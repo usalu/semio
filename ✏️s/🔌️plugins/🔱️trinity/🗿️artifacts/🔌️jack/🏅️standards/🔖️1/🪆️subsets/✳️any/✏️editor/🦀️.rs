@@ -1,13 +1,12 @@
 //! 🔱️ Trinity Jack editor — jack query editor bundled as a hot-swappable WASM plugin.
 //!
 //! 📌️ Pure-trait `ArtifactEditor`: `TrinityJackPlayApp` is a unit struct; every former
-//! `TrinityJackRuntime` field (selection, camera, query draft, LOD, …) lives in
-//! exact window config/transient owners. Every action dispatches through the single typed `TrinityJackCommand`
+//! `TrinityJackRuntime` field (selection, camera, LOD, …) lives in exact window config/transient owners; the query is
+//! document content (`JackSnapshot::query`), undoable and shared like the graph it runs against. Every action dispatches through the single typed `TrinityJackCommand`
 //! channel via `ArtifactEditor::handle`, which fans out to `🎮️commands/<group>/component.rs` (the
 //! command enum stays hand-rolled — see its own doc comment — only the match body is decomposed).
 
 use crate::editor::jack::commands;
-use crate::editor::jack::query_window_config::JackEditorWindowConfigOwner;
 use crate::editor::jack::transient::{JackEditorWindowTransientOwner, JackResultsWindowTransientOwner};
 use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMutation;
 use crate::{JackSnapshot, Node, PortDirection, TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
@@ -48,7 +47,6 @@ pub(crate) const TRINITY_JACK_PLAY_WINDOW_RESULTS: &str = "trinity-jack-results"
 pub(crate) const NAKAGIN_FIXTURE_DSL: &str = include_str!("../🖼️assets/🎬️demo/🗣️.dsl.semio");
 pub(crate) const BRANCH_FIXTURE_DSL: &str = include_str!("../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
-pub(crate) const TRINITY_JACK_DEFAULT_QUERY: &str = "MATCH (a:Piece)-[r:Connection]->(b:Piece) WHERE a.name = 'b' AND b.name != 'b' RETURN a.name, b.name, b.label";
 //#endregion 🔖️Constants
 
 //#region 🔖️DocumentHelpers
@@ -375,15 +373,13 @@ mod args_bridge {
 pub struct TrinityJackPlayApp;
 
 //#region 🧵️RetainedConfigCommands
-const JACK_RETAINED_WINDOW_CONFIG_TOOL_IDS: &[&str] = &["nodeGraphViewport", "textEdit", "formatDocument", "setLodMode"];
+const JACK_RETAINED_WINDOW_CONFIG_TOOL_IDS: &[&str] = &["nodeGraphViewport", "setLodMode"];
 const JACK_RETAINED_TRANSIENT_TOOL_IDS: &[&str] = &["textSelect"];
 const JACK_RETAINED_PAYLOAD_SCHEMA: &str = "trinity.graph.config-command.v1";
 const JACK_RETAINED_RAW_BYTES: usize = 8_192;
 const JACK_RETAINED_WORK_ITEMS: usize = 64;
 const JACK_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
-    ArtifactToolPublicationContract { tool_id: "textEdit", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
-    ArtifactToolPublicationContract { tool_id: "formatDocument", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setLodMode", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
 ];
 const JACK_RETAINED_TRANSIENT_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: "textSelect", lanes: &[ArtifactToolPublicationLane::WindowTransient] }];
@@ -396,8 +392,6 @@ fn jack_retained_window_config_extent(command: &TrinityJackCommand, _snapshot: &
     let bytes = match command {
         TrinityJackCommand::SetViewport { viewport, .. } if viewport.validate().is_ok() => 1,
         TrinityJackCommand::SetViewport { .. } => return None,
-        TrinityJackCommand::TextEdit { text } => text.len(),
-        TrinityJackCommand::FormatDocument => 1,
         TrinityJackCommand::SetLodMode { value } => value.len(),
         _ => return None,
     };
@@ -417,12 +411,6 @@ fn jack_retained_window_config_reduce(
 ) -> Result<Emit<TrinityGraphMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
         TrinityJackCommand::SetViewport { viewport, .. } => commands::set_viewport(viewport, context.and_then(|context| context.view_state.as_ref())),
-        TrinityJackCommand::TextEdit { text } => commands::text_edit(text, context.and_then(|context| context.view_state.as_ref())),
-        TrinityJackCommand::FormatDocument => {
-            let context = context.ok_or_else(|| Fault::from("Jack query formatting requires retained window context"))?;
-            let query = context.window_config.as_ref().and_then(|window| window.get::<JackEditorWindowConfigOwner>()).ok_or_else(|| Fault::from("Jack query formatting requires the exact editor-window config snapshot"))?;
-            commands::format_document(&query.jack_query, context.view_state.as_ref())
-        }
         TrinityJackCommand::SetLodMode { value } => commands::set_lod_mode(value, context.and_then(|context| context.view_state.as_ref())),
         _ => Err(Fault::from("jack-retained-config-route-mismatch")),
     }
@@ -562,7 +550,7 @@ impl ArtifactCommandWork<EditorApp<TrinityJackPlayApp>> for JackEditorWindowTran
 /// refuses UI dispatch of every command not classified `Migrated`, which left the whole document surface
 /// dead in the shell. `patchNodes`/`deleteSelection` publish granular graph mutations; the example and
 /// fixture loaders publish a host-applied `Effect::LoadDocument`.
-const JACK_RETAINED_DOCUMENT_TOOL_IDS: &[&str] = &["patchNodes", "deleteSelection", "setActiveExample", "setFixtureJson"];
+const JACK_RETAINED_DOCUMENT_TOOL_IDS: &[&str] = &["patchNodes", "deleteSelection", "setActiveExample", "setFixtureJson", "textEdit", "formatDocument"];
 const JACK_RETAINED_DOCUMENT_PAYLOAD_SCHEMA: &str = "trinity.graph.document-command.v1";
 const JACK_RETAINED_DOCUMENT_RAW_BYTES: usize = 32_768;
 const JACK_RETAINED_DOCUMENT_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
@@ -570,6 +558,8 @@ const JACK_RETAINED_DOCUMENT_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationCon
     ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "setFixtureJson", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "textEdit", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "formatDocument", lanes: &[ArtifactToolPublicationLane::Artifact] },
 ];
 
 fn jack_retained_document_contract() -> ToolExecutionContract {
@@ -582,6 +572,8 @@ fn jack_retained_document_extent(command: &TrinityJackCommand, _snapshot: &JackS
         TrinityJackCommand::DeleteSelection => 1,
         TrinityJackCommand::SetActiveExample { example_id } => example_id.len(),
         TrinityJackCommand::SetFixtureJson { json } => json.len(),
+        TrinityJackCommand::TextEdit { text } if text.len() <= crate::JACK_QUERY_MAXIMUM_BYTES => text.len(),
+        TrinityJackCommand::FormatDocument => 1,
         _ => return None,
     };
     (bytes <= JACK_RETAINED_DOCUMENT_RAW_BYTES).then_some(1)
@@ -603,6 +595,8 @@ fn jack_retained_document_reduce(
         TrinityJackCommand::DeleteSelection => commands::delete_selection(snapshot, interaction.selection.get("ast").map_or(&[][..], |selection| selection.ids.as_slice())),
         TrinityJackCommand::SetActiveExample { example_id } => commands::set_active_example(example_id),
         TrinityJackCommand::SetFixtureJson { json } => commands::set_fixture_json(json),
+        TrinityJackCommand::TextEdit { text } => commands::text_edit(text)?,
+        TrinityJackCommand::FormatDocument => commands::format_document(&snapshot.query),
         _ => return Err(Fault::from("jack-retained-document-route-mismatch")),
     })
 }
@@ -719,8 +713,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
     }
 
     fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
-        crate::editor::jack::window_config::register(registry)?;
-        crate::editor::jack::query_window_config::register(registry)
+        crate::editor::jack::window_config::register(registry)
     }
 
     fn retained_window_transient_target(command: &Self::Command) -> Option<(&str, &'static str)> {
@@ -937,7 +930,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
     fn handle(
         command: &TrinityJackCommand,
         doc: &ArtifactView<'_, JackSnapshot>,
-        cfg: &ConfigView<'_, NoConfig>,
+        _cfg: &ConfigView<'_, NoConfig>,
         interaction: &InteractionView<'_>,
         view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
@@ -951,12 +944,9 @@ impl ArtifactEditor for TrinityJackPlayApp {
             TrinityJackCommand::RunQuery { .. } | TrinityJackCommand::LoadExampleQuery { .. } => return Err(Fault::from("query execution requires its retained operation owner")),
             TrinityJackCommand::SetActiveExample { example_id } => commands::set_active_example(example_id),
             TrinityJackCommand::SetViewport { viewport, .. } => return commands::set_viewport(viewport, view_state),
-            TrinityJackCommand::TextEdit { text } => return commands::text_edit(text, view_state),
+            TrinityJackCommand::TextEdit { text } => commands::text_edit(text)?,
             TrinityJackCommand::TextSelect { .. } => return Err(Fault::from("text selection requires its retained transient operation owner")),
-            TrinityJackCommand::FormatDocument => {
-                let query = crate::editor::jack::query_window_config::current(cfg).ok_or_else(|| Fault::from("Jack query formatting requires exact editor-window config"))?;
-                return commands::format_document(&query.jack_query, view_state);
-            }
+            TrinityJackCommand::FormatDocument => commands::format_document(&snapshot.query),
             TrinityJackCommand::SetLodMode { value } => return commands::set_lod_mode(value, view_state),
         })
     }
@@ -966,10 +956,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
         let labels = semio_framework_plugin::resolve_labels::<crate::editor::jack::terminology::TrinityJackLabels>(view_state);
         let root = match body_key {
             TRINITY_JACK_PLAY_BODY_GRAPH => edit::windows::graph::render(TRINITY_JACK_PLAY_SURFACE_GRAPH, TRINITY_JACK_PLAY_CONTROLLER_ID, snapshot, crate::editor::jack::window_config::current(cfg)),
-            TRINITY_JACK_PLAY_BODY_EDITOR => {
-                let query = crate::editor::jack::query_window_config::current(cfg).cloned().unwrap_or_default();
-                edit::windows::editor::render(TRINITY_JACK_PLAY_SURFACE_EDITOR, TRINITY_JACK_PLAY_CONTROLLER_ID, snapshot, &query, None)
-            }
+            TRINITY_JACK_PLAY_BODY_EDITOR => edit::windows::editor::render(TRINITY_JACK_PLAY_SURFACE_EDITOR, TRINITY_JACK_PLAY_CONTROLLER_ID, snapshot, None),
             TRINITY_JACK_PLAY_BODY_RESULTS => edit::windows::results::render(TRINITY_JACK_PLAY_SURFACE_RESULTS, TRINITY_JACK_PLAY_CONTROLLER_ID, None, None),
             TRINITY_JACK_PLAY_BODY_ARTIFACT => crate::editor::jack::panels::document::render(snapshot, cfg.snapshot, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, TRINITY_JACK_PLAY_BODY_ARTIFACT)),
             TRINITY_JACK_PLAY_BODY_CATALOGUE => crate::editor::jack::panels::catalogue::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, TRINITY_JACK_PLAY_BODY_CATALOGUE)),
@@ -995,8 +982,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
         }
         if body_key == TRINITY_JACK_PLAY_BODY_EDITOR {
             let selection = transient.window::<JackEditorWindowTransientOwner>().and_then(|window| window.selection.as_ref());
-            let query = crate::editor::jack::query_window_config::current(cfg).cloned().unwrap_or_default();
-            let root = edit::windows::editor::render(TRINITY_JACK_PLAY_SURFACE_EDITOR, TRINITY_JACK_PLAY_CONTROLLER_ID, doc.snapshot, &query, selection)?;
+            let root = edit::windows::editor::render(TRINITY_JACK_PLAY_SURFACE_EDITOR, TRINITY_JACK_PLAY_CONTROLLER_ID, doc.snapshot, selection)?;
             return Ok(semio_framework_plugin::built_to_component_tree(root));
         }
         Self::render(body_key, doc, cfg, view_state)
@@ -1111,9 +1097,9 @@ pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Mutation) })
             .action_destructive("setFixtureJson")
             .view_action("nodeGraphViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansicht festlegen"))
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("textEdit", LocalizedLabel::native("Edit Jack Query", "Jack-Abfrage bearbeiten"), ActionKind::View, "typography") })
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("textEdit", LocalizedLabel::native("Edit Jack Query", "Jack-Abfrage bearbeiten"), ActionKind::Mutation, "typography") })
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("textSelect", LocalizedLabel::native("Select Jack Query Text", "Jack-Abfragetext auswählen"), ActionKind::View, "text-cursor") })
-            .action_with(semio_framework_plugin::ActionDefinition::new("formatDocument", LocalizedLabel::native("Format Jack Query", "Jack-Abfrage formatieren"), ActionKind::View, "typography").with_category("utilities"))
+            .action_with(semio_framework_plugin::ActionDefinition::new("formatDocument", LocalizedLabel::native("Format Jack Query", "Jack-Abfrage formatieren"), ActionKind::Mutation, "typography").with_category("utilities"))
             .action_with(semio_framework_plugin::ActionDefinition::new("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"), ActionKind::View, "layers"))
             .action_interactive_job("runQuery", InteractiveJobClassification::Migrated)
             .action_interactive_job("loadExampleQuery", InteractiveJobClassification::Migrated)
@@ -1138,12 +1124,10 @@ pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
                 selection: SelectionSpec { modes: vec![SelectionMode::Multiple, SelectionMode::Single], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace], transitive: true, broadcast: true },
             })
             .window_kind_interactions(TRINITY_JACK_PLAY_WINDOW_GRAPH, vec![InteractionRef::new("ast")])
-            // 📇️ Per-window action scoping. Every retained WINDOW-CONFIG verb reads the config of the
-            // window it was dispatched from, so an unowned one is a live fault: `build_definition`
-            // copies an unowned action onto EVERY window kind, the Actions pane of the graph pane then
-            // offered `formatDocument`, and the reducer refused it with "Jack query formatting requires
-            // the exact editor-window config snapshot" (`:422`). Text verbs belong to the query editor,
-            // viewport/LOD to the graph. Document verbs, selection, history and the example picker stay
+            // 📇️ Per-window action scoping: `build_definition` copies an unowned action onto EVERY window
+            // kind. Viewport/LOD read the config of the graph window they were dispatched from, so they
+            // belong to the graph; the text verbs edit the document's query where it is typed, so they
+            // belong to the query editor. Document verbs, selection, history and the example picker stay
             // unscoped on purpose — they read the document, not a pane.
             .window_kind_action_refs(TRINITY_JACK_PLAY_WINDOW_EDITOR, vec!["textEdit".into(), "textSelect".into(), "formatDocument".into()])
             .window_kind_action_refs(TRINITY_JACK_PLAY_WINDOW_GRAPH, vec!["nodeGraphViewport".into(), "setLodMode".into()])
@@ -1181,12 +1165,12 @@ pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
             .keybinding("mod+alt+s", "commitCheckpoint")
             .io(jack_io())
             .action_describe("setLodMode", LocalizedLabel::native("Sets the level of detail the graph window draws the component graph with; only that window's view changes.", "Legt die Detailstufe fest, mit der das Graphfenster den Bauteilgraphen zeichnet; nur die Ansicht dieses Fensters ändert sich."))
-            .action_describe("formatDocument", LocalizedLabel::native("Reformats the Jack query in the query editor window; the graph document is not changed, and a query that does not parse is left as it is.", "Formatiert die Jack-Abfrage im Abfrage-Editorfenster neu; das Graphdokument ändert sich nicht, eine nicht lesbare Abfrage bleibt wie sie ist."))
+            .action_describe("formatDocument", LocalizedLabel::native("Reformats the document's Jack query as one undoable edit; the graph is not changed, and a query that does not parse is left as it is.", "Formatiert die Jack-Abfrage des Dokuments als ein rückgängig machbarer Schritt neu; der Graph ändert sich nicht, eine nicht lesbare Abfrage bleibt wie sie ist."))
             .action_describe("deleteSelection", LocalizedLabel::native("Deletes every selected node of the component graph together with every edge attached to them.", "Löscht alle ausgewählten Knoten des Bauteilgraphen samt aller daran angeschlossenen Kanten."))
             .action_describe("patchNodes", LocalizedLabel::native("Renames the given nodes, or the selected ones when no ids are given; name is the only field a Jack node allows.", "Benennt die angegebenen Knoten um, ohne Ids die ausgewählten; der Name ist das einzige Feld, das ein Jack-Knoten erlaubt."))
-            .action_describe("runQuery", LocalizedLabel::native("Runs a Jack graph query (or the editor's current one) against the component graph and shows the matches in the given results window; CREATE, SET or DELETE clauses change the graph.", "Führt eine Jack-Graphabfrage (oder die aktuelle des Editors) auf dem Bauteilgraphen aus und zeigt die Treffer im angegebenen Ergebnisfenster; CREATE-, SET- oder DELETE-Klauseln ändern den Graphen."))
-            .action_describe("loadExampleQuery", LocalizedLabel::native("Puts one of the bundled example queries into the query editor, runs it and shows its matches in the given results window.", "Setzt eine der mitgelieferten Beispielabfragen in den Abfrage-Editor, führt sie aus und zeigt ihre Treffer im angegebenen Ergebnisfenster."))
-            .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole component graph with a bundled fixture (the Nakagin capsule tower or the branch chain), by example id.", "Ersetzt den gesamten Bauteilgraphen durch eine mitgelieferte Fixture (den Nakagin Capsule Tower oder die Astkette), anhand der Beispiel-Id."))
+            .action_describe("runQuery", LocalizedLabel::native("Runs a Jack graph query (or the document's own query) against the component graph and shows the matches in the given results window; CREATE, SET or DELETE clauses change the graph.", "Führt eine Jack-Graphabfrage (oder die eigene Abfrage des Dokuments) auf dem Bauteilgraphen aus und zeigt die Treffer im angegebenen Ergebnisfenster; CREATE-, SET- oder DELETE-Klauseln ändern den Graphen."))
+            .action_describe("loadExampleQuery", LocalizedLabel::native("Makes one of the bundled example queries the document's query, runs it and shows its matches in the given results window.", "Macht eine der mitgelieferten Beispielabfragen zur Abfrage des Dokuments, führt sie aus und zeigt ihre Treffer im angegebenen Ergebnisfenster."))
+            .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole document with a bundled fixture (the Nakagin capsule tower or the branch chain) and its example query, by example id.", "Ersetzt das gesamte Dokument durch eine mitgelieferte Fixture (den Nakagin Capsule Tower oder die Astkette) samt Beispielabfrage, anhand der Beispiel-Id."))
             .action_describe("setFixtureJson", LocalizedLabel::native("Replaces the whole component graph with one parsed from the given fixture JSON; invalid JSON changes nothing.", "Ersetzt den gesamten Bauteilgraphen durch einen, der aus dem angegebenen Fixture-JSON gelesen wird; ungültiges JSON ändert nichts."))
             .action_audience("nodeGraphViewport", semio_framework_plugin::CapabilityAudience::Chrome)
             .action_destructive("runQuery")

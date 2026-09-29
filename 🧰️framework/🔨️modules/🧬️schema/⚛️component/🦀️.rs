@@ -501,10 +501,13 @@ impl ArtifactInferenceRegistry {
     }
 }
 
-/// 📎 Registers one artifact's handcrafted inference descriptor into the OS-wide catalog. `id` on
-/// the descriptor must be `"{artifact_id}.inference"`, matching its owning `ArtifactSchemaDescriptor`'s id.
+/// 📎 Registers one artifact's handcrafted inference descriptor into the OS-wide catalog, and its document as the
+/// `inference` export of its own scope so a contract that `$ref`s the inference document resolves it. `id` on the
+/// descriptor must be `"{artifact_id}.inference"`, matching its owning `ArtifactSchemaDescriptor`'s id.
 pub fn register_artifact_inference_descriptor(descriptor: ArtifactInferenceDescriptor) {
     register_kernel_artifact_inference_descriptor(inference_descriptor_to_kernel(&descriptor));
+    let exports: &'static [SchemaExport] = Box::leak(Box::new([SchemaExport { id: "inference", leaves: descriptor.inference }]));
+    let _ = register_scope_schema_exports(ScopeSchemaExports { scope: descriptor.id, exports });
 }
 
 /// 🔬️ Verifies inference schema descriptors against the established catalog without mutation.

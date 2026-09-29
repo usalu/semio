@@ -44,7 +44,7 @@ async fn registered_pdf_draft_publishes_once_refuses_stale_and_undoes_redoes() {
     let mut original = PdfSnapshot::default();
     original.pages.push(PdfPage { content: vec![PdfOp::BeginText, PdfOp::ShowText { text: PdfTextString::text("before") }, PdfOp::EndText], ..Default::default() });
     let mut app = artifact_app_laws::new_registered_app::<EditorApp<Pdf17Editor>, _>(async { semio_framework_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() } }).await;
-    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, STDIO_PDF_DOCUMENT_SCHEMA) else { panic!("PDF fixture produces a document load") };
+    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, STDIO_PDF17_DOCUMENT_SCHEMA) else { panic!("PDF fixture produces a document load") };
     app.load_document_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap();
     let loaded = app.snapshot().unwrap().clone();
     assert_eq!(loaded.pages[0].text(), "before");
@@ -81,7 +81,7 @@ async fn registered_pdf_page_edit_publishes_and_undoes_redoes() {
 
     let mut original = crate::standards::v1_7::subsets::base::schema::snapshot::demo_pdf17_snapshot();
     let mut app = artifact_app_laws::new_registered_app::<EditorApp<Pdf17Editor>, _>(async { semio_framework_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() } }).await;
-    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, STDIO_PDF_DOCUMENT_SCHEMA) else { panic!("PDF fixture produces a document load") };
+    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, STDIO_PDF17_DOCUMENT_SCHEMA) else { panic!("PDF fixture produces a document load") };
     app.load_document_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap();
     let loaded = app.snapshot().unwrap().clone();
     let meta = artifact_app_laws::meta("local");

@@ -311,8 +311,16 @@ impl ValueComparison {
         Ok(())
     }
     fn advance(&mut self, left: &UiValue, right: &UiValue, bytes: usize) -> Result<UiComponentCompareProgress, &'static str> {
-        if self.length == 0 && !matches!((left, right), (UiValue::List(_), UiValue::List(_)) | (UiValue::Map(_), UiValue::Map(_))) {
-            return match value_unit(left, right, &mut self.position, &mut self.remembered, None, bytes)? {
+        let collection = matches!((left, right), (UiValue::List(_), UiValue::List(_)) | (UiValue::Map(_), UiValue::Map(_)));
+        self.advance_from(collection, |position, remembered, arena| value_unit(left, right, position, remembered, arena, bytes), bytes)
+    }
+    /// 🗺️ The same traversal rooted at two bare [`UiMap`] handles (a [`RowTarget`]'s argument map).
+    fn advance_map(&mut self, left: &UiMap, right: &UiMap, bytes: usize) -> Result<UiComponentCompareProgress, &'static str> {
+        self.advance_from(true, |_, _, arena| collection_heads(left.handle, left.len, right.handle, right.len, arena.ok_or("typed comparison map requires arena authority")?), bytes)
+    }
+    fn advance_from(&mut self, collection: bool, root: impl FnOnce(&mut usize, &mut u8, Option<&UiValueArena>) -> Result<ValueUnit, &'static str>, bytes: usize) -> Result<UiComponentCompareProgress, &'static str> {
+        if self.length == 0 && !collection {
+            return match root(&mut self.position, &mut self.remembered, None)? {
                 ValueUnit::Progress(step) => Ok(step),
                 _ => Err("typed comparison unexpected collection"),
             };
@@ -323,7 +331,7 @@ impl ValueComparison {
             Err(std::sync::TryLockError::Poisoned(_)) => return Err("typed comparison arena is poisoned"),
         };
         if self.length == 0 {
-            return match value_unit(left, right, &mut self.position, &mut self.remembered, Some(&arena), bytes)? {
+            return match root(&mut self.position, &mut self.remembered, Some(&arena))? {
                 ValueUnit::Progress(step) => Ok(step),
                 ValueUnit::Children(left, right) => {
                     self.push(left, right)?;
@@ -389,6 +397,16 @@ impl ValueComparison {
 impl TypedCompare for UiValue {
     fn compare_one(&self, right: &Self, _: &mut [usize], values: &mut ValueComparison, bytes: usize) -> Result<UiComponentCompareProgress, &'static str> {
         let step = values.advance(self, right, bytes)?;
+        if step.complete {
+            values.reset();
+        }
+        Ok(step)
+    }
+}
+
+impl TypedCompare for UiMap {
+    fn compare_one(&self, right: &Self, _: &mut [usize], values: &mut ValueComparison, bytes: usize) -> Result<UiComponentCompareProgress, &'static str> {
+        let step = values.advance_map(self, right, bytes)?;
         if step.complete {
             values.reset();
         }

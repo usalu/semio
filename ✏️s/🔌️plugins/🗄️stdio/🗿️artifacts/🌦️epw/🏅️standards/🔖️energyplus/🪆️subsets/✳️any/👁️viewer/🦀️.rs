@@ -55,7 +55,7 @@ impl ArtifactViewer for EpwViewer {
     const DOCUMENT_SCHEMA: &'static str = STDIO_EPW_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> EpwSnapshot {
-        EpwSnapshot::default()
+        crate::standards::energyplus::subsets::any::schema::blank_epw_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `EpwViewCommand::Noop` variant never carries a config

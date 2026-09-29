@@ -132,6 +132,6 @@ fn instance_lifetime_ui_typed_all_patch_variants_close_and_max_surface_progresse
             Component::Surface(SurfaceProps { kind: SurfaceKind::Canvas2d, doc_schema: UiText::try_from_str(&text).unwrap(), doc: SurfaceDoc { bytes: UiFixedBytes::try_from_vec(vec![7; UI_FIXED_BYTES]).unwrap() }, bindings: Default::default() });
         assert_eq!(close_typed(&mut surface, grant), UI_TEXT_MAX_BYTES + UI_FIXED_BYTES);
     }
-    assert_eq!(<UiSnapshot as UiTypedRetire>::DEPTH, 8);
-    assert_eq!(<UiPatch as UiTypedRetire>::DEPTH, 8);
+    assert_eq!(<UiSnapshot as UiTypedRetire>::DEPTH, 7);
+    assert_eq!(<UiPatch as UiTypedRetire>::DEPTH, 7);
 }

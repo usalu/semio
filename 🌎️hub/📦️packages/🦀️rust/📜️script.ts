@@ -4220,7 +4220,7 @@ async function proveDocumentOpenPlanFixture(repoRoot: string): Promise<void> {
     !productionSource.includes("issue_document_plan_socket_grant") ||
     !productionSource.includes("authority_for_authenticated_exchange") ||
     !productionSource.includes("document_plan_socket_validity") ||
-    !productionSource.includes("checkpoint.as_ref() != Some(&authority.checkpoint)") ||
+    !productionSource.match(/if checkpoint\.as_ref\(\) == Some\(&authority\.checkpoint\) \{\s*DocumentPlanBootstrapV1::Current\s*\} else \{\s*DocumentPlanBootstrapV1::Stale\s*\}/u) ||
     productionSource.includes("post(issue_document_socket_grant)")
   )
     throw new Error("document-open catalog-gated issuer and exchange activation boundary drifted");
@@ -7973,9 +7973,12 @@ function trustedBootstrapResolveClosure(profileId: string, claims: ReadonlyMap<s
  * rows and their COMMITTED descriptors alone, so a violation surfaces in seconds instead of after the release builds (ticket
  * 26/09/23 W4: a hosted-only stdio family and a 260-byte profile id each failed only after 15–44 min): the profile id is a
  * bounded `local-…-open-v1` name (`TRUSTED_IDENTITY_MAX_BYTES`); every package identity and declared kind id/schema is a bounded
- * trusted identity; a package without linked codecs declares at least one artifact kind — its component can only answer codec
- * rows for kinds it declares, and the catalog has no hosted-package model — (which of them its apps OWN is the `describe` gate's
- * `first_owned_codec` law); a linked package's codec registry exists; no artifact kind is owned by editors of two packages (the hub's
+ * trusted identity; a package without linked codecs declares an artifact kind of its own (its component answers the codec rows)
+ * or HOSTS kinds (`manifest.hostedArtifactKinds`, p15) — the hub's own hosted-row rule (`trusted-catalog` descriptor decode): each
+ * (id, schema) row once and never also owned, its explicit `owner` another package this one declares as a dependency and this catalog
+ * selects BEFORE it (the publisher binds the row to the owner's already-published codec rows; a row the owner publishes no codec for —
+ * stdio's definition-only kinds — opens nothing, as in the bootstrap); which kinds its apps OWN is the `describe`
+ * gate's `first_owned_codec` law; a linked package's codec registry exists; no artifact kind is owned by editors of two packages (the hub's
  * `artifact_creation_selection` needs one unambiguous editor — c9's GIS probe got 409 when demonstrator re-owned `s.gis.gismap`). Law + fixture: `🌎️hub/🧪️tests/🛫️catalog-selection-preflight`. */
 export function trustedBootstrapSelectionFindingsV1(profileId: string, packages: readonly Readonly<{ pluginId: string; componentPackageId: string; outputName: string; linkedCodecRegistry: string | null; linkedCodecRegistryPresent: boolean; descriptor: Record<string, any> }>[]): readonly string[] {
   const bounded = (value: unknown): boolean => typeof value === "string" && value.length > 0 && new TextEncoder().encode(value).length <= 256 && value.trim() === value;
@@ -7992,7 +7995,20 @@ export function trustedBootstrapSelectionFindingsV1(profileId: string, packages:
     }
     if (row.linkedCodecRegistry !== null) {
       if (!row.linkedCodecRegistryPresent) findings.push(`${row.pluginId}: linked codec registry ${row.linkedCodecRegistry} is missing`);
-    } else if (kinds.length === 0) findings.push(`${row.pluginId}: declares no artifact kind — its apps host kinds another package owns, and a trusted-catalog package must answer at least one codec row of its own (no hosted-package model)`);
+    }
+    const manifest = (row.descriptor.manifest ?? {}) as Record<string, any>;
+    const hosted = (manifest.hostedArtifactKinds ?? []) as Record<string, any>[];
+    if (row.linkedCodecRegistry === null && kinds.length === 0 && hosted.length === 0) findings.push(`${row.pluginId}: declares no artifact kind, owned or hosted — a trusted-catalog package answers a codec row of its own or hosts kinds of a selected owner`);
+    const dependencies = new Set(((manifest.dependencies ?? []) as Record<string, any>[]).map((dependency) => String(dependency.pluginId)));
+    const owned = new Set(((manifest.artifactKinds ?? []) as Record<string, any>[]).map((kind) => String(kind.id)));
+    const hostedPairs = new Set<string>();
+    for (const kind of hosted) {
+      const owner = typeof kind.owner === "string" && kind.owner !== "" ? kind.owner : undefined;
+      if (!bounded(kind.id) || !bounded(kind.schema)) findings.push(`${row.pluginId}: hosted kind ${JSON.stringify(String(kind.id).slice(0, 96))} has an unbounded id or schema`);
+      else if (hostedPairs.has(`${kind.id}\u0000${kind.schema}`) || owned.has(String(kind.id))) findings.push(`${row.pluginId}: hosts ${kind.id} (${kind.schema}) twice or also owns it`);
+      else if (!owner || owner === row.pluginId || !dependencies.has(owner) || !packages.slice(0, packages.indexOf(row)).some((candidate) => candidate.pluginId === owner)) findings.push(`${row.pluginId}: hosts ${kind.id}, whose owner ${owner ?? "(none)"} is not another package it declares as a dependency and this catalog selects before it`);
+      hostedPairs.add(`${kind.id}\u0000${kind.schema}`);
+    }
   }
   for (const [kindId, owners] of editorOwners) if (owners.length > 1) findings.push(`artifact kind ${kindId} is owned by editors of ${owners.join(" and ")} — the hub creates a kind only through one unambiguous editor (host, don't own, another package's kind)`);
   return Object.freeze(findings);
@@ -9943,8 +9959,9 @@ type TrustedBootstrapPackageSpecV1 = Readonly<{
 const TRUSTED_BOOTSTRAP_DEFAULT_PACKAGES = "stdio,gis,note";
 
 /** 🌎️ Every selectable `s` plugin package — the top-level plugins and the stdio family components right after the `stdio`
- * package they depend on — in publication order. */
-const TRUSTED_BOOTSTRAP_ALL_PACKAGES = "stdio,stdio-image,stdio-media,stdio-cad,stdio-bim,stdio-mesh,stdio-pdf,stdio-office,stdio-semio,stdio-binary,gis,animate,architect,block,cad,dag,demonstrator,draw,energy,fem,flow,forms,imperative,layout,lowpoly,mathematical,norm,note,playbook,procedural,process,puzzle,raster,reasoning,remodel,sequence,shooting,sourcing,space,trinity,vcs,wfc,writer";
+ * package they depend on — in publication order: a host after every owner it hosts kinds of (the publisher binds a hosted row to
+ * the owner's already-published codec rows), so `demonstrator` comes last. */
+const TRUSTED_BOOTSTRAP_ALL_PACKAGES = "stdio,stdio-image,stdio-media,stdio-cad,stdio-bim,stdio-mesh,stdio-pdf,stdio-office,stdio-semio,stdio-binary,gis,animate,architect,block,cad,dag,draw,energy,fem,flow,forms,imperative,layout,lowpoly,mathematical,norm,note,playbook,procedural,process,puzzle,raster,reasoning,remodel,sequence,shooting,sourcing,space,trinity,vcs,wfc,writer,demonstrator";
 
 /** 🔗️ The closure every gate, rotation and process law in this file proves: exactly the packages
  * this hub binary links Rust codecs for. They keep minting `local-stdio-gis-open-v1`, so the hub's
@@ -10077,6 +10094,37 @@ export function trustedBootstrapLinkedUnownedKindsV1(pairs: readonly (readonly [
  * declaration order. This is `validate_descriptor_open_target`'s own discoverability union: a spec
  * declared at PLUGIN level (`PluginBuilder::artifact_kind`, the channel GIS and Stdio still use) or
  * on the OWNING APP, which is where a package migrated onto the declaration tree stitches it. */
+/** 🏠️ The kinds one package HOSTS (`manifest.hostedArtifactKinds`: `PluginBuilder::host_artifact` and embedded surfaces of
+ * another plugin's artifact): each row's explicit `owner` must be a declared dependency already published in this catalog —
+ * never read off the kind id (an embedded editor's `3d.cad` names no plugin); a hosted row binds the
+ * owner's verified codec row (codec rows never move), and a row the owner publishes no codec for opens nothing — the owner's
+ * own rule for its unlinked kinds (the owner publishes ONE codec row per kind, so a kind's other document schemas stay
+ * unbound). */
+function trustedBootstrapHostedKindsV1(pluginId: string, descriptor: Record<string, any>, codecs: Readonly<Record<string, readonly TrustedBootstrapCodec[]>>): Readonly<{ pairs: readonly (readonly [string, string])[]; rows: readonly TrustedBootstrapCodec[]; unowned: ReadonlySet<string>; unbound: ReadonlySet<string> }> {
+  const manifest = descriptor.manifest as Record<string, any>;
+  const dependencies = new Set(((manifest.dependencies ?? []) as Record<string, any>[]).map((dependency) => String(dependency.pluginId)));
+  const hosted = (manifest.hostedArtifactKinds ?? []) as Record<string, any>[];
+  const pairs = hosted.map((kind) => [String(kind.id), String(kind.schema)] as const);
+  const rows: TrustedBootstrapCodec[] = [];
+  const unowned = new Set<string>();
+  const unbound = new Set<string>();
+  for (const kind of hosted) {
+    const [id, schema] = [String(kind.id), String(kind.schema)];
+    const owner = typeof kind.owner === "string" ? kind.owner : "";
+    if (!owner || owner === pluginId || !dependencies.has(owner)) throw new Error(`trusted catalog package ${pluginId} hosts ${id}, whose owner ${JSON.stringify(owner)} is not one of its declared dependencies`);
+    const published = codecs[owner];
+    if (!published) throw new Error(`trusted catalog package ${pluginId} hosts ${id}, whose owner ${owner} is not published before it in this catalog`);
+    const row = published.find((codec) => codec.artifactKind === id && codec.artifactSchema === schema);
+    if (row) rows.push(row);
+    else {
+      unowned.add(id);
+      unbound.add(`${id} ${schema}`);
+    }
+  }
+  for (const row of rows) unowned.delete(row.artifactKind);
+  return Object.freeze({ pairs: Object.freeze(pairs), rows: Object.freeze(rows), unowned, unbound });
+}
+
 function trustedBootstrapDescriptorKindsV1(descriptor: Record<string, any>): readonly Record<string, any>[] {
   const manifest = descriptor.manifest as Record<string, any>;
   const apps = (manifest.apps ?? []) as Record<string, any>[];
@@ -10090,13 +10138,13 @@ function trustedBootstrapDescriptorKindsV1(descriptor: Record<string, any>): rea
  * `descriptor_open_targets` in `🔏️trusted-catalog/🦀️.rs` that `validate_descriptor_open_target` also
  * applies), each bound to the package's own verified codec row. The rule has one implementation; this is
  * its caller. */
-function trustedBootstrapHubOpenTargetsV1(hubBinary: string, pluginId: string, descriptor: Uint8Array, codecs: readonly TrustedBootstrapCodec[], unowned: ReadonlySet<string>): readonly TrustedBootstrapOpenTargetV1[] {
+function trustedBootstrapHubOpenTargetsV1(hubBinary: string, pluginId: string, descriptor: Uint8Array, codecs: readonly TrustedBootstrapCodec[], unowned: ReadonlySet<string>, unbound: ReadonlySet<string> = new Set()): readonly TrustedBootstrapOpenTargetV1[] {
   const answer = spawnSync(hubBinary, ["trusted-catalog", "open-targets"], { input: descriptor, maxBuffer: 4 * 1024 * 1024, timeout: 120_000, killSignal: "SIGKILL", env: { PATH: process.env.PATH ?? "" } });
   if (answer.error || answer.status !== 0) throw new Error(`hub open-target answer for ${pluginId} failed (${answer.status ?? answer.signal ?? answer.error?.message}): ${String(answer.stderr ?? "").trim().slice(0, 512)}`);
   const document = documentOpenNeutralObject(JSON.parse(String(answer.stdout)), ["schema", "targets"]);
   if (document.schema !== "semio.hub.trusted-catalog-descriptor-open-targets/v1" || !Array.isArray(document.targets)) throw new Error(`hub open-target answer for ${pluginId} is outside its schema`);
   return Object.freeze(
-    document.targets.filter((value: any) => !unowned.has(String(value?.artifactKind))).map((value: unknown) => {
+    document.targets.filter((value: any) => !unowned.has(String(value?.artifactKind)) && !unbound.has(`${String(value?.artifactKind)} ${String(value?.artifactSchema)}`)).map((value: unknown) => {
       const row = documentOpenNeutralObject(value, ["artifactKind", "artifactSchema", "surfaceId", "appId", "windowKindId", "role", "rendererTarget", "parentDialect", "grant"]);
       const codec = codecs.find((candidate) => candidate.artifactKind === row.artifactKind && candidate.artifactSchema === row.artifactSchema);
       if (!codec) throw new Error(`trusted bootstrap open target ${row.artifactKind} has no verified codec row`);
@@ -10214,7 +10262,7 @@ export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot
     const descriptorJson = new Map<string, Record<string, any>>();
     const codecs: Record<string, readonly TrustedBootstrapCodec[]> = {};
     const openTargets: TrustedBootstrapOpenTargetV1[] = [];
-    const declaredOpenTargets = new Map<string, (codecs: readonly TrustedBootstrapCodec[], unowned: ReadonlySet<string>) => readonly TrustedBootstrapOpenTargetV1[]>();
+    const declaredOpenTargets = new Map<string, (codecs: readonly TrustedBootstrapCodec[], unowned: ReadonlySet<string>, unbound: ReadonlySet<string>) => readonly TrustedBootstrapOpenTargetV1[]>();
     const unownedKinds = new Map<string, ReadonlySet<string>>();
     for (const request of requests) {
       const spec = selection.find((candidate) => candidate.pluginId === request.pluginId)!;
@@ -10235,9 +10283,9 @@ export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot
           descriptorClaims.set(request.pluginId, trustedBootstrapDescriptorClaims(descriptor));
           descriptorJson.set(request.pluginId, packValueToExactJson(decodePackValue(descriptor)) as Record<string, any>);
           const descriptorCopy = Uint8Array.from(descriptor);
-          declaredOpenTargets.set(request.pluginId, (rows, unowned) => {
+          declaredOpenTargets.set(request.pluginId, (rows, unowned, unbound) => {
             try {
-              return trustedBootstrapHubOpenTargetsV1(hubBinary, request.pluginId, descriptorCopy, rows, unowned);
+              return trustedBootstrapHubOpenTargetsV1(hubBinary, request.pluginId, descriptorCopy, rows, unowned, unbound);
             } finally {
               descriptorCopy.fill(0);
             }
@@ -10250,18 +10298,22 @@ export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot
         // is generated from; every other package answers for itself, through the `codecs` subcommand
         // of the descriptor emitter this build already produced, on these exact component bytes.
         const manifestKinds = trustedBootstrapDescriptorKindsV1(descriptorJson.get(request.pluginId)!).map((kind) => [String(kind.id), String(kind.schema)] as const);
+        const hostedKinds = trustedBootstrapHostedKindsV1(request.pluginId, descriptorJson.get(request.pluginId)!, codecs);
         if (spec.linkedCodecRegistry) {
           const linked = linkedCodecs[request.pluginId as "gis" | "stdio"];
           if (!linked || linked.length === 0) throw new Error(`trusted codec capture carries no linked closure for ${request.pluginId}`);
           codecs[request.pluginId] = linked;
           unownedKinds.set(request.pluginId, trustedBootstrapLinkedUnownedKindsV1(manifestKinds, linked));
+        } else if (manifestKinds.length === 0 && hostedKinds.pairs.length > 0) {
+          codecs[request.pluginId] = [];
+          unownedKinds.set(request.pluginId, hostedKinds.unowned);
         } else {
           const emitter = join(target, "debug", process.platform === "win32" ? "semio-framework-plugin-describe.exe" : "semio-framework-plugin-describe");
           const answered = trustedBootstrapComponentCodecRowsV1(repoRoot, emitter, join(stage, "component.wasm"), join(target, "component-codecs.json"), manifestKinds);
           codecs[request.pluginId] = answered.rows;
           unownedKinds.set(request.pluginId, answered.unowned);
         }
-        for (const declared of declaredOpenTargets.get(request.pluginId)!(codecs[request.pluginId]!, unownedKinds.get(request.pluginId) ?? new Set())) openTargets.push(declared);
+        for (const declared of declaredOpenTargets.get(request.pluginId)!([...codecs[request.pluginId]!, ...hostedKinds.rows], unownedKinds.get(request.pluginId) ?? new Set(), hostedKinds.unbound)) openTargets.push(declared);
         const pluginOpensDocuments = openTargets.some((declared) => declared.pluginId === request.pluginId);
         if (pluginOpensDocuments) {
           const componentBytes = trustedBootstrapReadRegular(join(stage, "component.wasm"), DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, `fresh ${request.pluginId} component for closed actor`, checkBuild);

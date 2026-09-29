@@ -505,11 +505,14 @@ fn a_verb_whose_lane_an_agent_cannot_carry_is_refused_by_name_with_an_en_and_de_
         assert!(!remedy.trim().is_empty(), "remedy.{locale} is non-empty");
     }
     assert_ne!(AGENT_LANE_UNCARRIED_REMEDY.0, AGENT_LANE_UNCARRIED_REMEDY.1, "de is a translation, not a copy");
-    let unsupported = map_fault(&Fault { code: AGENT_LANE_PREVIEW_UNSUPPORTED_FAULT_CODE.into(), message: "action 'formatDocument' runs a 'writer.writer.tool-command.v1' job the agent lane cannot preview; it runs only from the shell".into() });
-    assert_eq!(unsupported.code, GatewayErrorCode::PluginUnavailable, "a job without an agent preview is a shell-only verb, not a gateway defect");
-    assert!(!unsupported.retryable);
-    assert_eq!(unsupported.details["faultCode"], AGENT_LANE_PREVIEW_UNSUPPORTED_FAULT_CODE);
-    assert_eq!(unsupported.details["remedy"]["de"], AGENT_LANE_UNCARRIED_REMEDY.1);
+    let no_effect = map_fault(&Fault { code: COMMAND_NO_EFFECT_FAULT_CODE.into(), message: "action 'createEdge' changes nothing here".into() });
+    assert_eq!(no_effect.code, GatewayErrorCode::PreconditionFailed, "a verb that changes nothing in this state is a precondition, not a shell-only verb");
+    assert!(!no_effect.retryable, "the same invocation on the same state changes nothing again");
+    assert_eq!(no_effect.details["faultCode"], COMMAND_NO_EFFECT_FAULT_CODE);
+    for (locale, remedy) in [("en", COMMAND_NO_EFFECT_REMEDY.0), ("de", COMMAND_NO_EFFECT_REMEDY.1)] {
+        assert_eq!(no_effect.details["remedy"][locale], remedy, "no-effect remedy.{locale}");
+    }
+    assert_ne!(COMMAND_NO_EFFECT_REMEDY.0, COMMAND_NO_EFFECT_REMEDY.1, "de is a translation, not a copy");
     let budget = map_fault(&Fault { code: AGENT_LANE_PREVIEW_BUDGET_FAULT_CODE.into(), message: "the preview of 'solve' was still running after its budget".into() });
     assert_eq!((budget.code, budget.retryable, budget.details["faultCode"].as_str()), (GatewayErrorCode::PluginUnavailable, false, Some(AGENT_LANE_PREVIEW_BUDGET_FAULT_CODE)));
     let targets = map_fault(&Fault { code: COMMAND_TARGETS_REQUIRED_FAULT_CODE.into(), message: "patchNodes needs node ids or a node selection".into() });
@@ -625,6 +628,31 @@ fn an_unrecognised_field_against_the_capabilitys_schema_is_input_invalid() {
 /// ✅️ The flip side of the fix above, made explicit rather than left implicit: `{}` genuinely IS
 /// valid input for translateSelection (no arg is required in this fixture), so `prepare` must
 /// succeed for it — pinning down the exact behaviour the two tests above now correctly assume.
+/// 🧮️ LAW (S19 relay, forms `addBlock` "missing field `kind`" on 7800/p33): an optional argument the agent leaves out runs
+/// with its declared `default` — the shells' one effective-args rule (`manifest::effective_action_args`), the guest SDK no
+/// longer fills defaults — the agent's own values run as given, and an undeclared key is still refused, never dropped.
+#[test]
+fn an_omitted_optional_argument_runs_with_its_declared_default() {
+    let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
+    let definitions = [
+        semio_framework::manifest::ActionArgDef::text("kind", semio_framework_ui::wgpu::LocalizedLabel::native("Kind", "Art")).default_value(&"text".to_string()),
+        semio_framework::manifest::ActionArgDef::text("title", semio_framework_ui::wgpu::LocalizedLabel::native("Title", "Titel")),
+    ];
+    let mut capability = synthetic_capability("forms.addBlock", &[], ApprovalMode::Never, false);
+    capability.input_schema = serde_json::json!({ "type": "object", "properties": { "kind": { "type": "string", "default": "text" }, "title": { "type": "string" } }, "additionalProperties": false });
+    capability.presentation.args = definitions.into_iter().map(|definition| crate::catalog::CapabilityArgSummary { id: definition.id.clone(), label: definition.id.clone(), required: definition.required, definition: Some(definition) }).collect();
+    let catalog = single_capability_catalog(capability);
+    let session = SessionHandle::new("sess_1");
+    let principal = principal(&[]);
+    let sent = || channel.frame_log().into_iter().filter_map(|(_, command)| match command { AppCommand::PureCommand { input, .. } => Some(input), _ => None }).last();
+    adapter.prepare(&catalog, &principal, &session, "forms.addBlock", serde_json::json!({}), 0, 0).expect("{} runs with the declared default");
+    assert_eq!(sent(), Some(serde_json::json!({ "kind": "text" })));
+    adapter.prepare(&catalog, &principal, &session, "forms.addBlock", serde_json::json!({ "kind": "choice", "title": "T" }), 0, 1).expect("given values run as given");
+    assert_eq!(sent(), Some(serde_json::json!({ "kind": "choice", "title": "T" })));
+    let refused = adapter.prepare(&catalog, &principal, &session, "forms.addBlock", serde_json::json!({ "notAnArg": 1 }), 0, 2).unwrap_err();
+    assert_eq!(refused.code, GatewayErrorCode::InputInvalid, "an undeclared key is refused, never dropped");
+}
+
 #[test]
 fn empty_input_is_valid_for_a_capability_with_no_required_args() {
     let (adapter, _channel, _handles, _audit) = harness(AutoApprovePolicy::Never);

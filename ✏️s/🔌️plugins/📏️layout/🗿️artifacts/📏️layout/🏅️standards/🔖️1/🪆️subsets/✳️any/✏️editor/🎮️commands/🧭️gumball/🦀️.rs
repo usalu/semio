@@ -32,7 +32,11 @@ pub fn handle(payload: &TranslateSelection, doc: &ArtifactView<'_, LayoutSnapsho
         .ids
         .iter()
         .filter_map(|id| {
-            let bounds = frame_on_page(page, id)?.bounds();
+            let frame = frame_on_page(page, id)?;
+            if crate::frame_edits_blocked(doc.snapshot, page, frame) {
+                return None;
+            }
+            let bounds = frame.bounds();
             Some(LayoutMutation::MoveFrame(MoveFrame { page_id: page.id.clone(), frame_id: id.clone(), new_x: bounds.x + payload.dx, new_y: bounds.y + payload.dy }))
         })
         .collect();
@@ -55,7 +59,11 @@ pub fn rotate(payload: &RotateSelection, doc: &ArtifactView<'_, LayoutSnapshot>,
         .ids
         .iter()
         .filter_map(|id| {
-            let bounds = frame_on_page(page, id)?.bounds();
+            let frame = frame_on_page(page, id)?;
+            if crate::frame_edits_blocked(doc.snapshot, page, frame) {
+                return None;
+            }
+            let bounds = frame.bounds();
             Some(LayoutMutation::RotateFrame(RotateFrame { page_id: page.id.clone(), frame_id: id.clone(), new_rotation: bounds.rotation + payload.angle }))
         })
         .collect();
@@ -75,7 +83,7 @@ pub struct ScaleSelection {
 
 pub fn scale(payload: &ScaleSelection, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<LayoutMutation, NoConfigMutation>, Fault> {
     let Some(page) = page_id_for(doc.snapshot, cfg) else { return Ok(Emit::default()) };
-    let mutations: Vec<LayoutMutation> = payload.ids.iter().filter_map(|id| frame_on_page(page, id).map(|frame| (id.clone(), frame.bounds().clone()))).flat_map(|(id, bounds)| {
+    let mutations: Vec<LayoutMutation> = payload.ids.iter().filter_map(|id| frame_on_page(page, id).filter(|frame| !crate::frame_edits_blocked(doc.snapshot, page, frame)).map(|frame| (id.clone(), frame.bounds().clone()))).flat_map(|(id, bounds)| {
         let new_width = (bounds.width * payload.sx).max(1.0);
         let new_height = (bounds.height * payload.sy).max(1.0);
         let new_x = bounds.x + (bounds.width - new_width) * 0.5;

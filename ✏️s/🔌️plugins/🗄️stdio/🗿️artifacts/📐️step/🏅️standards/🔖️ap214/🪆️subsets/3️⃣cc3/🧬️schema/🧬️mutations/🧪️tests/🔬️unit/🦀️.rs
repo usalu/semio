@@ -1,6 +1,6 @@
 use super::*;
 use crate::standards::v_ap214::engine::ladder::{has_product_definition_chain, ladder_violations, shape_representation_row};
-use crate::standards::v_ap214::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
+use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
 use crate::standards::v_ap214::subsets::cc3::schema::check_cc3_conformance;
 
 /// 🧫️ The shape of this artifact's own committed fixture, cut down to what a conformance class

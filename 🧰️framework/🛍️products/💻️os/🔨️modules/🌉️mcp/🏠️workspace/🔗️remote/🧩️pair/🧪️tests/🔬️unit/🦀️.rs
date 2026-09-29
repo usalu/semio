@@ -491,6 +491,49 @@ async fn canonical_pair_receipt_preflights_streams_cancels_expires_and_never_res
     assert_eq!(binding.canonical_pair_test_stats().0, CanonicalPairActorState::Refreshing);
 }
 
+/// ⏳️ A joined reader waits on the framework executor with no Tokio reactor — where the gateway drives every mount — and
+/// learns the owner's publication, or its own cancel at once (live quartet on 7800/p33: the Tokio-timer poll panicked there).
+#[test]
+fn a_joined_reader_waits_without_a_tokio_reactor_and_learns_the_publication_or_its_own_cancel() {
+    let contract = fixture();
+    let scope = DocumentScope::new(contract["binding"]["spaceId"].as_str().unwrap(), contract["binding"]["documentId"].as_str().unwrap());
+    let binding = ready_binding(i64::MAX);
+    let authority = binding.authority_generation.load(Ordering::SeqCst);
+    let published = CanonicalPairMountIdentity {
+        hub_origin: "https://hub.invalid".into(),
+        authority_generation: authority,
+        scope: scope.clone(),
+        descriptor_digest_v1: contract["binding"]["descriptorDigest"].as_str().unwrap().into(),
+        active_checkpoint_id: contract["binding"]["checkpointId"].as_str().unwrap().into(),
+        etag: contract["valid"]["etag"].as_str().unwrap().into(),
+        catalog_generation: Some(9),
+    };
+    let owner_ctx = context(10_000);
+    let PairBegin::Owner(owner) = binding.pair_actor.lock().unwrap().begin(authority, &scope, None, &owner_ctx.cancel).unwrap() else { panic!("the first reader owns its receipt") };
+    let PairBegin::Join(joined) = binding.pair_actor.lock().unwrap().begin(authority, &scope, None, &owner_ctx.cancel).unwrap() else { panic!("a second reader joins") };
+    let publisher = {
+        let binding = Arc::clone(&binding);
+        let (scope, published) = (scope.clone(), published.clone());
+        std::thread::spawn(move || {
+            std::thread::sleep(std::time::Duration::from_millis(50));
+            binding.pair_actor.lock().unwrap().loadings.get(&scope).unwrap().completion.send_replace(PairCompletion::Published(published));
+        })
+    };
+    assert_eq!(semio_framework_async::block_on(wait_for_published_receipt(joined, &owner_ctx, 1, std::time::Instant::now())).unwrap(), published);
+    publisher.join().unwrap();
+    let PairBegin::Join(cancelled) = binding.pair_actor.lock().unwrap().begin(authority, &scope, None, &owner_ctx.cancel).unwrap() else { panic!("the scope is still loading") };
+    binding.pair_actor.lock().unwrap().loadings.get(&scope).unwrap().completion.send_replace(PairCompletion::Pending);
+    let reader_ctx = context(10_000);
+    let token = reader_ctx.cancel.clone();
+    let canceller = std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_millis(50));
+        token.cancel_now();
+    });
+    assert_eq!(semio_framework_async::block_on(wait_for_published_receipt(cancelled, &reader_ctx, 1, std::time::Instant::now())).unwrap_err(), CanonicalPairMountError::Cancelled);
+    canceller.join().unwrap();
+    binding.pair_actor.lock().unwrap().cancel_receipt(&owner);
+}
+
 #[tokio::test]
 async fn every_reader_of_a_loading_scope_joins_its_one_receipt_and_learns_what_it_published() {
     let contract = fixture();

@@ -68,7 +68,7 @@ pub fn render(document: &XlsxSnapshot, locale: Locale, windows: &TreeWindows<'_>
                 };
                 WindowedEditableTableCell::read_only(value, labels[column])
             });
-            editable_table_window_row_at(&format!("workbook-cell-{ordinal}"), "s.stdio.xlsx@ecma-376/*#viewer", locale, columns.start, cells, Vec::new())
+            editable_table_window_row_at(&format!("workbook-cell-{ordinal}"), "s.stdio.xlsx@ecma-376/*#viewer", locale, columns.start, cells, Vec::new(), None)
         },
     )
 }

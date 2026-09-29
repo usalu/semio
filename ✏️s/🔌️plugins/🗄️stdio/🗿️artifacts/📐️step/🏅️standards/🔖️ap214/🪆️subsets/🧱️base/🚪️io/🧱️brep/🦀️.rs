@@ -6,7 +6,7 @@
 //! out of scope — a face whose geometry isn't a `PLANE`, or an edge whose curve isn't a `LINE`,
 //! is flagged in `BrepMeshView::issues` rather than silently producing a wrong mesh.
 
-use super::part21::{Part21Builder, Part21Document, Part21Header, Part21Value};
+use semio_s_artifact_stdio_contract::part21::{Part21Builder, Part21Document, Part21Header, Part21Value};
 use std::collections::HashMap;
 
 //#region 🔖️Model

@@ -519,6 +519,13 @@ fn text_editor_receipts_match_the_neutral_first_latest_refusal_and_read_only_law
         for value in &typed[1..] {
             assert!(text_editor_apply_key_into(&scene, &KeyAction::Char(value.as_str().unwrap().into()), &PointerModifiers::default(), &mut input).unwrap());
         }
+        let after_new_owner = law["typedAfterNewOwner"].as_array().cloned().unwrap_or_default();
+        if !after_new_owner.is_empty() {
+            assert!(sync_engine_scene(&text_editor_scene(id, law["initial"].as_str().unwrap()), "editor-delivery-law", Rect::new(0.0, 0.0, 480.0, 320.0), &Theme::default()), "{id}: the same host re-renders mid-flight with its guest's stale buffer");
+            for value in &after_new_owner {
+                assert!(text_editor_apply_key_into(&scene, &KeyAction::Char(value.as_str().unwrap().into()), &PointerModifiers::default(), &mut input).unwrap());
+            }
+        }
         let first_receipt = first_edit.receipt.unwrap();
         let accepted = law["outcome"] == "accepted";
         settle_text_editor_action_receipt(first_receipt, if accepted { TextEditorActionOutcome::Accepted } else { TextEditorActionOutcome::Refused(law["outcome"].as_str().unwrap()) });
@@ -543,7 +550,7 @@ fn text_editor_receipts_match_the_neutral_first_latest_refusal_and_read_only_law
         }
         assert_eq!(dispatched, law["expected"][2].as_array().unwrap().iter().map(|row| row.as_str().unwrap().to_owned()).collect::<Vec<_>>(), "{id}: settled pair");
         let text = ENGINE_SURFACES.with(|cell| cell.borrow().get(id).unwrap().editor.as_ref().unwrap().text().to_owned());
-        let expected_text = if accepted { format!("{}{}", law["initial"].as_str().unwrap(), typed.iter().map(|row| row.as_str().unwrap()).collect::<String>()) } else { law["initial"].as_str().unwrap().to_owned() };
+        let expected_text = if accepted { format!("{}{}", law["initial"].as_str().unwrap(), typed.iter().chain(after_new_owner.iter()).map(|row| row.as_str().unwrap()).collect::<String>()) } else { law["initial"].as_str().unwrap().to_owned() };
         assert_eq!(text, expected_text, "{id}: local echo");
         assert_eq!(text_editor_is_read_only(&scene), law["readOnly"].as_bool().unwrap(), "{id}: refusal mode");
         drop_engine_surface(id);

@@ -1,0 +1,241 @@
+{
+  "faultCode": "generation3d.widget.add",
+  "gap": 48,
+  "valid": [
+    {
+      "kind": "inputSlider"
+    },
+    {
+      "kind": "inputNote"
+    },
+    {
+      "kind": "inputImage"
+    },
+    {
+      "kind": "outputPreview"
+    },
+    {
+      "kind": "variable"
+    },
+    {
+      "kind": "neuron",
+      "neuronKind": "math.add"
+    },
+    {
+      "kind": "outputExport",
+      "format": "stl"
+    },
+    {
+      "kind": "outputExport",
+      "format": "obj"
+    },
+    {
+      "kind": "outputAction",
+      "action": "log"
+    },
+    {
+      "kind": "neuron",
+      "neuronKind": "input"
+    },
+    {
+      "kind": "neuron",
+      "neuronKind": "output"
+    }
+  ],
+  "invalid": [
+    {
+      "kind": "neuron|math.add"
+    },
+    {
+      "kind": "missing"
+    },
+    {
+      "kind": "neuron"
+    },
+    {
+      "kind": "outputExport"
+    },
+    {
+      "kind": "outputAction"
+    },
+    {
+      "kind": "neuron",
+      "neuronKind": ""
+    },
+    {
+      "kind": "inputNote",
+      "format": "obj"
+    },
+    {
+      "kind": "inputSlider",
+      "action": "log"
+    },
+    {
+      "kind": "inputNote",
+      "neuronKind": "math.add"
+    }
+  ],
+  "placements": [
+    {
+      "name": "empty",
+      "occupied": [],
+      "size": [
+        240,
+        100
+      ],
+      "expected": [
+        120,
+        120
+      ]
+    },
+    {
+      "name": "repeated",
+      "occupied": [
+        [
+          120,
+          120,
+          240,
+          100
+        ]
+      ],
+      "size": [
+        240,
+        100
+      ],
+      "expected": [
+        120,
+        268
+      ]
+    },
+    {
+      "name": "tall-neighbour",
+      "occupied": [
+        [
+          120,
+          120,
+          400,
+          600
+        ]
+      ],
+      "size": [
+        240,
+        100
+      ],
+      "expected": [
+        120,
+        518
+      ]
+    },
+    {
+      "name": "multiple-obstacles",
+      "occupied": [
+        [
+          120,
+          120,
+          240,
+          100
+        ],
+        [
+          120,
+          268,
+          240,
+          100
+        ]
+      ],
+      "size": [
+        240,
+        100
+      ],
+      "expected": [
+        120,
+        416
+      ]
+    },
+    {
+      "name": "other-column",
+      "occupied": [
+        [
+          500,
+          120,
+          240,
+          100
+        ]
+      ],
+      "size": [
+        240,
+        100
+      ],
+      "expected": [
+        120,
+        120
+      ]
+    },
+    {
+      "name": "explicit-drop",
+      "occupied": [
+        [
+          120,
+          120,
+          240,
+          100
+        ]
+      ],
+      "size": [
+        240,
+        100
+      ],
+      "x": 120,
+      "y": 120,
+      "expected": [
+        120,
+        120
+      ]
+    },
+    {
+      "name": "fixed-x",
+      "occupied": [
+        [
+          15,
+          120,
+          240,
+          100
+        ]
+      ],
+      "size": [
+        240,
+        100
+      ],
+      "x": 15,
+      "expected": [
+        15,
+        268
+      ]
+    },
+    {
+      "name": "fixed-y",
+      "occupied": [
+        [
+          120,
+          20,
+          240,
+          100
+        ]
+      ],
+      "size": [
+        240,
+        100
+      ],
+      "y": 20,
+      "expected": [
+        408,
+        20
+      ]
+    }
+  ],
+  "unsupportedOperators": [
+    {
+      "kind": "neuron",
+      "neuronKind": "missing.operator"
+    }
+  ]
+}

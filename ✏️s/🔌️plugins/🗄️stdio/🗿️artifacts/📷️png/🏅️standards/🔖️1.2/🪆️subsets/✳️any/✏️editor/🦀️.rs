@@ -376,7 +376,7 @@ impl ArtifactEditor for PngEditor {
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> { pngEditor_command_from_action(action, args) }
 
     fn initial_snapshot() -> Self::Snapshot {
-        PngSnapshot::default()
+        crate::standards::v1_2::subsets::any::schema::blank_png_snapshot()
     }
 
     fn handle(

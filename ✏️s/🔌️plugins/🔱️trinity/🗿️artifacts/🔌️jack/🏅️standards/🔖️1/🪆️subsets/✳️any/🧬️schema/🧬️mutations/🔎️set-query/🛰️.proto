@@ -1,0 +1,4 @@
+syntax = "proto3";
+package semio.s.trinity.jack.mutation.set_query;
+// set-query / SetQuery
+message SetQuery { string value = 1; }

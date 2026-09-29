@@ -122,6 +122,21 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-link/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-page-overrides/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/create-layer/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-frame-layer/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-drawing-text/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/reorder-frame/schema.json"
     }
   ]
 }

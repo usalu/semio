@@ -354,6 +354,17 @@ mod wasm_program_exchange {
         expect_done(&outcome.frames, seq)
     }
 
+    /// 🪪️ Reads exactly one typed identity reply from the app's own document store.
+    pub async fn read_app_document_identity(client: &KernelClient, instance_id: u32) -> Result<protocol::AppDocumentIdentity, String> {
+        let seq = next_seq();
+        let outcome = exchange(client, instance_id, vec![AppCommand::ReadDocumentIdentity { seq }]).await?;
+        let mut frames = outcome.frames.into_iter();
+        match (frames.next(), frames.next()) {
+            (Some(AppFrame::DocumentIdentity { in_reply_to, identity }), None) if in_reply_to == seq && identity.app_instance_id == instance_id => Ok(identity),
+            _ => Err(format!("plugin sent no exact DocumentIdentity for instance {instance_id} seq {seq}")),
+        }
+    }
+
     pub async fn read_app_document_archive(client: &KernelClient, instance_id: u32) -> Result<protocol::DocumentArchivePack, String> {
         let seq = next_seq();
         let outcome = exchange(client, instance_id, vec![AppCommand::ReadDocumentArchive { seq }]).await?;
@@ -774,6 +785,29 @@ impl ProgramBridgeEntry {
             #[cfg(not(target_arch = "wasm32"))]
             ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::load_app_document_pack(client, instance_id, pack, spr).await,
         }
+    }
+
+    /// 🪪️ Scalar document ownership query shared by native and browser bridges.
+    pub async fn read_app_document_identity(&self, instance_id: u32) -> Result<protocol::AppDocumentIdentity, String> {
+        let identity = match &self.backend {
+            #[cfg(not(target_arch = "wasm32"))]
+            ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::read_app_document_identity(client, instance_id).await?,
+            #[cfg(target_arch = "wasm32")]
+            ProgramBridgeBackend::Js(handle) => {
+                let args = Array::new();
+                args.push(&JsValue::from_f64(f64::from(instance_id)));
+                let result = call_js(handle, "readAppDocumentIdentity", &args).await?;
+                let json = result.as_string().ok_or_else(|| "document identity reply is not a JSON string".to_string())?;
+                if json.len() > 4_096 {
+                    return Err("document identity reply byte budget exceeded".into());
+                }
+                serde_json::from_str::<protocol::AppDocumentIdentity>(&json).map_err(|error| error.to_string())?
+            }
+        };
+        if identity.app_instance_id != instance_id || identity.parent_document_id.as_ref().is_some_and(|id| !(1..=512).contains(&id.chars().count())) {
+            return Err("document identity reply authority mismatch".into());
+        }
+        Ok(identity)
     }
 
     pub async fn read_app_document_archive(&self, instance_id: u32) -> Result<protocol::DocumentArchivePack, String> {

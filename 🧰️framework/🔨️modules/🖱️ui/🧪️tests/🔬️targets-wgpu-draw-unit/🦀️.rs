@@ -476,10 +476,14 @@ fn mesh_instances_without_lines_are_valid_world_pass() {
 }
 
 #[test]
-fn world_mesh_instance_packs_policy_and_standard_material_without_stride_growth() {
+/// 🧱️ LAW: the vertex-colour/shadow policy and the standard material pack into ONE `flags` lane; the stride grew exactly once, for
+/// the authored (GLB) material's emissive colour + alpha cutoff lane (`emissive_cutoff`, 09-28), which a standard instance leaves
+/// emissive-free with its cutoff disabled.
+fn world_mesh_instance_packs_policy_and_standard_material_into_one_fixed_stride() {
     let gpu = super::World3dGpuInstance::from_instance([0.0; 16], [1.0; 4], true, 0.2, 0.63, 0.27, true);
-    assert_eq!(std::mem::size_of::<super::World3dGpuInstance>(), 96);
+    assert_eq!(std::mem::size_of::<super::World3dGpuInstance>(), 112);
     assert_eq!(gpu.flags, [3.0, 0.2, 0.63, 0.27]);
+    assert_eq!(gpu.emissive_cutoff, [0.0, 0.0, 0.0, -1.0]);
 }
 
 #[test]
@@ -640,4 +644,28 @@ fn rounded_avatar_rasters_keep_their_radius_through_the_draw_packet() {
     assert_eq!(draw.layers[0].raster_instances[0].1.rect, rect);
     assert_eq!(draw.layers[0].raster_instances[0].1.uv_rect, uv);
     assert_eq!(draw.layers[0].raster_instances[1].1.params[0], 0.0);
+}
+
+/// 🎨️ LAW (ticket 26/09/23 session 14d, WG11): every edit that turns the lit mesh shader into the painted one finds its anchor
+/// EXACTLY once — the emissive anchor once lost its match when the lit shader gained `+ in.emissive_cutoff.rgb`, the
+/// `lit_color` declaration was silently dropped, and every GPU context refused `world3d_painted_shader`.
+#[test]
+fn every_painted_shader_edit_finds_its_anchor_in_the_lit_shader_once() {
+    for (anchor, _) in crate::wgpu::shaders::WORLD3D_PAINTED_SHADER_EDITS {
+        assert_eq!(crate::wgpu::shaders::WORLD3D_SHADER.matches(anchor).count(), 1, "painted shader anchor: {anchor}");
+    }
+    let painted = crate::wgpu::shaders::world3d_painted_shader();
+    assert!(painted.contains("let lit_color = in.color.rgb * paint_color;") && painted.contains("out.uv = vertex.uv;"), "every painted lane is applied");
+}
+/// 🧊️ LAW (ticket 26/09/23 session 14d, WG11): a native `GpuContext` creates every render pipeline without a validation error.
+/// `world3d_shadow_pipeline` once declared its own copy of the instance layout without `@location(10)` of the `InstanceInput` its
+/// `vs_shadow` reads, and wgpu's default error handler panicked inside every native `GpuContext::from_device` (both GPU icon export
+/// laws, every native renderer boot). A machine with no adapter at all is the only accepted absence.
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn a_native_gpu_context_creates_every_pipeline_without_a_validation_error() {
+    match semio_framework_async::block_on(crate::wgpu::gpu::GpuContext::headless(1, 1)) {
+        Ok(_) => {}
+        Err(error) => assert!(error.starts_with("offscreen adapter:"), "a native GPU context refused past adapter selection: {error}"),
+    }
 }

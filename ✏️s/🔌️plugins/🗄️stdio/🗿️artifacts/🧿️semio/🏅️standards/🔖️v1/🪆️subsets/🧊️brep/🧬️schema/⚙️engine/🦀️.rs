@@ -516,6 +516,40 @@ fn evec(p: Pnt3) -> EVec3 {
 fn vec3(v: EVec3) -> NativeVec3 {
     NativeVec3::new(v[0], v[1], v[2])
 }
+/// 🧭️ Refuses a non-finite point or vector argument of an affine transform, by its name.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn require_finite_vector(label: &str, value: EVec3) -> Result<(), BrepError> {
+    if value.iter().all(|component| component.is_finite()) {
+        return Ok(());
+    }
+    Err(BrepError::InvalidInput(format!("{label} must be finite, got {value:?}")))
+}
+/// 🧭️ Refuses a direction argument that has no direction (zero or non-finite length) instead of substituting one.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn require_direction(label: &str, value: EVec3) -> Result<(), BrepError> {
+    require_finite_vector(label, value)?;
+    if vec3(value).normalized().is_some() {
+        return Ok(());
+    }
+    Err(BrepError::InvalidInput(format!("{label} must be a non-zero direction, got {value:?}")))
+}
+/// 🧭️ Refuses a non-finite scalar argument of an affine transform, by its name.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn require_finite_scalar(label: &str, value: f64) -> Result<(), BrepError> {
+    if value.is_finite() {
+        return Ok(());
+    }
+    Err(BrepError::InvalidInput(format!("{label} must be finite, got {value}")))
+}
+/// 🧭️ Refuses a uniform scale factor that collapses the shape (zero) or is not a number.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn require_scale_factor(label: &str, value: f64) -> Result<(), BrepError> {
+    require_finite_scalar(label, value)?;
+    if value != 0.0 {
+        return Ok(());
+    }
+    Err(BrepError::InvalidInput(format!("{label} must be non-zero, got {value}")))
+}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn map_err(e: &KernelError) -> BrepError {
     BrepError::Operation(e.to_string())
@@ -1110,6 +1144,7 @@ impl Brep {
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn translate_sync(&mut self, shape: &GeometryHandle, offset: EVec3) -> Result<GeometryHandle, BrepError> {
+        require_finite_vector("translate offset", offset)?;
         self.transform_shape_sync(shape, &Affine3::translation(vec3(offset)))
     }
     /// 🔁 Rotates about the WORLD origin, not `shape`'s bounding-box center — the trait's `rotate`
@@ -1117,14 +1152,21 @@ impl Brep {
     /// point.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn rotate_sync(&mut self, shape: &GeometryHandle, axis: EVec3, angle: f64) -> Result<GeometryHandle, BrepError> {
+        require_direction("rotate axis", axis)?;
+        require_finite_scalar("rotate angle", angle)?;
         self.transform_shape_sync(shape, &Affine3::rotation_axis_angle(vec3(axis), angle))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn rotate_about_sync(&mut self, shape: &GeometryHandle, origin: EVec3, axis: EVec3, angle: f64) -> Result<GeometryHandle, BrepError> {
+        require_finite_vector("rotate origin", origin)?;
+        require_direction("rotate axis", axis)?;
+        require_finite_scalar("rotate angle", angle)?;
         self.transform_shape_sync(shape, &Affine3::rotation_about(pnt(origin), vec3(axis), angle))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn scale_sync(&mut self, shape: &GeometryHandle, factor: f64, center: EVec3) -> Result<GeometryHandle, BrepError> {
+        require_scale_factor("scale factor", factor)?;
+        require_finite_vector("scale center", center)?;
         self.transform_shape_sync(shape, &Affine3::scaling(pnt(center), NativeVec3::new(factor, factor, factor)))
     }
     /// 📐️ Applies a finite, invertible axis scale through the kernel affine dispatcher.
@@ -1134,6 +1176,8 @@ impl Brep {
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn mirror_sync(&mut self, shape: &GeometryHandle, origin: EVec3, normal: EVec3) -> Result<GeometryHandle, BrepError> {
+        require_finite_vector("mirror origin", origin)?;
+        require_direction("mirror normal", normal)?;
         self.transform_shape_sync(shape, &Affine3::mirror(pnt(origin), vec3(normal)))
     }
 

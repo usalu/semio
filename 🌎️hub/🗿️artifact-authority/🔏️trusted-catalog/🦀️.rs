@@ -1038,10 +1038,11 @@ impl Drop for GuestCallRelease {
     }
 }
 
-/// 🧪️ One immutable authority identity bound to its executable. `codec` is `Some` only for a package
+/// 🧪️ One immutable authority identity bound to its executable. `codec` is `Some` only for a kind
 /// this binary links a Rust codec for (stdio import/export and GIS inference still run natively, TC2
-/// §9); every other package validates and applies through its own component. `guest` is never
-/// optional: it is the only creation authority there is.
+/// §9) — its owner's, or a host's for a kind it hosts from that owner ([`hosted_codec_targets`]);
+/// every other identity validates and applies through its package's own component. `guest` is never
+/// optional: it is the only creation authority there is, always the identity's own package.
 pub struct VerifiedNativeArtifactCodec {
     identity: TrustedArtifactIdentity,
     codec: Option<ArtifactCodec>,
@@ -1238,26 +1239,43 @@ impl VerifiedTrustedCatalog {
         (self.open_targets.len() == 1).then(|| &self.open_targets[0])
     }
 
-    /// 🌱️ Creation resolves one unambiguous writable target in this exact admitted generation.
+    /// 🌱️ Creation resolves one writable target in this exact admitted generation, OWNER-PREFERRED ([`owner_preferred_creation`]):
+    /// the editors of packages that declare the kind decide; only a kind no owner's editor creates falls to the editors of packages
+    /// that HOST it (`PluginManifest::hosted_artifact_kinds`). Hosting opens documents, it never re-owns their creation
+    /// (demonstrator's embedded cad/gis/procedural/process editors made every creation of those kinds ambiguous, hub 7800 p34,
+    /// 2026-09-29). Within the deciding tier the most general dialect creates ([`most_general_dialect`]): a kind whose subset
+    /// editors share it with their whole-standard editor (stdio json, xml; the families' jpg, svg, tiff, step, docx, zip, ifc)
+    /// is created by the whole-standard editor — the same app the guest answers `codec.genesis` with.
     pub(crate) fn artifact_creation_selection(&self, kind_id: &str) -> Option<&VerifiedDocumentOpenSelectionV1> {
-        let mut matches = self.open_targets.iter().filter(|selection| {
-            selection.artifact.kind == kind_id
-                && selection.surface.role == DocumentOpenSurfaceRoleV1::Editor
-                && self.codecs.iter().any(|codec| {
-                    codec.identity.plugin_id == selection.package.plugin_id
-                        && codec.identity.package_id == selection.package.package_id
-                        && codec.identity.version == selection.package.version
-                        && codec.identity.package_hash == selection.package.component_sha256
-                        && codec.identity.artifact_kind == selection.artifact.kind
-                        && codec.identity.artifact_schema == selection.artifact.schema
-                        && codec.identity.pack_schema_hash == selection.artifact.pack_schema_hash
-                })
-        });
-        let selected = matches.next()?;
-        matches.next().is_none().then_some(selected)
+        let (hosted, owned): (Vec<_>, Vec<_>) = self.open_targets.iter().filter(|selection| selection.artifact.kind == kind_id && selection.surface.role == DocumentOpenSurfaceRoleV1::Editor).partition(|selection| self.hosted_row(selection).is_some());
+        owner_preferred_creation(owned, hosted, |selection| &selection.parent_dialect).one()
     }
 
-    /// 🗣️ Projects only unambiguous factory-backed choices from retained compiled descriptors.
+    /// 📦️ The verified package `selection` opens its documents in.
+    fn selection_package(&self, selection: &VerifiedDocumentOpenSelectionV1) -> Option<&VerifiedTrustedPackage> {
+        self.packages.iter().find(|package| {
+            package.plugin_id == selection.package.plugin_id
+                && package.package.package.0 == selection.package.package_id
+                && package.version == selection.package.version
+                && hex_lower(&package.component_sha256) == selection.package.component_sha256
+        })
+    }
+
+    /// 🏠️ The row by which `selection`'s own package HOSTS its kind (`PluginManifest::hosted_artifact_kinds`); `None` for a
+    /// kind the package declares itself.
+    fn hosted_row(&self, selection: &VerifiedDocumentOpenSelectionV1) -> Option<&semio_framework::HostedArtifactKind> {
+        self.selection_package(selection)?.descriptor.manifest.hosted_artifact_kinds.iter().find(|kind| kind.id == selection.artifact.kind && kind.schema == selection.artifact.schema)
+    }
+
+    /// 🏠️ The package that OWNS `selection`'s hosted kind: the hosted row's explicit `owner`, a declared dependency the load
+    /// verified before its host.
+    fn hosted_kind_owner(&self, selection: &VerifiedDocumentOpenSelectionV1) -> Option<&VerifiedTrustedPackage> {
+        let hosted = self.hosted_row(selection)?;
+        self.packages.iter().find(|package| package.plugin_id == hosted.owner)
+    }
+
+    /// 🗣️ Projects only unambiguous factory-backed choices from retained compiled descriptors. A hosted kind is labelled by its
+    /// owner's declaration (a host carries only `{ id, schema, owner }`); a kind no declaration labels is not offered.
     pub(crate) fn artifact_creation_catalog(&self, space_id: &str) -> Option<directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationCatalogV1> {
         use directory::os_directory::schema::space_artifact_creation::{
             SpaceArtifactCreationCatalogV1, SpaceArtifactCreationDialectV1, SpaceArtifactCreationKindV1, SpaceArtifactCreationLabelV1,
@@ -1266,14 +1284,10 @@ impl VerifiedTrustedCatalog {
         let mut kinds = Vec::new();
         for kind_id in kind_ids {
             let Some(selection) = self.artifact_creation_selection(kind_id) else { continue };
-            let retained = self.packages.iter().find(|package| {
-                package.plugin_id == selection.package.plugin_id
-                    && package.package.package.0 == selection.package.package_id
-                    && package.version == selection.package.version
-                    && hex_lower(&package.component_sha256) == selection.package.component_sha256
-            })?;
+            let retained = self.selection_package(selection)?;
             let app = retained.descriptor.manifest.apps.iter().find(|app| app.id == selection.surface.app_id && app.dialect == selection.parent_dialect)?;
-            let kind = app.artifact_kinds.iter().chain(retained.descriptor.manifest.artifact_kinds.iter()).find(|kind| kind.id == selection.artifact.kind && kind.schema == selection.artifact.schema)?;
+            let owner = || self.hosted_kind_owner(selection).and_then(|owner| declared_kind(owner.descriptor.manifest.artifact_kinds.iter().chain(owner.descriptor.manifest.apps.iter().flat_map(|app| app.artifact_kinds.iter())), selection));
+            let Some(kind) = declared_kind(app.artifact_kinds.iter().chain(retained.descriptor.manifest.artifact_kinds.iter()), selection).or_else(owner) else { continue };
             kinds.push(SpaceArtifactCreationKindV1 {
                 kind_id: selection.artifact.kind.clone(),
                 schema: selection.artifact.schema.clone(),
@@ -1323,10 +1337,12 @@ impl VerifiedTrustedCatalog {
         Some(VerifiedExecutionTargetAssets { selection, component: package.component.clone(), descriptor: Arc::clone(&package.descriptor_bytes), browser_actor })
     }
 
-    /// 🎯 Resolves one exact descriptor, subject role, and optional surface preference without fallback.
+    /// 🎯 Resolves one exact descriptor, subject role, and optional surface preference without fallback. Without a preference
+    /// the role's most general surface opens the document ([`most_general_dialect`]): a json document opens in the
+    /// `rfc8259/*` editor, never refused because an `i-json` editor opens it too (the semio MCP workspace names no surface).
     pub fn resolve_document_open(&self, descriptor: &DocumentDescriptor, requested_surface_id: Option<&str>, writable: bool) -> Option<VerifiedDocumentOpenSelectionV1> {
         let role = if writable { DocumentOpenSurfaceRoleV1::Editor } else { DocumentOpenSurfaceRoleV1::Viewer };
-        let mut matches = self.open_targets.iter().filter(|selection| {
+        let matches = self.open_targets.iter().filter(|selection| {
             selection.package.plugin_id == descriptor.owner.plugin_id
                 && selection.package.package_id == descriptor.owner.package_id
                 && selection.package.version == descriptor.owner.version
@@ -1337,8 +1353,7 @@ impl VerifiedTrustedCatalog {
                 && selection.surface.role == role
                 && requested_surface_id.is_none_or(|requested| selection.surface.surface_id == requested)
         });
-        let selected = matches.next()?.clone();
-        matches.next().is_none().then_some(selected)
+        most_general_dialect(matches.collect(), |selection| &selection.parent_dialect).one().cloned()
     }
 }
 
@@ -1619,29 +1634,36 @@ impl TrustedCatalogLoader {
             staged.push(StagedTrustedPackage { position, record, component, component_sha256, component_blake3, descriptor_bytes, descriptor_sha256, descriptor, browser_actor, browser_actor_asset, plugin_module });
         }
 
+        let selected = |record: &TrustedBundlePackageV1, target: &TrustedBundleOpenTargetV1| {
+            profile.open_targets.iter().any(|selected| selected.package.plugin_id == record.plugin_id && selected.package.package_id == record.package_id && selected.package.version == record.version && selected.target == *target)
+        };
         let mut previews = Vec::with_capacity(staged.len());
         let mut pending_rows = BTreeMap::new();
+        let mut natively_bound = BTreeSet::new();
         for stage in &staged {
             context.checkpoint()?;
             let native_bindings = providers.preview(NativeCodecProviderPackageV1 { plugin_id: &stage.record.plugin_id, package_id: &stage.record.package_id, version: &stage.record.version }, &stage.descriptor, context)?;
             context.checkpoint()?;
             let bound = validate_native_bindings(&native_bindings)?.into_keys().collect::<BTreeSet<_>>();
-            let mut rows = Vec::new();
-            for expected in &stage.record.native_codecs {
-                if bound.contains(&CodecKey::from_parts(&stage.record.plugin_id, &stage.record.package_id, &expected.artifact_kind, &expected.artifact_schema)) {
-                    continue;
-                }
-                let expected_hash = decode_digest(&expected.pack_schema_hash, "pack schema hash")?;
+            let hosted = hosted_codec_targets(&bundle.packages, stage.record, |target| selected(stage.record, target))?;
+            let own_rows = stage.record.native_codecs.iter().filter(|expected| !bound.contains(&CodecKey::from_parts(&stage.record.plugin_id, &stage.record.package_id, &expected.artifact_kind, &expected.artifact_schema))).map(|expected| (&expected.artifact_schema, &expected.pack_schema_hash));
+            let hosted_rows = hosted.iter().filter(|(owner, target)| !natively_bound.contains(&CodecKey::from_parts(&owner.plugin_id, &owner.package_id, &target.artifact_kind, &target.artifact_schema))).map(|(_, target)| (&target.artifact_schema, &target.pack_schema_hash));
+            let mut rows: Vec<(String, [u8; 32])> = Vec::new();
+            for (schema, hash) in own_rows.chain(hosted_rows) {
+                let expected_hash = decode_digest(hash, "pack schema hash")?;
                 if expected_hash == [0; 32] {
                     return Err(catalog("artifact codec schema hash is zero"));
                 }
-                if verifications.recall(&stage.component_sha256, &expected.artifact_schema).await == Some(expected_hash) {
+                if rows.iter().any(|(row, row_hash)| row == schema && *row_hash == expected_hash) || verifications.recall(&stage.component_sha256, schema).await == Some(expected_hash) {
                     continue;
                 }
-                rows.push((expected.artifact_schema.clone(), expected_hash));
+                rows.push((schema.clone(), expected_hash));
             }
-            let pinned = u64::try_from(stage.record.native_codecs.len() - rows.len()).unwrap_or(u64::MAX);
+            let total = stage.record.native_codecs.len() + hosted.len();
+            let (total, pinned) = (u64::try_from(total).unwrap_or(u64::MAX), u64::try_from(total - rows.len()).unwrap_or(u64::MAX));
+            natively_bound.extend(bound);
             progress.package(stage.position, |package| {
+                package.rows = total;
                 package.rows_pinned = pinned;
                 if rows.is_empty() {
                     package.phase = TrustedCatalogPackagePhaseV1::Ready;
@@ -1718,14 +1740,12 @@ impl TrustedCatalogLoader {
                     return Err(AuthorityError::ResourceLimit("trusted document-open target count"));
                 }
                 let parent_dialect = validate_descriptor_open_target(&descriptor, target)?;
-                if !profile.open_targets.iter().any(|selected| {
-                    selected.package.plugin_id == record.plugin_id && selected.package.package_id == record.package_id && selected.package.version == record.version && selected.target == *target
-                }) {
+                if !selected(record, target) {
                     continue;
                 }
-                let declared = record.native_codecs.iter().any(|codec| codec.artifact_kind == target.artifact_kind && codec.artifact_schema == target.artifact_schema && codec.pack_schema_hash == target.pack_schema_hash);
-                if !declared {
-                    return Err(catalog("document-open target has no exact verified native codec"));
+                let bound = open_target_codec_package(&bundle.packages, record, target)?;
+                if bound.plugin_id != record.plugin_id && !descriptor.manifest.hosted_artifact_kinds.iter().any(|kind| kind.id == target.artifact_kind && kind.schema == target.artifact_schema && kind.owner == bound.plugin_id) {
+                    return Err(catalog("document-open target binds a dependency's codec its descriptor does not host from that owner"));
                 }
                 let role = match target.role {
                     TrustedBundleOpenRole::Viewer => DocumentOpenSurfaceRoleV1::Viewer,
@@ -1756,6 +1776,29 @@ impl TrustedCatalogLoader {
                     return Err(catalog("document-open target identity is duplicated"));
                 }
                 open_targets.push(selection);
+            }
+            for (owner, target) in hosted_codec_targets(&bundle.packages, record, |target| selected(record, target))? {
+                if codecs.len() >= TRUSTED_CATALOG_MAX_CODECS {
+                    return Err(AuthorityError::ResourceLimit("trusted codec count"));
+                }
+                let identity = TrustedArtifactIdentity {
+                    plugin_id: record.plugin_id.clone(),
+                    package_id: record.package_id.clone(),
+                    version: record.version.clone(),
+                    package_hash: hex_lower(&component_sha256),
+                    artifact_kind: target.artifact_kind.clone(),
+                    artifact_schema: target.artifact_schema.clone(),
+                    pack_schema_hash: target.pack_schema_hash.clone(),
+                };
+                let owned = codecs
+                    .iter()
+                    .find(|entry| entry.identity.plugin_id == owner.plugin_id && entry.identity.package_id == owner.package_id && entry.identity.version == owner.version && entry.identity.artifact_kind == identity.artifact_kind && entry.identity.artifact_schema == identity.artifact_schema && entry.identity.pack_schema_hash == identity.pack_schema_hash)
+                    .ok_or_else(|| catalog("hosted document-open target's owner codec is not verified before its host"))?;
+                let codec = owned.codec.clone();
+                if codecs.iter().any(|entry| entry.identity == identity) {
+                    return Err(catalog("duplicate exact trusted artifact identity"));
+                }
+                codecs.push(VerifiedNativeArtifactCodec { identity, codec, guest: GuestArtifactCodecBinding { component: Arc::clone(&guest), artifact_schema: target.artifact_schema.clone() } });
             }
             report_package_progress(context, position, 4, total_units)?;
             packages.push(VerifiedTrustedPackage {
@@ -1877,11 +1920,20 @@ fn valid_open_identity(value: &str) -> bool {
 /// surfaces whose own dialect names it, even when a sibling app lists it as an input (GIS's terrain editor
 /// lists the map). Any other kind is opened by the editor that declares it itself (where a plugin migrated
 /// onto the declaration tree, ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, stitches its spec)
-/// and by the viewers of that editor's dialect, the read-only surface of the same documents.
+/// and by the viewers of that editor's dialect, the read-only surface of the same documents. A HOSTED kind
+/// (`PluginManifest::hosted_artifact_kinds`) opens in the host surfaces whose dialect names it (a family hosting its owner's
+/// kind, `PluginBuilder::host_artifact`) or whose io presents it — an embedded editor of another plugin's artifact
+/// (demonstrator's cad editor presents `3d.cad`) — and in the viewers of a presenting editor's dialect.
 fn app_opens_kind(descriptor: &PackageDescriptor, app: &semio_framework::AppDefinition, artifact_kind: &str, artifact_schema: &str) -> bool {
     let declares = |kinds: &[semio_framework::ArtifactKindSpec]| kinds.iter().any(|kind| kind.id == artifact_kind && kind.schema == artifact_schema);
     if declares(&descriptor.manifest.artifact_kinds) {
         return app.dialect.artifact_kind == artifact_kind;
+    }
+    if descriptor.manifest.hosted_artifact_kinds.iter().any(|kind| kind.id == artifact_kind && kind.schema == artifact_schema) {
+        let presents = |candidate: &semio_framework::AppDefinition| candidate.io.artifact.id == artifact_kind && candidate.io.artifact_schema == artifact_schema;
+        return app.dialect.artifact_kind == artifact_kind
+            || presents(app)
+            || (app.role == semio_framework::AppRole::Viewer && descriptor.manifest.apps.iter().any(|editor| editor.role == semio_framework::AppRole::Editor && editor.dialect == app.dialect && presents(editor)));
     }
     match app.role {
         semio_framework::AppRole::Editor => declares(&app.artifact_kinds),
@@ -1909,13 +1961,15 @@ pub fn descriptor_open_targets(descriptor: &PackageDescriptor) -> Vec<schema::Tr
         };
         let mut seen = BTreeSet::new();
         let editors = descriptor.manifest.apps.iter().filter(|editor| app.role == semio_framework::AppRole::Viewer && editor.role == semio_framework::AppRole::Editor && editor.dialect == app.dialect);
-        for kind in descriptor.manifest.artifact_kinds.iter().chain(app.artifact_kinds.iter()).chain(editors.flat_map(|editor| editor.artifact_kinds.iter())) {
-            if !seen.insert((kind.id.as_str(), kind.schema.as_str())) || !app_opens_kind(descriptor, app, &kind.id, &kind.schema) {
+        let owned = descriptor.manifest.artifact_kinds.iter().chain(app.artifact_kinds.iter()).chain(editors.flat_map(|editor| editor.artifact_kinds.iter())).map(|kind| (kind.id.as_str(), kind.schema.as_str()));
+        let hosted = descriptor.manifest.hosted_artifact_kinds.iter().map(|kind| (kind.id.as_str(), kind.schema.as_str()));
+        for (kind_id, kind_schema) in owned.chain(hosted) {
+            if !seen.insert((kind_id, kind_schema)) || !app_opens_kind(descriptor, app, kind_id, kind_schema) {
                 continue;
             }
             targets.push(schema::TrustedDescriptorOpenTargetV1 {
-                artifact_kind: kind.id.clone(),
-                artifact_schema: kind.schema.clone(),
+                artifact_kind: kind_id.to_string(),
+                artifact_schema: kind_schema.to_string(),
                 surface_id: app.id.clone(),
                 app_id: app.id.clone(),
                 window_kind_id: app.window_kinds.first().id.clone(),
@@ -1927,6 +1981,89 @@ pub fn descriptor_open_targets(descriptor: &PackageDescriptor) -> Vec<schema::Tr
         }
     }
     targets
+}
+
+/// 🏠️ The package whose native codec one document-open target of `host` binds: `host` itself when it declares that exact
+/// codec, else — for a kind `host` hosts — the ONE declared dependency of `host` in this catalog that declares the exact
+/// codec (the load then holds it to the hosted row's explicit owner). Codec rows never move: a host carries none for the
+/// kinds it hosts, and no owner is ever read off a kind id.
+fn open_target_codec_package<'a>(packages: &'a [TrustedBundlePackageV1], host: &'a TrustedBundlePackageV1, target: &TrustedBundleOpenTargetV1) -> Result<&'a TrustedBundlePackageV1, AuthorityError> {
+    let binds = |package: &TrustedBundlePackageV1| package.native_codecs.iter().any(|codec| codec.artifact_kind == target.artifact_kind && codec.artifact_schema == target.artifact_schema && codec.pack_schema_hash == target.pack_schema_hash);
+    if binds(host) {
+        return Ok(host);
+    }
+    let mut owners = packages.iter().filter(|package| package.plugin_id != host.plugin_id && host.dependencies.iter().any(|dependency| dependency.plugin_id == package.plugin_id) && binds(package));
+    let owner = owners.next().ok_or_else(|| catalog("trusted document-open target binds no exact native codec of its own package or of a declared dependency in the catalog"))?;
+    if owners.next().is_some() {
+        return Err(catalog("trusted document-open target binds an exact native codec more than one declared dependency declares"));
+    }
+    Ok(owner)
+}
+
+/// 🏠️ The distinct HOSTED codec identities of `host`'s `selected` open targets, each with the declared dependency that owns
+/// it ([`open_target_codec_package`]). A document a host creates or opens names the host as its descriptor owner (the host's
+/// component ships the surface), so the catalog executes it under the host's own identity: the owner's native codec when the
+/// hub links one, and the host's component for genesis and every guest codec call — never the owner's component, which need
+/// not ship the surface (the `stdio` component ships none of its families' apps).
+fn hosted_codec_targets<'a>(packages: &'a [TrustedBundlePackageV1], host: &'a TrustedBundlePackageV1, selected: impl Fn(&TrustedBundleOpenTargetV1) -> bool) -> Result<Vec<(&'a TrustedBundlePackageV1, &'a TrustedBundleOpenTargetV1)>, AuthorityError> {
+    let mut hosted: Vec<(&TrustedBundlePackageV1, &TrustedBundleOpenTargetV1)> = Vec::new();
+    for target in host.open_targets.iter().filter(|target| selected(target)) {
+        let owner = open_target_codec_package(packages, host, target)?;
+        if owner.plugin_id != host.plugin_id && !hosted.iter().any(|(_, known)| known.artifact_kind == target.artifact_kind && known.artifact_schema == target.artifact_schema && known.pack_schema_hash == target.pack_schema_hash) {
+            hosted.push((owner, target));
+        }
+    }
+    Ok(hosted)
+}
+
+/// 🌱️ The owner-preferred creation rule over two candidate tiers — the owners' editors, then the hosts' editors: the first
+/// non-empty tier decides by [`most_general_dialect`], so a host never makes an owner's kind ambiguous, a whole-standard
+/// editor creates for its subset editors, and two most general editors (two owners, two standards) never pick one.
+fn owner_preferred_creation<T>(owned: Vec<T>, hosted: Vec<T>, dialect: impl Fn(&T) -> &semio_framework::ArtifactDialect) -> MostGeneralDialect<T> {
+    most_general_dialect(if owned.is_empty() { hosted } else { owned }, dialect)
+}
+
+/// 🌳️ What [`most_general_dialect`] answers over the surfaces of one role that share a document.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum MostGeneralDialect<T> {
+    One(T),
+    Ambiguous,
+    Empty,
+}
+
+impl<T> MostGeneralDialect<T> {
+    /// 🎯️ The one answer, when there is one.
+    fn one(self) -> Option<T> {
+        match self {
+            Self::One(candidate) => Some(candidate),
+            Self::Ambiguous | Self::Empty => None,
+        }
+    }
+}
+
+/// 🌳️ The ONE most-general-dialect rule ([fixture](../../../🧰️framework/🔨️modules/🚪️io/🧫️fixtures/🌳️most-general-dialect/🔣️.json),
+/// read by the guest's `artifact_codec_owner` too): the candidate no other candidate covers ([`dialect_covers`]); several
+/// uncovered candidates are ambiguous and refused rather than resolved by order.
+fn most_general_dialect<T>(candidates: Vec<T>, dialect: impl Fn(&T) -> &semio_framework::ArtifactDialect) -> MostGeneralDialect<T> {
+    let covered = candidates.iter().map(|candidate| candidates.iter().any(|other| dialect_covers(dialect(other), dialect(candidate)))).collect::<Vec<_>>();
+    let mut uncovered = candidates.into_iter().zip(covered).filter_map(|(candidate, covered)| (!covered).then_some(candidate));
+    match (uncovered.next(), uncovered.next()) {
+        (Some(one), None) => MostGeneralDialect::One(one),
+        (Some(_), Some(_)) => MostGeneralDialect::Ambiguous,
+        (None, _) => MostGeneralDialect::Empty,
+    }
+}
+
+/// 🌳️ Whether `general` is the whole-standard dialect (`<kind>@<standard>/*`) of `subset`'s own kind and standard: every
+/// document of a subset of a standard is a document of the whole standard, so the whole-standard surface covers it.
+fn dialect_covers(general: &semio_framework::ArtifactDialect, subset: &semio_framework::ArtifactDialect) -> bool {
+    let any = semio_framework::SubsetId::ANY.0;
+    general.subset == any && subset.subset != any && general.artifact_kind == subset.artifact_kind && general.standard == subset.standard
+}
+
+/// 🏷️ The declaration of `selection`'s exact kind among `kinds`.
+fn declared_kind<'a>(mut kinds: impl Iterator<Item = &'a semio_framework::ArtifactKindSpec>, selection: &VerifiedDocumentOpenSelectionV1) -> Option<&'a semio_framework::ArtifactKindSpec> {
+    kinds.find(|kind| kind.id == selection.artifact.kind && kind.schema == selection.artifact.schema)
 }
 
 /// 📤️ Answers `os-hub trusted-catalog open-targets`: decodes one bounded descriptor exactly as the loader
@@ -2252,9 +2389,7 @@ fn validate_bundle(bundle: &TrustedBundleV1, profile_id: &str) -> Result<Selecte
             if decode_digest(&target.pack_schema_hash, "open target pack schema hash")? == [0; 32] {
                 return Err(catalog("trusted document-open target pack schema hash is zero"));
             }
-            if !package.native_codecs.iter().any(|codec| codec.artifact_kind == target.artifact_kind && codec.artifact_schema == target.artifact_schema && codec.pack_schema_hash == target.pack_schema_hash) {
-                return Err(catalog("trusted document-open target is bound to no native codec of its own package"));
-            }
+            open_target_codec_package(&bundle.packages, package, target)?;
             if !open_target_keys.insert((target.artifact_kind.as_str(), target.artifact_schema.as_str(), target.surface_id.as_str(), target.role as u8)) {
                 return Err(catalog("trusted document-open target key is duplicated within one package"));
             }
@@ -2443,6 +2578,18 @@ fn validate_descriptor(record: &TrustedBundlePackageV1, descriptor: &PackageDesc
         }
         if !record.native_codecs.iter().any(|codec| codec.artifact_kind == kind.id && codec.artifact_schema == kind.schema) {
             return Err(catalog("decoded manifest artifact kind is absent from the trust record"));
+        }
+    }
+    let mut hosted_kinds = BTreeSet::new();
+    for kind in &descriptor.manifest.hosted_artifact_kinds {
+        if !hosted_kinds.insert((kind.id.as_str(), kind.schema.as_str())) || manifest_kinds.contains(kind.id.as_str()) {
+            return Err(catalog("decoded manifest hosted kind is duplicated or also owned"));
+        }
+        if kind.owner.is_empty() || kind.owner == record.plugin_id {
+            return Err(catalog("decoded manifest hosted kind names no other owner package"));
+        }
+        if !manifest_dependencies.contains(kind.owner.as_str()) || !records.contains_key(kind.owner.as_str()) {
+            return Err(catalog("decoded manifest hosted kind's owner is not a declared dependency present in the catalog"));
         }
     }
     Ok(())

@@ -1,0 +1,22 @@
+{
+ "plugin": "architect",
+ "dir": "🏛️architect",
+ "apps": [
+  {
+   "app": "s.architect.program@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "crate::editor::architect::ArchitectPlayApp",
+   "create": "crate::editor::architect::create_architect_app",
+   "app": "s.architect.program@1/*#editor"
+  }
+ ]
+}

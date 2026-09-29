@@ -5,20 +5,18 @@
     {
       "id": "exhausted-byte-budget",
       "fault": {
-        "kind": "transport",
-        "io": "package \"semio-framework-os-mcp\" exhausted its network_bytes_per_min budget"
+        "kind": "budget"
       },
       "expected": {
         "code": "PLUGIN_UNAVAILABLE",
-        "message": "hub directory is temporarily unavailable (transport: package \"semio-framework-os-mcp\" exhausted its network_bytes_per_min budget)",
+        "message": "hub directory is temporarily unavailable (network byte budget exhausted until its next refill)",
         "details": {
           "cause": {
-            "kind": "transport",
-            "detail": "package \"semio-framework-os-mcp\" exhausted its network_bytes_per_min budget"
+            "kind": "network-budget"
           },
           "summary": {
-            "en": "The hub could not be reached (package \"semio-framework-os-mcp\" exhausted its network_bytes_per_min budget); the request is retried once the connection recovers.",
-            "de": "Der Hub war nicht erreichbar (package \"semio-framework-os-mcp\" exhausted its network_bytes_per_min budget); die Anfrage wird wiederholt, sobald die Verbindung wieder steht."
+            "en": "This gateway's network allowance for this minute is used up; the request continues once it refills.",
+            "de": "Das Netzwerkkontingent dieses Gateways für diese Minute ist aufgebraucht; die Anfrage läuft weiter, sobald es aufgefüllt ist."
           }
         },
         "retryable": true

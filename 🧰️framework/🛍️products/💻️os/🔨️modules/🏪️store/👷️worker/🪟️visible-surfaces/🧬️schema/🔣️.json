@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/store/worker/browser-actor-visible-surfaces.json",
+  "$ref": "#/definitions/BrowserActorVisibleSurfacesV1",
+  "definitions": {
+    "BrowserActorVisibleSurfacesV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "description", "sections", "turns", "cases"],
+      "properties": {
+        "schema": { "const": "semio.os.browser-actor-visible-surfaces/v1" },
+        "description": { "type": "string", "minLength": 1 },
+        "sections": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/section" } },
+        "turns": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mount", "repaint", "refresh"],
+          "properties": { "mount": { "$ref": "#/definitions/turn" }, "repaint": { "$ref": "#/definitions/turn" }, "refresh": { "$ref": "#/definitions/turn" } }
+        },
+        "cases": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/case" } }
+      }
+    },
+    "key": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[^\\u0000-\\u001f\\u007f]+$" },
+    "section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "bodyKey", "static"],
+      "properties": { "key": { "enum": ["engagements", "measures", "tools", "catalogue"] }, "bodyKey": { "type": "string", "pattern": "^framework\\.section\\.[a-z]+$" }, "static": { "type": "boolean" } }
+    },
+    "turn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["windows", "staticSections"],
+      "properties": { "windows": { "type": "boolean" }, "staticSections": { "type": "boolean" } }
+    },
+    "surface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "bodyKey"],
+      "properties": { "key": { "$ref": "#/definitions/key" }, "bodyKey": { "$ref": "#/definitions/key" } }
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "surfaces", "turn", "visible"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "surfaces": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["windows", "panels"],
+          "properties": { "windows": { "type": "array", "items": { "$ref": "#/definitions/surface" } }, "panels": { "type": "array", "items": { "$ref": "#/definitions/surface" } } }
+        },
+        "turn": { "enum": ["mount", "repaint", "refresh"] },
+        "visible": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["surface", "bodyKey", "context"],
+            "properties": { "surface": { "$ref": "#/definitions/key" }, "bodyKey": { "$ref": "#/definitions/key" }, "context": { "enum": ["window", "panel", "section"] } }
+          }
+        }
+      }
+    }
+  }
+}

@@ -665,6 +665,14 @@ fn the_reserved_media_transport_projects_only_truthful_localized_host_status() {
         assert_eq!(slot.body_key, extension_id, "the reserved address remains the stable slot identity");
         assert_eq!(slot.host_status.as_deref(), vector["expectedHostStatus"].as_str(), "{}", vector["name"]);
         assert_eq!(slot.params_json, serde_json::to_string(&vector["props"]).expect("fixture props serialize"), "hostContentHeight and future decoder inputs survive untouched");
+        assert_eq!(crate::wgpu::reconcile::media_transport_contract_valid(&vector["props"]), vector.get("contractValid").unwrap_or(&vector["schemaValid"]).as_bool().unwrap(), "{}", vector["name"]);
+        let projection = crate::wgpu::accessibility::accessibility_projection(&tree);
+        let projected = projection.iter().find(|node| node.key == "media-slot").expect("media accessibility node");
+        if extension_id == crate::wgpu::reconcile::MEDIA_TRANSPORT_EXTENSION_ID {
+            assert_eq!(projected.role, "status");
+            assert_eq!(projected.label.as_deref(), vector["expectedHostStatus"].as_str());
+            assert!(!projected.focusable && !projected.tabbable && !projected.actionable && !projected.editable);
+        }
         retire(tree);
     }
 }

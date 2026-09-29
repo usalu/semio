@@ -89,5 +89,8 @@
       "hidden": false
     }
   ],
-  "actionIds": []
+  "actionIds": [
+    "cad-play.deleteItem@1",
+    "cad-play.rowMenu@1"
+  ]
 }

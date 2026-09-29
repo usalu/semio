@@ -557,14 +557,6 @@ impl DockState {
         if drag.kind == DockDragKind::NewWindow && self.collect_window_ids().contains(&drag.window_id) {
             return false;
         }
-        let same_source = matches!(
-            zone,
-            DockDropZone::Tab { stack_path, .. } | DockDropZone::Split { stack_path, .. }
-                if *stack_path == drag.source_path && drag.kind == DockDragKind::Stack
-        );
-        if same_source {
-            return false;
-        }
         let (mut next, incoming) = match drag.kind {
             DockDragKind::Tab => {
                 if !self.collect_window_ids().iter().any(|id| *id == drag.window_id) {
@@ -2157,4 +2149,8 @@ mod app_mode_layout_tests;
 #[cfg(all(test, not(target_arch = "wasm32")))]
 #[path = "../../🧪️tests/🪟️window-template-drag/🦀️.rs"]
 mod window_template_drag_tests;
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../🧪️tests/🎯️stack-drop-destination/🦀️.rs"]
+mod stack_drop_destination_tests;
 //#endregion DockTests

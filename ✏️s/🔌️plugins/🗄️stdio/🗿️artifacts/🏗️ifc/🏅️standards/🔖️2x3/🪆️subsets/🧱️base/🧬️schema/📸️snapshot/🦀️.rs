@@ -1,12 +1,12 @@
 //! 📸️ Ifc2x3Snapshot — the `2x3` standard's OWN typed snapshot (buildingSMART Coordination
 //! View 2.0 era, IFC2X3 / ISO-PAS 16739:2005 schema, still ISO 10303-21 Part-21 syntax like
 //! `📐️step`/`4️⃣4`). Deliberately its own newtype (NOT a `pub use` of
-//! `step::engine::part21::Part21Document`, and not the same Rust type as `4`'s `IfcSnapshot`) —
+//! `semio_s_artifact_stdio_contract::part21::Part21Document`, and not the same Rust type as `4`'s `IfcSnapshot`) —
 //! W1's own recon (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION/STATUS.md`,
 //! "shared-type violation" entry) flags reusing a cross-artifact type's IDENTITY as the exact
 //! anti-pattern this repo bans ("copy-pasted shared types... die"). Reuse here is scoped to
 //! PARSING CODE ONLY: this struct wraps a `Part21Document` as an internal field and the codec
-//! below calls straight into `step::engine::part21::{parse_part21, write_part21}` — the tokenizer
+//! below calls straight into `semio_s_artifact_stdio_contract::part21::{parse_part21, write_part21}` — the tokenizer
 //! itself is genuinely shared (IFC2X3 is STEP Part-21 syntax + a different EXPRESS schema), but
 //! `Ifc2x3Snapshot` the TYPE is this standard's own.
 
@@ -15,7 +15,7 @@ use crate::standards::v2x3::subsets::base::schema::diff::{
     enc_part21_header, enc_part21_header_bin, enc_str, read_str_bin, write_str_bin,
 };
 use framework_schema::ArtifactSchema;
-use semio_s_artifact_stdio_step::engine::part21::Part21Document;
+use semio_s_artifact_stdio_contract::part21::Part21Document;
 
 //#region 🔖️Ids
 /// 🏷️ Document schema / DSL envelope id — distinct from `4`'s `"stdio.ifc"` so the two
@@ -59,7 +59,7 @@ pub struct Ifc2x3Snapshot {
     #[value(default)]
     pub document: Part21Document,
     #[state(artifact)]
-    #[value(default)]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub edm_preamble: Option<Ifc2x3EdmPreamble>,
 }
 

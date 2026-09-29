@@ -8,20 +8,21 @@ fn node_by_key<'a>(node: &'a BuiltNode, key: &str) -> Option<&'a BuiltNode> {
     node.children.iter().find_map(|child| node_by_key(child, key))
 }
 
-fn own_bindings(node: &BuiltNode) -> impl Iterator<Item = &ActionBinding> {
-    let row_actions = match &node.component {
-        Component::TableRow(props) => Some(props.row_actions.iter().map(|row_action| &row_action.action)),
-        _ => None,
+/// 🎬️ What `node` dispatches: its record bindings, and — for a table row — each row action's verb on the row's ONE target.
+fn own_bindings(node: &BuiltNode) -> Vec<ActionBinding> {
+    let row_verbs = match &node.component {
+        Component::TableRow(props) => props.target.as_ref().map_or_else(Vec::new, |target| props.row_actions.iter().map(|row_action| target.binding(&row_action.verb).expect("credited row binding")).collect()),
+        _ => Vec::new(),
     };
-    node.bindings.iter().chain(row_actions.into_iter().flatten())
+    node.bindings.iter().map(|binding| binding.credited_clone().expect("credited record binding")).chain(row_verbs).collect()
 }
 
-fn binding_named<'a>(node: &'a BuiltNode, action: &str) -> Option<&'a ActionBinding> {
-    own_bindings(node).find(|binding| binding.action.name.as_str() == action).or_else(|| node.children.iter().find_map(|child| binding_named(child, action)))
+fn binding_named(node: &BuiltNode, action: &str) -> Option<ActionBinding> {
+    own_bindings(node).into_iter().find(|binding| binding.action.name.as_str() == action).or_else(|| node.children.iter().find_map(|child| binding_named(child, action)))
 }
 
 fn node_with_binding<'a>(node: &'a BuiltNode, action: &str) -> Option<&'a BuiltNode> {
-    own_bindings(node).any(|binding| binding.action.name.as_str() == action).then_some(node).or_else(|| node.children.iter().find_map(|child| node_with_binding(child, action)))
+    own_bindings(node).iter().any(|binding| binding.action.name.as_str() == action).then_some(node).or_else(|| node.children.iter().find_map(|child| node_with_binding(child, action)))
 }
 
 fn number_arg(binding: &ActionBinding, key: &str) -> Option<f64> {
@@ -76,7 +77,7 @@ async fn every_audio_command_has_one_definition_and_a_revision_bound_surface_con
         let control = node_with_binding(&root, action_id).unwrap_or_else(|| panic!("{action_id} surface control"));
         assert!(matches!(&control.component, Component::Button(_) | Component::Input(_) | Component::TableRow(_)), "{action_id} must remain a natively keyboard-operable control (a row action is painted as a native button)");
         let binding = binding_named(control, action_id).expect("control owns binding");
-        assert_eq!(text_arg(binding, "revision").as_deref(), Some(revision), "{action_id} revision binding");
+        assert_eq!(text_arg(&binding, "revision").as_deref(), Some(revision), "{action_id} revision binding");
     }
 }
 
@@ -104,17 +105,17 @@ async fn wide_audio_uses_complete_windowed_coordinates_and_revision_bound_contro
     assert_eq!(sample_props.window.map(|window| (window.total, window.offset)), Some((channels * 2, channels * 2 - 1)));
     assert_eq!(samples.children[0].key.as_str(), format!("sample-{}", channels * 2 - 1));
     let sample = binding_named(samples, crate::editor::wav::edit_audio::SET_SAMPLE_ACTION_ID).expect("late-channel sample edit binding");
-    assert_eq!(number_arg(sample, "row"), Some(1.0));
-    assert_eq!(number_arg(sample, "column"), Some(63.0));
-    assert_eq!(text_arg(sample, "revision").as_deref(), Some(revision));
+    assert_eq!(number_arg(&sample, "row"), Some(1.0));
+    assert_eq!(number_arg(&sample, "column"), Some(63.0));
+    assert_eq!(text_arg(&sample, "revision").as_deref(), Some(revision));
     let channels_table = node_by_key(&root, CHANNEL_TABLE_ID).expect("channel controls");
     let Component::Table(channel_props) = &channels_table.component else { panic!("channel controls are a table") };
     assert_eq!(channel_props.window.map(|window| (window.total, window.offset)), Some((channels, channels - 1)));
     let insert_channel = binding_named(channels_table, crate::editor::wav::edit_audio::INSERT_CHANNEL_ACTION_ID).expect("late-channel insert binding");
-    assert_eq!(number_arg(insert_channel, "channel"), Some(63.0));
-    assert_eq!(text_arg(insert_channel, "revision").as_deref(), Some(revision));
-    assert_eq!(text_arg(binding_named(&root, crate::editor::wav::edit_audio::SET_SAMPLE_RATE_ACTION_ID).expect("sample-rate control"), "revision").as_deref(), Some(revision));
-    assert_eq!(text_arg(binding_named(&root, semio_s_artifact_stdio_contract::ADD_TABLE_COLUMN_ACTION_ID).expect("append-channel control"), "revision").as_deref(), Some(revision));
+    assert_eq!(number_arg(&insert_channel, "column"), Some(63.0));
+    assert_eq!(text_arg(&insert_channel, "revision").as_deref(), Some(revision));
+    assert_eq!(text_arg(&binding_named(&root, crate::editor::wav::edit_audio::SET_SAMPLE_RATE_ACTION_ID).expect("sample-rate control"), "revision").as_deref(), Some(revision));
+    assert_eq!(text_arg(&binding_named(&root, semio_s_artifact_stdio_contract::ADD_TABLE_COLUMN_ACTION_ID).expect("append-channel control"), "revision").as_deref(), Some(revision));
 }
 
 #[semio_framework_async_macros::async_test]

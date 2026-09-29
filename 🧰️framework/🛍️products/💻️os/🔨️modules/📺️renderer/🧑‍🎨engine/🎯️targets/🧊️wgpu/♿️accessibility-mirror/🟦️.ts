@@ -37,7 +37,7 @@ export type AccessibilityProjectionNode = {
 export type AccessibilityProjectionWindow = { readonly windowId: string; readonly windowGeneration: number; readonly nodes: readonly AccessibilityProjectionNode[] };
 export type AccessibilityMirrorTransport = Pick<BrowserFrameTransport, "enqueueLossless" | "introspect">;
 
-export function createAccessibilityMirror(root: HTMLElement, transport: AccessibilityMirrorTransport, tongue: "en" | "de", focusFallback?: HTMLElement): { readonly refresh: () => void; readonly dispose: () => void } {
+export function createAccessibilityMirror(root: HTMLElement, transport: AccessibilityMirrorTransport, tongue: "en" | "de", focusFallback?: HTMLElement, domOwns?: (surface: AccessibilityProjectionWindow, node: AccessibilityProjectionNode) => boolean): { readonly refresh: () => void; readonly dispose: () => void } {
   const mirror = document.createElement("div");
   mirror.id = WGPU_ACCESSIBILITY_MIRROR_ID;
   mirror.setAttribute("role", "region");
@@ -176,6 +176,7 @@ export function createAccessibilityMirror(root: HTMLElement, transport: Accessib
       const surfaceId = encodeURIComponent(surface.windowId);
       const ids = new Map(surface.nodes.map((node) => [node.key, `${WGPU_ACCESSIBILITY_MIRROR_ID}-${surfaceId}-${surface.windowGeneration}-${node.nodeId}`]));
       for (const node of surface.nodes) {
+        if (domOwns?.(surface, node)) continue;
         while (stack.length > node.depth + 1) stack.pop();
         const projected = projectedElement(surface, node, ids);
         const parent = stack[node.depth] ?? group;
@@ -211,7 +212,10 @@ export function createAccessibilityMirror(root: HTMLElement, transport: Accessib
   const pull = async (): Promise<void> => {
     lastAt = performance.now();
     const json = await transport.introspect("accessibility");
-    if (disposed || json === null || json === published) return;
+    if (disposed || json === null) return;
+    const ownership = Array.from(root.querySelectorAll<HTMLElement>("[data-media-slot]")).map((host) => `${host.dataset.mediaWindow}:${host.dataset.uiNodeId}:${host.dataset.uiNodeKey}:${host.dataset.mediaSlot}`).join("\u0000");
+    const signature = `${json}\u0000${ownership}`;
+    if (signature === published) return;
     let dump: { readonly windows?: readonly AccessibilityProjectionWindow[] };
     try {
       dump = JSON.parse(json) as { readonly windows?: readonly AccessibilityProjectionWindow[] };
@@ -219,11 +223,17 @@ export function createAccessibilityMirror(root: HTMLElement, transport: Accessib
       return;
     }
     paint(dump.windows ?? []);
-    published = json;
+    published = signature;
   };
 
   const refresh = (): void => {
-    if (disposed || pending) return;
+    if (disposed) return;
+    if (domOwns) for (const candidate of mirror.querySelectorAll<HTMLElement>("[data-node-id]")) {
+      const surface = { windowId: candidate.dataset.window!, windowGeneration: Number(candidate.dataset.windowGeneration), nodes: [] };
+      const node = { nodeId: Number(candidate.dataset.nodeId), key: candidate.dataset.nodeKey!, role: candidate.getAttribute("role") ?? "region", depth: 0, live: "off" };
+      if (domOwns(surface, node)) { candidate.remove(); published = ""; }
+    }
+    if (pending) return;
     pending = true;
     window.setTimeout(() => {
       pending = false;

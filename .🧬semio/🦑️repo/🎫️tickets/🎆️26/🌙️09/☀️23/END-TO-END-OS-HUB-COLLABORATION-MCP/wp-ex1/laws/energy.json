@@ -1,0 +1,78 @@
+{
+ "plugin": "energy",
+ "dir": "🔋️energy",
+ "apps": [
+  {
+   "app": "s.energy.model@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    },
+    {
+     "id": "bestest-600",
+     "document": "distinct"
+    },
+    {
+     "id": "bestest-600ff",
+     "document": "distinct"
+    },
+    {
+     "id": "bestest-610",
+     "document": "distinct"
+    },
+    {
+     "id": "bestest-620",
+     "document": "distinct"
+    },
+    {
+     "id": "bestest-630",
+     "document": "distinct"
+    },
+    {
+     "id": "bestest-640",
+     "document": "distinct"
+    },
+    {
+     "id": "bestest-650",
+     "document": "distinct"
+    },
+    {
+     "id": "bestest-900",
+     "document": "distinct"
+    },
+    {
+     "id": "bestest-900ff",
+     "document": "distinct"
+    },
+    {
+     "id": "bestest-910",
+     "document": "distinct"
+    },
+    {
+     "id": "bestest-920",
+     "document": "distinct"
+    },
+    {
+     "id": "bestest-930",
+     "document": "distinct"
+    },
+    {
+     "id": "bestest-940",
+     "document": "distinct"
+    },
+    {
+     "id": "bestest-950",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "crate::editor::model::EnergyModelEditor",
+   "create": "crate::editor::model::create_energy_model_editor",
+   "app": "s.energy.model@1/*#editor"
+  }
+ ]
+}

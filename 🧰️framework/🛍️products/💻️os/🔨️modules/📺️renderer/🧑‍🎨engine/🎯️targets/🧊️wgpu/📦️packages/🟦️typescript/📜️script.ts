@@ -12,6 +12,7 @@ import {
   getWorkspaceRoot,
   packageTestBudgetMs,
   resolveTestLevel,
+  runCargo,
   runCargoTestBudgeted,
   runExactCargoLaws,
   runTestBudgeted,
@@ -104,6 +105,13 @@ class WgpuUnitTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments, "long");
     await runCargoTestBudgeted([crateName], this.repoRoot, ["--lib", ...rest]);
+  }
+}
+
+/** 🔬️ Checks browser Rust code before Wasm binding and optimization. */
+class WasmCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    await runCargo(["check", "--locked", "--offline", "-p", crateName, "--lib", "--target", "wasm32-unknown-unknown", ...segments], this.repoRoot);
   }
 }
 
@@ -443,6 +451,23 @@ class NativeGuestJourneyCheckScript extends BundleScript {
   }
 }
 
+/** 🎬️ Verifies real media app reservations through the accepted browser renderer and frame Worker. */
+class BrowserMediaAppAcceptanceScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const { runBrowserMediaAppAcceptance } = await import("../../🧪️tests/🎬️media-app/🟦️.ts");
+    await runBrowserMediaAppAcceptance(segments);
+  }
+}
+
+/** 🌐️ Runs every browser renderer law independently of native compilation. */
+class BrowserTestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    assertRendererOutputOwnership();
+    const { rest } = resolveTestLevel(segments, "long");
+    await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
+  }
+}
+
 /** 🧵️ Runs the browser Worker transport protocol without invoking Cargo. */
 class BrowserWorkerTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -539,6 +564,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("test", TestScript)
   .register("test-native", NativeTestScript)
   .register("test-wgpu-unit", WgpuUnitTestScript)
+  .register("check-wasm", WasmCheckScript)
   .register("directory-retained-home-bootstrap-source-check", DirectoryRetainedHomeBootstrapSourceCheckScript)
   .register("directory-retained-home-bootstrap-native-check", DirectoryRetainedHomeBootstrapNativeCheckScript)
   .register("normalized-presence-rows-source-check", NormalizedPresenceRowsSourceCheckScript)
@@ -548,6 +574,8 @@ const router = new ScriptRouter(import.meta.dir)
   .register("hub-live-collaboration-check", HubLiveCollaborationCheckScript)
   .register("hub-collaboration-acceptance", HubCollaborationAcceptanceScript)
   .register("native-guest-journey-check", NativeGuestJourneyCheckScript)
+  .register("browser-media-acceptance", BrowserMediaAppAcceptanceScript)
+  .register("test-browser", BrowserTestScript)
   .register("test-browser-worker", BrowserWorkerTestScript)
   .register("test-preview-generated", PreviewGeneratedTestScript)
   .register("check-browser-worker", BrowserWorkerCheckScript)

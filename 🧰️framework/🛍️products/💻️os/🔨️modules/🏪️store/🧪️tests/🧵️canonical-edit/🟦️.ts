@@ -87,5 +87,43 @@ export function testCanonicalEditFixtures(): void {
   ];
   for (const [name, hostile] of hostiles) assert.equal(exported(name)(hostile), false, `${name} hostile is refused`);
 
+  const chains = read("./🧫️fixtures/🔗️edit-digest-chains.json");
+  const validateChains = exported("EditDigestChains");
+  assert(validateChains(chains), JSON.stringify(validateChains.errors));
+  assert.equal(validateChains({ ...chains, cases: chains.cases.map((row: Record<string, unknown>) => ({ ...row, unexpected: true })) }), false, "EditDigestChains hostile is refused");
+  const u64 = (value: number) => { const bytes = Buffer.alloc(8); bytes.writeBigUInt64BE(BigInt(value)); return bytes; };
+  const record = (domain: string, parts: Buffer[]) => {
+    const hash = createHash("sha256").update("semio.artifact.cursor.v2").update(u64(Buffer.byteLength(domain))).update(domain);
+    for (const part of parts) hash.update(u64(part.length)).update(part);
+    return hash.digest();
+  };
+  const chain = (domain: string, items: unknown[]) => items.reduce<Buffer>((state, item) => record(domain, [state, Buffer.from(JSON.stringify(item))]), Buffer.alloc(32));
+  const text = (edit: Record<string, unknown>, key: string) => [Buffer.from([key in edit ? 1 : 0]), Buffer.from(String(edit[key] ?? ""))];
+  const editDigest = (edit: Record<string, unknown>) => {
+    const [forwards, inverse, meta] = [edit.forwards as unknown[], edit.inverse as unknown[], (edit.mutationMeta ?? []) as unknown[]];
+    if (forwards.length <= 1) return record("edit", [Buffer.from(String(edit.id)), Buffer.from(JSON.stringify(edit))]);
+    const sequence = Buffer.alloc(4);
+    sequence.writeInt32BE(edit.sequenceNumber as number);
+    return record("edit-chained", [
+      Buffer.from(String(edit.id)),
+      ...text(edit, "actor"),
+      ...text(edit, "description"),
+      ...text(edit, "coalesceKey"),
+      sequence,
+      Buffer.from(String(edit.startedAt)),
+      ...text(edit, "finishedAt"),
+      u64(forwards.length), chain("edit-forward", forwards),
+      u64(inverse.length), chain("edit-inverse", inverse),
+      u64(meta.length), chain("edit-meta", meta),
+    ]);
+  };
+  for (const row of chains.cases) {
+    const edit = row.edit ?? {
+      ...row.header,
+      forwards: Array.from({ length: row.generatedOperations }, (_, index) => ({ SetN: { n: index + 1 } })),
+      inverse: Array.from({ length: row.generatedOperations }, (_, index) => ({ SetN: { n: index } })),
+    };
+    assert.equal(editDigest(edit).toString("hex"), row.expectedDigest, `edit digest vector ${row.name}`);
+  }
 }
 //#endregion 🧵️CanonicalEditOracle

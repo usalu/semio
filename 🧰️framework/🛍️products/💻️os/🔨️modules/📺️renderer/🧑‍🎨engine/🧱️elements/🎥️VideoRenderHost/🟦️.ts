@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/VideoRenderHost/module.ts
-/** @emoji 🎥️ `🎥️VideoRenderHost` — the browser host of the `media.video-render` capability (`Effect::VideoRenderExport`,
+/** 🎥️ `🎥️VideoRenderHost` — the browser host of the `media.video-render` capability (`Effect::VideoRenderExport`,
  * `🎠️kernel`): a guest has no canvas and no encoder, so a plugin that requested {@link MEDIA_VIDEO_RENDER_CAPABILITY} hands
  * the host a `VideoRenderProgram`; the host paints every distinct scene once on a 2D canvas, encodes the timeline as H.264
  * and muxes an MP4 with the raster video tier's first-party writer (`🖌️raster/🎥️video/🟦️.ts`).

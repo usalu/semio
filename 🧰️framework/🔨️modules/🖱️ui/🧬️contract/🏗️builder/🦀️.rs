@@ -1521,6 +1521,7 @@ pub struct TreeItemBuilder {
     window: Option<crate::TreeWindow>,
     granularity: Option<crate::UiText>,
     row_actions: crate::UiFixedList<crate::RowAction>,
+    target: Option<crate::RowTarget>,
 }
 
 /// 🌿️ A tree row reading `label`. Its accessible name defaults to `label`, the same "hard to omit"
@@ -1529,7 +1530,7 @@ pub struct TreeItemBuilder {
 pub fn tree_item(label: crate::Label) -> TreeItemBuilder {
     let mut base = NodeBase::stack(crate::Axis::Vertical);
     base.accessibility.label = Some(label.clone());
-    TreeItemBuilder { base, label, description: None, icon: None, default_open: None, draggable: None, drag_data: None, dimmed: None, window: None, granularity: None, row_actions: crate::UiFixedList::default() }
+    TreeItemBuilder { base, label, description: None, icon: None, default_open: None, draggable: None, drag_data: None, dimmed: None, window: None, granularity: None, row_actions: crate::UiFixedList::default(), target: None }
 }
 
 impl TreeItemBuilder {
@@ -1592,7 +1593,7 @@ impl TreeItemBuilder {
         self
     }
 
-    /// 🎬️ Appends one row action.
+    /// 🎬️ Appends one row action — a verb on the row's [`crate::RowTarget`].
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     #[expect(clippy::result_large_err, reason = "A full row-action list returns its builder and original action owner for caller-directed retirement.")]
     pub fn try_row_action(mut self, row_action: crate::RowAction) -> Result<Self, (Self, crate::RowAction)> {
@@ -1600,6 +1601,13 @@ impl TreeItemBuilder {
             Ok(()) => Ok(self),
             Err(row_action) => Err((self, row_action)),
         }
+    }
+
+    /// 🎯️ Sets the ONE target every row action and the activation of this row fire on.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn target(mut self, target: crate::RowTarget) -> Self {
+        self.target = Some(target);
+        self
     }
 }
 
@@ -1630,6 +1638,7 @@ impl From<TreeItemBuilder> for BuiltNode {
                 inline_toolbar: None,
                 detail: None,
                 row_actions: builder.row_actions,
+                target: builder.target,
             }),
         )
     }
@@ -1710,27 +1719,34 @@ impl From<TableBuilder> for BuiltNode {
     }
 }
 
-/// 📊️ One table row — `Component::TableRow`. Cells and row actions are props, never child records.
-/// Build with [`table_row`].
+/// 📊️ One table row — `Component::TableRow`. Cells, row actions and target are props, never child
+/// records. Build with [`table_row`].
 pub struct TableRowBuilder {
     base: NodeBase,
     cells: crate::UiFixedList<crate::UiText>,
     row_actions: crate::UiFixedList<crate::RowAction>,
+    target: Option<crate::RowTarget>,
 }
 
 /// 📊️ A table row reading `cells`, positional to its table's columns.
 pub fn table_row(cells: crate::UiFixedList<crate::UiText>) -> TableRowBuilder {
-    TableRowBuilder { base: NodeBase::stack(crate::Axis::Horizontal), cells, row_actions: crate::UiFixedList::default() }
+    TableRowBuilder { base: NodeBase::stack(crate::Axis::Horizontal), cells, row_actions: crate::UiFixedList::default(), target: None }
 }
 
 impl TableRowBuilder {
-    /// 🎬️ Appends one row action.
+    /// 🎬️ Appends one row action — a verb on the row's [`crate::RowTarget`].
     #[expect(clippy::result_large_err, reason = "A full row-action list returns its builder and original action owner for caller-directed retirement.")]
     pub fn try_row_action(mut self, row_action: crate::RowAction) -> Result<Self, (Self, crate::RowAction)> {
         match self.row_actions.try_push(row_action) {
             Ok(()) => Ok(self),
             Err(row_action) => Err((self, row_action)),
         }
+    }
+
+    /// 🎯️ Sets the ONE target every row action and the activation of this row fire on.
+    pub fn target(mut self, target: crate::RowTarget) -> Self {
+        self.target = Some(target);
+        self
     }
 }
 
@@ -1743,7 +1759,7 @@ impl HasChildren for TableRowBuilder {}
 
 impl From<TableRowBuilder> for BuiltNode {
     fn from(builder: TableRowBuilder) -> Self {
-        assemble(builder.base, crate::Component::TableRow(crate::TableRowProps { cells: builder.cells, row_actions: builder.row_actions }))
+        assemble(builder.base, crate::Component::TableRow(crate::TableRowProps { cells: builder.cells, row_actions: builder.row_actions, target: builder.target }))
     }
 }
 //#endregion 📊️Table

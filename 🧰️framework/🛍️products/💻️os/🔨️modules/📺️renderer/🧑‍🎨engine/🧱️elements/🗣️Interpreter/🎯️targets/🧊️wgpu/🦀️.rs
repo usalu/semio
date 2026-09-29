@@ -7,7 +7,7 @@
 //! with zero other changes.
 //! 🧩️ Maps framework UiNode trees to ui_wgpu widget nodes.
 
-use crate::scenes::{queue_canvas_image_upload_sized, queue_canvas_image_upload_with, render_component_scene_step};
+use crate::scenes::{queue_canvas_image_upload_sized, queue_canvas_image_upload_with, render_component_scene_step, RasterUploadRefusal};
 use infinite_world::world::{WorldAssetFault, WorldAssetMetadataId, WorldAssetRequestKind};
 use serde_json::Value;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -637,6 +637,12 @@ struct ScenePointerOwners {
 static SCENE_POINTER_OWNERS: WorkerCell<ScenePointerOwners> = WorkerCell::new();
 
 /// 🪪️ Captures the exact retained scene identity published by one document node.
+/// 🪟️ Every windowed tree container the retained surface `window_id` presents, measured against its scroll viewport
+/// (`Ui::tree_window_measures`) — the Shell's tree window observer reads the shared engine through this.
+pub(crate) fn tree_window_measures(window_id: &str) -> Option<(f64, Vec<ui_wgpu::wgpu::tree_window::TreeWindowContainerMeasure>)> {
+    UI_ENGINE.with(|cell| cell.borrow().tree_window_measures(window_id))
+}
+
 pub fn retained_scene_target(window_id: &str, node: NodeId) -> Option<ScenePointerTarget> {
     UI_ENGINE.with(|cell| retained_scene_target_in(&cell.borrow(), window_id, node))
 }
@@ -961,9 +967,9 @@ fn apply_presented_scene_caret(window_id: &str, caret: ui_wgpu::wgpu::UiPresente
         let node = engine.presented_node_at(window_id, caret.surface, caret.document_id)?;
         let tree = engine.tree(window_id)?;
         let UiNode::ComponentScene(scene) = &tree.node(node)?.spec.0 else { return None };
-        Some(scene.clone())
+        Some((scene.host_id.clone(), scene.surface_id.clone(), scene.component_kind))
     });
-    scene.as_ref().is_some_and(|scene| crate::engine_canvas::component_scene_set_caret_visible(scene, caret.visible))
+    scene.is_some_and(|(host_id, surface_id, kind)| crate::engine_canvas::component_scene_set_caret_visible(&host_id, &surface_id, kind, caret.visible))
 }
 
 fn apply_window_clock_caret(window_id: &str, step: Option<&ui_wgpu::wgpu::UiWindowClockStep>) {
@@ -3595,6 +3601,16 @@ impl ui_wgpu::wgpu::SceneHost for FrameworkSceneHost<'_> {
     }
 }
 
+/// ⏱️ Whether one layout scheduling call was `window_id`'s own work: a step of its own job (or an `Idle` stall of a dirty layout)
+/// is; a wait on the worker pool or a step of another surface's job is not.
+fn layout_step_is_window_work(step: &ui_wgpu::wgpu::UiLayoutStep, window_id: &str) -> bool {
+    match step {
+        ui_wgpu::wgpu::UiLayoutStep::Awaiting { .. } => false,
+        ui_wgpu::wgpu::UiLayoutStep::Idle => true,
+        ui_wgpu::wgpu::UiLayoutStep::Yielded { window_id: stepped, .. } | ui_wgpu::wgpu::UiLayoutStep::Ready { window_id: stepped, .. } | ui_wgpu::wgpu::UiLayoutStep::Cancelled { window_id: stepped, .. } => AsRef::<str>::as_ref(stepped) == window_id,
+    }
+}
+
 fn drive_mounted_layout_text_one(engine: &mut ui_wgpu::wgpu::Ui, window_id: &str, atlas: &mut ui_wgpu::wgpu::FontAtlas) -> ui_wgpu::wgpu::UiLayoutStep {
     let generation = engine.tree_revision(window_id).unwrap_or(1);
     let now = semio_framework_job::default_now_us();
@@ -3644,9 +3660,19 @@ pub struct UiDocumentFrameCursor {
     phase: UiDocumentFramePhase,
     /// 🩺️ Consecutive `Pending` paint opportunities, reset whenever the phase changes.
     stalled: u32,
+    /// ⏱️ Whether the last step advanced THIS document's own ladder ([`Self::last_step_was_own_work`]).
+    own_work: bool,
 }
 
 impl UiDocumentFrameCursor {
+    /// ⏱️ Whether the last step was this document's own work — false when it only ran the shared retirement lanes, only waited on
+    /// the layout worker pool ([`ui_wgpu::wgpu::UiLayoutStep::Awaiting`]) or advanced another surface's layout. A host's
+    /// non-convergence budget spends an opportunity only on own work, so a slow worker or a busy neighbour never faults a document
+    /// that is converging.
+    pub fn last_step_was_own_work(&self) -> bool {
+        self.own_work
+    }
+
     pub fn terminal_is_complete(&self) -> bool {
         matches!(self.phase, UiDocumentFramePhase::Complete)
     }
@@ -3785,6 +3811,7 @@ pub(crate) fn render_ui_document_step(
     driver_drag: ui_wgpu::wgpu::UiDriverDrag,
     hosts: &mut crate::scenes::SceneEngineHosts<'_>,
 ) -> bool {
+    cursor.own_work = false;
     if close_retiring_focus_clipboard_one() {
         return false;
     }
@@ -3795,6 +3822,7 @@ pub(crate) fn render_ui_document_step(
         return false;
     }
     if ui_document_close_pending_for(window_id) {
+        cursor.own_work = true;
         return false;
     }
     let Ok(header) = document.header() else {
@@ -3814,6 +3842,7 @@ pub(crate) fn render_ui_document_step(
     );
     let viewport_w = bounds.w.max(1.0);
     let viewport_h = bounds.h.max(1.0);
+    cursor.own_work = !matches!(cursor.phase, UiDocumentFramePhase::Layout);
     UI_ENGINE.with(|cell| {
         let mut engine = cell.borrow_mut();
         engine.set_driver_drag(driver_drag);
@@ -3883,11 +3912,13 @@ pub(crate) fn render_ui_document_step(
                 cursor.phase = UiDocumentFramePhase::Layout;
             }
             UiDocumentFramePhase::Layout => {
-                let _ = drive_mounted_layout_text_one(&mut engine, window_id, ctx.atlas);
+                let step = drive_mounted_layout_text_one(&mut engine, window_id, ctx.atlas);
+                cursor.own_work = layout_step_is_window_work(&step, window_id);
                 if engine.layout_is_dirty(window_id) {
                     engine.request_layout(window_id);
                 } else {
                     cursor.phase = UiDocumentFramePhase::Paint;
+                    cursor.own_work = true;
                 }
             }
             UiDocumentFramePhase::Paint => {
@@ -3960,6 +3991,9 @@ static UI_IMAGE_FETCH_MISS: WorkerCell<std::collections::HashMap<String, String>
 static UI_IMAGE_LAST_URL: WorkerCell<std::collections::HashMap<String, String>> = WorkerCell::new();
 static UI_IMAGE_URL_CACHE: WorkerCell<std::collections::HashMap<String, String>> = WorkerCell::new();
 static UI_IMAGE_SIZES: WorkerCell<std::collections::HashMap<String, (u32, u32)>> = WorkerCell::new();
+/// 🚫️ Per image id, the inline source the raster authority refused as the image's own ([`RasterUploadRefusal::Invalid`]) — kept, not
+/// re-offered each paint; the image paints its fallback until its source changes.
+static UI_IMAGE_REFUSED: WorkerCell<std::collections::HashMap<String, String>> = WorkerCell::new();
 static UI_IMAGE_ASSET_FAULT: WorkerCell<Option<WorldAssetFault>> = WorkerCell::new();
 #[cfg(test)]
 thread_local! {
@@ -3983,12 +4017,15 @@ pub fn apply_ui_image_bytes(id: &str, url: &str, bytes: &[u8]) {
         let decoded = if svg { std::str::from_utf8(bytes).ok().and_then(rasterize_svg_to_rgba).map(|(pixels, _, _)| pixels) } else { decode_raster_bytes(bytes).map(|(pixels, _, _)| pixels) };
         decoded
     };
-    let key = queue_canvas_image_upload_with("ui-image", id, bytes, dimensions, decode);
-    let Some(key) = key else {
-        UI_IMAGE_FETCH_MISS.with(|cell| {
-            cell.borrow_mut().insert(id.to_string(), url.to_string());
-        });
-        return;
+    let key = match queue_canvas_image_upload_with("ui-image", id, bytes, dimensions, decode) {
+        Ok(key) => key,
+        Err(RasterUploadRefusal::Invalid(_)) => {
+            UI_IMAGE_FETCH_MISS.with(|cell| {
+                cell.borrow_mut().insert(id.to_string(), url.to_string());
+            });
+            return;
+        }
+        Err(RasterUploadRefusal::Busy) => return,
     };
     let Some((width, height)) = size else { return };
     UI_IMAGE_URL_CACHE.with(|cell| {
@@ -4108,7 +4145,7 @@ fn parse_svg_data_url_bytes(src: &str) -> Option<Vec<u8>> {
     }
 }
 
-fn resolve_ui_image_svg(id: &str, src: &str) -> (Option<String>, Option<(u32, u32)>) {
+fn resolve_ui_image_svg(id: &str, src: &str) -> (Result<String, RasterUploadRefusal>, Option<(u32, u32)>) {
     let size = std::cell::Cell::new(None);
     let key = queue_canvas_image_upload_with(
         "ui-image",
@@ -4145,11 +4182,24 @@ fn resolve_ui_image_svg(id: &str, src: &str) -> (Option<String>, Option<(u32, u3
  */
 fn resolve_ui_image_data_url(id: &str, src: &str) {
     let current = UI_IMAGE_LAST_URL.with(|cell| cell.borrow().get(id).is_some_and(|last| last == src));
-    if current {
+    if current || UI_IMAGE_REFUSED.with(|cell| cell.borrow().get(id).is_some_and(|refused| refused == src)) {
         return;
     }
     let (key, size) = if src.starts_with("data:image/svg+xml") { resolve_ui_image_svg(id, src) } else { queue_canvas_image_upload_sized("ui-image", id, src) };
-    let (Some(key), Some((width, height))) = (key, size) else { return };
+    let key = match key {
+        Ok(key) => key,
+        Err(RasterUploadRefusal::Invalid(_)) => {
+            UI_IMAGE_REFUSED.with(|cell| {
+                cell.borrow_mut().insert(id.to_string(), src.to_string());
+            });
+            return;
+        }
+        Err(RasterUploadRefusal::Busy) => return,
+    };
+    let Some((width, height)) = size else { return };
+    UI_IMAGE_REFUSED.with(|cell| {
+        cell.borrow_mut().remove(id);
+    });
     UI_IMAGE_URL_CACHE.with(|cell| {
         cell.borrow_mut().insert(id.to_string(), key);
     });
@@ -4198,10 +4248,12 @@ pub(crate) fn resolve_ui_image(id: &str, src: &str) -> (Option<String>, Option<(
         return (None, None);
     }
     if src.starts_with("data:image/svg+xml") {
-        return resolve_ui_image_svg(id, src);
+        let (key, size) = resolve_ui_image_svg(id, src);
+        return (key.ok(), size);
     }
     if src.starts_with("data:") {
-        return queue_canvas_image_upload_sized("ui-image", id, src);
+        let (key, size) = queue_canvas_image_upload_sized("ui-image", id, src);
+        return (key.ok(), size);
     }
     resolve_ui_image_url(id, src)
 }
@@ -5829,6 +5881,41 @@ pub(crate) fn staged_retained_clock_surfaces() -> Vec<(String, ui_wgpu::wgpu::Ui
     UI_ENGINE.with(|cell| {
         let engine = cell.borrow();
         visible.into_iter().filter_map(|id| engine.surface_token(&id).map(|surface| (id, surface))).collect()
+    })
+}
+
+/// 🎬️ Joins the GPU-accepted shell roster to strictly presented retained documents.
+#[cfg(target_arch = "wasm32")]
+pub(crate) fn presented_media_slots(bodies: &[(String, Rect)], surfaces: &[(String, ui_wgpu::wgpu::UiSurfaceToken)], owners: &[(String, Option<crate::media_slots::PresentedMediaOwner>)], panels: &[Rect], dock_windows: &[(String, Rect)]) -> Vec<crate::media_slots::PresentedMediaSlot> {
+    UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        let overlay_occluded = surfaces.iter().any(|(id, surface)| engine.presented_has_overlay(id, *surface));
+        let mut slots = Vec::new();
+        for (index, (window_id, body)) in bodies.iter().enumerate() {
+            let Some(owner) = owners.iter().find(|(id, _)| id == window_id).and_then(|(_, owner)| owner.as_ref()) else { continue };
+            let Some((_, surface)) = surfaces.iter().find(|(id, _)| id == window_id) else { continue };
+            let Some(tree) = engine.presented_tree(window_id, *surface) else { continue };
+            let first = slots.len();
+            if !crate::media_slots::collect_tree_slots(tree, window_id, *body, owner, &mut slots) {
+                return Vec::new();
+            }
+            let dock_body = dock_windows.iter().any(|(id, _)| id == window_id);
+            let mut next = first;
+            while next < slots.len() {
+                let clip = &slots[next].clip;
+                let covered = |rect: &Rect| crate::media_slots::rects_overlap(Rect::new(clip.x, clip.y, clip.width, clip.height), *rect);
+                let later_body_covered = bodies[index + 1..].iter().any(|(_, rect)| {
+                    let frame = crate::media_slots::body_occluder(*rect, panels.iter().copied().chain(dock_windows.iter().map(|(_, frame)| *frame)));
+                    covered(&frame)
+                });
+                slots[next].occluded |= overlay_occluded || later_body_covered || dock_body && panels.iter().any(covered);
+                next += 1;
+            }
+        }
+        for (index, slot) in slots.iter_mut().enumerate() {
+            slot.paint_order = index as u32;
+        }
+        slots
     })
 }
 

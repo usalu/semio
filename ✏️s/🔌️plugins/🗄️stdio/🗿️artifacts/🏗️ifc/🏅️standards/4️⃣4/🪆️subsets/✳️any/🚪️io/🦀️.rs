@@ -6,7 +6,7 @@
 //! at once); only physically dissolved out of `⚙️engine`.
 //#region 🔖️Submodules
 /// 🏛️ Spatial structure + placement matrices + property sets, built on the shared
-/// `step::engine::part21` generic graph — never persisted itself. Reused externally by
+/// `semio_s_artifact_stdio_contract::part21` generic graph — never persisted itself. Reused externally by
 /// `🧿️semio`'s own IFC4 deserializer, so this stays reachable at the same `engine::spatial` path
 /// through the `engine` barrel shim.
 #[path = "🏛️spatial/🦀️.rs"]

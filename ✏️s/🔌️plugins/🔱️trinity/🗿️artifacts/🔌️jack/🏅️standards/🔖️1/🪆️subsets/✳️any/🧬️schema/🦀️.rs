@@ -26,6 +26,9 @@ pub struct JackArtifact {
     pub content: JackContentChild,
     #[state(artifact)]
     pub root_node_id: Option<String>,
+    /// 🔎️ The document's Jack query — the query editor's text, document content like the graph it runs against.
+    #[state(artifact)]
+    pub query: String,
 }
 //#endregion 🔖️Artifact
 
@@ -46,6 +49,7 @@ impl dsl::ToValue for JackArtifact {
             ("camera".to_string(), dsl::ToValue::to_value(&self.camera)),
             ("content".to_string(), dsl::to_dsl_value(&self.content).expect("ArtifactChild serializes")),
             ("rootNodeId".to_string(), dsl::ToValue::to_value(&self.root_node_id)),
+            ("query".to_string(), dsl::ToValue::to_value(&self.query)),
         ])
     }
 }
@@ -62,6 +66,7 @@ impl dsl::FromValue for JackArtifact {
             camera: dsl::FromValue::from_value(field("camera")?)?,
             content: dsl::from_dsl_value(field("content")?).map_err(dsl::ValueError::new)?,
             root_node_id: dsl::FromValue::from_value(field("rootNodeId")?)?,
+            query: dsl::FromValue::from_value(field("query")?)?,
         })
     }
 }
@@ -70,7 +75,7 @@ impl dsl::FromValue for JackArtifact {
 //#region 🔖️Conversions
 impl Default for JackArtifact {
     fn default() -> Self {
-        Self { schema: crate::TRINITY_GRAPH_SCHEMA.into(), name: String::new(), manifest_id: None, manifest: Manifest::default(), camera: Camera::default(), content: crate::jack_content_child_with_owner(Vec::new(), Vec::new()), root_node_id: None }
+        Self { schema: crate::TRINITY_GRAPH_SCHEMA.into(), name: String::new(), manifest_id: None, manifest: Manifest::default(), camera: Camera::default(), content: crate::jack_content_child_with_owner(Vec::new(), Vec::new()), root_node_id: None, query: crate::TRINITY_JACK_DEFAULT_QUERY.into() }
     }
 }
 
@@ -85,12 +90,13 @@ impl JackArtifact {
             camera: self.camera.clone(),
             content: self.content.clone(),
             root_node_id: self.root_node_id.clone(),
+            query: self.query.clone(),
         }
     }
 
     /// 🧬️ Builds the artifact from its document snapshot.
     pub fn from_snapshot(snapshot: crate::JackSnapshot) -> Self {
-        Self { schema: snapshot.schema, name: snapshot.name, manifest_id: snapshot.manifest_id, manifest: snapshot.manifest, camera: snapshot.camera, content: snapshot.content, root_node_id: snapshot.root_node_id }
+        Self { schema: snapshot.schema, name: snapshot.name, manifest_id: snapshot.manifest_id, manifest: snapshot.manifest, camera: snapshot.camera, content: snapshot.content, root_node_id: snapshot.root_node_id, query: snapshot.query }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -102,6 +108,7 @@ impl JackArtifact {
         self.camera = snapshot.camera;
         self.content = snapshot.content;
         self.root_node_id = snapshot.root_node_id;
+        self.query = snapshot.query;
     }
 
     /// 🔎 Live node list, read through the working-scene cache.

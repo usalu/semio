@@ -195,3 +195,4 @@ Executors = Opus 5.5 agents, one slice each. Auditors = Sonnet 5 agents, read-on
     (rule 2) until the coordinator writes "WINDOW 4 OPEN": guest sets are PREPARED only (for train T6: H14 retire-pages, WG11
     json-number + shell-footprint + renderer fixes, LB2 family hosting, U6 row target). Host-only fixes still land per rules 20/22
     (compile-atomic) — hub/kernel-db edits must keep `os-hub:build-dev` green (the chain builds the hub from the tree at its end).
+28. **Never hold one lane while waiting on another (2026-09-29 18:4x):** split a proof into per-lane steps and queue each in its own lane.

@@ -1,0 +1,26 @@
+{
+ "plugin": "remodel",
+ "dir": "📸️remodel",
+ "apps": [
+  {
+   "app": "s.remodel.remodeling@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    },
+    {
+     "id": "synthetic-orbit",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "crate::editor::remodeling::RemodelingPlayApp",
+   "create": "crate::editor::remodeling::create_remodeling_app",
+   "app": "s.remodel.remodeling@1/*#editor"
+  }
+ ]
+}

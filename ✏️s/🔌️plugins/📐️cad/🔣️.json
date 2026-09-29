@@ -3817,6 +3817,218 @@
             }
           },
           {
+            "id": "setReferenceHidden",
+            "label": {
+              "native": {
+                "en": "Set Reference Hidden",
+                "de": "Referenz verborgen festlegen"
+              },
+              "reuse": {
+                "en": "Set Reference Hidden",
+                "de": "Referenz verborgen festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "modelDefinitionId",
+                "label": {
+                  "native": {
+                    "en": "Model Definition",
+                    "de": "Modelldefinition"
+                  },
+                  "reuse": {
+                    "en": "Model Definition",
+                    "de": "Modelldefinition"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "referenceId",
+                "label": {
+                  "native": {
+                    "en": "Reference",
+                    "de": "Referenz"
+                  },
+                  "reuse": {
+                    "en": "Reference",
+                    "de": "Referenz"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "hidden",
+                "label": {
+                  "native": {
+                    "en": "Hidden",
+                    "de": "Verborgen"
+                  },
+                  "reuse": {
+                    "en": "Hidden",
+                    "de": "Verborgen"
+                  }
+                },
+                "schema": {
+                  "kind": "boolean"
+                },
+                "required": true
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one reference overlay hidden or shown, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Verbirgt eine Referenzüberlagerung oder zeigt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."
+                },
+                "reuse": {
+                  "en": "Sets one reference overlay hidden or shown, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Verbirgt eine Referenzüberlagerung oder zeigt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."
+                }
+              }
+            }
+          },
+          {
+            "id": "setReferenceLocked",
+            "label": {
+              "native": {
+                "en": "Set Reference Locked",
+                "de": "Referenz gesperrt festlegen"
+              },
+              "reuse": {
+                "en": "Set Reference Locked",
+                "de": "Referenz gesperrt festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "modelDefinitionId",
+                "label": {
+                  "native": {
+                    "en": "Model Definition",
+                    "de": "Modelldefinition"
+                  },
+                  "reuse": {
+                    "en": "Model Definition",
+                    "de": "Modelldefinition"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "referenceId",
+                "label": {
+                  "native": {
+                    "en": "Reference",
+                    "de": "Referenz"
+                  },
+                  "reuse": {
+                    "en": "Reference",
+                    "de": "Referenz"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "locked",
+                "label": {
+                  "native": {
+                    "en": "Locked",
+                    "de": "Gesperrt"
+                  },
+                  "reuse": {
+                    "en": "Locked",
+                    "de": "Gesperrt"
+                  }
+                },
+                "schema": {
+                  "kind": "boolean"
+                },
+                "required": true
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one reference overlay locked or unlocked, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Sperrt eine Referenzüberlagerung oder entsperrt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."
+                },
+                "reuse": {
+                  "en": "Sets one reference overlay locked or unlocked, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Sperrt eine Referenzüberlagerung oder entsperrt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."
+                }
+              }
+            }
+          },
+          {
             "id": "engagementSubmit",
             "label": {
               "native": {
@@ -7495,8 +7707,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "7e97e50b185393b877b415cb5f21b3e32ffb641f7ba32b706f724166f1c311e1",
-    "coreWasmSha256": "32c1735c1e152475e1b132ac958619031816e61707affa4ffb098e9eeb7ebd2b",
-    "descriptorSha256": "5d72bd867739ae720d58d24494a5f82286a73a10e5112136ef1ce4e4da8040a6"
+    "wasmSha256": "2e870819f43638cee4f621bd224ec828357e0ea2a9464855ae926ebbaab01955",
+    "coreWasmSha256": "b22008e0faf7b00015921bd85eba88d82b0ce817a83495b46414a020562954f3",
+    "descriptorSha256": "aeccc4816f537505e7e0f0649cebb8bcc09152ccb33d0c69e448099bf43f878d"
   }
 }

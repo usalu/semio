@@ -579,7 +579,7 @@ async fn move_vertices_proportional_rejects_empty_and_applies_falloff() {
 #[semio_framework_async_macros::async_test]
 async fn snap_vertices_to_grid_rejects_non_positive_and_snaps() {
     let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-    assert_eq!(mesh.snap_vertices_to_grid(&[VertexId(0)], 0.0), Err(MeshKernelError::InvalidInput("grid must be positive".into())));
+    assert_eq!(mesh.snap_vertices_to_grid(&[VertexId(0)], 0.0), Err(MeshKernelError::InvalidInput("grid must be finite and positive".into())));
     mesh.set_vertex_position(VertexId(0), Vec3::new(0.44, 0.0, 0.0)).unwrap();
     mesh.snap_vertices_to_grid(&[VertexId(0)], 0.5).unwrap();
     let p = mesh.vertex_position(VertexId(0)).unwrap();
@@ -601,7 +601,7 @@ async fn bevel_edges_rejects_empty_and_runs_on_selection() {
     assert_eq!(mesh.bevel_edges(&[], 0.1, 1), Err(MeshKernelError::EmptySelection));
     let before_verts = mesh.vertex_count();
     mesh.bevel_edges(&[EdgeId(0)], 0.1, 1).unwrap();
-    assert_eq!(mesh.vertex_count(), before_verts + 2, "bevel_edges appends two offset points per edge");
+    assert_eq!(mesh.vertex_count(), before_verts + 2, "bevel creates two shared rail vertices per segment");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -655,12 +655,12 @@ async fn merge_vertices_by_distance_only_merges_within_threshold() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn dissolve_vertices_rejects_empty_and_removes_incident_faces() {
+async fn dissolve_vertices_rejects_empty_and_nonplanar_stars() {
     let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
     assert_eq!(mesh.dissolve_vertices(&[]), Err(MeshKernelError::EmptySelection));
-    let before = mesh.face_count();
-    mesh.dissolve_vertices(&[VertexId(0)]).unwrap();
-    assert!(mesh.face_count() < before);
+    let before = mesh.to_obj().unwrap();
+    assert!(mesh.dissolve_vertices(&[VertexId(0)]).is_err());
+    assert_eq!(mesh.to_obj().unwrap(), before);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -683,9 +683,10 @@ async fn set_shading_rejects_invalid_handle_and_marks_smooth() {
 #[semio_framework_async_macros::async_test]
 async fn mirror_doubles_geometry_and_welds_seam() {
     let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-    let before_faces = mesh.face_count();
+    mesh.translate(Vec3::new(0.5, 0.0, 0.0)).unwrap();
     mesh.mirror(MirrorAxis::X, 1e-4).unwrap();
-    assert_eq!(mesh.face_count(), before_faces * 2);
+    assert_eq!(mesh.face_count(), 10);
+    assert_eq!(mesh.vertex_count(), 12);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -709,7 +710,7 @@ async fn unwrap_uv_splits_islands_across_seam() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn decimate_no_op_when_ratio_at_max_and_clamps_below_min() {
+async fn decimate_no_op_when_ratio_at_max_and_rejects_invalid_ratio() {
     let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
     let before = mesh.vertex_count();
     mesh.decimate(1.0).unwrap();
@@ -717,8 +718,8 @@ async fn decimate_no_op_when_ratio_at_max_and_clamps_below_min() {
 
     let mut sphere = HalfedgeMesh::ico_sphere_prim(1.0, 2).unwrap();
     let before_sphere = sphere.vertex_count();
-    sphere.decimate(0.0).unwrap();
-    assert!(sphere.vertex_count() < before_sphere, "ratio below 0.1 must clamp to 0.1, not become a no-op");
+    assert!(sphere.decimate(0.0).is_err());
+    assert_eq!(sphere.vertex_count(), before_sphere);
 }
 
 #[semio_framework_async_macros::async_test]

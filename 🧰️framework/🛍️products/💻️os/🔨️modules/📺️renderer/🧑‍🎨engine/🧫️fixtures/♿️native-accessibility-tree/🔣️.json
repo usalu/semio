@@ -47,7 +47,7 @@
       { "authorId": "note-composite/toolbar", "role": "Toolbar", "name": "Formatting", "actions": [], "children": ["note-composite/bold"] },
       { "authorId": "note-composite/bold", "role": "Button", "name": "Bold", "actions": ["Click", "Focus"], "toggled": "False", "shortcut": "⌘B", "children": [] },
       { "authorId": "note-composite/body", "role": "MultilineTextInput", "name": "Note body", "actions": ["Focus", "SetValue"], "value": "Hello", "children": [] },
-      { "authorId": "note-composite/outline", "role": "Tree", "name": "Outline", "actions": [], "children": ["note-composite/outline.a"] },
+      { "authorId": "note-composite/outline", "role": "Tree", "name": "Outline", "actions": [], "children": ["note-composite/outline.a", "note-composite/outline.b"] },
       { "authorId": "note-composite/outline.a", "role": "TreeItem", "name": "Chapter 1", "actions": ["Click", "Collapse", "Focus"], "expanded": true, "selected": true, "level": 1, "children": ["note-composite/outline.a.1"] },
       { "authorId": "note-composite/outline.a.1", "role": "TreeItem", "name": "Section 1.1", "actions": ["Click", "Focus"], "level": 2, "children": [] },
       { "authorId": "note-composite/outline.b", "role": "TreeItem", "name": "Chapter 2", "actions": ["Click", "Expand", "Focus"], "expanded": false, "selected": false, "level": 1, "children": ["note-composite/outline.b.1"] },

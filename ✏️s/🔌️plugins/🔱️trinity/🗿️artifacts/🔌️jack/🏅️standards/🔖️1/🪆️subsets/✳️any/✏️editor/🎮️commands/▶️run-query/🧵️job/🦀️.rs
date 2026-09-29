@@ -1,6 +1,6 @@
 //! 🧵️ Query execution and its transient result share one retained operation owner.
 
-use crate::editor::jack::query_window_config::{JackEditorWindowConfigMutation, JackEditorWindowConfigOwner, SetQuery};
+use crate::standards::v1::subsets::any::schema::mutations::set_query;
 use crate::editor::jack::transient::{JackResultsWindowTransientMutation, JackResultsWindowTransientOwner, ReplaceQueryResult};
 use crate::editor::jack::{TrinityJackCommand, TrinityJackPlayApp};
 use crate::{JackSnapshot, TRINITY_GRAPH_SCHEMA};
@@ -16,7 +16,7 @@ const QUERY_BYTES: usize = 4_096;
 const QUERY_CHECKPOINT_BYTES: usize = 32;
 const QUERY_REPLAY_MAXIMUM_STEPS: u64 = (QUERY_BYTES as u64) * 16_384 * 16_384 * 16_384 + 1_000_000;
 const PAYLOAD_SCHEMA: &str = "trinity.jack.query-command.v1";
-const LANES: &[ArtifactToolPublicationLane] = &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::WindowTransient];
+const LANES: &[ArtifactToolPublicationLane] = &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient];
 
 pub(crate) struct JackQueryJobFactory {
     keys: Vec<ToolFactoryKey>,
@@ -99,15 +99,8 @@ pub(crate) fn build_job(request: ArtifactOwnedToolJobRequest<Owner>) -> Result<s
     {
         return Err(Fault::from("Jack query execution requires the exact targeted results-window transient snapshot"));
     }
-    let editor_config = request
-        .context
-        .window_config
-        .as_ref()
-        .filter(|window| window.window_id() == editor_window_id)
-        .and_then(|window| window.get::<JackEditorWindowConfigOwner>())
-        .ok_or_else(|| Fault::from("Jack query execution requires the exact originating editor-window config snapshot"))?;
     let source = match request.command.as_ref() {
-        TrinityJackCommand::RunQuery { query, .. } => query.as_deref().filter(|query| !query.trim().is_empty()).unwrap_or(&editor_config.jack_query),
+        TrinityJackCommand::RunQuery { query, .. } => query.as_deref().filter(|query| !query.trim().is_empty()).unwrap_or(&request.snapshot.query),
         TrinityJackCommand::LoadExampleQuery { query, .. } => query,
         _ => unreachable!(),
     };
@@ -122,7 +115,8 @@ pub(crate) fn build_job(request: ArtifactOwnedToolJobRequest<Owner>) -> Result<s
         canonical_base_revision: request.canonical_base_revision,
         authoring_seed: request.authoring_seed.clone(),
     };
-    let work = Box::new(JackQueryWork::new(tool, source.to_string(), editor_window_id.to_string(), results_window_id.to_string(), operation.operation_id, operation.generation));
+    let adopts_query = matches!(request.command.as_ref(), TrinityJackCommand::LoadExampleQuery { .. }) && source != request.snapshot.query && source.len() <= crate::JACK_QUERY_MAXIMUM_BYTES;
+    let work = Box::new(JackQueryWork::new(tool, source.to_string(), adopts_query, editor_window_id.to_string(), results_window_id.to_string(), operation.operation_id, operation.generation));
     let payload = ArtifactRetainedCommandPayload::try_new(
         ArtifactRetainedCommandInputs {
             command: *request.command,
@@ -146,6 +140,7 @@ pub(crate) fn build_job(request: ArtifactOwnedToolJobRequest<Owner>) -> Result<s
 struct JackQueryWork {
     tool: &'static str,
     source: Option<String>,
+    adopts_query: bool,
     editor_window_id: Option<String>,
     results_window_id: Option<String>,
     preparation: Option<crate::executor::QueryExecutionPreparation>,
@@ -159,8 +154,8 @@ struct JackQueryWork {
 }
 
 impl JackQueryWork {
-    fn new(tool: &'static str, source: String, editor_window_id: String, results_window_id: String, operation_id: u64, generation: u64) -> Self {
-        Self { tool, source: Some(source), editor_window_id: Some(editor_window_id), results_window_id: Some(results_window_id), preparation: None, execution: None, operation_id, generation, progress: 0, replay_target: None, finished: false, closing: false }
+    fn new(tool: &'static str, source: String, adopts_query: bool, editor_window_id: String, results_window_id: String, operation_id: u64, generation: u64) -> Self {
+        Self { tool, source: Some(source), adopts_query, editor_window_id: Some(editor_window_id), results_window_id: Some(results_window_id), preparation: None, execution: None, operation_id, generation, progress: 0, replay_target: None, finished: false, closing: false }
     }
 
     fn identity(&self) -> u64 {
@@ -195,11 +190,7 @@ impl JackQueryWork {
         self.finished = true;
         ArtifactCommandWorkStep::CompleteWithEphemeral {
             emit: Emit {
-                artifact_mutations: mutations,
-                window_config_mutations: vec![semio_framework_plugin::WindowConfigMutation::of::<JackEditorWindowConfigOwner>(
-                    self.editor_window_id.as_ref().expect("editor window id is retained"),
-                    JackEditorWindowConfigMutation::SetQuery(SetQuery { value: self.source.as_ref().expect("query source is retained").clone() }),
-                )],
+                artifact_mutations: self.adopts_query.then(|| set_query(self.source.as_ref().expect("query source is retained").clone())).into_iter().chain(mutations).collect(),
                 ..Default::default()
             },
             ephemeral: EphemeralEmit {

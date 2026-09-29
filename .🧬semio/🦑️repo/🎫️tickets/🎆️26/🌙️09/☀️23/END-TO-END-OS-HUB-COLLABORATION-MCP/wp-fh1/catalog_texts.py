@@ -722,3 +722,20 @@ for code in ["owner-poisoned", "instance-poisoned", "maintenance-poisoned"]:
 put("unsupported", "This command is not supported here yet; use the editor's own controls.", "Dieser Befehl wird hier noch nicht unterstützt; verwenden Sie die Bedienelemente des Editors.")
 put("plugin.assembly-failed", "The plugin could not be started because it is set up incorrectly; update the plugin or report the problem.", "Das Plugin konnte nicht gestartet werden, weil es fehlerhaft eingerichtet ist; aktualisieren Sie das Plugin oder melden Sie das Problem.")
 put("plugin.action.argument-missing", "The action {action} needs a value that was not given; provide it and try again.", "Der Aktion {action} fehlt ein erforderlicher Wert; geben Sie ihn an und versuchen Sie es erneut.")
+# ── S20 session 15 (rebase onto the post-round-3a tree): P9 fail-closed agent lane + example registry codes ─────────
+put("app.command.no-effect", "The action {action} changes nothing in this state; check the document or choose another action.", "Die Aktion {action} ändert in diesem Zustand nichts; prüfen Sie das Dokument oder wählen Sie eine andere Aktion.")
+put("app.notice", "The app reported a notice for this action.", "Die App hat zu dieser Aktion einen Hinweis gemeldet.")
+put("app.example.unreadable", "The example document could not be read; choose another example or report the problem.", "Das Beispieldokument konnte nicht gelesen werden; wählen Sie ein anderes Beispiel oder melden Sie das Problem.")
+put("app.example.unknown", "There is no example named {example}; choose one from the list.", "Es gibt kein Beispiel namens {example}; wählen Sie eines aus der Liste.")
+
+# ── S20 session 15: class-review retexts (texts that contradicted what the raise site checks) ──
+T["artifact-envelope.ingress-credits"] = ("The document is larger than the editor can receive at once; open a smaller document.", "Das Dokument ist größer, als der Editor auf einmal empfangen kann; öffnen Sie ein kleineres Dokument.")
+T["artifact-inference.unavailable"] = ("The inference service stopped because of an internal error; reload the app.", "Der Auswertungsdienst wurde wegen eines internen Fehlers angehalten; laden Sie die App neu.")
+# ── S20 pass 2: the frozen mutation report codes (contract C2), raised by `MutationCode::code()` ─────────────────────────
+put("mutation.target-missing", "The element this change refers to no longer exists; refresh the document and try again.", "Das Element, auf das sich diese Änderung bezieht, existiert nicht mehr; aktualisieren Sie das Dokument und versuchen Sie es erneut.")
+put("mutation.no-op", "The change has no effect; the document already looks like this.", "Die Änderung bewirkt nichts; das Dokument sieht bereits so aus.")
+put("mutation.partial", "Only part of the change could be applied.", "Die Änderung konnte nur teilweise angewendet werden.")
+put("mutation.clamped", "A value was adjusted to the allowed range.", "Ein Wert wurde auf den zulässigen Bereich angepasst.")
+put("mutation.duplicate-id", "An element with this identifier already exists; choose another one.", "Ein Element mit dieser Kennung existiert bereits; wählen Sie eine andere.")
+put("mutation.invariant", "The change would break the rules of the document, so it was not applied.", "Die Änderung würde die Regeln des Dokuments verletzen und wurde daher nicht angewendet.")
+put("mutation.cascade", "Dependent elements were changed as well.", "Abhängige Elemente wurden ebenfalls geändert.")

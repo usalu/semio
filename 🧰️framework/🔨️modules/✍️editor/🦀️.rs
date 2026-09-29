@@ -284,7 +284,10 @@ pub struct EditorHost {
     chrome_edgeless_scroll: bool,
 }
 
-/// 🧹️ Retained text-editor owner that releases one scalar or collection item per close grant.
+/// ♻️ The bytes of text (or of a scalar list) one close grant releases — a page, never a scalar.
+const EDITOR_RETIREMENT_PAGE_BYTES: usize = 64 * 1024;
+
+/// 🧹️ Retained text-editor owner that releases one page of its text or caret list, or one string-owning item, per close grant.
 pub struct EditorHostRetirement {
     text: String,
     semantic_tokens: Vec<SemanticTokenJson>,
@@ -331,14 +334,20 @@ impl EditorHostRetirement {
         if self.released {
             return true;
         }
-        if self.text.pop().is_some()
-            || self.semantic_tokens.pop().is_some()
-            || self.selectable_spans.pop().is_some()
-            || self.diagnostics.pop().is_some()
-            || self.placeholders.pop().is_some()
-            || self.hover_occurrences.pop().is_some()
-            || self.selection_occurrences.pop().is_some()
-            || self.extra_carets.pop().is_some()
+        if !self.text.is_empty() {
+            let mut cut = self.text.len().saturating_sub(EDITOR_RETIREMENT_PAGE_BYTES);
+            while !self.text.is_char_boundary(cut) {
+                cut += 1;
+            }
+            self.text.truncate(cut);
+            return false;
+        }
+        if !self.extra_carets.is_empty() {
+            let keep = self.extra_carets.len().saturating_sub(EDITOR_RETIREMENT_PAGE_BYTES / std::mem::size_of::<usize>());
+            self.extra_carets.truncate(keep);
+            return false;
+        }
+        if self.semantic_tokens.pop().is_some() || self.selectable_spans.pop().is_some() || self.diagnostics.pop().is_some() || self.placeholders.pop().is_some() || self.hover_occurrences.pop().is_some() || self.selection_occurrences.pop().is_some()
         {
             return false;
         }

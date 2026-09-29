@@ -33,7 +33,7 @@ use crate::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
 use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
 use protocol::os_spr::command::DiffAlgebra;
 use protocol::Mutation;
-use semio_s_artifact_stdio_step::engine::part21::Part21Value;
+use semio_s_artifact_stdio_contract::part21::Part21Value;
 
 pub use crate::standards::v2x3::subsets::base::schema::mutations::{apply_ifc2x3_mutation, Ifc2x3Mutation};
 

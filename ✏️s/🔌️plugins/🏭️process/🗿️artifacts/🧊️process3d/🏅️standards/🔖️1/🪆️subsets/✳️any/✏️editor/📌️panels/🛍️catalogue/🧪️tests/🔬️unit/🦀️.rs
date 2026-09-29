@@ -171,7 +171,7 @@ fn a_catalogue_window_request_materialises_exactly_its_slice() {
 
 /// ⚖️ LAW (d), as it applies to the catalogue: its rows are install/add ACTIONS, not domain pick
 /// targets, so the tree declares no `interactionDomain` and every materialised row keeps its own
-/// `addStep` binding (the domain-pick form of law (d) is pinned on `📌️panels/🗿️artifact`).
+/// `addStep` activation (the domain-pick form of law (d) is pinned on `📌️panels/🗿️artifact`).
 #[test]
 fn catalogue_rows_are_action_rows_not_domain_pick_targets() {
     let view = window_view(PROCESS_3D_PLAY_CATALOGUE_WORKSHOP, Some(true), 0, 4);
@@ -187,7 +187,7 @@ fn catalogue_rows_are_action_rows_not_domain_pick_targets() {
         assert_eq!(rows.len(), 4, "the requested four rows: {json}");
         for row in rows {
             assert!(row["component"]["granularity"].as_str().is_none(), "an action row declares no pick granularity: {row}");
-            assert!(!row["bindings"].as_array().cloned().unwrap_or_default().is_empty(), "an action row keeps its own addStep binding: {row}");
+            assert_eq!(row["component"]["target"]["activation"].as_str(), Some("addStep"), "an action row keeps its own addStep activation: {row}");
         }
     }
 }

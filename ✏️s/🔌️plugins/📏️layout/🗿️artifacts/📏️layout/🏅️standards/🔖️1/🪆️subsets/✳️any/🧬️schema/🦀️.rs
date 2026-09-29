@@ -272,13 +272,36 @@ pub struct ResolvedFrame {
     pub inherited: bool,
 }
 
+pub fn apply_page_override(frame: &mut crate::Frame, page_override: &crate::PageOverride) {
+    if let Some(bounds) = &page_override.bounds {
+        match frame {
+            crate::Frame::Rect { bounds: target, .. } | crate::Frame::Text { bounds: target, .. } | crate::Frame::Image { bounds: target, .. } => *target = bounds.clone(),
+        }
+    }
+    match frame {
+        crate::Frame::Rect { visible, locked, .. } | crate::Frame::Text { visible, locked, .. } | crate::Frame::Image { visible, locked, .. } => {
+            if page_override.visible.is_some() {
+                *visible = page_override.visible;
+            }
+            if page_override.locked.is_some() {
+                *locked = page_override.locked;
+            }
+        }
+    }
+}
+
 pub fn resolve_page<'a>(doc: &'a crate::LayoutSnapshot, page: &'a Page) -> Vec<ResolvedFrame> {
     let mut frames = Vec::new();
     if let Some(parent_id) = &page.parent_page_id {
         if let Some(parent) = doc.parent_pages.iter().find(|p| p.id == *parent_id) {
             for frame in &parent.frames {
-                let overridden = page.overrides.iter().any(|o| o.object_id == frame.id());
-                frames.push(ResolvedFrame { frame: frame.clone(), inherited: !overridden });
+                let page_override = page.overrides.iter().find(|item| item.object_id == frame.id());
+                let inherited = page_override.is_none();
+                let mut resolved = frame.clone();
+                if let Some(page_override) = page_override {
+                    apply_page_override(&mut resolved, page_override);
+                }
+                frames.push(ResolvedFrame { frame: resolved, inherited });
             }
         }
     }

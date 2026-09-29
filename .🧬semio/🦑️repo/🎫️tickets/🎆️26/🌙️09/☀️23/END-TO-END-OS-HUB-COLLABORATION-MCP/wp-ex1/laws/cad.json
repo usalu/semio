@@ -1,0 +1,26 @@
+{
+ "plugin": "cad",
+ "dir": "📐️cad",
+ "apps": [
+  {
+   "app": "s.cad.cad@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    },
+    {
+     "id": "hexagonal-cut-concrete-forest-left",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "crate::editor::cad::CadPlayApp",
+   "create": "crate::editor::cad::create_cad_app",
+   "app": "s.cad.cad@1/*#editor"
+  }
+ ]
+}

@@ -20,14 +20,20 @@ FAMILIES = {"din16798": "🌬️din16798", "din18599": "⚡️din18599", "din410
 
 class Emitter:
     def __init__(self, binary):
-        self.process = subprocess.Popen([binary], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, encoding="utf-8")
+        self.process = subprocess.Popen([binary] + os.environ.get("S19_EMITTER_ARGS", "").split(), stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, encoding="utf-8")
         self.calls = 0
+
+    def _line(self):
+        while True:
+            line = self.process.stdout.readline()
+            if not line or line.lstrip().startswith("{"):
+                return line
 
     def ask(self, request):
         self.calls += 1
         self.process.stdin.write(json.dumps(request, ensure_ascii=False) + "\n")
         self.process.stdin.flush()
-        reply = json.loads(self.process.stdout.readline())
+        reply = json.loads(self._line())
         if "error" in reply:
             raise ValueError(reply["error"])
         return reply["ok"]

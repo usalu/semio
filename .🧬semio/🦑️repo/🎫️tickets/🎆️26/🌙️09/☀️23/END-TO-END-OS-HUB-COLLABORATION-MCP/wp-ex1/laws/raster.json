@@ -1,0 +1,22 @@
+{
+ "plugin": "raster",
+ "dir": "🖨️raster",
+ "apps": [
+  {
+   "app": "s.raster.raster@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "crate::editor::raster::RasterPlayApp",
+   "create": "crate::editor::raster::create_raster_app",
+   "app": "s.raster.raster@1/*#editor"
+  }
+ ]
+}

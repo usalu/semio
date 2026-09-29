@@ -466,18 +466,17 @@ fn mounted_document_tree_publishes_nested_interactive_rows() {
     use ui_contract::{Buildable, HasBase, HasChildren};
     fn row(value: &serde_json::Value) -> ui_contract::BuiltNode {
         let id = value["id"].as_str().unwrap();
-        let mut builder = ui_contract::tree_item(ui_contract::Label(ui_contract::UiText::try_from_str(id).unwrap())).try_id(id).ok().unwrap();
-        let action = |name: &str| serde_json::from_value(serde_json::json!({ "scope": "fixture", "name": name, "version": 1 })).unwrap();
-        let args = || serde_json::from_value(serde_json::json!({ "domainId": "fixture", "merge": "replace", "method": "pick", "targets": id })).unwrap();
-        builder = builder.try_on_with(ui_contract::Trigger::Activate, action("select"), args()).ok().unwrap();
+        let target = serde_json::from_value(serde_json::json!({ "scope": "fixture", "version": 1, "args": { "domainId": "fixture", "merge": "replace", "method": "pick", "targets": id }, "activation": "select" })).unwrap();
+        let mut builder = ui_contract::tree_item(ui_contract::Label(ui_contract::UiText::try_from_str(id).unwrap())).try_id(id).ok().unwrap().target(target);
         for name in value["rowActions"].as_array().into_iter().flatten() {
             let name = name.as_str().unwrap();
             builder = builder
                 .try_row_action(ui_contract::RowAction {
                     icon: ui_contract::UiText::try_from_str(name).unwrap(),
                     label: Some(ui_contract::Label(ui_contract::UiText::try_from_str(name).unwrap())),
-                    action: ui_contract::ActionBinding { trigger: ui_contract::Trigger::Activate, action: action(name), args: Some(args()), capability: None },
+                    verb: ui_contract::UiText::try_from_str(name).unwrap(),
                     placement: ui_contract::RowActionPlacement::Row,
+                    disabled: false,
                 })
                 .ok()
                 .unwrap();
@@ -511,7 +510,8 @@ fn mounted_document_tree_publishes_nested_interactive_rows() {
     let patch = finish(&tracker).unwrap_or_else(|| panic!("document never published: {:?}", tracker.state.borrow().terminals.iter().flatten().map(|slot| slot.authority.fault()).collect::<Vec<_>>()));
     let nodes = patch.ops.iter().filter_map(|op| if let ui_contract::UiPatchOp::Upsert(node) = op { Some(node) } else { None }).collect::<Vec<_>>();
     assert_eq!(nodes.len(), fixture["nodes"].as_u64().unwrap() as usize);
-    assert_eq!(nodes.iter().filter(|node| !node.bindings.is_empty()).count(), fixture["interactiveRows"].as_u64().unwrap() as usize);
+    let activates = |node: &&&ui_contract::UiNodeRecord| matches!(&node.component, ui_contract::Component::TreeItem(props) if props.target.as_ref().is_some_and(|target| target.activation.is_some()));
+    assert_eq!(nodes.iter().filter(activates).count(), fixture["interactiveRows"].as_u64().unwrap() as usize);
 }
 
 #[test]

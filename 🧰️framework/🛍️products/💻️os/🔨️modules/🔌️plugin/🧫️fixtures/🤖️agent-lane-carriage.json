@@ -1,0 +1,400 @@
+{
+  "why": "What an agent transaction carries, written once and read by two implementations: the Rust law `app::agent_lane_preview_tests` (`🧪️tests/🤖️agent-lane-preview/🦀️.rs`) decodes each case's host effects from their wire form (the kernel `Effect`'s camelCase JSON) and asks `agent_lane_uncarried_lanes` — the check the agent lane's preview (`preview_addressed_action`, the MCP gateway's `action_prepare`) runs on every previewed completion — and the AJV twin (`🧪️tests/🤖️agent-lane-preview/🟦️.ts`) derives the same answer with one JSON Schema per lane. An agent transaction carries only a command's document, config, draft and owned-child operations; the agent lane fails closed on everything else. A `publication` states how many operations the transaction carries (`carriedOps`: document, config and draft ops and owned-child groups), lists the host effects the previewed command requests and how many items each other lane holds (window-config ops, extension calls, app events, selection writes, follow-up tasks, and the presence, transient and window-transient mutations of the app's ephemeral hook and of the job's completion). `uncarried` names every lane that is not empty, each once, in `lanes` order: a load-document effect is a whole-document replacement; a media, icon or video export a file download; a file or media-frame request a file request; a guest-emitted interaction verb (a dispatch-action or replay-shell-command effect naming `interactionSelect`, `interactionHover`, `clearSelection`, `selectAll`, `setSelectionMode` or `setInteractionGranularity`) a selection change; any other dispatch-action effect a follow-up dispatch; an open-dialog effect a dialog; a notify effect a notice; a clipboard write a clipboard write; opening or closing a window, a panel, navigation, an external URL, spawning or opening a plugin instance, switching the active utility or tool and replaying a shell command a shell change; an extension invocation (as an effect or through the extension lane) extension calls; every other host effect a host request. The `presentation` lanes (a notice, selection changes) only present the result to the human who ran the command: beside carried operations they are omitted, on their own (`carriedOps` 0) they are the command's whole effect and are named like every other lane. The `verdict`: `carried` when `uncarried` is empty (the only answer the preview settles on); `noEffect` when nothing is carried and `uncarried` names presentation lanes only — the command changes nothing in this state and is refused `app.command.no-effect` with the app's own notice; `uncarried` otherwise — refused `interactive-job.agent-lane-uncarried` naming those lanes. So an agent is never told \"done\" for a verb whose shell run acts where its transaction would do nothing.",
+  "lanes": [
+    "a whole-document replacement",
+    "a file download",
+    "a file request",
+    "a follow-up dispatch",
+    "a dialog",
+    "a notice",
+    "a clipboard write",
+    "a shell change",
+    "a host request",
+    "extension calls",
+    "app events",
+    "selection changes",
+    "window configuration changes",
+    "follow-up tasks",
+    "presence changes",
+    "transient state changes",
+    "window transient state changes"
+  ],
+  "presentation": [
+    "a notice",
+    "selection changes"
+  ],
+  "interactionVerbs": [
+    "interactionSelect",
+    "interactionHover",
+    "clearSelection",
+    "selectAll",
+    "setSelectionMode",
+    "setInteractionGranularity"
+  ],
+  "cases": [
+    {
+      "name": "a publication of document, config, draft and child operations only is carried",
+      "publication": {
+        "carriedOps": 3,
+        "effects": [],
+        "windowConfigOps": 0,
+        "extensionCalls": 0,
+        "events": 0,
+        "selectionWrites": 0,
+        "tasks": 0,
+        "presence": 0,
+        "transient": 0,
+        "windowTransient": 0
+      },
+      "uncarried": [],
+      "verdict": "carried"
+    },
+    {
+      "name": "a follow-up dispatch is refused, not dropped",
+      "publication": {
+        "carriedOps": 0,
+        "effects": [
+          {
+            "dispatchAction": {
+              "req": 7,
+              "action": "evaluate",
+              "delayMs": 0
+            }
+          }
+        ],
+        "windowConfigOps": 0,
+        "extensionCalls": 0,
+        "events": 0,
+        "selectionWrites": 0,
+        "tasks": 0,
+        "presence": 0,
+        "transient": 0,
+        "windowTransient": 0
+      },
+      "uncarried": [
+        "a follow-up dispatch"
+      ],
+      "verdict": "uncarried"
+    },
+    {
+      "name": "a notice alone is the command's whole effect and is refused as no effect",
+      "publication": {
+        "carriedOps": 0,
+        "effects": [
+          {
+            "notify": {
+              "message": "3 nodes placed"
+            }
+          }
+        ],
+        "windowConfigOps": 0,
+        "extensionCalls": 0,
+        "events": 0,
+        "selectionWrites": 0,
+        "tasks": 0,
+        "presence": 0,
+        "transient": 0,
+        "windowTransient": 0
+      },
+      "uncarried": [
+        "a notice"
+      ],
+      "verdict": "noEffect"
+    },
+    {
+      "name": "shell changes of every kind share one lane named once",
+      "publication": {
+        "carriedOps": 0,
+        "effects": [
+          {
+            "setActiveTool": {
+              "toolId": "brush"
+            }
+          },
+          {
+            "navigate": {
+              "uri": "semio://studio/home"
+            }
+          }
+        ],
+        "windowConfigOps": 0,
+        "extensionCalls": 0,
+        "events": 0,
+        "selectionWrites": 0,
+        "tasks": 0,
+        "presence": 0,
+        "transient": 0,
+        "windowTransient": 0
+      },
+      "uncarried": [
+        "a shell change"
+      ],
+      "verdict": "uncarried"
+    },
+    {
+      "name": "a download and a sync request are named in lane order",
+      "publication": {
+        "carriedOps": 0,
+        "effects": [
+          "requestSync",
+          {
+            "downloadMediaExport": {
+              "filename": "a.svg",
+              "mimeType": "image/svg+xml",
+              "data": "<svg/>"
+            }
+          }
+        ],
+        "windowConfigOps": 0,
+        "extensionCalls": 0,
+        "events": 0,
+        "selectionWrites": 0,
+        "tasks": 0,
+        "presence": 0,
+        "transient": 0,
+        "windowTransient": 0
+      },
+      "uncarried": [
+        "a file download",
+        "a host request"
+      ],
+      "verdict": "uncarried"
+    },
+    {
+      "name": "extension calls count once whether effect or lane",
+      "publication": {
+        "carriedOps": 0,
+        "effects": [],
+        "windowConfigOps": 0,
+        "extensionCalls": 2,
+        "events": 0,
+        "selectionWrites": 0,
+        "tasks": 1,
+        "presence": 0,
+        "transient": 0,
+        "windowTransient": 0
+      },
+      "uncarried": [
+        "extension calls",
+        "follow-up tasks"
+      ],
+      "verdict": "uncarried"
+    },
+    {
+      "name": "selection writes, app events and window-config operations are refused",
+      "publication": {
+        "carriedOps": 0,
+        "effects": [],
+        "windowConfigOps": 1,
+        "extensionCalls": 0,
+        "events": 3,
+        "selectionWrites": 1,
+        "tasks": 0,
+        "presence": 0,
+        "transient": 0,
+        "windowTransient": 0
+      },
+      "uncarried": [
+        "app events",
+        "selection changes",
+        "window configuration changes"
+      ],
+      "verdict": "uncarried"
+    },
+    {
+      "name": "every ephemeral lane is refused",
+      "publication": {
+        "carriedOps": 0,
+        "effects": [],
+        "windowConfigOps": 0,
+        "extensionCalls": 0,
+        "events": 0,
+        "selectionWrites": 0,
+        "tasks": 0,
+        "presence": 1,
+        "transient": 4,
+        "windowTransient": 2
+      },
+      "uncarried": [
+        "presence changes",
+        "transient state changes",
+        "window transient state changes"
+      ],
+      "verdict": "uncarried"
+    },
+    {
+      "name": "a notice beside carried operations is omitted",
+      "publication": {
+        "carriedOps": 2,
+        "effects": [
+          {
+            "notify": {
+              "message": "edge created"
+            }
+          }
+        ],
+        "windowConfigOps": 0,
+        "extensionCalls": 0,
+        "events": 0,
+        "selectionWrites": 0,
+        "tasks": 0,
+        "presence": 0,
+        "transient": 0,
+        "windowTransient": 0
+      },
+      "uncarried": [],
+      "verdict": "carried"
+    },
+    {
+      "name": "selecting what the command made beside carried operations is omitted",
+      "publication": {
+        "carriedOps": 1,
+        "effects": [],
+        "windowConfigOps": 0,
+        "extensionCalls": 0,
+        "events": 0,
+        "selectionWrites": 1,
+        "tasks": 0,
+        "presence": 0,
+        "transient": 0,
+        "windowTransient": 0
+      },
+      "uncarried": [],
+      "verdict": "carried"
+    },
+    {
+      "name": "a follow-up dispatch beside carried operations is still refused",
+      "publication": {
+        "carriedOps": 4,
+        "effects": [
+          {
+            "dispatchAction": {
+              "req": 9,
+              "action": "evaluate",
+              "delayMs": 16
+            }
+          },
+          {
+            "notify": {
+              "message": "evaluating"
+            }
+          }
+        ],
+        "windowConfigOps": 0,
+        "extensionCalls": 0,
+        "events": 0,
+        "selectionWrites": 1,
+        "tasks": 0,
+        "presence": 0,
+        "transient": 0,
+        "windowTransient": 0
+      },
+      "uncarried": [
+        "a follow-up dispatch"
+      ],
+      "verdict": "uncarried"
+    },
+    {
+      "name": "selecting without carrying anything changes nothing and is refused as no effect",
+      "publication": {
+        "carriedOps": 0,
+        "effects": [],
+        "windowConfigOps": 0,
+        "extensionCalls": 0,
+        "events": 0,
+        "selectionWrites": 2,
+        "tasks": 0,
+        "presence": 0,
+        "transient": 0,
+        "windowTransient": 0
+      },
+      "uncarried": [
+        "selection changes"
+      ],
+      "verdict": "noEffect"
+    },
+    {
+      "name": "a notice beside a follow-up dispatch without carried operations is uncarried, not no effect",
+      "publication": {
+        "carriedOps": 0,
+        "effects": [
+          {
+            "notify": {
+              "message": "evaluating"
+            }
+          },
+          {
+            "dispatchAction": {
+              "req": 3,
+              "action": "evaluate",
+              "delayMs": 0
+            }
+          }
+        ],
+        "windowConfigOps": 0,
+        "extensionCalls": 0,
+        "events": 0,
+        "selectionWrites": 0,
+        "tasks": 0,
+        "presence": 0,
+        "transient": 0,
+        "windowTransient": 0
+      },
+      "uncarried": [
+        "a follow-up dispatch",
+        "a notice"
+      ],
+      "verdict": "uncarried"
+    },
+    {
+      "name": "selecting what the command made through a dispatched interaction verb beside carried operations is omitted",
+      "publication": {
+        "carriedOps": 1,
+        "effects": [
+          {
+            "dispatchAction": {
+              "req": 112,
+              "action": "interactionSelect",
+              "delayMs": 0
+            }
+          }
+        ],
+        "windowConfigOps": 0,
+        "extensionCalls": 0,
+        "events": 0,
+        "selectionWrites": 0,
+        "tasks": 0,
+        "presence": 0,
+        "transient": 0,
+        "windowTransient": 0
+      },
+      "uncarried": [],
+      "verdict": "carried"
+    },
+    {
+      "name": "a replayed interaction verb without carried operations changes nothing",
+      "publication": {
+        "carriedOps": 0,
+        "effects": [
+          {
+            "replayShellCommand": {
+              "actionId": "clearSelection"
+            }
+          }
+        ],
+        "windowConfigOps": 0,
+        "extensionCalls": 0,
+        "events": 0,
+        "selectionWrites": 0,
+        "tasks": 0,
+        "presence": 0,
+        "transient": 0,
+        "windowTransient": 0
+      },
+      "uncarried": [
+        "selection changes"
+      ],
+      "verdict": "noEffect"
+    }
+  ]
+}

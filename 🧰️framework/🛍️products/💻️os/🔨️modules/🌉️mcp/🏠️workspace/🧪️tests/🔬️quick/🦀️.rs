@@ -102,6 +102,7 @@ fn a_hub_session_edit_is_refused_before_its_guest_runs_unless_an_author_holds_a_
         backbone_blocked_by: Some(blocked.to_string()),
         relayed: Arc::new(std::sync::atomic::AtomicU64::new(0)),
         relay: Arc::default(),
+        used: 1,
     };
     let document = binding("no `store::ArtifactCodec` is registered for artifact schema `s.note.note`");
     let spectator = hub_edit_refusal(Ok(DirectorySpaceRole::Spectator), "note", Some(("hub-note", &document))).expect("a spectator never edits");
@@ -265,6 +266,85 @@ fn authenticated_hub_discovery_uses_retained_selection_and_never_installed_fallb
     let error = revoked_result.structured_content.expect("revoked discovery error");
     assert_eq!(error["code"], "PLUGIN_UNAVAILABLE");
     assert_eq!(error["retryable"], true);
+}
+
+/// 🔗️ LAW (fixture `🧫️fixtures/🔗️hub-live-links.json`, Python oracle `wp-g12/g12-live-links-oracle.py` of ticket
+/// 26/09/23): an agent session keeps one live hub link per app and at most [`HUB_SESSION_LIVE_LINK_LIMIT`] in all —
+/// opening a document supersedes its app's older link, relinks its own expired one, and closes the least recently used
+/// past the bound; an app's session document is the hub document opened or edited last, a folder's the single one.
+#[test]
+fn a_hub_session_keeps_one_live_link_per_app_within_its_bound_and_edits_the_document_opened_last() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️hub-live-links.json")).expect("hub-live-links fixture parses");
+    assert_eq!(fixture["limit"].as_u64(), Some(HUB_SESSION_LIVE_LINK_LIMIT as u64), "the fixture pins the session bound");
+    let text = |value: &serde_json::Value| value.as_str().expect("string").to_string();
+    for case in fixture["close"].as_array().expect("close cases") {
+        let live = case["live"].as_array().expect("live").iter().map(|row| (text(&row[0]), text(&row[1]), text(&row[2]), row[3].as_u64().expect("used"))).collect::<Vec<_>>();
+        let limit = case["limit"].as_u64().map_or(HUB_SESSION_LIVE_LINK_LIMIT, |limit| limit as usize);
+        let closes = hub_links_to_close(&live, case["opening"].as_str().expect("opening"), (case["route"][0].as_str().expect("plugin"), case["route"][1].as_str().expect("app")), limit)
+            .into_iter()
+            .map(|(artifact_id, close)| serde_json::json!([artifact_id, match close { HubLinkClose::Relinked => "relinked", HubLinkClose::Superseded => "superseded", HubLinkClose::Bounded => "bounded" }]))
+            .collect::<Vec<_>>();
+        assert_eq!(serde_json::Value::Array(closes), case["expect"], "{}", case["name"]);
+    }
+    for case in fixture["session"].as_array().expect("session cases") {
+        let bound = case["bound"].as_array().expect("bound").iter().map(|row| (row[0].as_str().expect("artifact"), row[1].as_bool().expect("hub"), row[2].as_u64().expect("used"))).collect::<Vec<_>>();
+        assert_eq!(route_session_artifact(bound), case["expect"].as_str(), "{}", case["name"]);
+    }
+    let (first, second) = (hub_link_tick(), hub_link_tick());
+    assert!(second > first, "the hub-link clock is monotonic");
+}
+
+/// 🪟️ LAW: a headless agent's transaction carries document operations and owned children only — a verb's config/draft view
+/// state beside a document change is omitted with a preview warning, a verb whose whole effect is view state is refused
+/// `interactive-job.agent-lane-uncarried` at prepare, and a verb with no view lane passes untouched.
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn a_headless_agent_carries_document_operations_and_leaves_view_state_in_the_shell() {
+    let ops = |document: usize, config: usize, draft: usize, children: &[u8]| PreparedOps { document: vec![vec![1]; document], config: vec![vec![2]; config], draft: vec![vec![3]; draft], children: children.to_vec() };
+    assert_eq!(headless_agent_ops("p.editor.rename", ops(2, 0, 0, &[])).expect("document only"), (ops(2, 0, 0, &[]), Vec::new()));
+    assert_eq!(headless_agent_ops("p.editor.addGeneration", ops(1, 1, 0, &[])).expect("document beside view state"), (ops(1, 0, 0, &[]), vec![VIEW_STATE_OMITTED_WARNING.to_string()]));
+    assert_eq!(headless_agent_ops("p.editor.addWidget", ops(0, 0, 1, &[9])).expect("children beside view state"), (ops(0, 0, 0, &[9]), vec![VIEW_STATE_OMITTED_WARNING.to_string()]));
+    let refused = headless_agent_ops("p.editor.setShowMode", ops(0, 1, 1, &[])).expect_err("view state alone");
+    assert_eq!(refused.code, crate::actions::AGENT_LANE_UNCARRIED_FAULT_CODE);
+    assert!(refused.message.contains("config and draft") && refused.message.contains("p.editor.setShowMode"), "{}", refused.message);
+}
+
+/// 🧹️ LAW: the exchange an abandoned command left on an instance (its wall budget ran out, or its turn faulted and the
+/// instance was discarded) is closed before the next command on that instance is admitted — never met by the next
+/// command's own turn, which asserted on the seq and took the whole gateway down (live hub coverage, 7800/p33); the
+/// command's own exchange is never touched.
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn an_abandoned_commands_exchange_is_closed_before_the_next_command_on_its_instance() {
+    let driver = |seq: u64| {
+        let mut owners = semio_framework::kernel::CommandEnvelopeSet::try_new().expect("envelope set");
+        let command = semio_framework::io::resolve_ready(store::encode_app_command(&store::AppCommand::LoadDocument { seq, pack: vec![1, 2, 3], spr: Vec::new() })).expect("the command encodes");
+        assert!(owners.try_push(semio_framework::kernel::CommandEnvelope { instance: 3, seq, command }).is_ok());
+        let Ok(batch) = semio_framework::kernel::CommandBatch::try_new(seq, owners) else { panic!("command batch") };
+        semio_framework::kernel::CommandBatchDriver::new(seq, batch)
+    };
+    let mut exchanges = PendingExchangeRegistry::<1>::new();
+    let mut closes = semio_framework::kernel::CommandDriverRegistry::<1>::new();
+    closes.insert_admitted(3, 5, driver(5));
+    exchanges.insert_admitted(PendingExchange { instance: 3, seq: 5, response: PendingResponsePage::Empty, ingress_fault: None });
+    begin_closing_abandoned_exchange(&exchanges, &mut closes, 3, 5).expect("the command's own exchange");
+    assert!(closes.is_active(3, 5), "a command's own exchange is never closed");
+    begin_closing_abandoned_exchange(&exchanges, &mut closes, 3, 6).expect("an abandoned exchange");
+    assert!(!closes.is_active(3, 5), "the abandoned exchange is closing");
+    let mut retired = false;
+    for _ in 0..64 {
+        let (response_complete, _) = exchanges.close_response_step(3, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
+        if !response_complete {
+            continue;
+        }
+        let (complete, _, _) = closes.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
+        if complete {
+            exchanges.remove(3).expect("the abandoned exchange");
+            retired = true;
+            break;
+        }
+    }
+    assert!(retired && exchanges.can_insert(3) && closes.can_insert(3), "the next command on the instance is admitted");
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -463,14 +543,14 @@ fn a_routed_channel_resolves_the_artifact_its_plugin_session_document_is() {
     bound
         .lock()
         .expect("binding map")
-        .insert("journey-note-typed".to_string(), PluginArtifactBinding { schema: "s.note.note".to_string(), plugin_id: "note".to_string(), app_id: "note.editor".to_string(), surface_id: None, document: None, backbone: None, backbone_blocked_by: None, relayed: Arc::new(std::sync::atomic::AtomicU64::new(0)), relay: Arc::default() });
+        .insert("journey-note-typed".to_string(), PluginArtifactBinding { schema: "s.note.note".to_string(), plugin_id: "note".to_string(), app_id: "note.editor".to_string(), surface_id: None, document: None, backbone: None, backbone_blocked_by: None, relayed: Arc::new(std::sync::atomic::AtomicU64::new(0)), relay: Arc::default(), used: 0 });
     assert_eq!(router.session_artifact_for(&note).as_deref(), Some("journey-note-typed"));
     assert_eq!(router.session_artifact_for(&cad), None, "a plugin with no bound artifact stays unnamed");
     assert_eq!(router.session_artifact_for(&AppRoute { plugin_id: "note".to_string(), app_id: Some("note.viewer".to_string()) }), None, "an artifact of one app is never another app's session document");
     bound
         .lock()
         .expect("binding map")
-        .insert("journey-note-second".to_string(), PluginArtifactBinding { schema: "s.note.note".to_string(), plugin_id: "note".to_string(), app_id: "note.editor".to_string(), surface_id: None, document: None, backbone: None, backbone_blocked_by: None, relayed: Arc::new(std::sync::atomic::AtomicU64::new(0)), relay: Arc::default() });
+        .insert("journey-note-second".to_string(), PluginArtifactBinding { schema: "s.note.note".to_string(), plugin_id: "note".to_string(), app_id: "note.editor".to_string(), surface_id: None, document: None, backbone: None, backbone_blocked_by: None, relayed: Arc::new(std::sync::atomic::AtomicU64::new(0)), relay: Arc::default(), used: 0 });
     assert_eq!(router.session_artifact_for(&note), None, "two artifacts on one app: no single stamp could name either truthfully");
 }
 
@@ -711,6 +791,7 @@ fn a_committed_backbone_message_with_no_document_actor_faults_with_its_reason() 
             backbone_blocked_by: Some("no `store::ArtifactCodec` is registered for artifact schema `s.note.note`".to_string()),
             relayed: Arc::new(std::sync::atomic::AtomicU64::new(0)),
             relay: Arc::default(),
+            used: 0,
         },
     );
     let blocked = router.relay_backbone_egress(&note, vec![vec![1, 2, 3]]).expect_err("bound, but no document actor");

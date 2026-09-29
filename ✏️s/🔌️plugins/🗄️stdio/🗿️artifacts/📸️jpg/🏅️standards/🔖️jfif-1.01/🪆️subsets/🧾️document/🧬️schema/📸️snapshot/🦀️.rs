@@ -188,7 +188,7 @@ pub struct JpgSnapshot {
     /// 🎚️ Quality parameter `engine::encode_jpg` scales the Annex K quantization tables by
     /// (IJG convention, `1..=100`). `None` = the engine's own default (90).
     #[state(artifact)]
-    #[value(default)]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub re_encode_quality: Option<u8>,
 
     // JFIF APP0 (ITU-T T.871 / JFIF 1.02). Always first-class (non-optional): every JFIF file
@@ -208,13 +208,13 @@ pub struct JpgSnapshot {
     #[value(default)]
     pub jfif_y_density: u16,
     #[state(artifact)]
-    #[value(default)]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub jfif_thumbnail: Option<JfifThumbnail>,
 
     // SOF (T.81 §B.2.2) — see the struct doc for why `frame`/`sof_marker`/`arithmetic` keep
     // their pre-existing shapes/names.
     #[state(artifact)]
-    #[value(default)]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub frame: Option<JpgFrameHeader>,
     #[state(artifact)]
     #[value(default)]
@@ -233,7 +233,7 @@ pub struct JpgSnapshot {
 
     // DRI (T.81 §B.2.4.4) — `None` = no restart interval segment was present.
     #[state(artifact)]
-    #[value(default)]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub restart_interval: Option<u16>,
 
     // Verbatim-retained other APPn/COM segments, in encounter order (§`JpgSegment` doc).

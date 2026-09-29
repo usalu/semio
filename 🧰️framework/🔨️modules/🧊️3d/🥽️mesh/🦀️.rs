@@ -667,31 +667,27 @@ impl HalfedgeMesh {
         self.recompute_normals()
     }
 
+    /// 🌊 Moves the selection fully and nearby vertices with linear radial falloff.
     pub fn move_vertices_proportional(&mut self, verts: &[VertexId], delta: Vec3, pivot: Vec3, radius: f32) -> MeshResult<()> {
-        if verts.is_empty() {
-            return Err(MeshKernelError::EmptySelection);
-        }
-        let r = radius.max(1e-6);
-        for &vid in verts {
-            let v = self.vertices.get_mut(vid.0 as usize).ok_or(MeshKernelError::InvalidHandle)?;
-            let pos = Vec3(v.position);
-            let dist = pos.sub(pivot).length();
-            let falloff = (1.0 - (dist / r).min(1.0)).max(0.0);
-            v.position = pos.add(delta.scale(falloff)).0;
-        }
+        if verts.is_empty() { return Err(MeshKernelError::EmptySelection); }
+        if !radius.is_finite() || radius <= 0.0 || delta.0.iter().chain(pivot.0.iter()).any(|value| !value.is_finite()) { return Err(MeshKernelError::DegenerateOperation); }
+        for &vertex in verts { self.vertex_position(vertex)?; }
+        let selected = verts.iter().copied().collect::<HashSet<_>>();
+        let all = (0..self.vertex_count()).map(|id| VertexId(id as u32)).collect::<Vec<_>>();
+        let weights = all.iter().map(|id| {
+            if selected.contains(id) { 1.0 } else { (1.0 - self.vertex_position(*id).unwrap().sub(pivot).length() / radius).max(0.0) }
+        }).collect::<Vec<_>>();
+        let positions = self.vertices.iter().zip(weights).map(|(vertex, weight)| Vec3(vertex.position).add(delta.scale(weight)).0).collect::<Vec<_>>();
+        if positions.iter().flatten().any(|value| !value.is_finite()) { return Err(MeshKernelError::DegenerateOperation); }
+        for (vertex, position) in self.vertices.iter_mut().zip(positions) { vertex.position = position; }
         self.recompute_normals()
     }
 
     pub fn snap_vertices_to_grid(&mut self, verts: &[VertexId], grid: f32) -> MeshResult<()> {
-        if grid <= 0.0 {
-            return Err(MeshKernelError::InvalidInput("grid must be positive".into()));
-        }
-        for &vid in verts {
-            let v = self.vertices.get_mut(vid.0 as usize).ok_or(MeshKernelError::InvalidHandle)?;
-            v.position = [(v.position[0] / grid).round() * grid, (v.position[1] / grid).round() * grid, (v.position[2] / grid).round() * grid];
-        }
-        Ok(())
+        if !grid.is_finite() || grid <= 0.0 { return Err(MeshKernelError::InvalidInput("grid must be finite and positive".into())); }
+        self.map_vertices(verts, |point| point.map(|coordinate| (coordinate / grid as f64).round() * grid as f64))
     }
+
 }
 
 //#endregion Transform
@@ -770,25 +766,70 @@ impl HalfedgeMesh {
         self.rebuild_from_polygon_soup(&positions, &result)
     }
 
-    pub fn bevel_edges(&mut self, edges: &[EdgeId], amount: f32, _segments: u32) -> MeshResult<()> {
-        if edges.is_empty() {
-            return Err(MeshKernelError::EmptySelection);
+    /// 🪚 Bevels convex closed meshes with a segmented circular profile and mitered corners.
+    pub fn bevel_edges(&mut self, edges: &[EdgeId], amount: f32, segments: u32) -> MeshResult<()> {
+        self.bevel_edges_with_progress(edges, amount, segments, |_| true)
+    }
+
+    /// ⏳ Reports progress and cancels atomically when the callback returns false.
+    pub fn bevel_edges_with_progress(&mut self, edges: &[EdgeId], amount: f32, segments: u32, mut progress: impl FnMut(f32) -> bool) -> MeshResult<()> {
+        if edges.is_empty() { return Err(MeshKernelError::EmptySelection); }
+        if !amount.is_finite() || amount <= 0.0 || !(1..=64).contains(&segments) { return Err(MeshKernelError::InvalidInput("bevel requires positive finite width and 1..=64 segments".into())); }
+        let (mut positions, mut faces) = self.polygon_soup();
+        let work = positions.len().saturating_mul(faces.len()).saturating_add(edges.len().saturating_mul(segments as usize).saturating_mul(self.halfedges.len()));
+        if work > 4_000_000 { return Err(MeshKernelError::InvalidInput("bevel work budget exceeded".into())); }
+        let extent = positions.iter().map(|point| Vec3(*point).sub(Vec3(positions[0])).length()).fold(0.0f32, f32::max);
+        let epsilon = extent * 1e-6;
+        if epsilon == 0.0 { return Err(MeshKernelError::DegenerateOperation); }
+        for (id, face) in faces.iter().enumerate() {
+            if !progress(0.2 * id as f32 / faces.len() as f32) { return Err(MeshKernelError::InvalidInput("operation cancelled".into())); }
+            let normal = self.face_normal(FaceId(id as u32))?;
+            let origin = Vec3(positions[face[0] as usize]);
+            if normal.length() == 0.0 || positions.iter().any(|point| Vec3(*point).sub(origin).dot(normal) > epsilon) { return Err(MeshKernelError::InvalidInput("bevel requires an outward convex mesh".into())); }
         }
-        let (mut positions, face_list) = self.polygon_soup();
-        for &eid in edges {
-            let (v0, v1) = self.edge_endpoints(eid)?;
-            let p0 = self.vertex_position(v0)?;
-            let p1 = self.vertex_position(v1)?;
-            let dir = p1.sub(p0).normalize();
-            let mid = p0.lerp(p1, 0.5);
-            let offset = dir.cross(Vec3::new(0.0, 1.0, 0.0)).normalize().scale(amount);
-            let nv0 = positions.len() as u32;
-            positions.push(mid.add(offset).0);
-            let nv1 = positions.len() as u32;
-            positions.push(mid.sub(offset).0);
-            let _ = (nv0, nv1, v0, v1);
+        if self.halfedges.iter().any(|edge| edge.twin.is_none()) { return Err(MeshKernelError::InvalidInput("bevel requires a closed manifold mesh".into())); }
+        let mut selected = HashSet::new();
+        let mut planes = Vec::new();
+        for &edge in edges {
+            let he = self.halfedges.get(edge.0 as usize).ok_or(MeshKernelError::InvalidHandle)?;
+            let twin = he.twin.ok_or(MeshKernelError::NonManifold)?;
+            if !selected.insert(edge.0.min(twin)) { continue; }
+            let n1 = self.face_normal(FaceId(he.face.ok_or(MeshKernelError::InvalidHandle)?))?;
+            let n2 = self.face_normal(FaceId(self.halfedges[twin as usize].face.ok_or(MeshKernelError::InvalidHandle)?))?;
+            let cosine = n1.dot(n2).clamp(-1.0, 1.0);
+            let theta = cosine.acos();
+            let sine = theta.sin();
+            if sine.abs() < 1e-5 { return Err(MeshKernelError::DegenerateOperation); }
+            let origin = Vec3(positions[he.vertex as usize]);
+            let tangent = n2.sub(n1.scale(cosine)).scale(1.0 / sine);
+            let mut clearance = f32::INFINITY;
+            for (face, direction) in [(he.face, tangent), (self.halfedges[twin as usize].face, n1.sub(n2.scale(cosine)).scale(1.0 / sine))] {
+                for vertex in self.face_vertex_ids(FaceId(face.ok_or(MeshKernelError::InvalidHandle)?))? {
+                    let distance = origin.sub(Vec3(positions[vertex.0 as usize])).dot(direction);
+                    if distance > epsilon { clearance = clearance.min(distance); }
+                }
+            }
+            if amount >= clearance * 0.5 || amount <= epsilon { return Err(MeshKernelError::InvalidInput("bevel width must stay below half the neighboring face clearance".into())); }
+            let center = origin.sub(n1.add(n2).scale(amount / sine));
+            let radius = amount * (1.0 + cosine) / sine;
+            for index in 0..segments {
+                let angle = theta * (index as f32 + 0.5) / segments as f32;
+                let normal = n1.scale(angle.cos()).add(tangent.scale(angle.sin()));
+                let distance = normal.dot(center) + radius * (theta / (2.0 * segments as f32)).cos();
+                planes.push((normal, distance));
+            }
         }
-        self.rebuild_from_polygon_soup(&positions, &face_list)
+        let count = planes.len();
+        for (index, (normal, distance)) in planes.into_iter().enumerate() {
+            if !progress(0.2 + 0.8 * index as f32 / count as f32) { return Err(MeshKernelError::InvalidInput("operation cancelled".into())); }
+            clip_convex_mesh(&mut positions, &mut faces, normal, distance, epsilon)?;
+        }
+        let mut result = Self::from_faces(&positions, &faces)?;
+        result.drop_unreferenced_vertices()?;
+        if result.halfedges.iter().enumerate().any(|(id,edge)| edge.twin.is_none_or(|twin| result.halfedges[twin as usize].twin != Some(id as u32))) { return Err(MeshKernelError::NonManifold); }
+        if result.face_count() < 4 || !progress(1.0) { return Err(MeshKernelError::InvalidInput("bevel cancelled or removed the solid".into())); }
+        *self = result;
+        Ok(())
     }
 
     /// ✂️ Splits connected quad strips, sharing cut vertices across adjacent faces.
@@ -987,90 +1028,112 @@ impl HalfedgeMesh {
     }
 
     pub fn merge_vertices(&mut self, verts: &[VertexId], mode: WeldMode, threshold: f32) -> MeshResult<()> {
-        if verts.len() < 2 {
-            return Err(MeshKernelError::EmptySelection);
-        }
-        let target_pos = match mode {
-            WeldMode::First => self.vertex_position(verts[0])?,
-            WeldMode::Center => {
-                let mut c = Vec3::ZERO;
-                for v in verts {
-                    c = c.add(self.vertex_position(*v)?);
+        let mut selected = Vec::new();
+        for &vertex in verts { self.vertex_position(vertex)?; if !selected.contains(&vertex.0) { selected.push(vertex.0); } }
+        if selected.len() < 2 { return Err(MeshKernelError::EmptySelection); }
+        if mode == WeldMode::ByDistance && (!threshold.is_finite() || threshold < 0.0) { return Err(MeshKernelError::DegenerateOperation); }
+        if selected.len().saturating_mul(selected.len()) > 4_000_000 { return Err(MeshKernelError::InvalidInput("merge work budget exceeded".into())); }
+        let (mut positions, faces) = self.polygon_soup();
+        let mut roots = (0..selected.len()).collect::<Vec<_>>();
+        if mode == WeldMode::ByDistance {
+            for i in 0..selected.len() {
+                for j in 0..i {
+                    if Vec3(positions[selected[i] as usize]).sub(Vec3(positions[selected[j] as usize])).length() <= threshold {
+                        let mut a = i; while roots[a] != a { a = roots[a]; }
+                        let mut b = j; while roots[b] != b { b = roots[b]; }
+                        roots[a.max(b)] = a.min(b);
+                    }
                 }
-                c.scale(1.0 / verts.len() as f32)
             }
-            WeldMode::ByDistance => self.vertex_position(verts[0])?,
-        };
-        let (positions, face_list) = self.polygon_soup();
-        let keep = verts[0].0;
-        let mut remap: HashMap<u32, u32> = HashMap::new();
-        for v in verts {
-            if mode == WeldMode::ByDistance {
-                let pos = self.vertex_position(*v)?;
-                if pos.sub(target_pos).length() <= threshold {
-                    remap.insert(v.0, keep);
-                }
-            } else {
-                remap.insert(v.0, keep);
-            }
+        } else { roots.fill(0); }
+        let mut remap = (0..positions.len() as u32).collect::<Vec<_>>();
+        for i in 0..selected.len() {
+            let mut root = i; while roots[root] != root { root = roots[root]; }
+            remap[selected[i] as usize] = selected[root];
         }
-        let mut new_positions = positions;
-        new_positions[keep as usize] = target_pos.0;
-        let new_faces: Vec<Vec<u32>> = face_list
-            .into_iter()
-            .map(|f| f.into_iter().map(|vi| *remap.get(&vi).unwrap_or(&vi)).collect::<Vec<_>>())
-            .filter(|f| {
-                let mut unique = f.clone();
-                unique.sort();
-                unique.dedup();
-                unique.len() >= 3
-            })
-            .collect();
-        self.rebuild_from_polygon_soup(&new_positions, &new_faces)
+        if mode == WeldMode::Center {
+            let mut center = [0.0f64; 3];
+            for &id in &selected { for (axis, coordinate) in center.iter_mut().enumerate() { *coordinate += positions[id as usize][axis] as f64 / selected.len() as f64; } }
+            positions[selected[0] as usize] = center.map(|value| value as f32);
+        }
+        let mut cleaned = Vec::new();
+        for face in faces {
+            let mut face = face.into_iter().map(|id| remap[id as usize]).collect::<Vec<_>>();
+            face.dedup();
+            if face.first() == face.last() { face.pop(); }
+            if face.len() < 3 { continue; }
+            if face.iter().copied().collect::<HashSet<_>>().len() != face.len() { return Err(MeshKernelError::NonManifold); }
+            cleaned.push(face);
+        }
+        let mut result = Self::from_faces(&positions, &cleaned)?;
+        result.drop_unreferenced_vertices()?;
+        *self = result;
+        Ok(())
     }
 
     pub fn dissolve_edges(&mut self, edges: &[EdgeId]) -> MeshResult<()> {
-        if edges.is_empty() {
-            return Err(MeshKernelError::EmptySelection);
+        if edges.is_empty() { return Err(MeshKernelError::EmptySelection); }
+        let selected = edges.iter().map(|edge| self.edge_endpoints(*edge).map(|(a,b)| (a.0,b.0))).collect::<MeshResult<Vec<_>>>()?;
+        let (positions, mut faces) = self.polygon_soup();
+        let mut done = HashSet::new();
+        for (a,b) in selected {
+            if !done.insert((a.min(b), a.max(b))) { continue; }
+            let ai = faces.iter().position(|face| find_edge_position(face,a,b).is_some()).ok_or(MeshKernelError::DegenerateOperation)?;
+            let bi = faces.iter().position(|face| find_edge_position(face,b,a).is_some()).ok_or(MeshKernelError::DegenerateOperation)?;
+            let merged = merge_face_loops(&faces[ai], &faces[bi]).ok_or(MeshKernelError::NonManifold)?;
+            if merged.iter().copied().collect::<HashSet<_>>().len() != merged.len() { return Err(MeshKernelError::NonManifold); }
+            faces[ai.min(bi)] = merged;
+            faces.remove(ai.max(bi));
         }
-        let (positions, mut face_list) = self.polygon_soup();
-        for &eid in edges {
-            let Ok((v0, v1)) = self.edge_endpoints(eid) else {
-                continue;
-            };
-            let mut a_idx = None;
-            let mut b_idx = None;
-            for (fi, face) in face_list.iter().enumerate() {
-                if find_edge_position(face, v0.0, v1.0).is_some() {
-                    a_idx = Some(fi);
-                }
-                if find_edge_position(face, v1.0, v0.0).is_some() {
-                    b_idx = Some(fi);
-                }
-            }
-            if let (Some(ai), Some(bi)) = (a_idx, b_idx) {
-                if ai == bi {
-                    continue;
-                }
-                if let Some(merged) = merge_face_loops(&face_list[ai], &face_list[bi]) {
-                    let (keep, remove) = if ai < bi { (ai, bi) } else { (bi, ai) };
-                    face_list[keep] = merged;
-                    face_list.remove(remove);
-                }
-            }
-        }
-        let cleaned = collinear_cleanup(&positions, &face_list);
-        self.rebuild_from_polygon_soup(&positions, &cleaned)
+        let mut result = Self::from_faces(&positions, &faces)?;
+        result.drop_unreferenced_vertices()?;
+        *self = result;
+        Ok(())
     }
 
+    /// 🧵 Dissolves planar vertex stars into their oriented outer boundary.
     pub fn dissolve_vertices(&mut self, verts: &[VertexId]) -> MeshResult<()> {
-        if verts.is_empty() {
-            return Err(MeshKernelError::EmptySelection);
+        if verts.is_empty() { return Err(MeshKernelError::EmptySelection); }
+        for &vertex in verts { self.vertex_position(vertex)?; }
+        let (positions, mut faces) = self.polygon_soup();
+        let mut selected = verts.iter().map(|vertex| vertex.0).collect::<Vec<_>>();
+        selected.sort_unstable(); selected.dedup();
+        for vertex in selected {
+            let incident = faces.iter().enumerate().filter_map(|(id, face)| face.contains(&vertex).then_some(id)).collect::<Vec<_>>();
+            if incident.is_empty() { return Err(MeshKernelError::DegenerateOperation); }
+            let points = faces[incident[0]].iter().map(|&id| Vec3(positions[id as usize])).collect::<Vec<_>>();
+            let normal = newell_normal(&points).normalize();
+            let origin = points[0];
+            let extent = points.iter().map(|point| point.sub(origin).length()).fold(0.0f32, f32::max);
+            if normal.length() == 0.0 || incident.iter().flat_map(|&id| faces[id].iter()).any(|&id| Vec3(positions[id as usize]).sub(origin).dot(normal).abs() > extent * 1e-5) { return Err(MeshKernelError::InvalidInput("vertex dissolution requires a planar star".into())); }
+            let mut boundary = HashMap::new();
+            for &id in &incident {
+                let face = &faces[id];
+                for i in 0..face.len() {
+                    let (a,b) = (face[i], face[(i+1)%face.len()]);
+                    if boundary.remove(&(b,a)).is_none() && boundary.insert((a,b),()).is_some() { return Err(MeshKernelError::NonManifold); }
+                }
+            }
+            let mut next = HashMap::new();
+            for &(a,b) in boundary.keys() { if next.insert(a,b).is_some() { return Err(MeshKernelError::NonManifold); } }
+            let start = *next.keys().min().ok_or(MeshKernelError::DegenerateOperation)?;
+            let mut merged = Vec::new();
+            let mut cursor = start;
+            loop {
+                if cursor != vertex { merged.push(cursor); }
+                cursor = next.remove(&cursor).ok_or(MeshKernelError::NonManifold)?;
+                if cursor == start { break; }
+                if merged.len() > boundary.len() { return Err(MeshKernelError::NonManifold); }
+            }
+            if !next.is_empty() || merged.len() < 3 { return Err(MeshKernelError::NonManifold); }
+            let incident = incident.into_iter().collect::<HashSet<_>>();
+            faces = faces.into_iter().enumerate().filter_map(|(id,face)| (!incident.contains(&id)).then_some(face)).collect();
+            faces.push(merged);
         }
-        let remove: HashMap<u32, bool> = verts.iter().map(|v| (v.0, true)).collect();
-        let (positions, face_list) = self.polygon_soup();
-        let new_faces: Vec<Vec<u32>> = face_list.into_iter().filter(|f| !f.iter().any(|vi| remove.contains_key(vi))).collect();
-        self.rebuild_from_polygon_soup(&positions, &new_faces)
+        let mut result = Self::from_faces(&positions, &faces)?;
+        result.drop_unreferenced_vertices()?;
+        *self = result;
+        Ok(())
     }
 
     pub fn subdivide_faces(&mut self, faces: &[FaceId]) -> MeshResult<()> {
@@ -1320,93 +1383,106 @@ impl HalfedgeMesh {
         Ok(filled)
     }
 
+    /// 🪞 Reflects geometry on one side of the axis plane and welds its seam.
     pub fn mirror(&mut self, axis: MirrorAxis, weld_threshold: f32) -> MeshResult<()> {
-        let (positions, face_list) = self.polygon_soup();
-        let mut all_positions = positions.clone();
-        let offset = all_positions.len() as u32;
-        for p in &positions {
-            let mut np = *p;
-            match axis {
-                MirrorAxis::X => np[0] = -np[0],
-                MirrorAxis::Y => np[1] = -np[1],
-                MirrorAxis::Z => np[2] = -np[2],
-            }
-            all_positions.push(np);
-        }
-        let mut all_faces = face_list.clone();
-        for face in &face_list {
-            let mut mirrored: Vec<u32> = face.iter().map(|&vi| vi + offset).collect();
-            mirrored.reverse();
-            all_faces.push(mirrored);
-        }
-        self.rebuild_from_polygon_soup(&all_positions, &all_faces)?;
-        let vert_count = self.vertex_count();
-        let mut to_merge: Vec<VertexId> = Vec::new();
-        for i in 0..vert_count {
-            for j in (i + 1)..vert_count {
-                let pi = self.vertex_position(VertexId(i as u32))?;
-                let pj = self.vertex_position(VertexId(j as u32))?;
-                if pi.sub(pj).length() <= weld_threshold {
-                    to_merge.push(VertexId(i as u32));
-                    to_merge.push(VertexId(j as u32));
-                    if to_merge.len() >= 2 {
-                        let batch = to_merge.clone();
-                        to_merge.clear();
-                        let _ = self.merge_vertices(&batch, WeldMode::Center, weld_threshold);
-                    }
-                }
+        if !weld_threshold.is_finite() || weld_threshold < 0.0 { return Err(MeshKernelError::DegenerateOperation); }
+        let axis = match axis { MirrorAxis::X => 0, MirrorAxis::Y => 1, MirrorAxis::Z => 2 };
+        let (mut positions, faces) = self.polygon_soup();
+        let tolerance = weld_threshold * 0.5;
+        if positions.iter().any(|point| point[axis] > tolerance) && positions.iter().any(|point| point[axis] < -tolerance) { return Err(MeshKernelError::InvalidInput("mirror geometry must lie on one side of its plane".into())); }
+        let count = positions.len();
+        let mut reflected = Vec::with_capacity(count);
+        for id in 0..count {
+            if positions[id][axis].abs() <= tolerance {
+                positions[id][axis] = 0.0;
+                reflected.push(id as u32);
+            } else {
+                let mut point = positions[id]; point[axis] = -point[axis];
+                reflected.push(positions.len() as u32); positions.push(point);
             }
         }
+        let mut result_faces = Vec::new();
+        for face in faces {
+            if face.iter().all(|&id| positions[id as usize][axis] == 0.0) { continue; }
+            let mirrored = face.iter().rev().map(|&id| reflected[id as usize]).collect();
+            result_faces.push(face); result_faces.push(mirrored);
+        }
+        let mut result = Self::from_faces(&positions, &result_faces)?;
+        result.drop_unreferenced_vertices()?;
+        *self = result;
         Ok(())
     }
 
     pub fn decimate(&mut self, target_ratio: f32) -> MeshResult<()> {
-        let ratio = target_ratio.clamp(0.1, 1.0);
-        let target_verts = ((self.vertex_count() as f32) * ratio).ceil() as usize;
-        if target_verts >= self.vertex_count() {
-            return Ok(());
-        }
-        // 🩹️ Merging remaps a vertex id but never shrinks `self.vertices`, so `self.vertex_count()` itself
-        // never drops; track the live (merged-away-aware) count locally for the loop guard instead, or this
-        // never converges on `target_verts` and instead collapses edges until the mesh is empty.
-        let mut live_verts = self.vertex_count();
-        while live_verts > target_verts && self.edge_count() > 0 {
-            let mut shortest: Option<(EdgeId, f32)> = None;
-            for he_id in 0..self.halfedges.len() {
-                if he_id % 2 != 0 {
-                    continue;
+        self.decimate_with_progress(target_ratio, |_| true)
+    }
+
+    /// 🪶 Collapses shortest safe edges, preserving winding and manifold edge incidence.
+    pub fn decimate_with_progress(&mut self, target_ratio: f32, mut progress: impl FnMut(f32) -> bool) -> MeshResult<()> {
+        if !target_ratio.is_finite() || target_ratio <= 0.0 || target_ratio > 1.0 { return Err(MeshKernelError::InvalidInput("decimation ratio must be in (0,1]".into())); }
+        let initial = self.vertex_count();
+        let target = ((initial as f32 * target_ratio).ceil() as usize).max(4);
+        if target >= initial { return Ok(()); }
+        if initial.saturating_mul(self.halfedges.len()).saturating_mul(initial - target) > 32_000_000 { return Err(MeshKernelError::InvalidInput("decimation work budget exceeded".into())); }
+        let mut result = self.clone();
+        let closed = self.halfedges.iter().all(|edge| edge.twin.is_some());
+        while result.vertex_count() > target {
+            if !progress((initial - result.vertex_count()) as f32 / (initial - target) as f32) { return Err(MeshKernelError::InvalidInput("operation cancelled".into())); }
+            let (positions, faces) = result.polygon_soup();
+            let mut edges = HashSet::new();
+            for face in &faces { for i in 0..face.len() { let (a,b) = (face[i],face[(i+1)%face.len()]); edges.insert((a.min(b),a.max(b))); } }
+            let mut edges = edges.into_iter().collect::<Vec<_>>();
+            edges.sort_by(|&(a,b),&(c,d)| Vec3(positions[a as usize]).sub(Vec3(positions[b as usize])).length().total_cmp(&Vec3(positions[c as usize]).sub(Vec3(positions[d as usize])).length()).then((a,b).cmp(&(c,d))));
+            let mut replacement = None;
+            for (a,b) in edges {
+                let mut candidate_positions = positions.clone();
+                candidate_positions[a as usize] = Vec3(positions[a as usize]).lerp(Vec3(positions[b as usize]),0.5).0;
+                let mut candidate_faces = Vec::new();
+                let mut safe = true;
+                for original in &faces {
+                    let mut face = original.iter().map(|&id| if id == b { a } else { id }).collect::<Vec<_>>();
+                    face.dedup(); if face.first() == face.last() { face.pop(); }
+                    if face.len() < 3 { continue; }
+                    if face.iter().copied().collect::<HashSet<_>>().len() != face.len() { safe = false; break; }
+                    let before = newell_normal(&original.iter().map(|&id| Vec3(positions[id as usize])).collect::<Vec<_>>()).normalize();
+                    let after = newell_normal(&face.iter().map(|&id| Vec3(candidate_positions[id as usize])).collect::<Vec<_>>()).normalize();
+                    if after.length() == 0.0 || before.dot(after) <= 0.0 { safe = false; break; }
+                    candidate_faces.push(face);
                 }
-                if let Ok((v0, v1)) = self.edge_endpoints(EdgeId(he_id as u32)) {
-                    let len = self.vertex_position(v0)?.sub(self.vertex_position(v1)?).length();
-                    if shortest.is_none_or(|(_, l)| len < l) {
-                        shortest = Some((EdgeId(he_id as u32), len));
+                if !safe || candidate_faces.len() < 4 { continue; }
+                let mut incidence = HashMap::<(u32,u32),(usize,i32)>::new();
+                for face in &candidate_faces {
+                    for i in 0..face.len() {
+                        let (a,b) = (face[i],face[(i+1)%face.len()]);
+                        let entry = incidence.entry((a.min(b),a.max(b))).or_default(); entry.0 += 1; entry.1 += if a < b { 1 } else { -1 };
                     }
                 }
+                if !incidence.values().all(|edge| *edge == (2,0) || (!closed && edge.0 == 1)) { continue; }
+                if closed {
+                    let mut links = HashMap::new();
+                    for face in &candidate_faces {
+                        if let Some(index) = face.iter().position(|&id| id == a) {
+                            let previous = face[(index + face.len() - 1) % face.len()];
+                            let next = face[(index + 1) % face.len()];
+                            if links.insert(previous,next).is_some() { safe = false; break; }
+                        }
+                    }
+                    if !safe || links.is_empty() { continue; }
+                    let start = *links.keys().min().unwrap();
+                    let mut cursor = start;
+                    while let Some(next) = links.remove(&cursor) { cursor = next; if cursor == start { break; } }
+                    if cursor != start || !links.is_empty() { continue; }
+                }
+                let mut candidate = Self::from_faces(&candidate_positions,&candidate_faces)?;
+                candidate.drop_unreferenced_vertices()?;
+                if candidate.vertex_count() < result.vertex_count() { replacement = Some(candidate); break; }
             }
-            let Some((edge, _)) = shortest else { break };
-            let (v0, v1) = self.edge_endpoints(edge)?;
-            let p0 = self.vertex_position(v0)?;
-            let p1 = self.vertex_position(v1)?;
-            let mid = p0.lerp(p1, 0.5);
-            let (positions, face_list) = self.polygon_soup();
-            let mut remap: HashMap<u32, u32> = HashMap::new();
-            remap.insert(v1.0, v0.0);
-            let mut new_positions = positions;
-            new_positions[v0.0 as usize] = mid.0;
-            let new_faces: Vec<Vec<u32>> = face_list
-                .into_iter()
-                .map(|f| f.into_iter().map(|vi| *remap.get(&vi).unwrap_or(&vi)).collect())
-                .filter(|f: &Vec<u32>| {
-                    let mut u = f.clone();
-                    u.sort();
-                    u.dedup();
-                    u.len() >= 3
-                })
-                .collect();
-            self.rebuild_from_polygon_soup(&new_positions, &new_faces)?;
-            live_verts -= 1;
+            let Some(candidate) = replacement else { break; };
+            result = candidate;
         }
-        self.drop_unreferenced_vertices()
+        if !progress(1.0) { return Err(MeshKernelError::InvalidInput("operation cancelled".into())); }
+        *self = result;
+        Ok(())
     }
 
     /// 🧹️ Compacts away vertices no longer referenced by any face, so `vertex_count()` reflects the mesh's
@@ -1436,36 +1512,70 @@ impl HalfedgeMesh {
     }
 
     pub fn set_shading(&mut self, faces: &[FaceId], smooth: bool) -> MeshResult<()> {
-        for &fid in faces {
-            let f = self.faces.get_mut(fid.0 as usize).ok_or(MeshKernelError::InvalidHandle)?;
-            f.smooth = smooth;
-        }
-        Ok(())
+        if faces.is_empty() { return Err(MeshKernelError::EmptySelection); }
+        for &face in faces { self.face_vertex_ids(face)?; }
+        for &face in faces { self.faces[face.0 as usize].smooth = smooth; }
+        self.recompute_normals()
     }
 
     pub fn recompute_normals(&mut self) -> MeshResult<()> {
-        for v in &mut self.vertices {
-            v.normal = None;
-        }
+        let mut flat = vec![None; self.vertex_count()];
+        let mut smooth_sums = vec![Vec3::ZERO; self.vertex_count()];
         for fi in 0..self.faces.len() {
-            let face_normal = self.face_normal(FaceId(fi as u32))?;
-            let verts = self.face_vertex_ids(FaceId(fi as u32))?;
-            let smooth = self.faces[fi].smooth;
-            for v in verts {
-                let vert = &mut self.vertices[v.0 as usize];
-                if smooth {
-                    let n = vert.normal.map_or(Vec3::ZERO, Vec3).add(face_normal);
-                    vert.normal = Some(n.normalize().0);
-                } else {
-                    vert.normal = Some(face_normal.0);
-                }
+            let normal = self.face_normal(FaceId(fi as u32))?;
+            for vertex in self.face_vertex_ids(FaceId(fi as u32))? {
+                if flat[vertex.0 as usize].is_none() { flat[vertex.0 as usize] = Some(normal); }
+                if self.faces[fi].smooth { smooth_sums[vertex.0 as usize] = smooth_sums[vertex.0 as usize].add(normal); }
             }
+        }
+        for (id,vertex) in self.vertices.iter_mut().enumerate() {
+            vertex.normal = if smooth_sums[id].length() > 0.0 { Some(smooth_sums[id].normalize().0) } else { flat[id].map(|normal| normal.0) };
         }
         Ok(())
     }
+
 }
 
 //#endregion Edit
+
+fn clip_convex_mesh(positions: &mut Vec<[f32; 3]>, faces: &mut Vec<Vec<u32>>, normal: Vec3, distance: f32, epsilon: f32) -> MeshResult<()> {
+    let mut intersections = HashMap::new();
+    let mut cap = HashSet::new();
+    let mut clipped = Vec::new();
+    for face in faces.iter() {
+        let mut result = Vec::new();
+        for index in 0..face.len() {
+            let (a,b) = (face[index],face[(index+1)%face.len()]);
+            let da = Vec3(positions[a as usize]).dot(normal) - distance;
+            let db = Vec3(positions[b as usize]).dot(normal) - distance;
+            if da <= epsilon { result.push(a); if da.abs() <= epsilon { cap.insert(a); } }
+            if (da > epsilon && db < -epsilon) || (da < -epsilon && db > epsilon) {
+                let key = (a.min(b),a.max(b));
+                let id = *intersections.entry(key).or_insert_with(|| {
+                    let point = Vec3(positions[a as usize]).lerp(Vec3(positions[b as usize]), da / (da-db));
+                    let id = positions.len() as u32; positions.push(point.0); id
+                });
+                result.push(id); cap.insert(id);
+            }
+        }
+        result.dedup();
+        if result.first() == result.last() { result.pop(); }
+        if result.len() >= 3 { clipped.push(result); }
+    }
+    if cap.len() < 3 { return Err(MeshKernelError::InvalidInput("bevel width does not intersect the solid".into())); }
+    let mut cap = cap.into_iter().collect::<Vec<_>>();
+    let center = cap.iter().fold(Vec3::ZERO, |sum,&id| sum.add(Vec3(positions[id as usize]).scale(1.0/cap.len() as f32)));
+    let axis = if normal.x().abs() < 0.9 { Vec3::new(1.0,0.0,0.0) } else { Vec3::new(0.0,1.0,0.0) };
+    let u = normal.cross(axis).normalize();
+    let v = normal.cross(u);
+    cap.sort_by(|&a,&b| {
+        let a = Vec3(positions[a as usize]).sub(center); let b = Vec3(positions[b as usize]).sub(center);
+        a.dot(v).atan2(a.dot(u)).total_cmp(&b.dot(v).atan2(b.dot(u)))
+    });
+    clipped.push(cap);
+    *faces = clipped;
+    Ok(())
+}
 
 //#region Uv
 

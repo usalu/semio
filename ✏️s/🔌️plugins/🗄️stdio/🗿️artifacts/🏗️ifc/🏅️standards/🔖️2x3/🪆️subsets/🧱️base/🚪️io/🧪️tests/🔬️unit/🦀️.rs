@@ -99,7 +99,7 @@ async fn exact_native_engine_raw_serializers_analyzer_and_composer_roundtrip() {
 async fn snapshot_and_facets_forbid_native_shadow_state() {
     let value = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(demo_ifc2x3_snapshot()))).expect("serialize logical snapshot");
     let object = value.as_object().expect("snapshot object");
-    assert_eq!(object.keys().map(String::as_str).collect::<Vec<_>>(), vec!["document", "edmPreamble", "schema"]);
+    assert_eq!(object.keys().map(String::as_str).collect::<Vec<_>>(), vec!["document", "schema"]);
     for (relative, text) in [
         ("snapshot.proto", include_str!("../../../🧬️schema/📸️snapshot/🛰️.proto")),
         ("snapshot.graphql", include_str!("../../../🧬️schema/📸️snapshot/🔗️.graphql")),
@@ -250,3 +250,39 @@ mod conformance_laws {
     }
 }
 //#endregion 🔖️ConformanceLaws
+
+
+/// 📐️ Every committed IFC 2x3 fixture reads through the contract's canonical Part-21 codec: the canonical text re-reads as the
+/// same graph and is a fixed point. With `SEMIO_PART21_ORACLE_OUT` naming a directory, each file's canonical JSON projection is
+/// written there beside its source path for the IfcOpenShell oracle (ticket `26/09/23/END-TO-END-OS-HUB-COLLABORATION-MCP`,
+/// `wp-lb2/lb2-p16-part21-oracle.py`).
+#[test]
+fn committed_ifc2x3_fixtures_read_through_the_canonical_part21_codec() {
+    use semio_s_artifact_stdio_contract::part21::{parse_part21, write_part21};
+    let mut pending = vec![std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️2x3")];
+    let mut files = Vec::new();
+    while let Some(directory) = pending.pop() {
+        for entry in std::fs::read_dir(&directory).expect("fixture directory") {
+            let path = entry.expect("fixture entry").path();
+            if path.is_dir() {
+                pending.push(path);
+            } else if path.extension().is_some_and(|extension| extension == "ifc") {
+                files.push(path);
+            }
+        }
+    }
+    files.sort();
+    assert!(files.len() >= 40, "the committed IFC 2x3 fixtures are found: {}", files.len());
+    let out = std::env::var_os("SEMIO_PART21_ORACLE_OUT").map(std::path::PathBuf::from);
+    for (index, path) in files.iter().enumerate() {
+        let text = String::from_utf8(std::fs::read(path).expect("fixture bytes")).expect("utf-8 fixture");
+        let document = parse_part21(&text).unwrap_or_else(|error| panic!("{}: {error}", path.display()));
+        let canonical = write_part21(&document);
+        let reread = parse_part21(&canonical).expect("canonical text re-reads");
+        assert_eq!(reread, document, "{}: the canonical text re-reads as the same graph", path.display());
+        assert_eq!(write_part21(&reread), canonical, "{}: the canonical text is a fixed point", path.display());
+        if let Some(out) = &out {
+            std::fs::write(out.join(format!("{index:03}.json")), format!("{{\"source\":{},\"document\":{}}}", dsl::json::to_json_string(&path.to_string_lossy().to_string()), dsl::json::to_json_string(&document))).expect("oracle projection");
+        }
+    }
+}

@@ -1,0 +1,110 @@
+{
+ "plugin": "wfc",
+ "dir": "🀄️wfc",
+ "apps": [
+  {
+   "app": "s.wfc.wfc3d@1/*#editor",
+   "examples": [
+    {
+     "id": "tower-stack",
+     "document": "distinct"
+    },
+    {
+     "id": "two-room-corridor",
+     "document": "distinct"
+    },
+    {
+     "id": "wall-roof-facade-strip",
+     "document": "distinct"
+    }
+   ]
+  },
+  {
+   "app": "s.wfc.grid3d@1/*#editor",
+   "examples": [
+    {
+     "id": "blocks",
+     "document": "distinct"
+    },
+    {
+     "id": "pipes-3d",
+     "document": "distinct"
+    }
+   ]
+  },
+  {
+   "app": "s.wfc.bitmap@1/*#editor",
+   "examples": [
+    {
+     "id": "flowers-24",
+     "document": "distinct"
+    },
+    {
+     "id": "rooms-16",
+     "document": "distinct"
+    }
+   ]
+  },
+  {
+   "app": "s.wfc.wfc2d@1/*#editor",
+   "examples": [
+    {
+     "id": "hex-ring",
+     "document": "distinct"
+    },
+    {
+     "id": "terrain-ring",
+     "document": "distinct"
+    },
+    {
+     "id": "two-room-corridor",
+     "document": "distinct"
+    },
+    {
+     "id": "wall-roof-facade-strip",
+     "document": "distinct"
+    }
+   ]
+  },
+  {
+   "app": "s.wfc.grid2d@1/*#editor",
+   "examples": [
+    {
+     "id": "terrain",
+     "document": "distinct"
+    },
+    {
+     "id": "pipes",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "semio_s_artifact_wfc_3d::editor::wfc3d::Wfc3dEditor",
+   "create": "semio_s_artifact_wfc_3d::editor::wfc3d::create_wfc3d_editor",
+   "app": "s.wfc.wfc3d@1/*#editor"
+  },
+  {
+   "editor": "semio_s_artifact_wfc_grid3d::editor::grid3d::Grid3dEditor",
+   "create": "semio_s_artifact_wfc_grid3d::editor::grid3d::create_grid3d_editor",
+   "app": "s.wfc.grid3d@1/*#editor"
+  },
+  {
+   "editor": "semio_s_artifact_wfc_bitmap::editor::bitmap::BitmapEditor",
+   "create": "semio_s_artifact_wfc_bitmap::editor::bitmap::create_bitmap_editor",
+   "app": "s.wfc.bitmap@1/*#editor"
+  },
+  {
+   "editor": "semio_s_artifact_wfc_2d::editor::wfc2d::Wfc2dEditor",
+   "create": "semio_s_artifact_wfc_2d::editor::wfc2d::create_wfc2d_editor",
+   "app": "s.wfc.wfc2d@1/*#editor"
+  },
+  {
+   "editor": "semio_s_artifact_wfc_grid2d::editor::grid2d::Grid2dEditor",
+   "create": "semio_s_artifact_wfc_grid2d::editor::grid2d::create_grid2d_editor",
+   "app": "s.wfc.grid2d@1/*#editor"
+  }
+ ]
+}

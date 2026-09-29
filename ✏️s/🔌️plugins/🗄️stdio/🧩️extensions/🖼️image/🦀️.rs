@@ -46,13 +46,20 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 
 /// 🔌️ Builds the `stdio-image` bundle: every png/jpg/bmp/tiff/gif/svg subset's editor and viewer (with the owner-mutation roster where
 /// the subset's mutation enum derives one), one activation per artifact kind it opens read live from that kind's own
-/// `artifact_kind().id`, and the exact-pin runtime dependency on `stdio`, which owns those kinds and their codecs.
+/// `artifact_kind().id`, the exact-pin runtime dependency on `stdio`, which owns those kinds and their codecs, and the hosted runtime of
+/// each of them (`host_artifact`: schemas, inferences, document codecs, composers, formats, subset validators) in this component.
 pub fn plugin() -> Result<Plugin<StdioImageApps>, PluginAssemblyError> {
     Plugin::<StdioImageApps>::builder("stdio-image")
         .label("Stdio Image")
         .version(env!("CARGO_PKG_VERSION"))
         .package_id("semio:stdio-image")
         .depends_on("stdio", semio_framework::tree_pin!())
+        .host_artifact(semio_s_artifact_stdio_png::declaration(semio_s_artifact_stdio_png::definition()?).map_err(PluginAssemblyError::definition)?)
+        .host_artifact(semio_s_artifact_stdio_jpg::declaration(semio_s_artifact_stdio_jpg::definition()?).map_err(PluginAssemblyError::definition)?)
+        .host_artifact(semio_s_artifact_stdio_bmp::declaration(semio_s_artifact_stdio_bmp::definition()?).map_err(PluginAssemblyError::definition)?)
+        .host_artifact(semio_s_artifact_stdio_tiff::declaration(semio_s_artifact_stdio_tiff::definition()?).map_err(PluginAssemblyError::definition)?)
+        .host_artifact(semio_s_artifact_stdio_gif::declaration(semio_s_artifact_stdio_gif::definition()?).map_err(PluginAssemblyError::definition)?)
+        .host_artifact(semio_s_artifact_stdio_svg::declaration(semio_s_artifact_stdio_svg::definition()?).map_err(PluginAssemblyError::definition)?)
         .editor::<semio_s_artifact_stdio_png::editor::png::PngEditor>(semio_s_artifact_stdio_png::editor::png::create_png_editor())
         .viewer::<semio_s_artifact_stdio_png::viewer::png::PngViewer>(semio_s_artifact_stdio_png::viewer::png::create_png_viewer())
         .editor::<semio_s_artifact_stdio_jpg::editor::jpg_any::JpgAnyEditor>(semio_s_artifact_stdio_jpg::editor::jpg_any::create_jpg_any_editor())

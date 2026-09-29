@@ -231,20 +231,24 @@ fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node_ceili
 //#endregion 🪟️WindowLaws
 
 //#region 🙈️RowFlagLaws
+/// 🔁️ A row's inline toggles as `(icon, asked)`: each row action names only its set-verb, and the row's ONE target carries
+/// the value that verb sets — the flag state the click ASKS FOR.
 fn row_actions_of(node: &BuiltNode) -> Vec<(String, bool)> {
     match &node.component {
         ui::Component::TreeItem(props) => props
             .row_actions
             .iter()
             .map(|action| {
-                let asked = match action.action.args.as_ref() {
-                    Some(semio_framework_plugin::UiValue::Map(map)) => map.iter().find(|(key, _)| key.as_str() == "value").and_then(|(_, value)| match value {
-                        semio_framework_plugin::UiValue::Bool(value) => Some(value),
-                        _ => None,
-                    }),
-                    _ => None,
+                let flag = match action.verb.as_str() {
+                    "setSelectionHidden" | "setTargetRegionHidden" => "hidden",
+                    "setSelectionLocked" | "setTargetRegionLocked" => "locked",
+                    verb => panic!("a row toggle names a set-verb, not {verb}"),
                 };
-                (action.icon.as_str().to_string(), asked.expect("a row toggle always names the state it asks for"))
+                let asked = props.target.as_ref().and_then(|target| target.args.as_ref()).and_then(|args| args.iter().find(|(key, _)| key.as_str() == flag)).and_then(|(_, value)| match value {
+                    semio_framework_plugin::UiValue::Bool(value) => Some(value),
+                    _ => None,
+                });
+                (action.icon.as_str().to_string(), asked.expect("a row toggle's target always names the state it asks for"))
             })
             .collect(),
         _ => Vec::new(),
@@ -253,7 +257,7 @@ fn row_actions_of(node: &BuiltNode) -> Vec<(String, bool)> {
 
 fn flagged_scene(hidden: bool, locked: bool) -> Puzzle2dScene {
     let mut scene = scaled_scene(1, 0);
-    scene.fixture["nodes"][0]["hidden"] = serde_json::json!(hidden);
+    scene.fixture["nodes"][0]["visible"] = serde_json::json!(!hidden);
     scene.fixture["nodes"][0]["locked"] = serde_json::json!(locked);
     scene
 }

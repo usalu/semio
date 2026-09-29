@@ -416,6 +416,24 @@ fn mounted_layout_wraps_text_inside_a_narrow_flex_item() {
     assert!(narrow_width <= wide_width);
 }
 
+/// 🤝️ LAW (ticket 26/09/23 session 14d, WG11 T7b): the retained layout's text worker prices a run with the atlas's own pair
+/// kerning — a hugging text node is exactly as wide as the atlas measures the run, never its unkerned advance sum.
+#[test]
+fn mounted_layout_prices_a_text_run_with_the_atlas_pair_kerning() {
+    let value = "The quick brown fox jumps over the lazy dog";
+    let mut tree = UiTree::new();
+    let root = mount(&mut tree, None, 0, leaf(), stack_spec(Axis::Horizontal, Align::Start, Justify::Start, false));
+    let text = mount(&mut tree, Some(root), 1, UiNode::Text(UiTextNode { value: Label::data(value), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None }), LayoutSpec::default());
+    tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
+    assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut tree, root, Theme::default(), 1_000.0, 400.0));
+    let (_, _, width, _) = solved(&tree, text);
+    let mut atlas = crate::wgpu::text::FontAtlas::shaped_default();
+    let kerned = atlas.measure_text(value, DEFAULT_TEXT_SIZE_PX).0;
+    let unkerned: f32 = value.chars().map(|ch| atlas.ensure_glyph(ch, DEFAULT_TEXT_SIZE_PX).advance).sum();
+    assert!(unkerned - kerned > 0.5, "the pangram kerns: {unkerned} vs {kerned}");
+    assert!(close(width, kerned), "the laid-out run is the atlas's kerned width: {width} vs {kerned}");
+}
+
 fn composite_intrinsic_and_layout(tree: &mut UiTree, root: NodeId, width: f32) -> f32 {
     let identity = MountedLayoutIdentity { surface: UiSurfaceToken::new(5, 1), generation: 1, revision: 0, theme_revision: 0, viewport_revision: 0 };
     let mut job = MountedLayoutJob::try_new(tree, root, identity, Theme::default(), width, 400.0, false, ui_contract::FlowInline::Ltr).expect("composite layout job");

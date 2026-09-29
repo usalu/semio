@@ -3,18 +3,22 @@
     {
       "id": 1,
       "entities": [
-        [
-          "IFCPROJECT",
-          [
+        {
+          "typeName": "IFCPROJECT",
+          "arguments": [
             {
-              "Str": "0Xk$Q1nMz9wgLp2vBcRt4A"
+              "kind": "str",
+              "value": "0Xk$Q1nMz9wgLp2vBcRt4A"
             },
-            "Unset",
             {
-              "Str": "Nakagin Capsule Tower"
+              "kind": "unset"
+            },
+            {
+              "kind": "str",
+              "value": "Nakagin Capsule Tower"
             }
           ]
-        ]
+        }
       ]
     }
   ]

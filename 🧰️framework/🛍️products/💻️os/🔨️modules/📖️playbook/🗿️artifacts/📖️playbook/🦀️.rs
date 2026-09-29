@@ -606,6 +606,7 @@ pub mod generation_forms {
                     label: Some(generation_tree_label("remove", locale, terminology)),
                     action: generation_action(controller_id, "removeGeneration", Some(DslValue::object([("id".to_string(), DslValue::String(generation.id.clone()))]))),
                     placement: Some(UiTreeActionPlacement::Menu),
+                    disabled: false,
                 }];
                 actions.insert(
                     0,
@@ -614,6 +615,7 @@ pub mod generation_forms {
                         label: Some(generation_tree_label("rename", locale, terminology)),
                         action: generation_action(controller_id, "renameGeneration", Some(DslValue::object([("id".to_string(), DslValue::String(generation.id.clone())), ("name".to_string(), DslValue::String(format!("{} copy", generation.name)))]))),
                         placement: Some(UiTreeActionPlacement::Menu),
+                        disabled: false,
                     },
                 );
                 UiTreeItemNode { window: None, granularity: None,

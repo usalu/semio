@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/space/space/transient/mutation/SetArtifactPresence/schema.json",
+  "title": "SetArtifactPresence",
+  "description": "👥️ The live actors on one artifact's documents (comma-separated actor ids, empty when nobody is on it), replacing that artifact's presence row in the Space index transient projection.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifactId",
+    "actorsCsv"
+  ],
+  "properties": {
+    "artifactId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "actorsCsv": {
+      "type": "string",
+      "maxLength": 4096
+    }
+  }
+}

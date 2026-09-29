@@ -113,10 +113,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
    *   no env pin (`VITE_SEMIO_APP_ID`) and no `appRole` is the registry `app` column, else `apps[0]`;
    * — the rows it offers are `examplesForApp` = `examplesForDialect(examples, app.dialect)`: manifest
    *   order, same dialect coordinate, deduplicated by id;
-   * — it offers them at all only when `appSwitchesExamples(app.id, app.windowKinds, app.actions)` holds,
-   *   i.e. `undeclaredActionDiagnostic` finds `setActiveExample` on a window kind or on the app itself
-   *   (`🛠️ShellHelpers/🟦️.tsx`) — restated here rather than imported, because that module is the
-   *   renderer's React surface and this gate is a static read of committed JSON.
+   * — an editor offers them whenever the catalogue is non-empty. The framework loads `setActiveExample`
+   *   for an editor that never declared the action (`appOffersRegisteredExamples`). A non-editor still
+   *   needs the action on a window kind or on the app. Restated here rather than imported, because
+   *   `🛠️ShellHelpers` is the renderer's React surface and this gate is a static read of committed JSON.
    * — `labels` is the text each row RENDERS in that picker: play is terminology-`native` and locale-`en`
    *   (`PLAY_LOCALE`/`PLAY_TERMINOLOGY`), so the navbar shows `label.native.en`, which is authored prose
    *   and NOT the example id spelled out. */
@@ -134,7 +134,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           const ids = [...new Set(offered.map((example: any) => example.id as string))] as string[];
           const labels = Object.fromEntries(ids.map((id) => [id, offered.find((example: any) => example.id === id)?.label?.native?.en ?? ""]));
           const declares = (actions: readonly any[] | undefined) => (actions ?? []).some((action: any) => action.id === "setActiveExample");
-          const switches = ((app?.windowKinds ?? []) as any[]).some((kind) => declares(kind.actions)) || declares(app?.actions);
+          const declaresAction = ((app?.windowKinds ?? []) as any[]).some((kind) => declares(kind.actions)) || declares(app?.actions);
+          const switches = app?.role === "editor" || declaresAction;
           return { source: "descriptor", appId: app?.id ?? null, ids, labels, switches };
         })()
       : { source: "disk", appId: row.app ?? null, ids: diskExampleIds(repoRoot, pluginRoot), labels: {}, switches: declaresSetActiveExampleInRust(repoRoot, pluginRoot) };

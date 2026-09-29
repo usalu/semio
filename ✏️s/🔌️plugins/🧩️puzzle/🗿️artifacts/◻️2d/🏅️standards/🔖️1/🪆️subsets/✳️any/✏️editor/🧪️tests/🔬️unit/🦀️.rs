@@ -1593,6 +1593,38 @@ async fn the_board_scene_carries_the_area_brush_extent_and_the_regions_ride_the_
 }
 //#endregion 🎯️BoardRegionEvents
 
+//#region 🙈️SetVerbIdempotence
+/// 🙈️ LAW: an outliner row's set-verbs are idempotent by value — replaying `{verb}{ids|id, flag: true}` (a stale view's
+/// second click) leaves exactly the first dispatch's ONE document edit and a byte-identical document, for the node verbs
+/// and the target-region verbs alike; and a set-verb without its value is refused at the command boundary, never defaulted.
+#[test]
+fn outliner_set_verbs_are_idempotent_by_value_and_refuse_a_missing_value() {
+    let mut app = concrete_forest_app();
+    dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "regionCreate", "payload": { "x": 0.5, "y": 0.5, "width": 10.5, "height": 10.5 } }]).to_string() })), Some(overview::WINDOW_KIND_ID)).expect("region create");
+    let node = first_node_id(&app);
+    let region = law_target_regions(&fixture_of(&app))[0].get("id").and_then(Value::as_str).expect("the painted region has an id").to_string();
+    for (verb, flag, mut args) in [
+        ("setSelectionHidden", "hidden", json!({ "ids": [node.clone()] })),
+        ("setSelectionLocked", "locked", json!({ "ids": [node.clone()] })),
+        ("setTargetRegionHidden", "hidden", json!({ "id": region.clone() })),
+        ("setTargetRegionLocked", "locked", json!({ "id": region.clone() })),
+    ] {
+        assert!(<Puzzle2dPlayApp as ArtifactEditor>::command_from_action(verb, Some(&dsl::DslValue::from(&args))).is_err(), "{verb} without its {flag} value must be refused");
+        args[flag] = json!(true);
+        let first = dispatch(&mut app, verb, Some(&args), None).unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
+        assert_eq!(committed_edits(&first), 1, "{verb} commits exactly one document edit");
+        let set = fixture_of(&app);
+        let replay = dispatch(&mut app, verb, Some(&args), None).unwrap_or_else(|fault| panic!("{verb} replay: {fault:?}"));
+        assert_eq!(committed_edits(&replay), 0, "replaying {verb} with the same value commits no second edit");
+        assert_eq!(fixture_of(&app), set, "replaying {verb} with the same value leaves the document byte-identical");
+    }
+    let fixture = fixture_of(&app);
+    let flagged = fixture_nodes(&fixture).iter().find(|entry| entry.get("id").and_then(Value::as_str) == Some(node.as_str())).cloned().expect("the flagged node");
+    assert!(puzzle2d_entity_hidden(&flagged) && flagged.get("locked").and_then(Value::as_bool) == Some(true), "the node row's set-verbs land in the document's own fields: {flagged}");
+    close_app(&mut app);
+}
+//#endregion 🙈️SetVerbIdempotence
+
 //#region 🔖️Pz2ShippedKindCatalog
 /// 🗂️ The authored [`PUZZLE2D_SHIPPED_NODE_KINDS`] IS the two shipped examples' own node-kind rows,
 /// in their own order — the law that lets the `kind` select be a `const` instead of a parse of

@@ -21,5 +21,6 @@
         "subset": "graph"
       }
     }
-  }
+  },
+  "query": "MATCH (a:Piece)-[r:Connection]->(b:Piece) WHERE a.name = 'b' AND b.name != 'b' RETURN a.name, b.name, b.label"
 }

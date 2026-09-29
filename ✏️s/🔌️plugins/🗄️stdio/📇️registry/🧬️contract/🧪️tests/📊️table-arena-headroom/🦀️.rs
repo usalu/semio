@@ -8,8 +8,8 @@
 //! Oracle: every materialised cell binds an address `(row, column)` that serde_json's RFC 6901 `pointer` resolves in the
 //! case's document, so a shortened window never binds a cell that is not there.
 
-use semio_framework_plugin::app::{editable_table_window_row_at, table_row_action, TableWindowKit, WindowKit, WindowedEditableTableCell};
-use semio_framework_plugin::{ActionId, BuiltNode, Component, Locale, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiMapBuilder, UiValue};
+use semio_framework_plugin::app::{editable_table_window_row_at, row_action, row_target, TableWindowKit, WindowKit, WindowedEditableTableCell};
+use semio_framework_plugin::{BuiltNode, Component, Locale, PluginAssemblyError, RowActionPlacement, TreeWindows, UiAssemblyResult, UiMapBuilder, UiValue};
 use semio_framework_ui_contract as ui;
 use semio_s_artifact_stdio_contract::{render_structural_table, window_kit_indexed_revision_arguments, window_kit_revision_arguments, window_kit_revisioned_cell_arguments, REMOVE_TABLE_ROW_ACTION_ID};
 
@@ -58,12 +58,9 @@ fn structural_table(rows: usize, width: usize, editable_headers: bool, revision:
                 let cells = columns
                     .map(|column| window_kit_revisioned_cell_arguments(row, column, revision).map(|arguments| WindowedEditableTableCell::new(format!("r{row}c{column}"), header(column), "set-cell", arguments)))
                     .collect::<UiAssemblyResult<Vec<_>>>()?;
-                let remove = table_row_action(
-                    "trash-2",
-                    "Remove row",
-                    (ActionId::try_v1(CONTROLLER, REMOVE_TABLE_ROW_ACTION_ID).ok_or_else(|| PluginAssemblyError::new("law.remove-row", "invalid action"))?, Some(window_kit_indexed_revision_arguments("row", row, revision)?)),
-                )?;
-                editable_table_window_row_at(&format!("row-{row}"), CONTROLLER, locale, column_offset, cells, [remove])
+                let remove = row_action("trash-2", "Remove row", REMOVE_TABLE_ROW_ACTION_ID, RowActionPlacement::Row)?;
+                let target = row_target(CONTROLLER, Some(window_kit_indexed_revision_arguments("row", row, revision)?), None)?;
+                editable_table_window_row_at(&format!("row-{row}"), CONTROLLER, locale, column_offset, cells, [remove], Some(target))
             },
         )
     };

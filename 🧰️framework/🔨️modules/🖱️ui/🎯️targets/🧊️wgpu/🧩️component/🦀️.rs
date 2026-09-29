@@ -2384,6 +2384,10 @@ pub mod ui {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
         pub placement: Option<UiTreeActionPlacement>,
+        /// 🚫️ Painted and announced disabled; its gesture dispatches nothing (the contract refuses the verb typed).
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[value(default, skip_serializing_if = "std::ops::Not::not")]
+        pub disabled: bool,
     }
 
     impl UiTreeItemAction {
@@ -2398,13 +2402,11 @@ pub mod ui {
     /// items means expandable-but-not-yet-loaded, never "empty" — a renderer pitches the
     /// unmaterialised rows as empty spacer bands so the scrollbar spans the whole document. The
     /// legacy-node mirror of `ui_contract::TreeWindow`; the two are bridged in
-    /// `🎯️targets/🧊️wgpu/🔀️reconcile/🦀️.rs`.
-    ///
-    /// ⚠️ GAP (ticket 26/09/16/ARTIFACT-TREE-VIRTUALISED-STREAMING packet P5): the wgpu target
-    /// RENDERS a window but never REQUESTS one. React's host owns scroll/open state and reports it
-    /// back through `ViewModel.tree_windows`; the wgpu shell has no equivalent observer, so a wgpu
-    /// tree only ever shows the first-paint window its guest chose. There is deliberately no `+N`
-    /// continuation-row fallback.
+    /// `🎯️targets/🧊️wgpu/🔀️reconcile/🦀️.rs`. The retained layout pitches the unmaterialised rows as spacers
+    /// (`layout::tree_window_spacer_px`), `Ui::tree_window_measures` reads every windowed container against its scroll
+    /// viewport, and the one request rule (`🧱️elements/🌳️Tree/🪟️window/🦀️.rs`, React's `treeWindowServedRequestsV1`) asks
+    /// back the rows the viewport needs — the same `ViewModel.tree_windows` React's host reports. There is deliberately no
+    /// `+N` continuation-row fallback.
     #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
     #[value(rename_all = "camelCase")]

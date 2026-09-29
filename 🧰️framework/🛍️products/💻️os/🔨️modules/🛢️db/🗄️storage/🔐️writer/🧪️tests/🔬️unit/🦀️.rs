@@ -221,3 +221,52 @@ fn wal_writer_file_lock_excludes_independent_instances_and_processes() {
     while second.close_step().unwrap() {}
     assert!(second.terminal_is_empty());
 }
+
+/// 🚦️ The admission policy the code enforces is the declared one, and its line is first come, first served: only the head
+/// is told about freed capacity, a waiter that leaves hands the turn to the next one (and only the head's leaving does),
+/// and one waiter beyond the declared bound is refused as transient without joining.
+#[test]
+fn the_writer_admission_line_is_the_declared_first_come_first_served_policy() {
+    let fixture = fixture();
+    let admission = &fixture["admission"];
+    assert_eq!(admission["waitMs"].as_u64().unwrap(), WAL_WRITER_ADMISSION_WAIT_MS);
+    assert_eq!(admission["waiters"].as_u64().unwrap() as usize, WAL_WRITER_ADMISSION_WAITERS);
+    assert_eq!(admission["order"], "first-come-first-served");
+    assert_eq!(admission["refusal"], "unavailable");
+    let counter = std::sync::Arc::new(WakeCounter(std::sync::atomic::AtomicUsize::new(0)));
+    let waker = std::task::Waker::from(counter.clone());
+    let mut line = WalWriterAdmissionLine::new();
+    let (first, second, third) = (line.join().unwrap(), line.join().unwrap(), line.join().unwrap());
+    assert!(first < second && second < third);
+    assert_eq!(line.head(), Some(first));
+    for ticket in [first, second, third] {
+        assert!(line.register(ticket, &waker));
+    }
+    assert!(!line.register(u64::MAX, &waker), "a ticket that is not in line registers nothing");
+    let epoch = line.capacity_epoch;
+    line.capacity_changed().expect("freed capacity wakes the head").wake();
+    assert_ne!(line.capacity_epoch, epoch);
+    assert!(line.capacity_changed().is_none(), "the head's waker was taken: nobody else is told");
+    assert!(line.leave(second).is_none(), "a waiter behind the head leaves without handing any turn on");
+    line.leave(first).expect("the head's leaving wakes the next in line").wake();
+    assert_eq!(line.head(), Some(third));
+    assert_eq!(counter.0.load(std::sync::atomic::Ordering::SeqCst), 2);
+    line.leave(third);
+    assert_eq!(line.census(), WalWriterAdmissionCensus { waited: 3, refused: 0, waiting: 0 });
+    for _ in 0..WAL_WRITER_ADMISSION_WAITERS {
+        line.join().unwrap();
+    }
+    assert!(matches!(line.join(), Err(DbError::Unavailable(ref detail)) if detail == WAL_WRITER_ADMISSION_REFUSAL), "one waiter beyond the declared bound is refused, transient");
+    assert_eq!(line.census(), WalWriterAdmissionCensus { waited: 3 + WAL_WRITER_ADMISSION_WAITERS as u64, refused: 1, waiting: WAL_WRITER_ADMISSION_WAITERS });
+    let stale = line.rebind(backend(1));
+    assert!(stale.is_empty(), "no waiter registered a waker");
+    assert_eq!(line.census(), WalWriterAdmissionCensus::default());
+}
+
+struct WakeCounter(std::sync::atomic::AtomicUsize);
+
+impl std::task::Wake for WakeCounter {
+    fn wake(self: std::sync::Arc<Self>) {
+        self.0.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+    }
+}

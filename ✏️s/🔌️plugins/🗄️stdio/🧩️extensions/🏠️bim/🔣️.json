@@ -17359,6 +17359,23 @@
     "topicContributions": [],
     "commands": [],
     "artifactKinds": [],
+    "hostedArtifactKinds": [
+      {
+        "id": "s.stdio.ifc",
+        "schema": "stdio.ifc",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.ifc",
+        "schema": "stdio.ifc.2x3",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.bcf",
+        "schema": "stdio.bcf",
+        "owner": "stdio"
+      }
+    ],
     "dependencies": [
       {
         "pluginId": "stdio",
@@ -17624,8 +17641,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "0ccf263f85a5d19abf56341474e66e23a382236c0e9a8b2a72f35797ad291d51",
-    "coreWasmSha256": "4ae2c96aff28d063a5c080729ec26fbf91fa8f9502ce5649569fcc7945981673",
-    "descriptorSha256": "10c5ccb004902890278ee63e90b90aae76e3d5a947dc90256b9f9d8e966bca73"
+    "wasmSha256": "7f19c81b56f3be4c50465d51ed983cdcc09ee214e4920db6ef775dabd15bf5a7",
+    "coreWasmSha256": "43698b6ca34219a1000ca95c95b4ac2f0e97056c7f2d1ddc250b0d764565c8cd",
+    "descriptorSha256": "74d5886c8c0fdacc0d463407ef1469c17debfabf9ffeb8325e766217539ba687"
   }
 }

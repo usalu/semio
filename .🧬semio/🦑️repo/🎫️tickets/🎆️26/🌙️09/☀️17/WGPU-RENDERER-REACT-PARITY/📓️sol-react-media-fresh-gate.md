@@ -1,0 +1,9 @@
+# Fresh React Media Lifecycle Gate
+
+At the media owner's request, the existing renderer React `MediaTransportHost` lifecycle gate was rerun after the metadata-loaded position seek adjustment. The current suite bundles the actual browser component, so its physical Chromium witness must be observed on this source revision.
+
+Executed command: `PLAYWRIGHT_BROWSERS_PATH="$HOME/Library/Caches/ms-playwright" NX_DAEMON=false NX_FORCE_REUSE_CACHED_GRAPH=true bun node_modules/nx/dist/bin/nx.js run '@semio-tech/framework-renderer-react:test' --excludeTaskDependencies --skip-nx-cache -- long '../../../../🧱️elements/🎬️MediaTransportHost/🧪️tests/♻️lifecycle/🟦️.tsx' --run --disableConsoleIntercept --reporter=verbose --maxWorkers=1`.
+
+Result: seven passed and one failed, 31.62-second Vitest duration, Nx exit one. The actual Chromium test `exposes the mounted native media and two-ended selection controls in Chromium` timed out after 30 seconds waiting to evaluate the locator `[data-media-state="ready"]`, at lifecycle test line 186. The seven nonbrowser lifecycle laws passed. The media owner and coordinator were notified; this packet does not change their component or test files and does not claim browser media success. The failure is recorded in `🗑️generated/sol-react-media-lifecycle-fresh.txt` until ticket cleanup.
+
+The media owner traced the failure to the zero-sample WAV fixture and replaced it with one second of native-decodable media (8,044 bytes over two bounded pages). They also addressed legitimate browser play/pause `DOMException` AbortError interruption in both hosts. Their fresh exact lifecycle run passed eight tests in 4.1 seconds, including a physical Chromium decoder witness of one-second duration and the initial 0.25-second seek. That run is attributed to the media owner, with generated log `🗑️generated/react-media-focused.log`; the original failure above remains the result of this packet's own execution.

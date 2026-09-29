@@ -15,18 +15,20 @@
   ifc 2x3's `edmPreamble` now omit
   `None` (`skip_serializing_if = "Option::is_none"`), so a new document validates against its own contract
   (`schema.fragment.invalid … expected integer at /gama`).
-- ifc 2x3's snapshot contract had `schema` and `document` SWAPPED (`schema: Part21Document`, `document: string`; its TS/GraphQL/
-  Proto twins have them right) → swapped back. (Its `Part21*` definitions still describe a kind-tagged camelCase Part-21 the shared
-  `step::part21` types never project — reported, not fixed here.)
+- ifc 2x3's snapshot contract, its artifact contract and the artifact TS parser had `schema` and `document` SWAPPED (`schema:
+  Part21Document`, `document: string`; the TS interfaces and the GraphQL/Proto twins have them right) → swapped back. (Their
+  kind-tagged camelCase `Part21*` definitions are what the shared codec projects since p16.)
 - xml valid: a new document is the minimal VALID document (`<!DOCTYPE root><root/>`, `blank_valid_xml_snapshot`) — the subset
   refuses every edit/undo landing on an invalid one (`inverse-mismatch` on the empty document's undo).
 - committed mutation fixtures of those kinds (png 30, jpg 20, dwg 6, ifc 2x3 3 files) spelled the omitted fields as `null` →
   the `null` members are removed as a text edit (every other byte as committed; proven structural), so `committed_json_is_canonical`
   holds; the ifc 2x3 shadow-state law's key list and the epw set-cell law's fixture (now `blank_epw_snapshot()`, a codec fixed
   point — the old `records`-only document had no header records and did not load) follow.
-- laws that gave an absent optional field its value with `SetValue` (png `/gama`, jpg `/reEncodeQuality` patch fixtures and the
-  jpg large-raster law) insert it (`InsertValue`, RFC 6902 `add`; a present value is still replaced); the png typed-source law
-  replaces the demo with the edited source (replacing a document with its own source is correctly a no-op).
+- laws that gave an absent optional field its value with `SetValue` (png `/gama`, jpg `/reEncodeQuality` patch fixtures) insert
+  it (`InsertValue`, RFC 6902 `add`; a present value is still replaced); the jpg large-raster law edits a PRESENT quality (an
+  insert on a 2 MiB raster projects the whole container past the validation frontier); the png typed-source law edits the demo
+  into the typed source and compares the applied result (replacing a document with its own source is correctly a no-op), and
+  its added `vpAg` chunk takes a `chunk_order` slot (the encoder writes exactly the chunks the order lists).
 - binary's snapshot schema typed `bytes` as a string while its projection (and its TS mirror) is a byte array → array of 0..255.
 - dwg `ac1024` artifact schema named the header policy property `dwf_3dPrecision`; the model projects `dwf3dPrecision`
   (camelCase of `dwf_3d_precision`, as every committed fixture shows) → every dwg edit failed `missing required property`.
@@ -214,6 +216,8 @@ PNG_EMPTY_DOC = "/// 🕳️ Relocated verbatim from `⚙️engine` (ticket\n///
 PNG_DOC_MENTIONS = [f"{ART}/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🦀️.rs", f"{ART}/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/🦀️.rs", f"{ART}/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
 XML_VALID_SCHEMA = f"{ART}/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🧬️schema/🦀️.rs"
 IFC2X3_CONTRACT = f"{ART}/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json"
+IFC2X3_ARTIFACT = f"{ART}/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/🔣️.json"
+IFC2X3_ARTIFACT_TS = f"{ART}/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/🟦️.ts"
 DWG_SNAPSHOT = f"{ART}/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"
 INITIAL = {
     "pptx": ("PptxSnapshot::default()", "crate::standards::v_ecma_376::subsets::base::schema::blank_pptx_snapshot()", [f"📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/{subset}" for subset in ("🧱️base", "🔒️strict", "🌉️transitional")]),
@@ -228,6 +232,24 @@ INITIAL = {
 PPTX_SCHEMA = f"{ART}/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🦀️.rs"
 PPTX_ROOT = f"{ART}/📽️pptx/🦀️.rs"
 EPW_SCHEMA = f"{ART}/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧬️schema/🦀️.rs"
+
+
+RENAMED_MENTIONS = {
+    "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️.rs": "png",
+    f"{ART}/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/🦀️.rs": "jpg",
+    f"{ART}/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🚪️io/🦀️.rs": "tiff",
+    f"{ART}/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🚪️io/🦀️.rs": "gif",
+    f"{ART}/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🚪️io/🦀️.rs": "gif",
+}
+
+
+def renamed_mentions(text, artifact, label):
+    """🏷️ Every other importer or mention of a renamed `empty_<artifact>_snapshot` names `blank_<artifact>_snapshot` (the note →
+    png serializer imports it; T6 round 2 hotfix — the scratch never compiled note)."""
+    if f"empty_{artifact}_snapshot" not in text:
+        problems.append(f"{label}: no empty_{artifact}_snapshot mention")
+        return text
+    return text.replace(f"empty_{artifact}_snapshot", f"blank_{artifact}_snapshot")
 
 
 def blank(text, label, kind, artifact, doc, body):
@@ -289,6 +311,17 @@ def ifc2x3_contract(text):
         problems.append("ifc 2x3 contract: schema/document are not swapped")
         return text
     return json.dumps(document, indent=2, ensure_ascii=False) + "\n"
+
+
+def ifc2x3_artifact_parser(text):
+    return once(
+        text,
+        '    schema: row["schema"] === undefined ? undefined : parsePart21Document(row["schema"], `${at}.schema`),\n'
+        '    document: row["document"] === undefined ? undefined : stdioIfc2x3BaseArtifactGuardString(row["document"], `${at}.document`),\n',
+        '    schema: row["schema"] === undefined ? undefined : stdioIfc2x3BaseArtifactGuardString(row["schema"], `${at}.schema`),\n'
+        '    document: row["document"] === undefined ? undefined : parsePart21Document(row["document"], `${at}.document`),\n',
+        "ifc 2x3 artifact parser: schema/document swapped back",
+    )
 
 
 def pptx_blank(text):
@@ -387,25 +420,37 @@ def absent_optional_inserts(text, path, count, label):
 
 
 def jpg_editor_tests(text):
-    head = "fn large_raster_quality_edit_uses_compact_native_event() {\n"
-    old = '    let event = editing::SnapshotEditEvent::SetValue { path: "/reEncodeQuality".into(), value: dsl::DslValue::Number(dsl::Number::UInt(75)) };\n'
-    new = '    let event = editing::SnapshotEditEvent::InsertValue { path: "/reEncodeQuality".into(), value: dsl::DslValue::Number(dsl::Number::UInt(75)) };\n'
-    text = once(text, head + "    register_document_schema();\n    let mut snapshot = JpgSnapshot::default();\n    snapshot.pixels = vec![7; 2 * 1_024 * 1_024];\n" + old, head + "    register_document_schema();\n    let mut snapshot = JpgSnapshot::default();\n    snapshot.pixels = vec![7; 2 * 1_024 * 1_024];\n" + new, "jpg editor tests: absent quality insert")
-    return once(
-        text,
-        "    let native_emit = <JpgAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &native_base).expect(\"native quality edit emits\");\n",
-        "    let replace = editing::SnapshotEditEvent::SetValue { path: \"/reEncodeQuality\".into(), value: dsl::DslValue::Number(dsl::Number::UInt(75)) };\n"
-        "    let native_emit = <JpgAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&replace, &native_base).expect(\"native quality edit emits\");\n",
-        "jpg editor tests: present quality replace",
-    )
+    head = "    let mut snapshot = JpgSnapshot::default();\n    snapshot.pixels = vec![7; 2 * 1_024 * 1_024];\n"
+    return once(text, head, head + "    snapshot.re_encode_quality = Some(80);\n", "jpg editor tests: present quality on the large raster")
 
 
 def png_editor_tests(text):
+    push = "    base.unknown_chunks.push(crate::schema::snapshot::PngChunk { kind: *b\"vpAg\", data: vec![0, 1, 127, 128, 255] });\n"
+    text = once(
+        text,
+        push,
+        push + "    let idat = base.chunk_order.iter().position(|marker| *marker == crate::schema::snapshot::PngChunkMarker::Idat).expect(\"IDAT marker\");\n"
+        "    base.chunk_order.insert(idat, crate::schema::snapshot::PngChunkMarker::Unknown { index: base.unknown_chunks.len() - 1 });\n",
+        "png editor tests: the added chunk has its place in the chunk order",
+    )
     return once(
         text,
-        "    let emit = <PngEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &base).expect(\"lossless typed source\");\n",
-        "    let emit = <PngEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &crate::schema::demo_png_snapshot()).expect(\"lossless typed source\");\n",
-        "png editor tests: typed source replaces the demo",
+        "    let emit = <PngEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &base).expect(\"lossless typed source\");\n"
+        "    let PngMutation::SetSnapshot(mutation) = &emit.artifact_mutations[0] else { panic!(\"whole snapshot mutation\") };\n"
+        "    assert_eq!(mutation.snapshot, base);\n"
+        "    let native = crate::io::encode_png(&mutation.snapshot).expect(\"typed snapshot encodes to native PNG\");\n"
+        "    let reopened = crate::io::decode_png(&native).expect(\"native PNG with ancillary data reopens\");\n"
+        "    assert_eq!(reopened.gama, mutation.snapshot.gama);\n"
+        "    assert_eq!(reopened.unknown_chunks, mutation.snapshot.unknown_chunks);\n",
+        "    let current = crate::schema::demo_png_snapshot();\n"
+        "    let emit = <PngEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &current).expect(\"lossless typed source\");\n"
+        "    let edited = emit.artifact_mutations.iter().fold(current, |snapshot, mutation| protocol::MutationDiff::apply(<PngMutation as protocol::Mutation<PngSnapshot>>::diff(mutation, &snapshot).diff(), &snapshot).expect(\"typed source mutation applies\"));\n"
+        "    assert_eq!(edited, base);\n"
+        "    let native = crate::io::encode_png(&edited).expect(\"typed snapshot encodes to native PNG\");\n"
+        "    let reopened = crate::io::decode_png(&native).expect(\"native PNG with ancillary data reopens\");\n"
+        "    assert_eq!(reopened.gama, edited.gama);\n"
+        "    assert_eq!(reopened.unknown_chunks, edited.unknown_chunks);\n",
+        "png editor tests: typed source edits the demo into the source",
     )
 
 
@@ -468,12 +513,16 @@ def main():
     for path, keys in fixtures_with_nulls().items():
         edits[path] = lambda text, path=path, keys=keys: committed_fixture(text, keys, path.split("/")[4])
     edits[IFC2X3_CONTRACT] = ifc2x3_contract
+    edits[IFC2X3_ARTIFACT] = ifc2x3_contract
+    edits[IFC2X3_ARTIFACT_TS] = ifc2x3_artifact_parser
     for path in PNG_DOC_MENTIONS:
         edits[path] = png_doc_mention
     edits[DWG_ARTIFACT] = dwg_policy
     for path, (kind, artifact, doc, body) in BLANKS.items():
         edits[path] = lambda text, path=path, kind=kind, artifact=artifact, doc=doc, body=body: blank(text, path.split("/")[4], kind, artifact, doc, body)
     edits[EPW_SCHEMA] = blank_epw
+    for path, artifact in RENAMED_MENTIONS.items():
+        edits[path] = lambda text, path=path, artifact=artifact: renamed_mentions(text, artifact, path)
     edits[PPTX_SCHEMA] = pptx_blank
     edits[PPTX_ROOT] = lambda text: once(text, "`empty_pptx_snapshot`/`demo_pptx_snapshot`", "`blank_pptx_snapshot`/`demo_pptx_snapshot`", "pptx root doc")
     for name, (old, new, subsets) in INITIAL.items():

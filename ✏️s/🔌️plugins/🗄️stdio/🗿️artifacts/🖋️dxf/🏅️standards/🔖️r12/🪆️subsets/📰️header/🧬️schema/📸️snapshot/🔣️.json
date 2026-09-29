@@ -234,12 +234,7 @@
             "$ref": "#/$defs/DxfLinetype"
           }
         }
-      },
-      "required": [
-        "layers",
-        "styles",
-        "linetypes"
-      ]
+      }
     },
     "DxfOtherTable": {
       "type": "object",

@@ -1,0 +1,210 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "target": {
+    "scope": "s.space.home@1/*#editor",
+    "version": 1,
+    "args": {
+      "spaceId": "sp-7"
+    },
+    "activation": "openSpace"
+  },
+  "rowActions": [
+    {
+      "icon": "folder-open",
+      "label": "Open",
+      "verb": "openSpace"
+    },
+    {
+      "icon": "trash-2",
+      "label": "Delete",
+      "verb": "deleteSpace",
+      "placement": "menu"
+    },
+    {
+      "icon": "package-x",
+      "label": "Uninstall",
+      "verb": "uninstallSpace",
+      "disabled": true
+    }
+  ],
+  "dispatch": [
+    {
+      "verb": "openSpace",
+      "binding": {
+        "trigger": "activate",
+        "action": {
+          "scope": "s.space.home@1/*#editor",
+          "name": "openSpace",
+          "version": 1
+        },
+        "args": {
+          "spaceId": "sp-7"
+        }
+      }
+    },
+    {
+      "verb": "openSpace",
+      "binding": {
+        "trigger": "activate",
+        "action": {
+          "scope": "s.space.home@1/*#editor",
+          "name": "openSpace",
+          "version": 1
+        },
+        "args": {
+          "spaceId": "sp-7"
+        }
+      }
+    },
+    {
+      "verb": "deleteSpace",
+      "binding": {
+        "trigger": "activate",
+        "action": {
+          "scope": "s.space.home@1/*#editor",
+          "name": "deleteSpace",
+          "version": 1
+        },
+        "args": {
+          "spaceId": "sp-7"
+        }
+      }
+    },
+    {
+      "verb": "uninstallSpace",
+      "refusal": "disabled"
+    }
+  ],
+  "rows": [
+    {
+      "case": "tree-row",
+      "component": {
+        "type": "treeItem",
+        "label": "Studio",
+        "rowActions": [
+          {
+            "icon": "folder-open",
+            "label": "Open",
+            "verb": "openSpace"
+          },
+          {
+            "icon": "trash-2",
+            "label": "Delete",
+            "verb": "deleteSpace",
+            "placement": "menu"
+          },
+          {
+            "icon": "package-x",
+            "label": "Uninstall",
+            "verb": "uninstallSpace",
+            "disabled": true
+          }
+        ],
+        "target": {
+          "scope": "s.space.home@1/*#editor",
+          "version": 1,
+          "args": {
+            "spaceId": "sp-7"
+          },
+          "activation": "openSpace"
+        }
+      },
+      "bindings": [],
+      "violation": null
+    },
+    {
+      "case": "table-row",
+      "component": {
+        "type": "tableRow",
+        "cells": [
+          "Studio",
+          "Private"
+        ],
+        "rowActions": [
+          {
+            "icon": "folder-open",
+            "label": "Open",
+            "verb": "openSpace"
+          },
+          {
+            "icon": "trash-2",
+            "label": "Delete",
+            "verb": "deleteSpace",
+            "placement": "menu"
+          },
+          {
+            "icon": "package-x",
+            "label": "Uninstall",
+            "verb": "uninstallSpace",
+            "disabled": true
+          }
+        ],
+        "target": {
+          "scope": "s.space.home@1/*#editor",
+          "version": 1,
+          "args": {
+            "spaceId": "sp-7"
+          },
+          "activation": "openSpace"
+        }
+      },
+      "bindings": [],
+      "violation": null
+    },
+    {
+      "case": "verbs-without-target",
+      "component": {
+        "type": "tableRow",
+        "cells": [
+          "Studio"
+        ],
+        "rowActions": [
+          {
+            "icon": "trash-2",
+            "label": "Delete",
+            "verb": "deleteSpace"
+          }
+        ]
+      },
+      "bindings": [],
+      "violation": "invalidRowTarget"
+    },
+    {
+      "case": "target-without-verbs",
+      "component": {
+        "type": "treeItem",
+        "label": "Studio",
+        "target": {
+          "scope": "s.space.home@1/*#editor",
+          "version": 1,
+          "args": {
+            "spaceId": "sp-7"
+          }
+        }
+      },
+      "bindings": [],
+      "violation": "invalidRowTarget"
+    },
+    {
+      "case": "record-activate-binding",
+      "component": {
+        "type": "treeItem",
+        "label": "Studio"
+      },
+      "bindings": [
+        {
+          "trigger": "activate",
+          "action": {
+            "scope": "s.space.home@1/*#editor",
+            "name": "openSpace",
+            "version": 1
+          },
+          "args": {
+            "spaceId": "sp-7"
+          }
+        }
+      ],
+      "violation": "invalidRowTarget"
+    }
+  ]
+}

@@ -271,7 +271,7 @@ fn part_rows_read_authored_labels_and_numbered_peers() {
     assert_eq!(crate::editor::puzzle5d::puzzle5d_next_part_label(&document.parts, &document, "core"), "core", "the first instance of a kind takes the bare catalogue name");
 }
 
-/// 🙈️ Every part row carries exactly the two hide/lock toggles, each asking for the INVERSE of the
+/// 🙈️ Every part row carries exactly the two hide/lock set-verbs, and its ONE target asks for the INVERSE of the
 /// state the row is in — the hardcoded-`true` defect puzzle 3d carried would re-apply the same state.
 #[test]
 fn part_rows_carry_inverting_hide_and_lock_toggles() {
@@ -282,16 +282,21 @@ fn part_rows_carry_inverting_hide_and_lock_toggles() {
     let view = windows_for(vec![request(PARTS_SECTION, Some(true), 0, 2)]);
     let tree = render(&scene, labels(), &TreeWindows::for_body(&view, BODY_KEY)).expect("an outliner with row actions must be admitted");
     let parts = child_of(&tree, PARTS_SECTION);
-    for row in parts.children.iter() {
-        let actions = match &row.component {
-            ui::Component::TreeItem(props) => props.row_actions.len(),
-            _ => panic!("a part row is a tree item"),
+    for (index, row) in parts.children.iter().enumerate() {
+        let ui::Component::TreeItem(props) = &row.component else {
+            panic!("a part row is a tree item");
         };
-        assert_eq!(actions, 2, "part row {} carries show/hide and lock/unlock", row.key.as_str());
+        let verbs: Vec<&str> = props.row_actions.iter().map(|action| action.verb.as_str()).collect();
+        assert_eq!(verbs, ["setSelectionHidden", "setSelectionLocked"], "part row {} carries show/hide and lock/unlock", row.key.as_str());
+        let asked = |flag: &str| props.target.as_ref().and_then(|target| target.args.as_ref()).and_then(|args| args.iter().find(|(key, _)| key.as_str() == flag)).and_then(|(_, value)| match value {
+            UiValue::Bool(value) => Some(value),
+            _ => None,
+        });
+        let flagged = index == 0;
+        assert_eq!((asked("hidden"), asked("locked")), (Some(!flagged), Some(!flagged)), "part row {} must ask for the inverse of hidden=locked={flagged}", row.key.as_str());
         assert_eq!(row.bindings.len(), 0, "row actions are not bindings; the pick binding stays on the root");
     }
-    let body = body_json(tree);
-    assert!(body.contains("\"value\":false") || body.contains("\"value\": false"), "the already-hidden row must ask for `hidden:false`: {body:.900}");
+    drop(tree);
     drain_retired_ui_owners();
 }
 //#endregion 🏷️LabelAndFlagLaws

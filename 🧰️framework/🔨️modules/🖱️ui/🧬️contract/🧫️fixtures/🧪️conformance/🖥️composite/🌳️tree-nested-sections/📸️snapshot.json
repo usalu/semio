@@ -68,28 +68,18 @@
           {
             "icon": "trash",
             "label": "Delete",
-            "action": {
-              "trigger": "activate",
-              "action": {
-                "scope": "cad-play",
-                "name": "deleteItem",
-                "version": 1
-              }
-            }
+            "verb": "deleteItem"
           },
           {
             "icon": "more",
-            "action": {
-              "trigger": "activate",
-              "action": {
-                "scope": "cad-play",
-                "name": "rowMenu",
-                "version": 1
-              }
-            },
+            "verb": "rowMenu",
             "placement": "menu"
           }
-        ]
+        ],
+        "target": {
+          "scope": "cad-play",
+          "version": 1
+        }
       },
       "layout": {
         "kind": "leaf",

@@ -1,14 +1,15 @@
 //! 🔎️ 🔎️ Trinity Jack app command — `format-document`.
 
 use crate::core;
-use crate::editor::jack::query_window_config::{self, JackEditorWindowConfigMutation, SetQuery};
+use crate::standards::v1::subsets::any::schema::mutations::set_query;
 use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMutation;
-use semio_framework_plugin::{Emit, Fault, NoConfigMutation, ViewModel};
+use semio_framework_plugin::{Emit, NoConfigMutation};
 
-pub(crate) fn format_document(jack_query: &str, view: Option<&ViewModel>) -> Result<Emit<TrinityGraphMutation, NoConfigMutation>, Fault> {
-    let view = view.ok_or_else(|| Fault::from("Jack query formatting requires an exact editor window"))?;
+/// ✨️ Reformats the document's query as one undoable `set-query`; a query that does not parse, or is already formatted,
+/// changes nothing.
+pub(crate) fn format_document(jack_query: &str) -> Emit<TrinityGraphMutation, NoConfigMutation> {
     match core::format(jack_query) {
-        Ok(formatted) => Ok(Emit { window_config_mutations: vec![query_window_config::addressed(view, JackEditorWindowConfigMutation::SetQuery(SetQuery { value: formatted }))?], ..Default::default() }),
-        Err(_) => Ok(Emit::default()),
+        Ok(formatted) if formatted != jack_query && formatted.len() <= crate::JACK_QUERY_MAXIMUM_BYTES => Emit { artifact_mutations: vec![set_query(formatted)], ..Default::default() },
+        _ => Emit::default(),
     }
 }

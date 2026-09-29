@@ -1,0 +1,1437 @@
+{
+  "schema": "semio.ui.scene.text-splice.v1",
+  "contextScalars": 32,
+  "minTwoSidedScalars": 4,
+  "edits": [
+    {
+      "id": "insert-into-empty",
+      "previous": "",
+      "next": "a",
+      "splice": {
+        "start": 0,
+        "deleted": "",
+        "insert": "a",
+        "before": "",
+        "after": ""
+      }
+    },
+    {
+      "id": "replace-a-middle-run",
+      "previous": "abcdef",
+      "next": "abXYef",
+      "splice": {
+        "start": 2,
+        "deleted": "cd",
+        "insert": "XY",
+        "before": "ab",
+        "after": "ef"
+      }
+    },
+    {
+      "id": "delete-a-suffix",
+      "previous": "hello",
+      "next": "help",
+      "splice": {
+        "start": 3,
+        "deleted": "lo",
+        "insert": "p",
+        "before": "hel",
+        "after": ""
+      }
+    },
+    {
+      "id": "astral-insert",
+      "previous": "a😀b",
+      "next": "a😀Zb",
+      "splice": {
+        "start": 2,
+        "deleted": "",
+        "insert": "Z",
+        "before": "a😀",
+        "after": "b"
+      }
+    },
+    {
+      "id": "unchanged",
+      "previous": "same",
+      "next": "same",
+      "splice": null
+    },
+    {
+      "id": "delete-everything",
+      "previous": "xyz",
+      "next": "",
+      "splice": {
+        "start": 0,
+        "deleted": "xyz",
+        "insert": "",
+        "before": "",
+        "after": ""
+      }
+    },
+    {
+      "id": "repeated-letter-inserts-after-the-run",
+      "previous": "aa",
+      "next": "aaa",
+      "splice": {
+        "start": 2,
+        "deleted": "",
+        "insert": "a",
+        "before": "aa",
+        "after": ""
+      }
+    },
+    {
+      "id": "context-is-capped-at-32",
+      "previous": "pppppppppppppppppppppppppppppppppppppppp|ssssssssssssssssssssssssssssssssssssssss",
+      "next": "pppppppppppppppppppppppppppppppppppppppp+|ssssssssssssssssssssssssssssssssssssssss",
+      "splice": {
+        "start": 40,
+        "deleted": "",
+        "insert": "+",
+        "before": "pppppppppppppppppppppppppppppppp",
+        "after": "|sssssssssssssssssssssssssssssss"
+      }
+    }
+  ],
+  "applications": [
+    {
+      "id": "in-place",
+      "note": "the text around the splice is unchanged: it lands at its start",
+      "text": "hello world",
+      "splice": {
+        "start": 6,
+        "deleted": "",
+        "insert": "big ",
+        "before": "hello ",
+        "after": "world"
+      },
+      "located": {
+        "start": 6,
+        "deleteLength": 0,
+        "clamped": false
+      },
+      "result": "hello big world",
+      "inverse": {
+        "start": 6,
+        "deleted": "big ",
+        "insert": "",
+        "before": "hello ",
+        "after": "world"
+      }
+    },
+    {
+      "id": "shifted-by-an-earlier-insert",
+      "note": "text inserted before the splice moves it; the context finds it",
+      "text": "oh, hello world",
+      "splice": {
+        "start": 6,
+        "deleted": "",
+        "insert": "big ",
+        "before": "hello ",
+        "after": "world"
+      },
+      "located": {
+        "start": 10,
+        "deleteLength": 0,
+        "clamped": false
+      },
+      "result": "oh, hello big world",
+      "inverse": {
+        "start": 10,
+        "deleted": "big ",
+        "insert": "",
+        "before": "oh, hello ",
+        "after": "world"
+      }
+    },
+    {
+      "id": "deleted-run-moved",
+      "note": "a deletion follows its run",
+      "text": "XXhello world",
+      "splice": {
+        "start": 0,
+        "deleted": "hello",
+        "insert": "",
+        "before": "",
+        "after": " world"
+      },
+      "located": {
+        "start": 2,
+        "deleteLength": 5,
+        "clamped": false
+      },
+      "result": "XX world",
+      "inverse": {
+        "start": 2,
+        "deleted": "",
+        "insert": "hello",
+        "before": "XX",
+        "after": " world"
+      }
+    },
+    {
+      "id": "deleted-run-gone",
+      "note": "a deletion whose run is gone deletes nothing",
+      "text": "hi world",
+      "splice": {
+        "start": 0,
+        "deleted": "hello",
+        "insert": "",
+        "before": "",
+        "after": " world"
+      },
+      "located": {
+        "start": 2,
+        "deleteLength": 0,
+        "clamped": true
+      },
+      "result": "hi world",
+      "inverse": {
+        "start": 2,
+        "deleted": "",
+        "insert": "",
+        "before": "hi",
+        "after": " world"
+      }
+    },
+    {
+      "id": "one-sided-context",
+      "note": "an insert whose two-sided context was split by another insert lands after its left context",
+      "text": "hello big world",
+      "splice": {
+        "start": 6,
+        "deleted": "",
+        "insert": "new ",
+        "before": "hello ",
+        "after": "world"
+      },
+      "located": {
+        "start": 6,
+        "deleteLength": 0,
+        "clamped": false
+      },
+      "result": "hello new big world",
+      "inverse": {
+        "start": 6,
+        "deleted": "new ",
+        "insert": "",
+        "before": "hello ",
+        "after": "big world"
+      }
+    },
+    {
+      "id": "no-context-anywhere",
+      "note": "nothing of the context survives: the author's start, clamped to the text",
+      "text": "zzz",
+      "splice": {
+        "start": 9,
+        "deleted": "",
+        "insert": "!",
+        "before": "abc",
+        "after": "def"
+      },
+      "located": {
+        "start": 3,
+        "deleteLength": 0,
+        "clamped": true
+      },
+      "result": "zzz!",
+      "inverse": {
+        "start": 3,
+        "deleted": "!",
+        "insert": "",
+        "before": "zzz",
+        "after": ""
+      }
+    },
+    {
+      "id": "empty-text",
+      "note": "a splice into an empty text lands at 0",
+      "text": "",
+      "splice": {
+        "start": 0,
+        "deleted": "",
+        "insert": "a",
+        "before": "",
+        "after": ""
+      },
+      "located": {
+        "start": 0,
+        "deleteLength": 0,
+        "clamped": false
+      },
+      "result": "a",
+      "inverse": {
+        "start": 0,
+        "deleted": "a",
+        "insert": "",
+        "before": "",
+        "after": ""
+      }
+    },
+    {
+      "id": "astral-context",
+      "note": "context and positions count scalars",
+      "text": "😀😀x😀",
+      "splice": {
+        "start": 3,
+        "deleted": "",
+        "insert": "y",
+        "before": "😀😀x",
+        "after": "😀"
+      },
+      "located": {
+        "start": 3,
+        "deleteLength": 0,
+        "clamped": false
+      },
+      "result": "😀😀xy😀",
+      "inverse": {
+        "start": 3,
+        "deleted": "y",
+        "insert": "",
+        "before": "😀😀x",
+        "after": "😀"
+      }
+    }
+  ],
+  "concurrent": [
+    {
+      "id": "one-author-types-a-word",
+      "note": "a typing run is one splice per keystroke; the fold is the typed text",
+      "base": "",
+      "order": [
+        {
+          "author": "a",
+          "splice": {
+            "start": 0,
+            "deleted": "",
+            "insert": "h",
+            "before": "",
+            "after": ""
+          }
+        },
+        {
+          "author": "a",
+          "splice": {
+            "start": 1,
+            "deleted": "",
+            "insert": "e",
+            "before": "h",
+            "after": ""
+          }
+        },
+        {
+          "author": "a",
+          "splice": {
+            "start": 2,
+            "deleted": "",
+            "insert": "l",
+            "before": "he",
+            "after": ""
+          }
+        },
+        {
+          "author": "a",
+          "splice": {
+            "start": 3,
+            "deleted": "",
+            "insert": "l",
+            "before": "hel",
+            "after": ""
+          }
+        },
+        {
+          "author": "a",
+          "splice": {
+            "start": 4,
+            "deleted": "",
+            "insert": "o",
+            "before": "hell",
+            "after": ""
+          }
+        }
+      ],
+      "expected": {
+        "text": "hello",
+        "clamped": [],
+        "runs": {
+          "a": "hello"
+        }
+      }
+    },
+    {
+      "id": "two-authors-type-at-the-end-at-once",
+      "note": "both runs anchor after what their author saw; each run stays contiguous",
+      "base": "Doc: ",
+      "order": [
+        {
+          "author": "a",
+          "splice": {
+            "start": 5,
+            "deleted": "",
+            "insert": "a",
+            "before": "Doc: ",
+            "after": ""
+          }
+        },
+        {
+          "author": "a",
+          "splice": {
+            "start": 6,
+            "deleted": "",
+            "insert": "l",
+            "before": "Doc: a",
+            "after": ""
+          }
+        },
+        {
+          "author": "b",
+          "splice": {
+            "start": 5,
+            "deleted": "",
+            "insert": "b",
+            "before": "Doc: ",
+            "after": ""
+          }
+        },
+        {
+          "author": "b",
+          "splice": {
+            "start": 6,
+            "deleted": "",
+            "insert": "e",
+            "before": "Doc: b",
+            "after": ""
+          }
+        },
+        {
+          "author": "a",
+          "splice": {
+            "start": 7,
+            "deleted": "",
+            "insert": "p",
+            "before": "Doc: al",
+            "after": ""
+          }
+        },
+        {
+          "author": "a",
+          "splice": {
+            "start": 8,
+            "deleted": "",
+            "insert": "h",
+            "before": "Doc: alp",
+            "after": ""
+          }
+        },
+        {
+          "author": "a",
+          "splice": {
+            "start": 9,
+            "deleted": "",
+            "insert": "a",
+            "before": "Doc: alph",
+            "after": ""
+          }
+        },
+        {
+          "author": "b",
+          "splice": {
+            "start": 7,
+            "deleted": "",
+            "insert": "t",
+            "before": "Doc: be",
+            "after": ""
+          }
+        },
+        {
+          "author": "b",
+          "splice": {
+            "start": 8,
+            "deleted": "",
+            "insert": "a",
+            "before": "Doc: bet",
+            "after": ""
+          }
+        }
+      ],
+      "expected": {
+        "text": "Doc: betaalpha",
+        "clamped": [],
+        "runs": {
+          "a": "Doc: alpha",
+          "b": "Doc: beta"
+        }
+      }
+    },
+    {
+      "id": "two-authors-type-in-different-places",
+      "note": "an insert anchored by its context lands where its author put it whatever the other did",
+      "base": "hello world, see you",
+      "order": [
+        {
+          "author": "a",
+          "splice": {
+            "start": 6,
+            "deleted": "",
+            "insert": "b",
+            "before": "hello ",
+            "after": "world, see you"
+          }
+        },
+        {
+          "author": "a",
+          "splice": {
+            "start": 7,
+            "deleted": "",
+            "insert": "i",
+            "before": "hello b",
+            "after": "world, see you"
+          }
+        },
+        {
+          "author": "a",
+          "splice": {
+            "start": 8,
+            "deleted": "",
+            "insert": "g",
+            "before": "hello bi",
+            "after": "world, see you"
+          }
+        },
+        {
+          "author": "a",
+          "splice": {
+            "start": 9,
+            "deleted": "",
+            "insert": " ",
+            "before": "hello big",
+            "after": "world, see you"
+          }
+        },
+        {
+          "author": "b",
+          "splice": {
+            "start": 11,
+            "deleted": "",
+            "insert": "!",
+            "before": "hello world",
+            "after": ", see you"
+          }
+        },
+        {
+          "author": "b",
+          "splice": {
+            "start": 12,
+            "deleted": "",
+            "insert": "!",
+            "before": "hello world!",
+            "after": ", see you"
+          }
+        }
+      ],
+      "expected": {
+        "text": "hello big world!!, see you",
+        "clamped": [],
+        "runs": {
+          "a": "hello big world, see you",
+          "b": "hello world!!, see you"
+        }
+      }
+    },
+    {
+      "id": "both-delete-the-same-word",
+      "note": "the second deletion of an already deleted run deletes nothing and is clamped",
+      "base": "keep drop keep",
+      "order": [
+        {
+          "author": "a",
+          "splice": {
+            "start": 5,
+            "deleted": "drop ",
+            "insert": "",
+            "before": "keep ",
+            "after": "keep"
+          }
+        },
+        {
+          "author": "b",
+          "splice": {
+            "start": 5,
+            "deleted": "drop ",
+            "insert": "",
+            "before": "keep ",
+            "after": "keep"
+          }
+        }
+      ],
+      "expected": {
+        "text": "keep keep",
+        "clamped": [
+          1
+        ],
+        "runs": {
+          "a": "keep keep",
+          "b": "keep keep"
+        }
+      }
+    },
+    {
+      "id": "a-deletion-around-a-concurrent-insert",
+      "note": "a deletion whose run another author changed deletes nothing (clamped); the insert survives",
+      "base": "one two three four",
+      "order": [
+        {
+          "author": "a",
+          "splice": {
+            "start": 6,
+            "deleted": "",
+            "insert": "X",
+            "before": "one tw",
+            "after": "o three four"
+          }
+        },
+        {
+          "author": "b",
+          "splice": {
+            "start": 5,
+            "deleted": "wo t",
+            "insert": "",
+            "before": "one t",
+            "after": "hree four"
+          }
+        }
+      ],
+      "expected": {
+        "text": "one twXo three four",
+        "clamped": [
+          1
+        ],
+        "runs": {
+          "a": "one twXo three four",
+          "b": "one three four"
+        }
+      }
+    },
+    {
+      "id": "astral-scalars-count-once",
+      "note": "positions are Unicode scalars: the emoji is one position in every language",
+      "base": "a😀b c",
+      "order": [
+        {
+          "author": "a",
+          "splice": {
+            "start": 2,
+            "deleted": "",
+            "insert": "Z",
+            "before": "a😀",
+            "after": "b c"
+          }
+        },
+        {
+          "author": "b",
+          "splice": {
+            "start": 1,
+            "deleted": "",
+            "insert": "Y",
+            "before": "a",
+            "after": "😀b c"
+          }
+        }
+      ],
+      "expected": {
+        "text": "aY😀Zb c",
+        "clamped": [],
+        "runs": {
+          "a": "a😀Zb c",
+          "b": "aY😀b c"
+        }
+      }
+    },
+    {
+      "id": "typing-after-seeing-the-other",
+      "note": "after a sync the author's context includes the other's run and its run follows it",
+      "base": "Title\n",
+      "order": [
+        {
+          "author": "a",
+          "splice": {
+            "start": 6,
+            "deleted": "",
+            "insert": "f",
+            "before": "Title\n",
+            "after": ""
+          }
+        },
+        {
+          "author": "a",
+          "splice": {
+            "start": 7,
+            "deleted": "",
+            "insert": "i",
+            "before": "Title\nf",
+            "after": ""
+          }
+        },
+        {
+          "author": "a",
+          "splice": {
+            "start": 8,
+            "deleted": "",
+            "insert": "r",
+            "before": "Title\nfi",
+            "after": ""
+          }
+        },
+        {
+          "author": "a",
+          "splice": {
+            "start": 9,
+            "deleted": "",
+            "insert": "s",
+            "before": "Title\nfir",
+            "after": ""
+          }
+        },
+        {
+          "author": "a",
+          "splice": {
+            "start": 10,
+            "deleted": "",
+            "insert": "t",
+            "before": "Title\nfirs",
+            "after": ""
+          }
+        },
+        {
+          "author": "b",
+          "splice": {
+            "start": 11,
+            "deleted": "",
+            "insert": " ",
+            "before": "Title\nfirst",
+            "after": ""
+          }
+        },
+        {
+          "author": "b",
+          "splice": {
+            "start": 12,
+            "deleted": "",
+            "insert": "s",
+            "before": "Title\nfirst ",
+            "after": ""
+          }
+        },
+        {
+          "author": "b",
+          "splice": {
+            "start": 13,
+            "deleted": "",
+            "insert": "e",
+            "before": "Title\nfirst s",
+            "after": ""
+          }
+        },
+        {
+          "author": "b",
+          "splice": {
+            "start": 14,
+            "deleted": "",
+            "insert": "c",
+            "before": "Title\nfirst se",
+            "after": ""
+          }
+        },
+        {
+          "author": "b",
+          "splice": {
+            "start": 15,
+            "deleted": "",
+            "insert": "o",
+            "before": "Title\nfirst sec",
+            "after": ""
+          }
+        },
+        {
+          "author": "b",
+          "splice": {
+            "start": 16,
+            "deleted": "",
+            "insert": "n",
+            "before": "Title\nfirst seco",
+            "after": ""
+          }
+        },
+        {
+          "author": "b",
+          "splice": {
+            "start": 17,
+            "deleted": "",
+            "insert": "d",
+            "before": "Title\nfirst secon",
+            "after": ""
+          }
+        },
+        {
+          "author": "a",
+          "splice": {
+            "start": 11,
+            "deleted": "",
+            "insert": "!",
+            "before": "Title\nfirst",
+            "after": ""
+          }
+        }
+      ],
+      "expected": {
+        "text": "Title\nfirst! second",
+        "clamped": [],
+        "runs": {
+          "a": "Title\nfirst!",
+          "b": "Title\nfirst second"
+        }
+      }
+    },
+    {
+      "id": "a-typo-corrected-while-the-other-types-at-the-same-point",
+      "note": "an author's backspace removes only its own keystroke even when the other typed at the same point",
+      "base": "x = ",
+      "order": [
+        {
+          "author": "a",
+          "splice": {
+            "start": 4,
+            "deleted": "",
+            "insert": "1",
+            "before": "x = ",
+            "after": ""
+          }
+        },
+        {
+          "author": "a",
+          "splice": {
+            "start": 5,
+            "deleted": "",
+            "insert": "2",
+            "before": "x = 1",
+            "after": ""
+          }
+        },
+        {
+          "author": "b",
+          "splice": {
+            "start": 4,
+            "deleted": "",
+            "insert": "a",
+            "before": "x = ",
+            "after": ""
+          }
+        },
+        {
+          "author": "b",
+          "splice": {
+            "start": 5,
+            "deleted": "",
+            "insert": "b",
+            "before": "x = a",
+            "after": ""
+          }
+        },
+        {
+          "author": "a",
+          "splice": {
+            "start": 5,
+            "deleted": "2",
+            "insert": "",
+            "before": "x = 1",
+            "after": ""
+          }
+        },
+        {
+          "author": "a",
+          "splice": {
+            "start": 5,
+            "deleted": "",
+            "insert": "3",
+            "before": "x = 1",
+            "after": ""
+          }
+        }
+      ],
+      "expected": {
+        "text": "x = ab13",
+        "clamped": [],
+        "runs": {
+          "a": "x = 13",
+          "b": "x = ab"
+        }
+      }
+    },
+    {
+      "id": "a-replaced-word-while-the-other-types-inside-it",
+      "note": "replacing a word the other just changed deletes nothing (clamped) and inserts; both authors' text survives",
+      "base": "the quick fox",
+      "order": [
+        {
+          "author": "b",
+          "splice": {
+            "start": 9,
+            "deleted": "",
+            "insert": "k",
+            "before": "the quick",
+            "after": " fox"
+          }
+        },
+        {
+          "author": "a",
+          "splice": {
+            "start": 4,
+            "deleted": "quick",
+            "insert": "",
+            "before": "the ",
+            "after": " fox"
+          }
+        },
+        {
+          "author": "a",
+          "splice": {
+            "start": 4,
+            "deleted": "",
+            "insert": "s",
+            "before": "the ",
+            "after": " fox"
+          }
+        },
+        {
+          "author": "a",
+          "splice": {
+            "start": 5,
+            "deleted": "",
+            "insert": "l",
+            "before": "the s",
+            "after": " fox"
+          }
+        },
+        {
+          "author": "a",
+          "splice": {
+            "start": 6,
+            "deleted": "",
+            "insert": "o",
+            "before": "the sl",
+            "after": " fox"
+          }
+        },
+        {
+          "author": "a",
+          "splice": {
+            "start": 7,
+            "deleted": "",
+            "insert": "w",
+            "before": "the slo",
+            "after": " fox"
+          }
+        }
+      ],
+      "expected": {
+        "text": "the slowk fox",
+        "clamped": [],
+        "runs": {
+          "b": "the quickk fox",
+          "a": "the slow fox"
+        }
+      }
+    },
+    {
+      "id": "repeated-context-picks-the-nearest",
+      "note": "in repetitive text the match nearest to the author's position wins",
+      "base": "ab ab ab ab ab ab",
+      "order": [
+        {
+          "author": "a",
+          "splice": {
+            "start": 9,
+            "deleted": "",
+            "insert": "X",
+            "before": "ab ab ab ",
+            "after": "ab ab ab"
+          }
+        },
+        {
+          "author": "b",
+          "splice": {
+            "start": 3,
+            "deleted": "",
+            "insert": "Y",
+            "before": "ab ",
+            "after": "ab ab ab ab ab"
+          }
+        }
+      ],
+      "expected": {
+        "text": "ab Yab ab Xab ab ab",
+        "clamped": [],
+        "runs": {
+          "a": "ab ab ab Xab ab ab",
+          "b": "ab Yab ab ab ab ab"
+        }
+      }
+    }
+  ],
+  "rebases": [
+    {
+      "id": "nothing-pending",
+      "note": "no local splice pending: the remote text, the caret keeps its context",
+      "remote": "Oh. Hello",
+      "unapplied": [],
+      "local": "Hello",
+      "selection": {
+        "anchor": 5,
+        "caret": 5
+      },
+      "expected": {
+        "text": "Oh. Hello",
+        "anchor": 9,
+        "caret": 9
+      }
+    },
+    {
+      "id": "pending-typing-over-a-remote-prefix",
+      "note": "the unapplied local run folds onto the remote text; the caret follows it",
+      "remote": "Oh. Hello",
+      "unapplied": [
+        {
+          "start": 5,
+          "deleted": "",
+          "insert": " there",
+          "before": "Hello",
+          "after": ""
+        }
+      ],
+      "local": "Hello there",
+      "selection": {
+        "anchor": 11,
+        "caret": 11
+      },
+      "expected": {
+        "text": "Oh. Hello there",
+        "anchor": 15,
+        "caret": 15
+      }
+    },
+    {
+      "id": "pending-typing-at-the-same-point",
+      "note": "another author typed at the same point: the local run still ends at the caret",
+      "remote": "Hello friend",
+      "unapplied": [
+        {
+          "start": 5,
+          "deleted": "",
+          "insert": " there",
+          "before": "Hello",
+          "after": ""
+        }
+      ],
+      "local": "Hello there",
+      "selection": {
+        "anchor": 11,
+        "caret": 11
+      },
+      "expected": {
+        "text": "Hello there friend",
+        "anchor": 11,
+        "caret": 11
+      }
+    },
+    {
+      "id": "a-selection-travels",
+      "note": "both selection ends keep their context",
+      "remote": "## Hello",
+      "unapplied": [],
+      "local": "Hello",
+      "selection": {
+        "anchor": 0,
+        "caret": 5
+      },
+      "expected": {
+        "text": "## Hello",
+        "anchor": 3,
+        "caret": 8
+      }
+    }
+  ],
+  "offsets": [
+    {
+      "text": "a😀b",
+      "utf8": 0,
+      "scalar": 0
+    },
+    {
+      "text": "a😀b",
+      "utf8": 1,
+      "scalar": 1
+    },
+    {
+      "text": "a😀b",
+      "utf8": 5,
+      "scalar": 2
+    },
+    {
+      "text": "a😀b",
+      "utf8": 6,
+      "scalar": 3
+    },
+    {
+      "text": "äöü",
+      "utf8": 4,
+      "scalar": 2
+    }
+  ],
+  "hostTyping": [
+    {
+      "id": "an-echo-of-own-typing-shows-nothing",
+      "note": "the window echoes the host's own run: the editor keeps its text and caret",
+      "init": {
+        "buffer": "Hello",
+        "applied": 0
+      },
+      "events": [
+        {
+          "local": "Hello there",
+          "caret": 11
+        },
+        {
+          "send": {
+            "seq": 1,
+            "splice": {
+              "start": 5,
+              "deleted": "",
+              "insert": " there",
+              "before": "Hello",
+              "after": ""
+            }
+          }
+        },
+        {
+          "scene": "Hello there",
+          "applied": 1,
+          "show": null,
+          "unapplied": []
+        }
+      ]
+    },
+    {
+      "id": "a-lagging-echo-never-reverts-in-flight-typing",
+      "note": "an echo of an older run while a newer one is in flight changes nothing",
+      "init": {
+        "buffer": "Hello",
+        "applied": 0
+      },
+      "events": [
+        {
+          "local": "Hello there",
+          "caret": 11
+        },
+        {
+          "send": {
+            "seq": 1,
+            "splice": {
+              "start": 5,
+              "deleted": "",
+              "insert": " there",
+              "before": "Hello",
+              "after": ""
+            }
+          }
+        },
+        {
+          "local": "Hello there!",
+          "caret": 12
+        },
+        {
+          "send": {
+            "seq": 2,
+            "splice": {
+              "start": 11,
+              "deleted": "",
+              "insert": "!",
+              "before": "Hello there",
+              "after": ""
+            }
+          }
+        },
+        {
+          "scene": "Hello there",
+          "applied": 1,
+          "show": null,
+          "unapplied": [
+            2
+          ]
+        },
+        {
+          "scene": "Hello there!",
+          "applied": 2,
+          "show": null,
+          "unapplied": []
+        }
+      ]
+    },
+    {
+      "id": "a-collaborator-run-arrives-while-typing",
+      "note": "a collaborator's prefix arrives before the window applied the host's run: sent and unsent typing fold onto it, the caret follows",
+      "init": {
+        "buffer": "Hello",
+        "applied": 0
+      },
+      "events": [
+        {
+          "local": "Hello there",
+          "caret": 11
+        },
+        {
+          "send": {
+            "seq": 1,
+            "splice": {
+              "start": 5,
+              "deleted": "",
+              "insert": " there",
+              "before": "Hello",
+              "after": ""
+            }
+          }
+        },
+        {
+          "local": "Hello there you",
+          "caret": 15
+        },
+        {
+          "scene": "Oh. Hello",
+          "applied": 0,
+          "show": {
+            "text": "Oh. Hello there you",
+            "anchor": 19,
+            "caret": 19
+          },
+          "unapplied": [
+            1
+          ]
+        },
+        {
+          "scene": "Oh. Hello there",
+          "applied": 1,
+          "show": null,
+          "unapplied": []
+        }
+      ]
+    },
+    {
+      "id": "both-type-at-the-same-point",
+      "note": "the window took the collaborator's Y first and then the host's X at the same point: the host shows both, its caret stays after its own X",
+      "init": {
+        "buffer": "ab",
+        "applied": 0
+      },
+      "events": [
+        {
+          "local": "abX",
+          "caret": 3
+        },
+        {
+          "send": {
+            "seq": 1,
+            "splice": {
+              "start": 2,
+              "deleted": "",
+              "insert": "X",
+              "before": "ab",
+              "after": ""
+            }
+          }
+        },
+        {
+          "scene": "abY",
+          "applied": 0,
+          "show": {
+            "text": "abXY",
+            "anchor": 3,
+            "caret": 3
+          },
+          "unapplied": [
+            1
+          ]
+        },
+        {
+          "scene": "abXY",
+          "applied": 1,
+          "show": null,
+          "unapplied": []
+        }
+      ]
+    },
+    {
+      "id": "a-refused-run-disappears",
+      "note": "the window refused the run: the editor shows the published text again",
+      "init": {
+        "buffer": "Hello",
+        "applied": 0
+      },
+      "events": [
+        {
+          "local": "Hello there",
+          "caret": 11
+        },
+        {
+          "send": {
+            "seq": 1,
+            "splice": {
+              "start": 5,
+              "deleted": "",
+              "insert": " there",
+              "before": "Hello",
+              "after": ""
+            }
+          }
+        },
+        {
+          "refuse": 1,
+          "show": {
+            "text": "Hello",
+            "anchor": 5,
+            "caret": 5
+          },
+          "unapplied": []
+        }
+      ]
+    },
+    {
+      "id": "a-remounted-host-continues-the-window-sequence",
+      "note": "a host mounted on a window that applied splice 7 numbers its next run 8",
+      "init": {
+        "buffer": "abc",
+        "applied": 7
+      },
+      "events": [
+        {
+          "local": "abcd",
+          "caret": 4
+        },
+        {
+          "send": {
+            "seq": 8,
+            "splice": {
+              "start": 3,
+              "deleted": "",
+              "insert": "d",
+              "before": "abc",
+              "after": ""
+            }
+          }
+        },
+        {
+          "scene": "abcd",
+          "applied": 8,
+          "show": null,
+          "unapplied": []
+        }
+      ]
+    },
+    {
+      "id": "a-reincarnated-window-drops-the-runs-it-never-saw",
+      "note": "the document reopened while run 2 was in flight: the new window (applied 0 < acknowledged 1) never saw it, so the host drops it instead of folding it onto the reopened text, a late refusal of it changes nothing, and the next run is numbered 3",
+      "init": {
+        "buffer": "ab",
+        "applied": 0
+      },
+      "events": [
+        {
+          "local": "abX",
+          "caret": 3
+        },
+        {
+          "send": {
+            "seq": 1,
+            "splice": {
+              "start": 2,
+              "deleted": "",
+              "insert": "X",
+              "before": "ab",
+              "after": ""
+            }
+          }
+        },
+        {
+          "scene": "abX",
+          "applied": 1,
+          "show": null,
+          "unapplied": []
+        },
+        {
+          "local": "abXY",
+          "caret": 4
+        },
+        {
+          "send": {
+            "seq": 2,
+            "splice": {
+              "start": 3,
+              "deleted": "",
+              "insert": "Y",
+              "before": "abX",
+              "after": ""
+            }
+          }
+        },
+        {
+          "scene": "",
+          "applied": 0,
+          "show": {
+            "text": "",
+            "anchor": 0,
+            "caret": 0
+          },
+          "unapplied": []
+        },
+        {
+          "scene": "abX",
+          "applied": 0,
+          "show": {
+            "text": "abX",
+            "anchor": 0,
+            "caret": 0
+          },
+          "unapplied": []
+        },
+        {
+          "refuse": 2,
+          "show": null,
+          "unapplied": []
+        },
+        {
+          "local": "abXZ",
+          "caret": 4
+        },
+        {
+          "send": {
+            "seq": 3,
+            "splice": {
+              "start": 3,
+              "deleted": "",
+              "insert": "Z",
+              "before": "abX",
+              "after": ""
+            }
+          }
+        },
+        {
+          "scene": "abXZ",
+          "applied": 3,
+          "show": null,
+          "unapplied": []
+        }
+      ]
+    }
+  ]
+}

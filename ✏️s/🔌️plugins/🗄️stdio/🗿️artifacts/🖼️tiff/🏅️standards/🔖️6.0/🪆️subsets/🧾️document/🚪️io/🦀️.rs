@@ -81,7 +81,7 @@ pub use derived_composition::*;
 // still gets no invented pointer. `TiffEngine` (zero
 // construction sites) and the dead `register`/`register_pilot_languages`/
 // `register_artifact_inferences` cluster (superseded by `declaration()` in the artifact root,
-// zero real callers) were deleted outright. `empty_tiff_snapshot`/`demo_tiff_snapshot` moved to
+// zero real callers) were deleted outright. `blank_tiff_snapshot`/`demo_tiff_snapshot` moved to
 // `../🧬️schema`.
 use crate::schema::snapshot::{
     TiffByteOrder, TiffFieldType, TiffIfd, TiffSnapshot, TiffTag, TiffValues, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH, TAG_PHOTOMETRIC, TAG_ROWS_PER_STRIP, TAG_SAMPLES_PER_PIXEL, TAG_STRIP_BYTE_COUNTS,

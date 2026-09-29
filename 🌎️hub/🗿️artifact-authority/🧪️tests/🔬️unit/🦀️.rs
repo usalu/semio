@@ -204,6 +204,7 @@ fn fixture_manifest() -> semio_framework::PluginManifest {
             export_stdio_kinds: Vec::new(),
             import_stdio_kinds: Vec::new(),
         }],
+        hosted_artifact_kinds: Vec::new(),
         dependencies: Vec::new(),
         contributions: Vec::new(),
     }

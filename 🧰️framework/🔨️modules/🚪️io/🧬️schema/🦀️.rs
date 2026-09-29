@@ -315,4 +315,15 @@ pub struct IoRoute {
     pub fidelity: IoFidelity,
 }
 //#endregion 🔖️Route
+
+//#region 🔖️SchemaExports
+const IO_SCHEMA_EXPORTS: [semio_framework_schema_registry::SchemaExport; 1] = [semio_framework_schema_registry::SchemaExport { id: "schema", leaves: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") } }];
+
+/// 📌️ Registers the io vocabulary's own schema document (`framework/io/schema.json`: `ArtifactRef`, dialects, the io wire
+/// types) as the `schema` export of the `framework.io` scope, so every contract that `$ref`s it resolves it.
+// 🚫️async: E1 pure registration helper (no I/O) — see R9
+pub fn register_io_schema_exports() -> Result<(), semio_framework_schema_registry::SchemaExportRegistryError> {
+    semio_framework_schema_registry::register_scope_schema_exports(semio_framework_schema_registry::ScopeSchemaExports { scope: "framework.io", exports: &IO_SCHEMA_EXPORTS })
+}
+//#endregion 🔖️SchemaExports
 // #endregion io-schema

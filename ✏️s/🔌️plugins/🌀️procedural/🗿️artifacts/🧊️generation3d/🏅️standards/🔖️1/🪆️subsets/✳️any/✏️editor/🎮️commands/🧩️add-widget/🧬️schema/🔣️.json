@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Generation3d Widget Creation",
+  "type": "object",
+  "required": [
+    "kind"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "enum": [
+        "neuron",
+        "inputSlider",
+        "inputNote",
+        "inputImage",
+        "outputPreview",
+        "outputExport",
+        "outputAction",
+        "variable"
+      ]
+    },
+    "neuronKind": {
+      "type": "string",
+      "minLength": 1
+    },
+    "format": {
+      "type": "string",
+      "minLength": 1
+    },
+    "action": {
+      "type": "string",
+      "minLength": 1
+    },
+    "x": {
+      "type": "number"
+    },
+    "y": {
+      "type": "number"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "neuron"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "neuronKind"
+        ]
+      },
+      "else": {
+        "not": {
+          "required": [
+            "neuronKind"
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "outputExport"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "format"
+        ]
+      },
+      "else": {
+        "not": {
+          "required": [
+            "format"
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "outputAction"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "action"
+        ]
+      },
+      "else": {
+        "not": {
+          "required": [
+            "action"
+          ]
+        }
+      }
+    }
+  ]
+}

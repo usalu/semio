@@ -232,15 +232,19 @@ semio_framework_plugin::derive_artifact_facets!(
 
 //#region 🔖️DocumentHelpers
 // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
-// `empty_jpg_snapshot`/`demo_jpg_snapshot` relocated here verbatim (pure helpers over the
+// `blank_jpg_snapshot`/`demo_jpg_snapshot` relocated here verbatim (pure helpers over the
 // document type, destination rule 5); `JpgEngine` (zero construction sites) and the dead
 // `register`/`register_pilot_languages`/`register_artifact_inferences`/`register_schema_specs`
 // cluster (superseded by `declaration()` in the artifact root, zero real callers) deleted
 // outright; the real codec (`encode_jpg`/`decode_jpg`/`JpgError` + every pure format algorithm)
 // and `io_registry` moved to `../🚪️io`; tests moved beside what they now test.
+/// 🆕️ A new jpg document: one opaque white pixel as the real codec round-trips it — JPEG has no empty image (T.81 §B.2.2:
+/// a frame is at least 1×1), and a new document must save and reopen as itself.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn empty_jpg_snapshot() -> JpgSnapshot {
-    JpgSnapshot::default()
+pub fn blank_jpg_snapshot() -> JpgSnapshot {
+    use crate::standards::v_jfif_1_01::subsets::document::io::{decode_jpg, encode_jpg};
+    let seed = JpgSnapshot { width: 1, height: 1, pixels: vec![255, 255, 255, 255], ..JpgSnapshot::default() };
+    encode_jpg(&seed).and_then(|bytes| decode_jpg(&bytes)).expect("blank_jpg_snapshot: the 1×1 seed round-trips through the real codec")
 }
 
 /// 🧪️ P2-FG2: the demo `JpgSnapshot` used by `conformance_laws::protocol_walk_law`/

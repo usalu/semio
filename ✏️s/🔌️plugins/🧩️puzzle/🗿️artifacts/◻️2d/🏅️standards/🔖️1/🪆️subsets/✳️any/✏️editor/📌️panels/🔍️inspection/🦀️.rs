@@ -169,7 +169,7 @@ fn node_fields(node: &Value, labels: &Puzzle2dLabels) -> UiAssemblyResult<UiFixe
         stepper_row(&mut fields, "node.radius", labels.radius.as_str(), id, "radius", stepper_value(node, "radius", 24.0), 1.0)?;
     }
     read_only(&mut fields, "node.handles", labels.handles.as_str(), node.get("handles").and_then(Value::as_array).map_or(0, Vec::len))?;
-    flag_row(&mut fields, "node.hidden", labels.hidden.as_str(), "hidden", flag(node, "hidden"))?;
+    flag_row(&mut fields, "node.hidden", labels.hidden.as_str(), "hidden", crate::editor::puzzle2d::puzzle2d_entity_hidden(node))?;
     flag_row(&mut fields, "node.locked", labels.locked.as_str(), "locked", flag(node, "locked"))?;
     Ok(fields)
 }
@@ -180,7 +180,7 @@ fn edge_fields(edge: &Value, labels: &Puzzle2dLabels) -> UiAssemblyResult<UiFixe
     read_only(&mut fields, "edge.kind", labels.edge_kind.as_str(), text(edge, "edgeKind"))?;
     read_only(&mut fields, "edge.source", labels.source.as_str(), text(edge, "source"))?;
     read_only(&mut fields, "edge.target", labels.target.as_str(), text(edge, "target"))?;
-    flag_row(&mut fields, "edge.hidden", labels.hidden.as_str(), "hidden", flag(edge, "hidden"))?;
+    flag_row(&mut fields, "edge.hidden", labels.hidden.as_str(), "hidden", crate::editor::puzzle2d::puzzle2d_entity_hidden(edge))?;
     flag_row(&mut fields, "edge.locked", labels.locked.as_str(), "locked", flag(edge, "locked"))?;
     Ok(fields)
 }

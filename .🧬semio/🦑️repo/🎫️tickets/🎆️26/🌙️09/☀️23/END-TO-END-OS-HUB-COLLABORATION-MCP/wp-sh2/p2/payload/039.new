@@ -1,0 +1,537 @@
+{
+  "$schema": "../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🎚️ The transient state lane of `s.space.space` (👁️viewer/🫧️transient, reused by the editor): its mutation vocabulary `SpaceIndexTransientMutation` over `SpaceIndexTransient`, claimed by `../../../🧪️tests/🫧️mutate-s-space-1-any-viewer-transient` and backed by one committed vector per declared outcome class.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "s-space-1-any-viewer-transient-state-lane-semantics",
+      "capabilities": [
+        "s-space-1-any-viewer-transient-mutate"
+      ],
+      "rationale": "`SpaceIndexTransientMutation` is the transient state lane of `s.space.space`: it folds bounded batches of one space's directory events into the Space table's projection through the canonical kernel fold, and replaces per-artifact presence rows. This is this repository's own state record over its own directory wire, not a published format, so no third party implements it. What is under test is that `apply-directory-events` folds exactly a batch that continues the held frontier (or restarts from the origin), that replaying the held history is a warned `mutation.no-op`, that any other batch is refused by name without touching the projection, and that `set-artifact-presence` replaces exactly one artifact's row. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge.",
+      "substitutes": [
+        "specification-vectors"
+      ],
+      "coversMutations": true,
+      "referenceSurvey": {
+        "ecosystemsSearched": [
+          "npm",
+          "crates.io"
+        ],
+        "candidatesConsidered": [
+          {
+            "package": "zustand",
+            "ecosystem": "npm",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "An in-memory state container with arbitrary setter functions; it has no directory fold, no frontier rule and no typed batch vocabulary."
+          },
+          {
+            "package": "im",
+            "ecosystem": "crates.io",
+            "verdict": "cannot-express-the-mutation",
+            "reason": "Persistent immutable collections; they share structure but define no directory events, frontier admission or refusal semantics."
+          }
+        ],
+        "whyNoneQualifies": "`SpaceIndexTransient` is a projection defined by this repository over its own hub directory events; generic state containers can hold its rows but cannot adjudicate which batch continues a frontier or how an event folds."
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "s-space-1-any-viewer-transient",
+      "capability": "s-space-1-any-viewer-transient-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "kinds": [
+        "apply-directory-events",
+        "set-artifact-presence"
+      ],
+      "vectors": [
+        {
+          "mutationId": "apply-directory-events",
+          "sourceMutationDirectoryName": "📥️apply-directory-events",
+          "mutationDirectoryName": "📥️apply-directory-events",
+          "scenarios": [
+            {
+              "id": "apply-directory-events-applied",
+              "directoryName": "✅️apply-directory-events-applied"
+            },
+            {
+              "id": "apply-directory-events-no-op",
+              "directoryName": "🟰️apply-directory-events-no-op"
+            },
+            {
+              "id": "apply-directory-events-rejected",
+              "directoryName": "🚫️apply-directory-events-rejected"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-artifact-presence",
+          "sourceMutationDirectoryName": "👥️set-artifact-presence",
+          "mutationDirectoryName": "👥️set-artifact-presence",
+          "scenarios": [
+            {
+              "id": "set-artifact-presence-applied",
+              "directoryName": "✅️set-artifact-presence-applied"
+            },
+            {
+              "id": "set-artifact-presence-no-op",
+              "directoryName": "🟰️set-artifact-presence-no-op"
+            },
+            {
+              "id": "set-artifact-presence-rejected",
+              "directoryName": "🚫️set-artifact-presence-rejected"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.space.space",
+      "standard": "1",
+      "subset": "any",
+      "surface": "👁️viewer/🫧️transient",
+      "mutations": [
+        {
+          "id": "apply-directory-events",
+          "capability": "s-space-1-any-viewer-transient-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "apply-directory-events",
+            "bridgeVersion": 1,
+            "variant": "ApplyDirectoryEvents"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "s-space-1-any-viewer-transient-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-artifact-presence",
+          "capability": "s-space-1-any-viewer-transient-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-artifact-presence",
+            "bridgeVersion": 1,
+            "variant": "SetArtifactPresence"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "s-space-1-any-viewer-transient-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "apply-directory-events-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.space.space",
+        "standard": "1",
+        "subset": "any",
+        "surface": "👁️viewer/🫧️transient"
+      },
+      "mutation": "apply-directory-events",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/📥️apply-directory-events/✅️apply-directory-events-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:72b82c9d75a393965099baf5de3f2f381f3324bd5485dc486c4374f66c522339",
+          "bytes": 111
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/📥️apply-directory-events/✅️apply-directory-events-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:1a03990e2999960b9f8be27158f4fe08a41c989d83dd1716844a8ef101ae12b4",
+          "bytes": 2553
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/📥️apply-directory-events/✅️apply-directory-events-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a15c914c9ab5064dfcfe954174b8b8bc4557dbd893575b411e269c3ba1a9eb92",
+          "bytes": 1577
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/📥️apply-directory-events/✅️apply-directory-events-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a15c914c9ab5064dfcfe954174b8b8bc4557dbd893575b411e269c3ba1a9eb92",
+          "bytes": 1577
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/📥️apply-directory-events/✅️apply-directory-events-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector: the after snapshot is written from the directory fold's and the presence rule's documented semantics by an independent Python reading (`wp-sh2/p2/p2-space-vectors.py`), not produced by the implementation.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "transient-state-lane",
+      "notes": "The origin batch of a space lists its announced document, and the human's checkpoint publication it carries records the document's activity."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "apply-directory-events-no-op",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.space.space",
+        "standard": "1",
+        "subset": "any",
+        "surface": "👁️viewer/🫧️transient"
+      },
+      "mutation": "apply-directory-events",
+      "outcome": "no-op",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/📥️apply-directory-events/🟰️apply-directory-events-no-op/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a15c914c9ab5064dfcfe954174b8b8bc4557dbd893575b411e269c3ba1a9eb92",
+          "bytes": 1577
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/📥️apply-directory-events/🟰️apply-directory-events-no-op/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:1a03990e2999960b9f8be27158f4fe08a41c989d83dd1716844a8ef101ae12b4",
+          "bytes": 2553
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/📥️apply-directory-events/🟰️apply-directory-events-no-op/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a15c914c9ab5064dfcfe954174b8b8bc4557dbd893575b411e269c3ba1a9eb92",
+          "bytes": 1577
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/📥️apply-directory-events/🟰️apply-directory-events-no-op/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a15c914c9ab5064dfcfe954174b8b8bc4557dbd893575b411e269c3ba1a9eb92",
+          "bytes": 1577
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/📥️apply-directory-events/🟰️apply-directory-events-no-op/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d2a81b51136af5be8326cbd98957610a34e7017ac480f0a877898fbdc0b356a6",
+          "bytes": 114
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector: the after snapshot is written from the directory fold's and the presence rule's documented semantics by an independent Python reading (`wp-sh2/p2/p2-space-vectors.py`), not produced by the implementation.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "transient-state-lane",
+      "notes": "Replaying from the origin exactly the history the projection holds folds nothing."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "apply-directory-events-rejected",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.space.space",
+        "standard": "1",
+        "subset": "any",
+        "surface": "👁️viewer/🫧️transient"
+      },
+      "mutation": "apply-directory-events",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/📥️apply-directory-events/🚫️apply-directory-events-rejected/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a15c914c9ab5064dfcfe954174b8b8bc4557dbd893575b411e269c3ba1a9eb92",
+          "bytes": 1577
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/📥️apply-directory-events/🚫️apply-directory-events-rejected/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:5a3f27f64c799e1ab81e011d5c6b96e609a7bee5143dadac12ddad657779a09f",
+          "bytes": 1378
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/📥️apply-directory-events/🚫️apply-directory-events-rejected/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a15c914c9ab5064dfcfe954174b8b8bc4557dbd893575b411e269c3ba1a9eb92",
+          "bytes": 1577
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/📥️apply-directory-events/🚫️apply-directory-events-rejected/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a15c914c9ab5064dfcfe954174b8b8bc4557dbd893575b411e269c3ba1a9eb92",
+          "bytes": 1577
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/📥️apply-directory-events/🚫️apply-directory-events-rejected/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a4cd0d03772d1a53ff8b56283d2372467cd5071052472cd862f8920d89a8c763",
+          "bytes": 139
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector: the after snapshot is written from the directory fold's and the presence rule's documented semantics by an independent Python reading (`wp-sh2/p2/p2-space-vectors.py`), not produced by the implementation.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "transient-state-lane",
+      "notes": "A batch that does not continue the held frontier is refused by name and leaves the projection untouched."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-artifact-presence-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.space.space",
+        "standard": "1",
+        "subset": "any",
+        "surface": "👁️viewer/🫧️transient"
+      },
+      "mutation": "set-artifact-presence",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/👥️set-artifact-presence/✅️set-artifact-presence-applied/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:72b82c9d75a393965099baf5de3f2f381f3324bd5485dc486c4374f66c522339",
+          "bytes": 111
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/👥️set-artifact-presence/✅️set-artifact-presence-applied/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a76fd7cfdf2091f15c990cdfd8b476ae30fc3fe8c315e689c094ed3910a68925",
+          "bytes": 110
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/👥️set-artifact-presence/✅️set-artifact-presence-applied/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:5ded137e901e16cb27bc4581b9f84d67b5be508e8ef2ce5644bb6ab9e92b7dad",
+          "bytes": 205
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/👥️set-artifact-presence/✅️set-artifact-presence-applied/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:5ded137e901e16cb27bc4581b9f84d67b5be508e8ef2ce5644bb6ab9e92b7dad",
+          "bytes": 205
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/👥️set-artifact-presence/✅️set-artifact-presence-applied/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
+          "bytes": 44
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector: the after snapshot is written from the directory fold's and the presence rule's documented semantics by an independent Python reading (`wp-sh2/p2/p2-space-vectors.py`), not produced by the implementation.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "transient-state-lane",
+      "notes": "A presence row lists the live actors on the artifact's documents."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-artifact-presence-no-op",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.space.space",
+        "standard": "1",
+        "subset": "any",
+        "surface": "👁️viewer/🫧️transient"
+      },
+      "mutation": "set-artifact-presence",
+      "outcome": "no-op",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/👥️set-artifact-presence/🟰️set-artifact-presence-no-op/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:5ded137e901e16cb27bc4581b9f84d67b5be508e8ef2ce5644bb6ab9e92b7dad",
+          "bytes": 205
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/👥️set-artifact-presence/🟰️set-artifact-presence-no-op/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a76fd7cfdf2091f15c990cdfd8b476ae30fc3fe8c315e689c094ed3910a68925",
+          "bytes": 110
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/👥️set-artifact-presence/🟰️set-artifact-presence-no-op/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:5ded137e901e16cb27bc4581b9f84d67b5be508e8ef2ce5644bb6ab9e92b7dad",
+          "bytes": 205
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/👥️set-artifact-presence/🟰️set-artifact-presence-no-op/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:5ded137e901e16cb27bc4581b9f84d67b5be508e8ef2ce5644bb6ab9e92b7dad",
+          "bytes": 205
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/👥️set-artifact-presence/🟰️set-artifact-presence-no-op/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d2a81b51136af5be8326cbd98957610a34e7017ac480f0a877898fbdc0b356a6",
+          "bytes": 114
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector: the after snapshot is written from the directory fold's and the presence rule's documented semantics by an independent Python reading (`wp-sh2/p2/p2-space-vectors.py`), not produced by the implementation.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "transient-state-lane",
+      "notes": "The same row again changes nothing."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "set-artifact-presence-rejected",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.space.space",
+        "standard": "1",
+        "subset": "any",
+        "surface": "👁️viewer/🫧️transient"
+      },
+      "mutation": "set-artifact-presence",
+      "outcome": "rejected",
+      "units": {
+        "length": "unitless",
+        "angle": "unitless"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/👥️set-artifact-presence/🚫️set-artifact-presence-rejected/📸️snapshot/⬅️before/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:5ded137e901e16cb27bc4581b9f84d67b5be508e8ef2ce5644bb6ab9e92b7dad",
+          "bytes": 205
+        },
+        {
+          "role": "mutation",
+          "path": "../🧫️fixtures/👥️set-artifact-presence/🚫️set-artifact-presence-rejected/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:988d4201d7172ab7abf6559379e85b67df47566a4a893e143d2b04ddc19cdbdc",
+          "bytes": 88
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/👥️set-artifact-presence/🚫️set-artifact-presence-rejected/📸️snapshot/➡️after/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:5ded137e901e16cb27bc4581b9f84d67b5be508e8ef2ce5644bb6ab9e92b7dad",
+          "bytes": 205
+        },
+        {
+          "role": "expected-diff",
+          "path": "../🧫️fixtures/👥️set-artifact-presence/🚫️set-artifact-presence-rejected/🔺️diff/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:5ded137e901e16cb27bc4581b9f84d67b5be508e8ef2ce5644bb6ab9e92b7dad",
+          "bytes": 205
+        },
+        {
+          "role": "declared-outcome",
+          "path": "../🧫️fixtures/👥️set-artifact-presence/🚫️set-artifact-presence-rejected/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:0bfc53b42c4c5192d7c9a712d15af1c80a1cc8b951534ad41bfae50c2fc14647",
+          "bytes": 134
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/mutation/after vector: the after snapshot is written from the directory fold's and the presence rule's documented semantics by an independent Python reading (`wp-sh2/p2/p2-space-vectors.py`), not produced by the implementation.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "transient-state-lane",
+      "notes": "A row naming no artifact is refused by name and leaves the projection untouched."
+    }
+  ]
+}

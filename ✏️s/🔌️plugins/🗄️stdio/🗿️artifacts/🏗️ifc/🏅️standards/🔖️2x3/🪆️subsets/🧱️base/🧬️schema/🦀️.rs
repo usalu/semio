@@ -17,7 +17,7 @@ pub struct Ifc2x3Artifact {
     /// [`Ifc2x3Snapshot`] type — the actual persisted state.
     #[state(artifact)]
     #[value(default)]
-    pub document: semio_s_artifact_stdio_step::engine::part21::Part21Document,
+    pub document: semio_s_artifact_stdio_contract::part21::Part21Document,
     #[state(artifact)]
     #[value(default)]
     pub edm_preamble: Option<Ifc2x3EdmPreamble>,
@@ -258,7 +258,7 @@ pub fn empty_ifc2x3_snapshot() -> Ifc2x3Snapshot {
 /// `empty_ifc2x3_snapshot()` stub, so every recognizer/walk law actually exercises real content).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_ifc2x3_snapshot() -> Ifc2x3Snapshot {
-    use semio_s_artifact_stdio_step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
+    use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
     let document = Part21Document {
         header: Part21Header {
             file_description: vec![Part21Value::List(vec![Part21Value::Str(String::new())]), Part21Value::Str("2;1".into())],

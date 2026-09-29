@@ -1,0 +1,22 @@
+{
+ "plugin": "animate",
+ "dir": "🎞️animate",
+ "apps": [
+  {
+   "app": "s.animate.presentation@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "crate::editor::animate::AnimatePresentationPlayApp",
+   "create": "crate::editor::animate::create_animate_presentation_app",
+   "app": "s.animate.presentation@1/*#editor"
+  }
+ ]
+}

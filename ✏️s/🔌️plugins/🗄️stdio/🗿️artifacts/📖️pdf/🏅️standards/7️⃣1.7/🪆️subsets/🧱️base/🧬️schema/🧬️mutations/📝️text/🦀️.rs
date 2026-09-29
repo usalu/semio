@@ -69,6 +69,7 @@ pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[
     ("SetEncryption", super::set_encryption::text::TEXT_OPCODE),
     ("SetCatalogEntry", super::set_catalog_entry::text::TEXT_OPCODE),
     ("RemoveCatalogEntry", super::remove_catalog_entry::text::TEXT_OPCODE),
+    ("SetSnapshot", super::set_snapshot::text::TEXT_OPCODE),
 ];
 //#endregion 🧾️DerivedRegistry
 

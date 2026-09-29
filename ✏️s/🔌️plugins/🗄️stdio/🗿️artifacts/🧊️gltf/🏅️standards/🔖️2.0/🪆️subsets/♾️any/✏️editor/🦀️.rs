@@ -261,7 +261,7 @@ impl editing::SnapshotEditingEditor for GltfAnyEditor {
         match command { GltfAnyEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| GltfMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: snapshot }))
+        editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| GltfMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: Box::new(snapshot) }))
     }
 }
 

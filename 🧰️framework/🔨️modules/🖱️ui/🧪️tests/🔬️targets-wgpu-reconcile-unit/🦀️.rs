@@ -51,15 +51,8 @@ fn an_editable_table_row_keeps_one_child_per_cell_and_its_remove_action_as_a_row
         "component": {
             "type": "tableRow",
             "cells": ["Ada"],
-            "rowActions": [{
-                "icon": "trash-2",
-                "label": "Remove row",
-                "action": {
-                    "trigger": "activate",
-                    "action": { "scope": "s.stdio.csv@rfc4180/*#editor", "name": "remove-row", "version": 1 },
-                    "args": { "revision": "0123456789abcdef", "row": 7 }
-                }
-            }]
+            "rowActions": [{ "icon": "trash-2", "label": "Remove row", "verb": "remove-row" }],
+            "target": { "scope": "s.stdio.csv@rfc4180/*#editor", "version": 1, "args": { "revision": "0123456789abcdef", "row": 7 } }
         },
         "layout": { "kind": "stack", "axis": "horizontal", "gap": "none", "padding": { "all": "none" }, "align": "stretch", "justify": "start", "wrap": false, "grow": false },
         "style": {},
@@ -124,15 +117,8 @@ fn a_childless_table_row_never_implicitly_activates_its_first_row_action() {
         "component": {
             "type": "tableRow",
             "cells": ["Ada"],
-            "rowActions": [{
-                "icon": "trash-2",
-                "label": "Remove row",
-                "action": {
-                    "trigger": "activate",
-                    "action": { "scope": "s.stdio.csv@rfc4180/*#editor", "name": "remove-row", "version": 1 },
-                    "args": { "row": 7, "revision": "0123456789abcdef" }
-                }
-            }]
+            "rowActions": [{ "icon": "trash-2", "label": "Remove row", "verb": "remove-row" }],
+            "target": { "scope": "s.stdio.csv@rfc4180/*#editor", "version": 1, "args": { "row": 7, "revision": "0123456789abcdef" } }
         },
         "layout": { "kind": "stack", "axis": "horizontal", "gap": "none", "padding": { "all": "none" }, "align": "stretch", "justify": "start", "wrap": false, "grow": false },
         "style": {},
@@ -363,7 +349,7 @@ fn tree_item_control_and_trailing_actions_become_retained_children_too() {
         control: Some(UiControlNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, id: "tog".into(), icon_id: IconName::CircleDot, text: None, on_change: action(), presence: UiPresence::selected(true), menu: None })),
         inline_toolbar: None,
         detail: None,
-        actions: Some(vec![UiTreeItemAction { icon_id: IconName::Trash2, label: Some(Label::data("Delete")), action: action(), placement: Some(UiTreeActionPlacement::Menu) }]),
+        actions: Some(vec![UiTreeItemAction { icon_id: IconName::Trash2, label: Some(Label::data("Delete")), action: action(), placement: Some(UiTreeActionPlacement::Menu), disabled: false }]),
         ..tree_item("leaf", "Leaf")
     };
     let ui = tree_ui(vec![UiTreeSectionNode { header_toolbar: None, window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }], None);

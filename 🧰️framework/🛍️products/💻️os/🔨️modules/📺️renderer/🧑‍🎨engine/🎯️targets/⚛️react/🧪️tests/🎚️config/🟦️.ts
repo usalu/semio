@@ -183,6 +183,7 @@ const engineTestSuites = [
   elementSuite("🔎️ShellSearch", "🧩️component", "tsx"),
   elementSuite("📌️ChromePanels", "🧩️component", "tsx"),
   uiSuite("🔝️navbar-centered-band"),
+  uiSuite("🔤️text-advances"),
   uiSuite("📊️table-sort-header"),
 ] as const;
 const playwrightEngineTestSuites = [engineSuite("📚️storybook-hosts-no-wasm"), engineSuite("📚️storybook-hosts-wasm")] as const;

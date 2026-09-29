@@ -2695,6 +2695,10 @@ impl WasmtimeRuntime {
     }
 
     /// 🧬️ `codec.pack-schema-hash` — the kind's 32-byte structural snapshot fingerprint.
+    ///
+    /// 🚫️ A guest's own `plugin-error` from any `codec` export is its typed refusal, decoded as the owned interpreter
+    /// decodes it ([`decode_guest_plugin_error`]) — never a "trap" carrying the fault's raw bytes, which is what every
+    /// agent opening a `stdio` document on hub 7800/p33 read instead of the guest's reason.
     pub async fn codec_pack_schema_hash(&self, compiled: &CompiledHandle, artifact_schema: &str, budget: &Budget) -> Result<[u8; 32], TurnFault> {
         let mut instance = self.codec_instance(compiled, budget).await?;
         let GuestInstanceState::Wasmtime(state) = &mut instance.state else {
@@ -2708,7 +2712,7 @@ impl WasmtimeRuntime {
             .await
             .map_err(|error| TurnFault::Trapped(error.to_string()))?
             .map_err(|error| TurnFault::Trapped(error.to_string()))?
-            .map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
+            .map_err(decode_guest_plugin_error)?;
         <[u8; 32]>::try_from(bytes.as_slice()).map_err(|_| TurnFault::Trapped("guest pack schema hash is not 32 bytes".to_string()))
     }
 
@@ -2727,7 +2731,7 @@ impl WasmtimeRuntime {
             .await
             .map_err(|error| TurnFault::Trapped(error.to_string()))?
             .map_err(|error| TurnFault::Trapped(error.to_string()))?
-            .map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
+            .map_err(decode_guest_plugin_error)?;
         Ok(GuestDocumentPair { pack: pair.pack, spr: pair.spr })
     }
 
@@ -2748,7 +2752,7 @@ impl WasmtimeRuntime {
             .await
             .map_err(|error| TurnFault::Trapped(error.to_string()))?
             .map_err(|error| TurnFault::Trapped(error.to_string()))?
-            .map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
+            .map_err(decode_guest_plugin_error)?;
         Ok(GuestDocumentMirror { dsl: mirror.0, ops: mirror.1 })
     }
 
@@ -2769,7 +2773,7 @@ impl WasmtimeRuntime {
             .await
             .map_err(|error| TurnFault::Trapped(error.to_string()))?
             .map_err(|error| TurnFault::Trapped(error.to_string()))?
-            .map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
+            .map_err(decode_guest_plugin_error)?;
         Ok(GuestDocumentPair { pack: next.pack, spr: next.spr })
     }
 
@@ -2790,7 +2794,7 @@ impl WasmtimeRuntime {
             .await
             .map_err(|error| TurnFault::Trapped(error.to_string()))?
             .map_err(|error| TurnFault::Trapped(error.to_string()))?
-            .map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
+            .map_err(decode_guest_plugin_error)?;
         Ok(GuestDocumentPair { pack: next.pack, spr: next.spr })
     }
 }

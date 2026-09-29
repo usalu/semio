@@ -8,9 +8,9 @@
 use crate::standards::v1::subsets::any::schema::snapshot::{SSpaceSnapshot, SpaceArtifactRow, SpaceIndexTableLabels};
 use crate::editor::space_index::config::SpaceIndexConfig;
 use crate::editor::space_index::space_index_action;
-use semio_framework_plugin::app::{table_row_action, table_window_row, TableWindowKit, TreeWindows, WindowKit};
+use semio_framework_plugin::app::{activation_target, row_action, table_window_row, TableWindowKit, TreeWindows, WindowKit};
 use semio_framework_plugin::plugin_app_close_prelude::Label;
-use semio_framework_plugin::{IconName, WindowKindDefinition};
+use semio_framework_plugin::{IconName, RowActionPlacement, WindowKindDefinition};
 use semio_framework_ui_contract::{Buildable, HasBase, HasChildren, HasStackLayout};
 
 //#region 🔖️Constants
@@ -63,7 +63,7 @@ fn open_artifact_action(row: &SpaceArtifactRow) -> semio_framework_plugin::UiAss
 fn render_table(config: &SpaceIndexConfig, labels: &SpaceIndexTableLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     TableWindowKit::render_rows(windows, labels.table_name.as_str(), &labels.columns(), Some(labels.column_actions.as_str()), &config.indexed_artifacts, |row| {
         let cells = labels.row(row, &config.presence_for(&row.id).join(", "));
-        table_window_row(&format!("artifact:{}", row.id), &cells.each_ref().map(String::as_str), [table_row_action(IconName::FolderOpen.as_str(), labels.action_open.as_str(), open_artifact_action(row)?)?], Some(open_artifact_action(row)?))
+        table_window_row(&format!("artifact:{}", row.id), &cells.each_ref().map(String::as_str), [row_action(IconName::FolderOpen.as_str(), labels.action_open.as_str(), "openArtifact", RowActionPlacement::Row)?], Some(activation_target(open_artifact_action(row)?)?))
     })
 }
 

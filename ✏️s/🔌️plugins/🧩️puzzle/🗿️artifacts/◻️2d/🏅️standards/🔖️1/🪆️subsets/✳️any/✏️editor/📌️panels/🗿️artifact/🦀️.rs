@@ -14,9 +14,9 @@
 
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use crate::editor::puzzle2d::{fixture_edges, fixture_nodes, fixture_target_regions, puzzle2d_node_display_label, ui_label, Puzzle2dScene, PUZZLE2D_GRANULARITY_EDGE, PUZZLE2D_GRANULARITY_NODE, PUZZLE2D_GRANULARITY_TARGET_REGION, PUZZLE2D_INTERACTION_DOMAIN, PUZZLE2D_PLAY_CONTROLLER_ID};
-use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Buildable, HasBase, RowAction, RowActionPlacement, Trigger};
+use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, RowActionPlacement};
 use semio_framework_plugin::{
-    ActionFactory, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiListBuilder, UiMapBuilder, UiText, UiValue,
+    row_action, row_target, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiListBuilder, UiMapBuilder, UiText, UiValue,
     FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
 };
 use semio_framework_ui_contract as ui;
@@ -64,31 +64,35 @@ fn ui_value_text(value: &str) -> UiAssemblyResult<UiValue> {
     UiText::try_from_str(value).map(UiValue::Text).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d row action text admission failed"))
 }
 
-/// 🔁️ One inline row toggle's `setSelectionFlag` args. `value` is the state the click ASKS FOR —
-/// always the inverse of the row's current one, the same negation this app's own context menu
-/// (`value: any_visible`) and inspection panel (`UiValue::Bool(!pressed)`) already carry. A hardcoded
-/// `true` (puzzle3d's outliner bug, since fixed there) would make "Show"/"Unlock" re-apply the state
-/// the row was already in, so a row-hidden node could never be un-hidden from the row that hid it.
+/// 🎯️ A flag row's ONE target: the id key (`ids` for a node, `id` for a region) and the flag state each inline toggle
+/// ASKS FOR — always the inverse of the row's current one, stated as a value (`setSelectionHidden{hidden}` …), so a stale
+/// view sets a value and never flips one. A hardcoded `true` (puzzle3d's outliner bug, since fixed there) would make
+/// "Show"/"Unlock" re-apply the state the row was already in, so a row-hidden node could never be un-hidden from the row.
 ///
-/// 🔑️ `UiMapBuilder::push` admits keys in STRICTLY ASCENDING order only — `flag`, `ids`, `value`.
-fn flag_args(id: &str, flag_name: &str, value: bool) -> UiAssemblyResult<UiValue> {
-    let mut ids = UiListBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d row action list admission failed"))?;
-    ids.push(ui_value_text(id)?).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d row action list item admission failed"))?;
-    let mut args = UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d row action map admission failed"))?;
-    for (key, value) in [("flag", ui_value_text(flag_name)?), ("ids", UiValue::List(ids.finish())), ("value", UiValue::Bool(value))] {
-        args.push(key.to_owned(), value).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d row action map entry admission failed"))?;
+/// 🔑️ `UiMapBuilder::push` admits keys in STRICTLY ASCENDING order only — `hidden`, `id`/`ids`, `locked`.
+fn flag_target(identity: (&str, UiValue), hidden: bool, locked: bool) -> UiAssemblyResult<ui::RowTarget> {
+    let mut args = UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d row target map admission failed"))?;
+    for (key, value) in [("hidden", UiValue::Bool(!hidden)), identity, ("locked", UiValue::Bool(!locked))] {
+        args.push(key.to_owned(), value).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d row target map entry admission failed"))?;
     }
-    Ok(UiValue::Map(args.finish()))
+    row_target(PUZZLE2D_PLAY_CONTROLLER_ID, Some(UiValue::Map(args.finish())), None)
 }
 
-fn flag_row_action(icon: &str, label: &str, id: &str, flag_name: &str, next: bool) -> UiAssemblyResult<RowAction> {
-    let (action, args) = ActionFactory::new(PUZZLE2D_PLAY_CONTROLLER_ID).action("setSelectionFlag", Some(flag_args(id, flag_name, next)?))?;
-    Ok(RowAction {
-        icon: UiText::try_from_str(icon).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d row action icon admission failed"))?,
-        label: Some(ui_label(label)?),
-        action: ActionBinding { trigger: Trigger::Activate, action, args, capability: None },
-        placement: RowActionPlacement::Row,
-    })
+/// 🎯️ A node row's target: `ids` names exactly that node.
+fn node_flag_target(id: &str, hidden: bool, locked: bool) -> UiAssemblyResult<ui::RowTarget> {
+    let mut ids = UiListBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d row target list admission failed"))?;
+    ids.push(ui_value_text(id)?).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d row target list item admission failed"))?;
+    flag_target(("ids", UiValue::List(ids.finish())), hidden, locked)
+}
+
+/// 🎬️ A flag row's two inline toggles — `verbs` names the collection's own set-verbs (a region's flags are written by
+/// `setTargetRegion*`, not by `setSelection*`: the two address different collections, and a shared verb would silently
+/// flag a node that happened to share the id).
+fn hide_lock_actions(hidden: bool, locked: bool, labels: &Puzzle2dLabels, verbs: [&str; 2]) -> UiAssemblyResult<[ui::RowAction; 2]> {
+    Ok([
+        row_action(if hidden { "eye-off" } else { "eye" }, if hidden { labels.show.as_str() } else { labels.hide.as_str() }, verbs[0], RowActionPlacement::Row)?,
+        row_action(if locked { "lock" } else { "lock-open" }, if locked { labels.unlock.as_str() } else { labels.lock.as_str() }, verbs[1], RowActionPlacement::Row)?,
+    ])
 }
 
 /// 🪙️ Attaches a row's INLINE hide/lock toggles, and KEEPS the row when the argument arena cannot
@@ -98,14 +102,10 @@ fn flag_row_action(icon: &str, label: &str, id: &str, flag_name: &str, next: boo
 /// four headers and nothing selectable. A row without its toggles is still a pick target and still
 /// names its node; a row that was never materialised is neither. Edge rows carry no toggles at all,
 /// mirroring puzzle3d's attraction rows, which halves the per-document arena cost.
-fn with_hide_lock_actions(item: ui::TreeItemBuilder, hidden: bool, locked: bool, labels: &Puzzle2dLabels, id: &str) -> ui::TreeItemBuilder {
-    let actions = [
-        flag_row_action(if hidden { "eye-off" } else { "eye" }, if hidden { labels.show.as_str() } else { labels.hide.as_str() }, id, "hidden", !hidden),
-        flag_row_action(if locked { "lock" } else { "lock-open" }, if locked { labels.unlock.as_str() } else { labels.lock.as_str() }, id, "locked", !locked),
-    ];
-    let mut item = item;
+fn with_hide_lock_actions(item: ui::TreeItemBuilder, target: UiAssemblyResult<ui::RowTarget>, actions: UiAssemblyResult<[ui::RowAction; 2]>) -> ui::TreeItemBuilder {
+    let (Ok(target), Ok(actions)) = (target, actions) else { return item };
+    let mut item = item.target(target);
     for action in actions {
-        let Ok(action) = action else { return item };
         match item.try_row_action(action) {
             Ok(next) => item = next,
             Err((refused, _)) => return refused,
@@ -134,9 +134,9 @@ fn pick_row(id: &str, label: String, description: Option<&str>, granularity: &st
 
 fn node_row(node: &Value, fixture: &Value, labels: &Puzzle2dLabels) -> UiAssemblyResult<BuiltNode> {
     let id = node.get("id").and_then(Value::as_str).ok_or_else(|| PluginAssemblyError::new("ui.document", "puzzle2d node id is required"))?;
-    let (hidden, locked) = (flag(node, "hidden"), flag(node, "locked"));
+    let (hidden, locked) = (crate::editor::puzzle2d::puzzle2d_entity_hidden(node), flag(node, "locked"));
     let item = pick_item(id, node_label(node, fixture), node.get("nodeKind").and_then(Value::as_str), PUZZLE2D_GRANULARITY_NODE)?.dimmed(hidden);
-    with_hide_lock_actions(item, hidden, locked, labels, id).try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d row admission failed"))
+    with_hide_lock_actions(item, node_flag_target(id, hidden, locked), hide_lock_actions(hidden, locked, labels, ["setSelectionHidden", "setSelectionLocked"])).try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d row admission failed"))
 }
 
 fn edge_row(edge: &Value, fixture: &Value) -> UiAssemblyResult<BuiltNode> {
@@ -148,23 +148,6 @@ fn edge_row(edge: &Value, fixture: &Value) -> UiAssemblyResult<BuiltNode> {
 //#region 🎯️TargetRegionRows
 // 🤝️ Slice 2F owns everything in this region. It is kept whole and separate from `🔖️Rows` above so
 // slice 2C's outliner work and this one never anchor on the same lines.
-/// 🎯️ The inline hide/lock toggles of one region row. A region's flags are written by
-/// `setTargetRegionFlag`, not by `setSelectionFlag` — the two verbs address different collections,
-/// and a shared row action would silently flag a node that happened to share the id.
-fn region_flag_row_action(icon: &str, label: &str, id: &str, flag_name: &str, next: bool) -> UiAssemblyResult<RowAction> {
-    let mut args = UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d region row action map admission failed"))?;
-    for (key, value) in [("id", ui_value_text(id)?), ("flag", ui_value_text(flag_name)?), ("value", UiValue::Bool(next))] {
-        args.push(key.to_owned(), value).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d region row action map entry admission failed"))?;
-    }
-    let (action, args) = ActionFactory::new(PUZZLE2D_PLAY_CONTROLLER_ID).action("setTargetRegionFlag", Some(UiValue::Map(args.finish())))?;
-    Ok(RowAction {
-        icon: UiText::try_from_str(icon).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d region row action icon admission failed"))?,
-        label: Some(ui_label(label)?),
-        action: ActionBinding { trigger: Trigger::Activate, action, args, capability: None },
-        placement: RowActionPlacement::Row,
-    })
-}
-
 /// 🎯️ One fill-constraining rectangle as an outliner row: its label or id, its extent as the
 /// description, dimmed while hidden, with the same two inline toggles a node row carries. Refused
 /// toggles keep the row, exactly as [`with_hide_lock_actions`] argues for nodes.
@@ -173,21 +156,9 @@ fn target_region_row(region: &Value, labels: &Puzzle2dLabels) -> UiAssemblyResul
     let (hidden, locked) = (flag(region, "hidden"), flag(region, "locked"));
     let label = region.get("label").and_then(Value::as_str).map_or_else(|| id.to_string(), str::to_string);
     let extent = format!("{} × {}", region.get("width").and_then(Value::as_f64).unwrap_or(0.0).abs().round(), region.get("height").and_then(Value::as_f64).unwrap_or(0.0).abs().round());
-    let mut item = pick_item(id, label, Some(extent.as_str()), PUZZLE2D_GRANULARITY_TARGET_REGION)?.dimmed(hidden);
-    for action in [
-        region_flag_row_action(if hidden { "eye-off" } else { "eye" }, if hidden { labels.show.as_str() } else { labels.hide.as_str() }, id, "hidden", !hidden),
-        region_flag_row_action(if locked { "lock" } else { "lock-open" }, if locked { labels.unlock.as_str() } else { labels.lock.as_str() }, id, "locked", !locked),
-    ] {
-        let Ok(action) = action else { break };
-        match item.try_row_action(action) {
-            Ok(next) => item = next,
-            Err((refused, _)) => {
-                item = refused;
-                break;
-            }
-        }
-    }
-    item.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d region row admission failed"))
+    let item = pick_item(id, label, Some(extent.as_str()), PUZZLE2D_GRANULARITY_TARGET_REGION)?.dimmed(hidden);
+    let target = ui_value_text(id).and_then(|id| flag_target(("id", id), hidden, locked));
+    with_hide_lock_actions(item, target, hide_lock_actions(hidden, locked, labels, ["setTargetRegionHidden", "setTargetRegionLocked"])).try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d region row admission failed"))
 }
 //#endregion 🎯️TargetRegionRows
 

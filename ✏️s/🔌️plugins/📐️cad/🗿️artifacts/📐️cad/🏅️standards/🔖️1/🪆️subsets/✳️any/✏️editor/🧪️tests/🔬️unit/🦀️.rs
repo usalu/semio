@@ -221,7 +221,7 @@ use crate::standards::v1::subsets::any::schema::inferences::{
     align_mesh_to_host_snapshot_centroid, default_document, object_mesh_data, run_derive_from_geometry, CAD_CONCRETE_FOREST_REFERENCE_URL, CAD_DEFAULT_TYPOLOGY_EXTENT, CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX, CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX,
     CAD_FOREST_REFERENCE_PLANE_Z, CAD_FOREST_REFERENCE_WIDTH_WORLD, CAD_FOREST_REFERENCE_Y_OFFSET_RATIO,
 };
-use crate::{empty_cad_snapshot, CadNode, CAD_PLAY_DOCUMENT_SCHEMA};
+use crate::{empty_cad_snapshot, CadNode, CadReference, CAD_PLAY_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ActionKind, AppActionRegistry, EditorApp, PluginApp, SET_ACTIVE_UTILITY_ACTION_ID};
 use store::{Backbone, BackboneMessage, MemoryBackbone};
 
@@ -249,6 +249,8 @@ pub(crate) fn every_command() -> Vec<CadCommand> {
         CadCommand::ImportCadFile(import_cad_file::ImportCadFile { name: "triangle.obj".into(), payload: "data:model/obj;base64,AAAA".into() }),
         CadCommand::PatchCadPlayReference(patch_cad_play_reference::PatchCadPlayReference { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), field: "widthWorld".into(), value: Some("8".into()), delta: Some(0.5) }),
         CadCommand::PatchCadPlayReference(patch_cad_play_reference::PatchCadPlayReference { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), field: "hidden".into(), value: None, delta: None }),
+        CadCommand::SetReferenceHidden(set_reference_hidden::SetReferenceHidden { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), hidden: true }),
+        CadCommand::SetReferenceLocked(set_reference_locked::SetReferenceLocked { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), locked: false }),
         CadCommand::EngagementSubmit(engagement_submit::EngagementSubmit { pane: Some("shape".into()) }),
         CadCommand::EngagementSubmit(engagement_submit::EngagementSubmit { pane: None }),
         CadCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "hexagonal-cut-concrete-forest-left".into() }),
@@ -1009,6 +1011,8 @@ async fn internal_and_plumbing_actions_excluded_from_palette() {
     let definition = create_cad_app();
     let hidden_actions = [
         "patchCadPlayReference",
+        "setReferenceHidden",
+        "setReferenceLocked",
         "engagementSubmit",
         "setNodeSelection",
         "setReferenceSelection",
@@ -1067,6 +1071,56 @@ async fn window_engagements_registered_for_all_four_panes() {
         assert!(engagements.contains_key(window_kind), "missing engagement for {window_kind}");
     }
     close(&mut app);
+}
+
+/// 🙈️ LAW: a reference row's set-verbs are idempotent by value — `setReferenceHidden`/`setReferenceLocked` with the value
+/// the row's target asks for emit exactly one reference edit, and replaying them against the edited document emits none,
+/// so a stale second click leaves one history row's effect; a set-verb without its value is refused at the command
+/// boundary, never defaulted into a flip.
+#[test]
+fn reference_set_verbs_are_idempotent_by_value_and_refuse_a_missing_value() {
+    let scene = forest_play_scene();
+    let reference = scene.references_by_model_definition_id.get(CAD_MODEL_DEFINITION_ENERGY).and_then(|references| references.first()).expect("energy reference").clone();
+    let history = empty_history();
+    let config = CadConfig::default();
+    let cfg = ConfigView { snapshot: &config, window: None };
+    let identity = json!({ "modelDefinitionId": CAD_MODEL_DEFINITION_ENERGY, "referenceId": reference.id.as_str() });
+    for (verb, args, state) in [
+        ("setReferenceHidden", json!({ "hidden": !reference.hidden, "modelDefinitionId": CAD_MODEL_DEFINITION_ENERGY, "referenceId": reference.id.as_str() }), (|reference: &CadReference| reference.hidden) as fn(&CadReference) -> bool),
+        ("setReferenceLocked", json!({ "locked": !reference.locked, "modelDefinitionId": CAD_MODEL_DEFINITION_ENERGY, "referenceId": reference.id.as_str() }), (|reference: &CadReference| reference.locked) as fn(&CadReference) -> bool),
+    ] {
+        assert!(<CadPlayApp as ArtifactEditor>::command_from_action(verb, Some(&json::to_dsl_value(&identity))).is_err(), "{verb} without its value must be refused");
+        let command = command_from_action(verb, Some(&args));
+        let mut ctx = CadDispatchCtx { interaction: CadInteractionSnapshot::default(), preview_operation: None, view_state: None };
+        let first = command.dispatch(&ArtifactView::new(&scene, &history), &cfg, &mut ctx).unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
+        assert_eq!(first.artifact_mutations.len(), 1, "{verb} with the inverse value is exactly one reference edit");
+        let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&first.artifact_mutations[0], &scene);
+        let edited = protocol::MutationDiff::apply(outcome.diff(), &scene).expect("the reference edit applies");
+        let flagged = edited.references_by_model_definition_id.get(CAD_MODEL_DEFINITION_ENERGY).and_then(|references| references.iter().find(|entry| entry.id == reference.id)).expect("the reference survives its flag edit");
+        assert_eq!(state(flagged), !state(&reference), "{verb} reaches the value the row asked for");
+        let replay = command.dispatch(&ArtifactView::new(&edited, &history), &cfg, &mut ctx).unwrap_or_else(|fault| panic!("{verb} replay: {fault:?}"));
+        assert!(replay.artifact_mutations.is_empty(), "replaying {verb} with the same value emits no second edit");
+    }
+}
+
+/// 🎯️ LAW: a reference row carries ONE target — the reference, the inverse of each flag, and `setReferenceSelection` as its
+/// activation — and its two toggles name only their set-verbs, so the row and its toggles dispatch against the same target.
+#[test]
+fn a_reference_row_names_its_set_verbs_over_one_target_that_asks_for_the_inverse() {
+    let scene = forest_play_scene();
+    let reference = scene.references_by_model_definition_id.get(CAD_MODEL_DEFINITION_ENERGY).and_then(|references| references.first()).expect("energy reference").clone();
+    let row = document::reference_tree_item(CAD_MODEL_DEFINITION_ENERGY, &reference, cad_labels(&ViewModel::default())).expect("the reference row is admitted");
+    let semio_framework_plugin::Component::TreeItem(props) = &row.component else { panic!("a reference row is a tree item") };
+    let verbs: Vec<&str> = props.row_actions.iter().map(|action| action.verb.as_str()).collect();
+    assert_eq!(verbs, ["setReferenceHidden", "setReferenceLocked"]);
+    let target = props.target.as_ref().expect("the reference row carries one target");
+    assert_eq!(target.activation.as_ref().map(|activation| activation.as_str()), Some("setReferenceSelection"));
+    let asked = |flag: &str| target.args.as_ref().and_then(|args| args.iter().find(|(key, _)| key.as_str() == flag)).and_then(|(_, value)| match value {
+        semio_framework_plugin::UiValue::Bool(value) => Some(value),
+        _ => None,
+    });
+    assert_eq!((asked("hidden"), asked("locked")), (Some(!reference.hidden), Some(!reference.locked)), "the row asks for the inverse of hidden={} locked={}", reference.hidden, reference.locked);
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: row }).expect("the reference row retires");
 }
 
 #[semio_framework_async_macros::async_test]

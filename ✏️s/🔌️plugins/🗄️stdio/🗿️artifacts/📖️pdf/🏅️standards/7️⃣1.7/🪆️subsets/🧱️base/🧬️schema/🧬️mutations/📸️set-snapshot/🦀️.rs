@@ -31,3 +31,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetSnapshot {
         Vec::new()
     }
 }
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+#[path = "📝️text/🦀️.rs"]
+pub mod text;

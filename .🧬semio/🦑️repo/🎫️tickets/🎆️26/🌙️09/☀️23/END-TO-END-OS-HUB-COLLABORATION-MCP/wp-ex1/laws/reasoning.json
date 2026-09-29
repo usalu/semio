@@ -1,0 +1,22 @@
+{
+ "plugin": "reasoning",
+ "dir": "💡️reasoning",
+ "apps": [
+  {
+   "app": "s.reasoning.wires@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "crate::editor::wires::ReasoningWiresPlayApp",
+   "create": "crate::editor::wires::create_wires_app",
+   "app": "s.reasoning.wires@1/*#editor"
+  }
+ ]
+}

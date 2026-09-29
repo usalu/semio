@@ -460,7 +460,7 @@ pub fn descriptor_kind_identity_apps(descriptor: &PackageDescriptor) -> Vec<Kind
             app_id: &app.id,
             presented_kind: &app.io.artifact.id,
             presented_schema: &app.io.artifact_schema,
-            declared: app.artifact_kinds.iter().chain(manifest.artifact_kinds.iter()).map(|kind| (kind.id.as_str(), kind.schema.as_str())).collect(),
+            declared: app.artifact_kinds.iter().chain(manifest.artifact_kinds.iter()).map(|kind| (kind.id.as_str(), kind.schema.as_str())).chain(manifest.hosted_artifact_kinds.iter().map(|kind| (kind.id.as_str(), kind.schema.as_str()))).collect(),
         })
         .collect()
 }

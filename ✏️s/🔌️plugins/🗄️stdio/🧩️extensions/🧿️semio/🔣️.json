@@ -54477,6 +54477,103 @@
     "topicContributions": [],
     "commands": [],
     "artifactKinds": [],
+    "hostedArtifactKinds": [
+      {
+        "id": "s.stdio.semio",
+        "schema": "stdio.semio",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.semio",
+        "schema": "s.stdio.semio.animation",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.semio",
+        "schema": "stdio.semio.audio",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.semio",
+        "schema": "stdio.semio.brep",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.semio",
+        "schema": "stdio.semio.cad",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.semio",
+        "schema": "s.stdio.semio.document",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.semio",
+        "schema": "stdio.semio.drawing",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.semio",
+        "schema": "stdio.semio.flow",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.semio",
+        "schema": "s.stdio.semio.graph",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.semio",
+        "schema": "s.stdio.semio.image",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.semio",
+        "schema": "stdio.semio.kit",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.semio",
+        "schema": "stdio.semio.mesh",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.semio",
+        "schema": "stdio.semio.model",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.semio",
+        "schema": "stdio.semio.object",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.semio",
+        "schema": "s.stdio.semio.presentation",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.semio",
+        "schema": "s.stdio.semio.table",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.semio",
+        "schema": "s.stdio.semio.text",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.semio",
+        "schema": "stdio.semio.value",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.semio",
+        "schema": "stdio.semio.video",
+        "owner": "stdio"
+      }
+    ],
     "dependencies": [
       {
         "pluginId": "stdio",
@@ -55231,8 +55328,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "5a0a5d2ea605a5be6f1b15d1a0f2e1c6cd16fb1a440b3ab3f5fae5aecd8618e0",
-    "coreWasmSha256": "d8a0ad78040c4d865626358239aa342e17f70e09b7ca64769d7376d439232f00",
-    "descriptorSha256": "dec7be9432bc7f550c53c344c9ba88e9f4a6421dfe958097b7a7b762d607086e"
+    "wasmSha256": "b31f3e4a58c94a742d326de8eed4fcc556a81c29fd79fc031ac18ec3b4624812",
+    "coreWasmSha256": "adfefe311aa087544570069ca35dc6c6a99376c31d03c36ef84220dde31023fc",
+    "descriptorSha256": "7abf5f9fe8dd948526a539991743ac7ba80c2d8a93d76b45d08e9b4f97637b18"
   }
 }

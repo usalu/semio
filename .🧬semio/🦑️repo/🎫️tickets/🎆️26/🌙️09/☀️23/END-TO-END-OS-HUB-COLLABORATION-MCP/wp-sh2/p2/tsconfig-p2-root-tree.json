@@ -1,0 +1,11 @@
+{
+ "extends": "/Users/ueli/Documents/semio/tsconfig.json",
+ "compilerOptions": {
+  "noEmit": true,
+  "incremental": false
+ },
+ "include": [],
+ "files": [
+  "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/📜️script.ts"
+ ]
+}

@@ -1,7 +1,7 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
-  const { BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES, browserActorActionOwnerMatchesV1, browserActorGuestRefusalReasonV1, createBrowserActorAppCommandRequestV1, createBrowserActorUiIntentRequestV1, decodeAppCommand, decodePackValue, parseBrowserActorActionRequestV1, parseBrowserActorActionResultV1 } = dependencies;
+  const { BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES, browserActorActionOwnerMatchesV1, browserActorActionRefusalReasonV1, browserActorAdmissionRefusalReasonV1, browserActorGuestRefusalReasonV1, createBrowserActorAppCommandRequestV1, createBrowserActorUiIntentRequestV1, decodeAppCommand, decodePackValue, parseBrowserActorActionRequestV1, parseBrowserActorActionResultV1 } = dependencies;
 
   const { expect, it } = vitest;
   it("browser actor action handoff validates the neutral schema and exact owner with an independent oracle", async () => {
@@ -21,6 +21,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const reason = browserActorGuestRefusalReasonV1(row.detail);
       expect(reason, JSON.stringify(row.detail)).toBe(row.reason);
       expect(parseBrowserActorActionResultV1({ ...fixture.rejected, reason }).reason).toBe(reason);
+      expect(browserActorActionRefusalReasonV1(new Error(reason)), reason).toBeNull();
+    }
+    for (const row of fixture.admissionRefusals) {
+      const reason = browserActorAdmissionRefusalReasonV1(row.detail);
+      expect(reason, JSON.stringify(row.detail)).toBe(row.reason);
+      expect(parseBrowserActorActionResultV1({ ...fixture.rejected, reason }).reason).toBe(reason);
+      expect(browserActorActionRefusalReasonV1(new Error(reason)), reason).toBe("dispatch-failed");
     }
     for (const hostile of fixture.hostileResults) expect(browserActorActionOwnerMatchesV1(request, parseBrowserActorActionResultV1(hostile))).toBe(false);
     expect(() => parseBrowserActorActionRequestV1({ ...fixture.request, payload: { ...fixture.request.payload, bytes: new Array(BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES + 1).fill(0) } })).toThrow(/bounded bytes/u);

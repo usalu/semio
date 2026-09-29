@@ -5986,6 +5986,7 @@ dependencies = [
  "semio-framework-os-services",
  "semio-framework-pack",
  "semio-framework-replication",
+ "semio-framework-schema-registry",
  "semio-framework-trace",
  "semio-framework-ui-viewport",
  "semio-framework-value-derive",
@@ -7013,6 +7014,7 @@ dependencies = [
  "semio-framework-ui-contract",
  "semio-framework-ui-scene",
  "semio-framework-value-derive",
+ "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-dwg",
  "semio-s-artifact-stdio-obj",
  "semio-s-artifact-stdio-semio",
@@ -10305,6 +10307,7 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-plugin",
+ "semio-framework-schema",
  "semio-framework-value-derive",
  "semio-s-artifact-stdio-avi",
  "semio-s-artifact-stdio-bcf",
@@ -10444,6 +10447,7 @@ dependencies = [
  "semio-s-artifact-stdio-docx",
  "semio-s-artifact-stdio-pptx",
  "semio-s-artifact-stdio-xlsx",
+ "semio-s-artifact-stdio-xml",
 ]
 
 [[package]]

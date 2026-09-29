@@ -1,9 +1,9 @@
 //! 🧬️ IfcSnapshot schema — OWN typed model of the IFC4 EXPRESS-schema data (ticket
 //! 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION, W0 §7's most severe
-//! finding: the prior `IfcSnapshot.document: step::engine::part21::Part21Document` used STEP's
+//! finding: the prior `IfcSnapshot.document: semio_s_artifact_stdio_contract::part21::Part21Document` used STEP's
 //! own persisted type verbatim as this artifact's snapshot). IFC4 rides the same ISO 10303-21
 //! Part-21 EXCHANGE-STRUCTURE grammar as STEP (both real, both documented on
-//! `step::engine::part21`'s own module doc as a legitimate shared low-level tokenizer — same
+//! `semio_s_artifact_stdio_contract::part21`'s own module doc as a legitimate shared low-level tokenizer — same
 //! spirit as OPC being shared by the OOXML trio), but the DATA MODEL is IFC4's own EXPRESS
 //! schema, semantically unrelated to AP214 — so this snapshot declares its OWN
 //! `IfcEntity`/`IfcValue`/`IfcHeader` types (a near-duplicate of STEP's value grammar shape,
@@ -13,11 +13,11 @@
 
 use crate::STDIO_IFC_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
-use semio_s_artifact_stdio_step::engine::part21::{parse_part21, write_part21, Part21Document, Part21Header, Part21Instance, Part21Value};
+use semio_s_artifact_stdio_contract::part21::{parse_part21, write_part21, Part21Document, Part21Header, Part21Instance, Part21Value};
 
 //#region 🔖️Value
 /// 🔤️ One typed value in IFC4's Part-21 argument-list syntax — own enum, mirrors
-/// `step::engine::part21::Part21Value`'s shape but is IFC's own type (never shared cross-artifact).
+/// `semio_s_artifact_stdio_contract::part21::Part21Value`'s shape but is IFC's own type (never shared cross-artifact).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", content = "value", rename_all = "camelCase")]
 #[derive(Default)]
@@ -152,7 +152,7 @@ impl Default for IfcHeader {
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted `stdio.ifc` snapshot — the full, lossless IFC4 Part-21 graph in IFC's OWN typed
-/// model (never `step::engine::part21::Part21Document`). Spatial structure/placement
+/// model (never `semio_s_artifact_stdio_contract::part21::Part21Document`). Spatial structure/placement
 /// matrices/property sets stay a derived analyzer view (`engine::spatial::analyze_spatial`,
 /// which is handed a `Part21Document` built on demand via [`to_part21_document`]), not stored here.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]

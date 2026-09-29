@@ -29,7 +29,7 @@ export async function testWgpuBootInputs(workspace: string, generated: string): 
   const sourceFiles = sourceInputs.filter((input: unknown) => typeof input === "string").map((input: string) => input.replace("{workspaceRoot}/", ""));
   assert.ok(sourceFiles.includes(entry.slice(workspace.length + 1)));
   assert.ok(!sourceFiles.some((path: string) => path.includes(".vscode/") || path.includes("⚡️caching/📦️artifacts/🦀️rust/") || path.endsWith("📦️packages/🟦️typescript/📜️script.ts") || path.endsWith("🤖️generated/🎮️playgrounds/🟦️.ts")));
-  assert.deepEqual(sourceInputs.filter((input: any) => input.externalDependencies), [{ externalDependencies: ["typescript"] }]);
+  assert.deepEqual(sourceInputs.filter((input: any) => input.externalDependencies), [{ externalDependencies: ["ajv", "typescript"] }]);
   const catalog = await import(resolve(entry, "../../../../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts"));
   assert.equal(catalog.DEFAULT_HOST_VARIANT, fixture.defaultVariant);
   const names = new Set(["BOOT_FIELD_CAPACITY", "LOCATION_SEARCH_CAPACITY", "bounded", "bootDescriptor"]);

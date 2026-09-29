@@ -168,14 +168,18 @@ pub mod set_step_enabled {
         pub enabled: bool,
     }
 
-    /// 🔘 See `MoveStep::handle`'s doc comment — existence is validated at diff time.
+    /// 🔘 Sets the step to exactly `enabled` — the step row target's explicit next state — and emits nothing when the step
+    /// already holds it, so a replayed click leaves the one edit the first one made. An unknown id still reaches the
+    /// mutation, whose diff validates existence (see `MoveStep::handle`'s doc comment).
     pub fn handle(
         payload: &SetStepEnabled,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,
         _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        let _ = doc;
+        if doc.snapshot.step_payloads.iter().any(|step| step.id == payload.id && step.enabled == payload.enabled) {
+            return Ok(Emit::default());
+        }
         Ok(Emit::mutations(vec![Process3dMutation::ChangeStepEnabled(ChangeStepEnabled { id: payload.id.clone(), new_enabled: payload.enabled })]))
     }
 }

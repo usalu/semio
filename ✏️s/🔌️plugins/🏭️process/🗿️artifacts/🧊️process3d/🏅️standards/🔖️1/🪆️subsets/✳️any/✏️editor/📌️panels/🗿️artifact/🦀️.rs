@@ -1,10 +1,9 @@
 //! 📄️ Process 3d play app panel — the document tree: stock + ordered process steps.
 
-use crate::editor::process3d::process3d_action;
 use crate::editor::process3d::terminology::{process3d_measure_icon, Process3dLabels};
 use crate::editor::process3d::{PROCESS3D_GRANULARITY_OBJECT, PROCESS3D_INTERACTION_DOMAIN, PROCESS_3D_PLAY_APP_ID};
 use crate::{Process3dSnapshot, ProcessStep};
-use semio_framework_plugin::{tree_item, ActionBinding, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, RowAction, RowActionPlacement, Trigger, TreeWindows, UiAssemblyResult, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use semio_framework_plugin::{row_action, row_target, tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, RowActionPlacement, TreeWindows, UiAssemblyResult, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
 pub const PROCESS_3D_PLAY_BODY_ARTIFACT: &str = "process.play.artifact";
@@ -43,38 +42,24 @@ fn stock_row(snapshot: &Process3dSnapshot) -> UiAssemblyResult<BuiltNode> {
     Ok(item)
 }
 
-/// 🎞️ One step row: its own verbs stay ROW ACTIONS (the eye toggles `setStepEnabled`, the menu's
-/// trash dispatches `removeStep`), while selection is the tree's — the row declares its granularity
-/// and the tree carries the single `interactionSelect` binding both it and the canvas pick through.
+/// 🎞️ One step row: ONE target `{enabled, id}` — `enabled` states the INVERSE of the step's current state, so the eye's
+/// `setStepEnabled` sets a value and never flips one, and the menu's `removeStep` reads `id` alone — and its verbs stay ROW
+/// ACTIONS naming only a verb, while selection is the tree's: the row declares its granularity and the tree carries the
+/// single `interactionSelect` binding both it and the canvas pick through.
 fn step_row(index: usize, step: &ProcessStep, cursor: usize, labels: &Process3dLabels) -> UiAssemblyResult<BuiltNode> {
     let mut item = tree_item(&step.id, crate::editor::process3d::ui_label(&step.label)?)?;
-    let enabled_args = crate::editor::process3d::ui_value_map([("enabled", crate::editor::process3d::ui_value_bool(!step.enabled)), ("id", crate::editor::process3d::ui_value_text(&step.id)?)])?;
-    let (enabled_action, enabled_args) = process3d_action("setStepEnabled", Some(enabled_args))?;
-    let remove_args = crate::editor::process3d::ui_value_map([("id", crate::editor::process3d::ui_value_text(&step.id)?)])?;
-    let (remove_action, remove_args) = process3d_action("removeStep", Some(remove_args))?;
+    let args = crate::editor::process3d::ui_value_map([("enabled", crate::editor::process3d::ui_value_bool(!step.enabled)), ("id", crate::editor::process3d::ui_value_text(&step.id)?)])?;
+    let target = row_target(crate::editor::process3d::PROCESS_3D_PLAY_CONTROLLER_ID, Some(args), None)?;
     let mut row_actions = semio_framework_plugin::UiFixedList::default();
-    row_actions
-        .try_push(RowAction {
-            icon: ui_text(if step.enabled { "eye" } else { "eye-off" })?,
-            label: Some(crate::editor::process3d::ui_label(labels.enabled.as_str())?),
-            action: ActionBinding { trigger: Trigger::Activate, action: enabled_action, args: enabled_args, capability: None },
-            placement: RowActionPlacement::Row,
-        })
-        .map_err(|_| document_error("row-actions"))?;
-    row_actions
-        .try_push(RowAction {
-            icon: ui_text("trash")?,
-            label: Some(crate::editor::process3d::ui_label(labels.remove.as_str())?),
-            action: ActionBinding { trigger: Trigger::Activate, action: remove_action, args: remove_args, capability: None },
-            placement: RowActionPlacement::Menu,
-        })
-        .map_err(|_| document_error("row-actions"))?;
+    row_actions.try_push(row_action(if step.enabled { "eye" } else { "eye-off" }, labels.enabled.as_str(), "setStepEnabled", RowActionPlacement::Row)?).map_err(|_| document_error("row-actions"))?;
+    row_actions.try_push(row_action("trash", labels.remove.as_str(), "removeStep", RowActionPlacement::Menu)?).map_err(|_| document_error("row-actions"))?;
     if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
         props.description = if index >= cursor { Some(ui_text("pending")?) } else { None };
         props.icon = Some(ui_text(process3d_measure_icon(&step.measure))?);
         props.dimmed = Some(!step.enabled);
         props.granularity = Some(ui_text(PROCESS3D_GRANULARITY_OBJECT)?);
         props.row_actions = row_actions;
+        props.target = Some(target);
     }
     Ok(item)
 }

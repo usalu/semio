@@ -119,6 +119,19 @@ pub mod derived_composition {
         register_artifact_inferences();
     }
 
+    /// 🧾️ The declarative twin of [`register`]: this subset's schema, document codec, `SubsetValidator`, composers
+    /// (those writing semio, [`crate::semio_written`]) and inference descriptor as rows of [`crate::declaration`].
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn declare(builder: semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady>) -> semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady> {
+        static COMPOSERS: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
+        builder
+            .schemas([crate::standards::v1::subsets::object::schema::semio_object_artifact_schema_descriptor()])
+            .document_codec_bare::<SemioObjectSnapshot, crate::standards::v1::subsets::object::schema::mutations::SemioObjectMutation>(crate::standards::v1::subsets::object::schema::snapshot::STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA)
+            .subset_validators(std::slice::from_ref(validator_entry()))
+            .inferences([crate::standards::v1::subsets::object::schema::inferences::semio_object_artifact_inference_descriptor()])
+            .composers(crate::semio_written(io_entries(), &COMPOSERS))
+    }
+
     /// 💡️ Registers `s.stdio.semio.object.inference`'s facet leaves into the OS-wide inference
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).

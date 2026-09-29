@@ -1,0 +1,339 @@
+# owner	code	from	to	reason
+✒️writer	writer.camera.missing	precondition-failed	input-invalid	argument `camera` absent from the request (§7 FH6 rule: empty/missing argument)
+🎞️animate	animate.import-media.input-missing	precondition-failed	input-invalid	import request carries no media input
+🎞️animate	animate.video.export.program-too-large	input-invalid	precondition-failed	document (deck) is too large to export; the export takes no size argument
+🎞️animate	animate.video.export.scene-json	precondition-failed	input-invalid	`scene_json` argument is not JSON / not a scene
+🎥️shooting	shooting.retained.extent	precondition-failed	input-invalid	change exceeds the declared one-step extent; split the change (as *-payload-too-large)
+🎪️demonstrator	playground.example.unparsable	input-invalid	internal	bundled example fails to parse: our asset defect
+📖️playbook	playbook-example-unparsable	input-invalid	internal	bundled example fails to parse: our asset defect
+📜️imperative	imperative-example-unparsable	input-invalid	internal	bundled example fails to parse: our asset defect
+🪵️sourcing	sourcing.example.unparsable	input-invalid	internal	bundled example fails to parse: our asset defect
+📖️playbook	playbook.unhandled-action	precondition-failed	input-invalid	unknown action name (match fallthrough)
+📜️imperative	imperative.unhandled-action	precondition-failed	input-invalid	unknown action name (match fallthrough)
+📜️imperative	extension.evaluate	precondition-failed	internal	host→extension evaluate wire is not JSON / lacks kindId: our wire
+📸️remodel	remodeling-window-stale	conflict	precondition-failed	window id not among window_instances (window not open)
+🪵️sourcing	sourcing-grid-window-stale	conflict	precondition-failed	window id not among window_instances (window not open)
+📸️remodel	remodeling.retained.route	precondition-failed	internal	step after completion or undeclared route: wrong step/route
+📸️remodel	remodeling.retained.extent	precondition-failed	input-invalid	change exceeds the declared one-step extent; split the change
+📸️remodel	remodeling.reconstruction.provisional-count	precondition-failed	internal	provisional list length overflowing u32: broken invariant
+🔋️energy	energy.model.3d.viewer.retained-route-required	precondition-failed	internal	non-retained viewer path always refuses: wrong route
+🔋️energy	energy.model.construction.layer-material	precondition-failed	input-invalid	argument names a non-opaque material
+🔋️energy	energy.model.retained.extent	precondition-failed	input-invalid	change exceeds the declared one-step extent; split the change
+🔋️energy	mutation.kind-unavailable	unavailable	internal	declared command lacks its semantic mutation (not landed); never transient
+🕸️dag	dag.unhandled-action	precondition-failed	input-invalid	action not expressible as a shell {action,args} pair (unknown on this channel)
+🧱️block	block3d.unhandled-action	precondition-failed	input-invalid	action not a framework-reserved action (unknown on this channel)
+🪵️sourcing	sourcing.document-json.schema	precondition-failed	input-invalid	entered JSON is not a curation document
+framework	agent.target-revision-unresolved	precondition-failed	input-invalid	agent action lacks the target revision argument
+framework	app.intent.bridge-allocation	precondition-failed	unavailable	try_reserve refused (memory); transient capacity
+framework	app.intent.bridge-admission	internal	unavailable	credited_clone refused: arena alias credit exhausted (bounded admission)
+framework	app.intent.bridge-depth	precondition-failed	input-invalid	request nested deeper than the fixed command depth
+framework	app.intent.bridge-fault	precondition-failed	internal	converter reported Fault without a recorded fault
+framework	app.intent.bridge-items	precondition-failed	input-invalid	request has more values than the fixed item census
+framework	app.intent.bridge-map-key	precondition-failed	internal	map child lost its retained key: converter invariant
+framework	app.intent.bridge-publication	precondition-failed	internal	Ready without a complete candidate: converter invariant
+framework	app.intent.bridge-state	precondition-failed	internal	converter lost its retained frame
+framework	app.intent.version-mismatch	precondition-failed	input-invalid	request targets an action version the bridge does not resolve
+framework	artifact-envelope.completed-detach-invalid	input-invalid	internal	completed record could not transfer its owner: ownership invariant
+framework	artifact-envelope.completed-retirement-over-budget	unavailable	internal	single-owner retirement stayed Pending past its exact grant: contract breach
+framework	artifact-envelope.field-retirement-over-budget	unavailable	internal	single-owner retirement stayed Pending past its exact grant: contract breach
+framework	artifact-envelope.field-return-invalid	input-invalid	internal	decoder lost its registry generation: registry invariant
+framework	artifact-envelope.ingress-false-terminal	precondition-failed	internal	Complete before every page was released
+framework	artifact-envelope.ingress-handle	precondition-failed	conflict	unknown ingress handle (removed on a generation change), same as load-stale-handle
+framework	artifact-envelope.outcome-missing	precondition-failed	internal	checkout lost its exact outcome
+framework	artifact-envelope.output-missing	precondition-failed	internal	ready decode has no completed-record ticket
+framework	artifact-envelope.publication-ticket	precondition-failed	internal	completed ticket stale or invalid after a successful publish attempt
+framework	artifact-envelope.resume	precondition-failed	internal	worker lost its exact resume authority
+framework	artifact-envelope.session-missing	precondition-failed	internal	decode lost its retained worker session
+framework	artifact-inference.budget	unavailable	input-invalid	request budgets zero/too small for the requested data; en: request a larger budget
+framework	artifact-inference.cache-mode	precondition-failed	input-invalid	service did not honor the requested cache mode; en: request a full computation
+framework	artifact-inference.cancellation	cancelled	input-invalid	cancellation id empty or unknown in the request (not a cancel)
+framework	artifact-inference.dependencies	precondition-failed	input-invalid	dependency owners empty/duplicate/unparsable in the request
+framework	artifact-inference.previous-state	precondition-failed	input-invalid	cache mode and previous_state contradict each other in the request
+framework	artifact-inference.request-decode	input-invalid	internal	inference wire bytes not UTF-8/JSON: host-built wire
+framework	artifact-inference.source-dialect	precondition-failed	input-invalid	source dialect empty or unparsable in the request
+framework	artifact-inference.unavailable	unavailable	internal	every site is a poisoned registry lock (a panic), never transient
+framework	artifact-store.initializer-candidate-missing	precondition-failed	internal	completed initializer lost its exact candidate
+framework	artifact-store.initializer-outcome-missing	precondition-failed	internal	checkout lost its exact outcome
+framework	artifact-store.initializer-resume	precondition-failed	internal	initializer lost its exact resume authority
+framework	artifact-store.initializer-session-missing	precondition-failed	internal	initializer lost its retained session
+framework	app.example.unreadable	input-invalid	internal	registered (bundled) example body fails to parse: our asset defect
+framework	artifact-store.persisted-envelope-identity	precondition-failed	input-invalid	the given saved document is of another schema/dialect (unknown kind for this editor)
+framework	artifact-store.publication-authority-missing	precondition-failed	internal	registered domain/editor did not supply atomic publication authority: app defect
+framework	artifact-store.replacement-close-over-budget	unavailable	internal	disposer exceeded its exact close grant: contract breach
+framework	artifact-store.replacement-completed-ticket	precondition-failed	internal	completed-record ticket stale or invalid after publish attempt: bookkeeping invariant
+framework	artifact-store.replacement-decode-terminal	input-invalid	internal	decoded envelope retained an owner after transfer
+framework	artifact-store.replacement-disposer-missing	precondition-failed	internal	app supplied no displaced-store disposer / disposer lost
+framework	artifact-store.replacement-false-terminal	precondition-failed	internal	Complete without terminal-empty ownership
+framework	artifact-store.replacement-output-not-ready	unavailable	internal	host initialized from a decode that is not Ready (out-of-order protocol)
+framework	artifact-store.replacement-terminal-not-empty	precondition-failed	internal	terminal before every owner was empty
+framework	artifactBootstrap	precondition-failed	unavailable	hub bootstrap failed; the client requeues and reconnects automatically
+framework	artifactBootstrapLocalReplay	precondition-failed	unavailable	baseline committed; local replay retries after reconnect
+framework	capability-revoked	precondition-failed	cancelled	every site: effect cancelled (before dispatch) or host closed
+framework	deadline-exceeded	precondition-failed	unavailable	effect exceeded its deadline (timeout)
+framework	extension.answer-not-json	precondition-failed	internal	extension answered bytes that are not UTF-8/JSON: extension defect
+framework	externalDivergence	precondition-failed	conflict	external history diverged while local operations are pending
+framework	file-import.chunk	precondition-failed	input-invalid	a chunk of the import stream exceeds the chunk limit
+framework	file-import.envelope	precondition-failed	input-invalid	invalid chunk envelope or file larger than one document may be
+framework	file-import.gap	precondition-failed	input-invalid	chunks sent out of order
+framework	framework.document-transfer.shell-owned	precondition-failed	input-invalid	export/import document action sent to the program instead of the shell (wrong channel)
+framework	genesisMismatch	precondition-failed	conflict	persisted document names a different genesis than the attached store (diverged originals)
+framework	hubDocumentSeed	precondition-failed	internal	server's canonical checkpoint pair cannot seed the document
+framework	http-error	precondition-failed	unavailable	web request transport failure; check connection and retry
+framework	hub.inference.interrupted	precondition-failed	unavailable	bounded inference interrupted by its control checkpoint; request again
+framework	interactive-job.admission-capacity	internal	unavailable	every worker session slot in use
+framework	interactive-job.agent-lane-uncarried	precondition-failed	input-invalid	verb not available through an agent transaction (wrong channel)
+framework	interactive-job.app-owned-output	precondition-failed	internal	failure report could not be read (no raise sites in the census)
+framework	interactive-job.cancellation-busy	cancelled	unavailable	cancellation lock contended (or poisoned); try again in a moment
+framework	interactive-job.cancellation-capacity	cancelled	unavailable	fixed cancellation slots not admitted; wait until one finishes
+framework	interactive-job.cancellation-collision	cancelled	unavailable	fixed cancellation slot held by another document; retry later
+framework	interactive-job.checkpoint	precondition-failed	internal	job reported regressing/oversized checkpoint: protocol fault
+framework	interactive-job.child-member-allocation	precondition-failed	unavailable	fixed registry allocation not admitted (memory)
+framework	interactive-job.child-member-capacity	input-invalid	unavailable	fixed child-member registry saturated; wait
+framework	interactive-job.child-member-close-over-budget	unavailable	internal	disposer exceeded its exact grant: contract breach
+framework	interactive-job.child-member-removal-admission	internal	unavailable	removal refused while an admission is in flight; wait a moment
+framework	interactive-job.child-root-member	precondition-failed	internal	child-content publication lost its exact live member
+framework	interactive-job.child-root-publication-authority	precondition-failed	internal	publication lost its exact admitted generation
+framework	interactive-job.child-root-retirement-span	internal	input-invalid	one change touches more embedded documents than one step may release; split it
+framework	interactive-job.child-snapshot-disposer-refused	precondition-failed	internal	disposer refused its own bounded step
+framework	interactive-job.child-snapshot-retirement-over-budget	unavailable	internal	disposer exceeded its exact grant: contract breach
+framework	interactive-job.child-snapshot-terminal-not-empty	precondition-failed	internal	Complete without terminal-empty witness
+framework	interactive-job.close-presence-peer-over-budget	unavailable	internal	retirement exceeded its exact close grant: contract breach
+framework	interactive-job.command-identity	precondition-failed	internal	admitted verb decoded as another verb
+framework	interactive-job.dispatch	internal	input-invalid	factory rejected the payload (decode) or raw wire over limit; en: check the values
+framework	interactive-job.document-store-close-over-budget	unavailable	internal	store close exceeded its exact one-owner grant: contract breach
+framework	interactive-job.duplicate-media-output	precondition-failed	internal	job completed more than once: job defect
+framework	interactive-job.duplicate-output	precondition-failed	internal	job completed more than once: job defect
+framework	interactive-job.fault	precondition-failed	internal	framework route returned a retained fault (generic stand-in)
+framework	interactive-job.fixture-ack-rejected	precondition-failed	internal	fixture harness rejected its exact ACK
+framework	interactive-job.framework-route	precondition-failed	input-invalid	framework-owned tool sent as an app action (wrong channel)
+framework	interactive-job.host-configuration-output	precondition-failed	input-invalid	settings change exceeds the output cap; change fewer settings
+framework	interactive-job.maintenance-presence-peer-over-budget	unavailable	internal	retirement exceeded its exact maintenance grant: contract breach
+framework	interactive-job.media-completion-chunk-authority	precondition-failed	internal	chunk count changed during one fixed disposal step
+framework	interactive-job.media-completion-metadata	precondition-failed	internal	export job's error metadata exceeds its byte cap: job defect
+framework	interactive-job.media-completion-terminal-not-empty	precondition-failed	internal	completion released before its chunks were empty: protocol order
+framework	interactive-job.media-output-limit	input-invalid	precondition-failed	export output of the current document exceeds the cap (document state, as program-too-large)
+framework	interactive-job.media-output-overflow	precondition-failed	internal	byte count overflowed usize: broken invariant
+framework	interactive-job.media-output-structure	precondition-failed	internal	export produced structurally inconsistent data
+framework	interactive-job.media-resume-contention	internal	unavailable	outcome handback contended; wait a moment and retry
+framework	interactive-job.media-session-missing	precondition-failed	internal	media outcome lost its mounted session
+framework	interactive-job.missing-exact-key	precondition-failed	internal	typed command frame (host-built wire) decodes as no owner-qualified invocation
+framework	interactive-job.missing-factory	precondition-failed	internal	command has no exact factory proof: app defect
+framework	interactive-job.missing-output	precondition-failed	internal	job completed without producer output
+framework	interactive-job.missing-owned-builder	precondition-failed	internal	registered factory without payload builder: app defect
+framework	interactive-job.missing-reserved-builder	precondition-failed	internal	registered media port without importer: app defect
+framework	interactive-job.not-ui-safe	precondition-failed	internal	UI dispatch of a factory classified not UI-reachable: app registration defect
+framework	interactive-job.outcome-missing	precondition-failed	internal	checkout lost its exact outcome
+framework	interactive-job.output-envelope	precondition-failed	internal	job output larger than its cap or differs from its input: protocol fault
+framework	interactive-job.peer-presence-actor	precondition-failed	input-invalid	incoming peer actor identity empty or too long
+framework	interactive-job.peer-presence-duplicate	precondition-failed	input-invalid	incoming roster names one actor twice
+framework	interactive-job.peer-presence-entry-terminal-not-empty	precondition-failed	internal	Complete without an empty terminal witness
+framework	interactive-job.peer-roster-not-ready	unavailable	internal	candidate taken before every retained stage completed: protocol order
+framework	interactive-job.peer-roster-owner	internal	precondition-failed	late presence page for a publication that is no longer retained (target gone)
+framework	interactive-job.peer-roster-presence-pack-cap	precondition-failed	input-invalid	incoming presence pack too large / too many packs
+framework	interactive-job.peer-roster-rejected-over-budget	unavailable	internal	disposer exceeded its exact grant: contract breach
+framework	interactive-job.peer-roster-rejected-terminal-not-empty	precondition-failed	internal	Complete without an empty terminal witness
+framework	interactive-job.peer-roster-terminal-not-empty	precondition-failed	internal	Complete without an empty terminal witness
+framework	interactive-job.peer-roster-typed-over-budget	unavailable	internal	cleanup exceeded its exact grant: contract breach
+framework	interactive-job.peer-roster-typed-terminal-not-empty	precondition-failed	internal	Complete without an empty terminal witness
+framework	interactive-job.preview-budget	unavailable	precondition-failed	preview of this action on this document exceeds the agent-lane turn/wall budget; retrying unchanged does not help
+framework	interactive-job.preview-close	internal	unavailable	preview job still closing; the retirement pump finishes it, retry in a moment
+framework	interactive-job.preview-step	precondition-failed	unavailable	preview lost its caller-driven step to worker contention
+framework	interactive-job.publication-authority	precondition-failed	internal	publication owner changed before its one-unit transfer
+framework	interactive-job.publication-authority-missing	precondition-failed	internal	command declares an unsupported publication lane: app defect
+framework	interactive-job.publication-stalled	precondition-failed	internal	publication advanced N units without moving its ladder: stall defect
+framework	interactive-job.raw-wire-limit	internal	input-invalid	typed command JSON exceeds the registered wire admission; use a smaller input
+framework	interactive-job.reserved-commit-capacity	input-invalid	unavailable	reserved commit queue full; wait
+framework	interactive-job.reserved-commit-stage	precondition-failed	internal	route re-entered its validation unit
+framework	interactive-job.reserved-commit-stall	precondition-failed	internal	reserved commit did not settle within its fixed unit count
+framework	interactive-job.reserved-spawn-capacity	input-invalid	unavailable	no vacant pending spawn slot; wait
+framework	interactive-job.reserved-spawn-failed	precondition-failed	internal	reserved spawn job reported Failed (generic stand-in)
+framework	interactive-job.reserved-spawn-missing	precondition-failed	internal	spawn job had no pending admit
+framework	interactive-job.reserved-spawn-stall	precondition-failed	internal	spawn job did not reach Done within one host drive admission
+framework	interactive-job.reserved-terminal-not-empty	precondition-failed	internal	Complete without an exact terminal-empty witness
+framework	interactive-job.resume	precondition-failed	internal	reserved outcome lost its exact resume authority
+framework	interactive-job.segmented-download-authority	precondition-failed	internal	terminal download changed before exact removal
+framework	interactive-job.segmented-download-ephemeral	precondition-failed	internal	download ACK preceded the retained ephemeral publication: protocol order
+framework	interactive-job.segmented-download-metadata	precondition-failed	internal	producer handed oversized filename/MIME or unsealed chunks
+framework	interactive-job.segmented-download-terminal-not-empty	precondition-failed	internal	terminal download retained unread chunks
+framework	interactive-job.segmented-download-total-over-cap	precondition-failed	internal	producer declared an empty or over-cap total byte budget
+framework	interactive-job.segmented-media-metadata	precondition-failed	internal	producer handed invalid schema/MIME or unsealed chunks
+framework	interactive-job.segmented-output-capacity	input-invalid	unavailable	fixed slot allocation not admitted (memory)
+framework	interactive-job.segmented-output-duplicate-seal	precondition-failed	internal	output sealed more than once
+framework	interactive-job.segmented-output-limit	input-invalid	precondition-failed	export output of the current document exceeds its cap (as media-output-limit)
+framework	interactive-job.segmented-output-unsealed	precondition-failed	internal	output consumed before it was sealed
+framework	interactive-job.snapshot-read-return-over-budget	unavailable	internal	disposer exceeded its exact grant: contract breach
+framework	interactive-job.snapshot-read-return-terminal-not-empty	precondition-failed	internal	Complete without an exact terminal-empty witness
+framework	interactive-job.snapshot-terminal-not-empty	precondition-failed	internal	Complete before the terminal shell was empty
+framework	interactive-job.step-overrun	precondition-failed	unavailable	route overran the 8 ms wall ceiling for consecutive steps (load-dependent)
+framework	interactive-job.task-resume-command	precondition-failed	internal	AsyncTask resolved bytes that are not this app's Command
+framework	interactive-job.terminal-kind	precondition-failed	internal	reserved session closed without a terminal outcome
+framework	interactive-job.typed-operation-capacity	input-invalid	unavailable	every typed-operation slot owns a live operation; wait
+framework	interactive-job.typed-operation-session	precondition-failed	internal	operation lost its persistent worker session
+framework	interactive-job.unexpected-download-output	precondition-failed	internal	reserved clipboard/import route completed with a download
+framework	interactive-job.unknown-segmented-download	input-invalid	precondition-failed	download operation id no longer exists (gone)
+framework	interactive-job.worker-pump	precondition-failed	internal	route lost its mounted worker transition
+framework	job.host-fault	precondition-failed	internal	host turn failure stand-in (TurnFault: host error, trap, fuel, deadline, cancel)
+framework	job.infer.admission	internal	unavailable	inference worker session capacity exhausted (second site: lost rejection, internal)
+framework	job.infer.bridge	precondition-failed	internal	inference progress/diagnostic payload oversized for its bridge channel: plugin defect
+framework	job.infer.decode	input-invalid	internal	job input bytes (host/guest-built wire) not UTF-8/JSON
+framework	job.infer.outcome-missing	precondition-failed	internal	checkout lost its exact outcome
+framework	job.infer.payload-page	precondition-failed	internal	retained payload page exceeded the fixed codec grant
+framework	job.infer.result	precondition-failed	input-invalid	allocation budget of the request unusable / result above it; en: larger budget or less data
+framework	job.infer.resume	precondition-failed	internal	outcome lost its exact resume authority
+framework	job.infer.session-missing	precondition-failed	internal	lost its mounted worker session
+framework	job.infer.suspended	precondition-failed	internal	job future suspended inside a non-suspending step: defect
+framework	job.infer.terminal	precondition-failed	internal	stepped after completion (no state action left)
+framework	job.infer.terminal-result	precondition-failed	internal	terminal inference produced no result
+framework	job.infer.worker-pump	precondition-failed	internal	mounted worker transition rejected
+framework	job.io-run.decode	input-invalid	internal	job input bytes (host/guest-built wire) not UTF-8/JSON
+framework	job.io-run.suspended	precondition-failed	internal	job future suspended inside a non-suspending step: defect
+framework	job.io-run.terminal	precondition-failed	internal	stepped after completion
+framework	job.io-sniff	precondition-failed	input-invalid	source/target dialect coordinate unparsable; en: choose the format yourself
+framework	job.io-sniff.decode	input-invalid	internal	job input bytes (host/guest-built wire) not UTF-8/JSON
+framework	job.io-sniff.suspended	precondition-failed	internal	job future suspended inside a non-suspending step: defect
+framework	job.io-sniff.terminal	precondition-failed	internal	stepped after completion
+framework	job.migrate	precondition-failed	input-invalid	dialect coordinates unparsable or the given pack cannot be migrated to the target version
+framework	job.migrate.decode	input-invalid	internal	job input bytes (host/guest-built wire) not UTF-8/JSON
+framework	job.migrate.suspended	precondition-failed	internal	job future suspended inside a non-suspending step: defect
+framework	job.migrate.terminal	precondition-failed	internal	stepped after completion
+framework	job.mutation-plan.decode	input-invalid	internal	job input bytes (host/guest-built wire) not a wire value
+framework	job.mutation-plan.suspended	precondition-failed	internal	job future suspended inside a non-suspending step: defect
+framework	job.mutation-plan.terminal	precondition-failed	internal	stepped after completion
+framework	job.stalled	precondition-failed	internal	job made no progress across STALL_LIMIT calls with an unchanged budget
+framework	job.unknown	input-invalid	precondition-failed	no job registered for the id (gone)
+framework	job.unknown-kind	input-invalid	internal	job kind has no admitted bounded state machine in this host (version drift)
+framework	link-expired	precondition-failed	unavailable	sync link expired after a long disconnect; reconnect
+framework	reconnecting	precondition-failed	unavailable	connection lost; edits kept and sent when the hub is reachable
+framework	mutation.rejected	internal	precondition-failed	merge policy refuses the mutation against the current state (as transaction.member-rejected)
+framework	not-wired	unavailable	internal	host-async import has no backing host service yet (not landed)
+framework	opening.app-mismatch	precondition-failed	input-invalid	chosen default app does not serve this dialect/role
+framework	opening.partial-app-ref	precondition-failed	input-invalid	plugin_id and app_id must both be set or both be empty (arguments)
+framework	opening.role-mismatch	precondition-failed	input-invalid	artifact ref declares another role than the command argument
+framework	os.app-frame.decode	input-invalid	internal	editor answer bytes are not an app frame: our wire
+framework	os.fault.decode	input-invalid	internal	fault bytes are not a fault record: our wire
+framework	os.opening-config.rejected	precondition-failed	internal	our opening-config mutation refused by its own reducer
+framework	plugin.checkpoint.decode	input-invalid	internal	saved editor checkpoint (our own format) not UTF-8/JSON
+framework	plugin.checkpoint.decode-document	input-invalid	internal	document pack inside our checkpoint unreadable
+framework	plugin.cold-pair-hash-width	precondition-failed	internal	host handed a checksum of the wrong width: our wire
+framework	plugin.cold-pair-page-event-bypass	precondition-failed	internal	cold page on the generic event path: wrong route
+framework	plugin.command-batch-allocation	precondition-failed	unavailable	fixed batch slots could not be reserved (memory)
+framework	plugin.command-batch-page-allocation	precondition-failed	unavailable	page slots could not be reserved (memory)
+framework	plugin.command-build-close-capacity	internal	unavailable	fixed rejected-command close registry occupied; wait a moment
+framework	plugin.command-byte-cap	precondition-failed	input-invalid	one command exceeds the byte cap; split the change
+framework	plugin.command-cursor-mismatch	precondition-failed	internal	command page cursor mismatch: transport invariant
+framework	plugin.command-decode-closing	input-invalid	internal	rejected decoder stepped before it was closed: protocol order
+framework	plugin.command-decode-terminal	input-invalid	internal	decoder stepped after terminal: protocol order
+framework	plugin.command-decode-trailing	input-invalid	internal	trailing bytes after the terminal field: our wire
+framework	plugin.command-decode-truncated	input-invalid	internal	command ended inside a field: our wire
+framework	plugin.command-decode-varint	input-invalid	internal	varint overflows u64 / exceeds ten bytes: our wire
+framework	plugin.command-driver-capacity	input-invalid	unavailable	fixed command-driver slot occupied; wait a moment
+framework	plugin.command-driver-not-active	precondition-failed	unavailable	driver suspended or closing; wait a moment
+framework	plugin.command-driver-resume-state	precondition-failed	internal	resume of a driver that is not suspended: protocol order
+framework	plugin.command-driver-suspend-state	precondition-failed	internal	suspend of a driver that is not active: protocol order
+framework	plugin.command-field-allocation	precondition-failed	unavailable	field could not reserve its bytes (memory)
+framework	plugin.command-field-cap	precondition-failed	input-invalid	one value longer than the field accepts; use a shorter value
+framework	plugin.command-field-length	precondition-failed	internal	field length not representable: our wire
+framework	plugin.command-field-utf8	precondition-failed	internal	field bytes not UTF-8 (hosts encode strings as UTF-8): our wire
+framework	plugin.command-page-allocation	precondition-failed	unavailable	page block could not be reserved (memory)
+framework	plugin.command-page-count	precondition-failed	input-invalid	command needs more pages than allowed; split the change
+framework	plugin.command-page-empty	precondition-failed	internal	command has no kind byte: our wire
+framework	plugin.command-page-event-bypass	precondition-failed	internal	command page on the generic event path: wrong route
+framework	plugin.command-page-length	precondition-failed	internal	page length unrepresentable / over 4096: our wire
+framework	plugin.command-page-lift-cap	precondition-failed	internal	host lifted a page over 4096 bytes: our wire
+framework	plugin.command-page-padding	precondition-failed	internal	nonzero bytes outside the declared page length: our wire
+framework	plugin.command-page-shape	precondition-failed	internal	nonterminal page not full / empty page: our wire
+framework	plugin.command-page-underflow	precondition-failed	internal	page after the owner was empty: protocol order
+framework	plugin.command-presence-item-cap	precondition-failed	input-invalid	incoming presence names more than 64 peers
+framework	plugin.command-presence-page-shape	precondition-failed	input-invalid	incoming peer presence page empty or too large
+framework	plugin.command-release-budget	unavailable	internal	page exceeds the exact release grant the pump handed: grant contract
+framework	plugin.command-route-state-machine-required	precondition-failed	internal	command kind needs its route-specific decoder: wrong route
+framework	plugin.command-terminal-pages	precondition-failed	internal	terminal ACK before every page was released: protocol order
+framework	plugin.command.definition-missing	precondition-failed	internal	handler without manifest definition: plugin defect
+framework	plugin.command.not-app-owned	precondition-failed	input-invalid	command addressed to another app than the invocation's owner (wrong address)
+framework	plugin.document-archive-allocation	precondition-failed	unavailable	member roster could not reserve memory
+framework	plugin.document-archive-closing	unavailable	internal	rejected archive decoder stepped before it was closed: protocol order
+framework	plugin.document-archive-members	precondition-failed	input-invalid	the given archive has more than 1024 members / unrepresentable count
+framework	plugin.document-archive-ordinal	precondition-failed	input-invalid	the given archive carries an out-of-range member ordinal (damaged file)
+framework	plugin.document-archive-utf8	precondition-failed	input-invalid	the given archive carries non-UTF-8 text (damaged file)
+framework	plugin.ephemeral.apply-rejected	precondition-failed	unavailable	presence apply refused: local read registry busy (also store closing / app mutation refusal)
+framework	plugin.host.direct-unavailable	unavailable	precondition-failed	Direct backend needs a real wasm32-wasip2 build: runtime limitation, as host-async.poll-backed
+framework	plugin.host.http-decode-error	input-invalid	internal	http completion envelope from the host not UTF-8/JSON: our wire
+framework	plugin.instance-app-id-too-large	input-invalid	internal	plugin app id exceeds the fixed bound: plugin defect
+framework	plugin.instance-metadata-capacity	input-invalid	unavailable	fixed instance metadata slots saturated or collided; close documents
+framework	plugin.job-render-binding-capacity	input-invalid	unavailable	fixed job-to-surface bindings saturated or collided
+framework	plugin.presence.local-read	internal	unavailable	local read registry busy or exhausted (also: store closing)
+framework	plugin.reactor-close-capacity	internal	unavailable	fixed reactor close slots saturated or collided; wait
+framework	plugin.reactor-turn-deadline	internal	unavailable	guest turn exceeded its lifecycle deadline (retryable flag set)
+framework	plugin.request-registry.answer-too-large	internal	input-invalid	answer larger than allowed; request a smaller amount
+framework	plugin.request-registry.body-too-large	internal	input-invalid	body exceeded the instance quota; request a smaller amount
+framework	plugin.request-registry.capacity	internal	unavailable	fixed request slots saturated
+framework	plugin.task-authority-too-large	input-invalid	internal	plugin task label/restart exceeds the fixed bound: plugin defect
+framework	plugin.task-resume-capacity	input-invalid	internal	restored checkpoint carries more task resumes than the fixed authority
+framework	plugin.task.executor-capacity	input-invalid	unavailable	task executor slots exhausted; wait
+framework	plugin.task.key-too-large	input-invalid	internal	plugin task key exceeds the fixed bound: plugin defect
+framework	plugin.task.quota-exceeded	precondition-failed	unavailable	editor already runs its task quota; wait until some finish
+framework	plugin.task.record-capacity	input-invalid	unavailable	fixed task records exhausted; wait
+framework	plugin.task.supersession-pending	precondition-failed	internal	keyed supersession found no previous owner to dispose
+framework	plugin.timer-capacity	input-invalid	unavailable	fixed timer slots saturated or collided
+framework	plugin.transaction-prepared-ops	precondition-failed	input-invalid	transaction prepares more than 1024 ops; split the change
+framework	plugin.transaction-prepared-ops-allocation	precondition-failed	unavailable	prepared-op roster could not reserve memory
+framework	plugin.turn-page-staging	precondition-failed	internal	a page is already staged for the next turn / staging reentrancy: host protocol
+framework	retained-command-capacity-is-zero	input-invalid	internal	command declares zero raw bytes or work items: plugin defect
+framework	retained-command-checkpoint-context-invalid	input-invalid	internal	our own checkpoint header unreadable
+framework	retained-command-checkpoint-context-mismatch	precondition-failed	conflict	checkpoint was taken against another document state
+framework	retained-command-checkpoint-cursor-invalid	input-invalid	internal	our own checkpoint header unreadable
+framework	retained-command-checkpoint-extent-invalid	input-invalid	internal	checkpoint cursor/extent beyond its input: our own format
+framework	retained-command-checkpoint-invalid	input-invalid	internal	checkpoint magic/version wrong: our own format
+framework	retained-command-checkpoint-length-overflow	precondition-failed	internal	checkpoint length overflowed usize
+framework	retained-command-checkpoint-phase-invalid	input-invalid	internal	checkpoint phase byte invalid: our own format
+framework	retained-command-checkpoint-progress-invalid	input-invalid	internal	our own checkpoint header unreadable
+framework	retained-command-checkpoint-raw-invalid	input-invalid	internal	our own checkpoint header unreadable
+framework	retained-command-checkpoint-work-absent	precondition-failed	internal	work-phase checkpoint without its work owner
+framework	retained-command-checkpoint-workspace-invalid	input-invalid	internal	our own checkpoint header unreadable
+framework	retained-command-checkpoint-workspace-mismatch	precondition-failed	conflict	checkpoint was taken in another workspace identity
+framework	retained-command-raw-capacity-rejected	input-invalid	unavailable	raw input buffer could not reserve memory
+framework	retained-command-work-checkpoint-unsupported	input-invalid	internal	host asked a non-checkpointable work to checkpoint/restore
+framework	router-error	precondition-failed	unavailable	host router effect failed; retry
+framework	storage-error	precondition-failed	unavailable	local storage I/O failed; retry
+framework	stream-error	precondition-failed	unavailable	data stream could not be opened / broke off; retry
+framework	surface.conflict	conflict	precondition-failed	two installed plugins register the same surface: installation state, not a revision conflict
+framework	surface.contribution-not-permitted	precondition-failed	internal	plugin contributes a surface for a dialect it does not own: plugin defect
+framework	surface.unknown-dialect	input-invalid	precondition-failed	no installed app serves this dialect (as artifact-inference.not-registered)
+framework	toolRun.illegal	precondition-failed	internal	tool progress trace arrived in an impossible order
+framework	toolRun.tick-bytes	precondition-failed	internal	tool job tick exceeds its byte cap: job defect
+framework	toolRun.tick-decode	input-invalid	internal	tool job tick unreadable: our wire
+framework	transaction.child-groups-malformed	input-invalid	internal	owned-child op groups do not decode: our wire
+framework	transaction.commit-failed	precondition-failed	internal	combined dispatch failed; wraps another fault's message (generic stand-in)
+framework	transaction.unknown-mutation	input-invalid	internal	owner-mutation payload does not decode as this app's mutation: version drift
+framework	transient.disposer-authority	precondition-failed	internal	transient terminal owner changed during disposal
+framework	ui.dirty-intent-capacity	input-invalid	unavailable	fixed dirty-intent slots saturated; the display catches up
+framework	ui.dirty-surface-capacity	input-invalid	unavailable	fixed dirty-surface slots saturated; the display catches up
+framework	ui.dirty-surface-deferred-capacity	input-invalid	unavailable	deferred redraw slots saturated
+framework	ui.surface-capacity	input-invalid	internal	plugin surface id exceeds the fixed text cap: plugin defect
+framework	ui.surface-render-uncommitted	precondition-failed	unavailable	window keeps its previous state and updates with the next change
+framework	window-config.address	precondition-failed	internal	app emitted a window config for another window than the captured authority: app defect
+framework	window-config.capacity	input-invalid	unavailable	too many window config loads at once
+framework	window-config.history	precondition-failed	internal	our persisted window-config history unreadable (window falls back to defaults)
+framework	window-config.inner-identity	precondition-failed	internal	persisted window config names another window: our format
+framework	window-config.load-bound	precondition-failed	internal	load exhausted its declared turn bound before settling
+framework	window-config.mutation-type	precondition-failed	internal	mutation type does not match its registered window owner
+framework	window-config.pack	precondition-failed	internal	our persisted window-config pack unreadable
+framework	window-config.pack-envelope	precondition-failed	internal	persisted window-config envelope for another window kind: our format
+framework	window-config.publication-type	precondition-failed	internal	publication type does not match its registered window owner
+framework	window-config.replay	precondition-failed	internal	persisted window-config history does not replay
+framework	window-config.terminal	precondition-failed	internal	disposer reported complete without terminal emptiness
+framework	window-config.typed-state	precondition-failed	internal	persisted window-config state does not fit its owner type
+framework	window-transient.address	precondition-failed	internal	app emitted window transient for another window than the captured authority: app defect
+framework	window-transient.current-read	precondition-failed	unavailable	current read registry busy; try again
+framework	window-transient.document-generation	precondition-failed	conflict	transient state belongs to a document replaced meanwhile
+framework	window-transient.mutation-type	precondition-failed	internal	mutation type does not match its registered window owner
+framework	window-transient.publication	precondition-failed	internal	advance of a one-item publication refused
+framework	window-transient.publication-type	precondition-failed	internal	publication type does not match its registered window owner
+framework	window-transient.terminal	precondition-failed	internal	disposer reported complete without terminal emptiness
+framework	worker-lost	precondition-failed	unavailable	host lost the effect worker; retry
+framework	workflow/edge-cycle	precondition-failed	conflict	post-merge reconcile dropped an edge closing a loop (concurrent edits)
+framework	workflow/edge-orphaned	precondition-failed	conflict	post-merge reconcile dropped an edge whose endpoint was deleted concurrently
+framework	workflow/edge-type-mismatch	precondition-failed	conflict	post-merge reconcile dropped an edge re-typed concurrently
+framework	workflow/parameter-binding-invalid	input-invalid	conflict	post-merge reconcile dropped a binding whose target field no longer validates
+framework	artifact-envelope.ingress-credits	unavailable	input-invalid	declared document size exceeds the fixed decode maximum (also zero credits / allocation)
+framework	artifact-envelope.ingress-page	precondition-failed	internal	host pushed a page past the declared credits or after sealing: protocol

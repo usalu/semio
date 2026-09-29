@@ -76,6 +76,8 @@ impl CanonicalPairBody for NativeCanonicalPairBody {
                 CanonicalPairMountError::Cancelled
             } else if matches!(error, semio_framework_os_services::HttpPoolError::Compute(semio_framework_os_services::ComputeError::DeadlineExceeded)) {
                 CanonicalPairMountError::DeadlineExceeded
+            } else if matches!(error, semio_framework_os_services::HttpPoolError::ByteBudgetExhausted { .. }) {
+                CanonicalPairMountError::BudgetExhausted
             } else {
                 CanonicalPairMountError::Unavailable
             }
@@ -106,6 +108,7 @@ impl<R: semio_framework_async::HostAsyncRuntime + 'static> CanonicalPairTranspor
         let (head, body) = self.transport.fetch_protected_stream(context, self.credential.as_ref(), &url, request.accept).await.map_err(|error| match error {
             semio_framework_os_kernel::os_directory::client::TransportError::Cancelled => CanonicalPairMountError::Cancelled,
             semio_framework_os_kernel::os_directory::client::TransportError::DeadlineExceeded => CanonicalPairMountError::DeadlineExceeded,
+            semio_framework_os_kernel::os_directory::client::TransportError::BudgetExhausted => CanonicalPairMountError::BudgetExhausted,
             semio_framework_os_kernel::os_directory::client::TransportError::Io(_) => CanonicalPairMountError::Unavailable,
         })?;
         let (content_type, etag, content_length) = if head.status == 200 {
@@ -194,6 +197,8 @@ pub enum CanonicalPairMountError {
     ResourceLimit,
     InvalidResponse(&'static str),
     Unavailable,
+    /// 💰️ The gateway's network byte budget ran out before the pair arrived; the same mount succeeds after the refill.
+    BudgetExhausted,
 }
 
 impl std::fmt::Display for CanonicalPairMountError {
@@ -207,6 +212,7 @@ impl std::fmt::Display for CanonicalPairMountError {
             Self::ResourceLimit => "canonical pair receipt exceeded its fixed memory budget",
             Self::InvalidResponse(detail) => detail,
             Self::Unavailable => "canonical pair transport is unavailable",
+            Self::BudgetExhausted => "canonical pair transfer waits for the network byte budget to refill",
         })
     }
 }
@@ -763,6 +769,11 @@ fn validate_expected_identity(identity: &CanonicalPairMountIdentity, hub_origin:
     Ok(())
 }
 
+/// ⏳️ A joined reader waits for the receipt's owner to publish or fail — woken by the completion itself or by its own cancel,
+/// never by a timer: the gateway drives mounts on the framework executor (`TokioHostRuntime::block_on`), which runs no Tokio
+/// reactor, and the 10 ms Tokio sleep this loop used to poll with panicked there, so every second concurrent reader of a
+/// loading document died "without answering" (live quartet on 7800/p33, ticket 26/09/23 G12 session 14c). The owner's own
+/// deadline — the same operation timeout, started earlier — bounds the wait; every wake re-checks this reader's deadline.
 async fn wait_for_published_receipt(mut completion: tokio::sync::watch::Receiver<PairCompletion>, context: &OperationContext, operation_now_ms: u64, started: std::time::Instant) -> Result<CanonicalPairMountIdentity, CanonicalPairMountError> {
     loop {
         checkpoint(context, receipt_now(operation_now_ms, started))?;
@@ -773,7 +784,7 @@ async fn wait_for_published_receipt(mut completion: tokio::sync::watch::Receiver
         }
         tokio::select! {
             changed = completion.changed() => changed.map_err(|_| CanonicalPairMountError::StaleCompletion)?,
-            () = tokio::time::sleep(std::time::Duration::from_millis(10)) => {}
+            () = context.cancel.cancelled() => return Err(CanonicalPairMountError::Cancelled),
         }
     }
 }

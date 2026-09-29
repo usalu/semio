@@ -68,7 +68,9 @@ async fn display_list_hit_test_matches_image_bounds_and_misses_elsewhere() {
         page_height: 100.0,
         rects: Vec::new(),
         text_runs: Vec::new(),
-        images: vec![DisplayImage { object_id: "img-1".into(), x: 10.0, y: 10.0, width: 20.0, height: 20.0, rotation: 0.0, placeholder: false, proxy_data_url: None, preview: String::new() }],
+        strokes: Vec::new(),
+        frame_strokes: Vec::new(),
+        images: vec![DisplayImage { object_id: "img-1".into(), x: 10.0, y: 10.0, width: 20.0, height: 20.0, rotation: 0.0, placeholder: false, proxy_data_url: None, preview: String::new(), stack: 0 }],
         guides: Vec::new(),
     };
     assert_eq!(list.hit_test(15.0, 15.0).as_deref(), Some("img-1"));
@@ -194,12 +196,15 @@ async fn display_list_to_scene_handles_drop_preview_variants_and_rect_styles() {
                 inherited: false,
                 selected: true,
                 hovered: false,
+                stack: 0,
             },
-            DisplayRect { object_id: "r-implicit-hover".into(), x: 20.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0, fill: None, stroke: None, inherited: false, selected: false, hovered: true },
-            DisplayRect { object_id: "r-implicit-select".into(), x: 40.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0, fill: None, stroke: None, inherited: false, selected: true, hovered: false },
+            DisplayRect { object_id: "r-implicit-hover".into(), x: 20.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0, fill: None, stroke: None, inherited: false, selected: false, hovered: true, stack: 0 },
+            DisplayRect { object_id: "r-implicit-select".into(), x: 40.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0, fill: None, stroke: None, inherited: false, selected: true, hovered: false, stack: 0 },
         ],
-        text_runs: vec![DisplayTextRun { object_id: "text-1".into(), glyphs: vec![DisplayGlyph { glyph_id: 1, font_size: 12.0, x: 0.0, y: 12.0, color: DisplayColor([0.0, 0.0, 0.0, 1.0]) }], content: "Hi".into(), origin_x: 0.0, origin_y: 0.0, font_size: 12.0 }],
-        images: vec![DisplayImage { object_id: "img-1".into(), x: 0.0, y: 60.0, width: 10.0, height: 10.0, rotation: 0.0, placeholder: true, proxy_data_url: None, preview: String::new() }],
+        text_runs: vec![DisplayTextRun { object_id: "text-1".into(), glyphs: vec![DisplayGlyph { glyph_id: 1, font_size: 12.0, x: 0.0, y: 12.0, color: DisplayColor([0.0, 0.0, 0.0, 1.0]), italic: false }], content: "Hi".into(), origin_x: 0.0, origin_y: 0.0, font_size: 12.0, stack: 0, color: [0.0, 0.0, 0.0, 1.0] }],
+        strokes: Vec::new(),
+        frame_strokes: Vec::new(),
+        images: vec![DisplayImage { object_id: "img-1".into(), x: 0.0, y: 60.0, width: 10.0, height: 10.0, rotation: 0.0, placeholder: true, proxy_data_url: None, preview: String::new(), stack: 0 }],
         guides: vec![DisplayGuide { rect: LayoutRect { x: 0.0, y: 0.0, width: 10.0, height: 0.0 }, kind: "unrecognized".into() }],
     };
     for kind in ["page", "rect", "text", "image", "unrecognized"] {
@@ -294,4 +299,295 @@ async fn character_style_run_changes_glyph_size_and_color() {
     assert_eq!(run.glyphs.len(), "Hello layout".chars().count());
     assert!(run.glyphs[..5].iter().all(|glyph| glyph.font_size == 24.0 && glyph.color.0[0] == 1.0));
     assert!(run.glyphs[5..].iter().all(|glyph| glyph.font_size == 12.0 && glyph.color.0 == [0.0, 0.0, 0.0, 1.0]));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn page_override_moves_and_hides_an_inherited_frame() {
+    let mut doc = crate::standards::v1::subsets::any::schema::default_document();
+    doc.pages[0].overrides.push(crate::PageOverride { object_id: "frame-inherited".into(), bounds: Some(crate::LayoutBounds { x: 90.0, y: 50.0, width: 100.0, height: 80.0, rotation: 0.0 }), visible: None, locked: None });
+    let page = doc.pages[0].clone();
+    let mut engine = LayoutEngine::new();
+    let list = build_display_list_for_page(&mut engine, &doc, &page, "page-1", &[], None, false);
+    let rect = list.rects.iter().find(|rect| rect.object_id == "frame-inherited").expect("inherited");
+    assert_eq!(rect.x, 90.0);
+    doc.pages[0].overrides[0].visible = Some(false);
+    let page = doc.pages[0].clone();
+    let list = build_display_list_for_page(&mut engine, &doc, &page, "page-1", &[], None, false);
+    assert!(list.rects.iter().all(|rect| rect.object_id != "frame-inherited"));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn hidden_layer_drops_its_frames_and_keeps_the_master() {
+    let mut doc = crate::standards::v1::subsets::any::schema::default_document();
+    doc.pages[0].layers[0].visible = false;
+    let page = doc.pages[0].clone();
+    let mut engine = LayoutEngine::new();
+    let list = build_display_list_for_page(&mut engine, &doc, &page, "page-1", &[], None, false);
+    assert!(list.rects.iter().all(|rect| rect.object_id != "frame-1"));
+    assert!(list.images.iter().all(|image| image.object_id != "frame-image-1"));
+    assert!(list.text_runs.iter().all(|run| run.object_id != "frame-text-1"));
+    assert!(list.rects.iter().any(|rect| rect.object_id == "frame-inherited"));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn moving_a_frame_onto_a_hidden_layer_drops_only_that_frame() {
+    use crate::mutations::create_layer::CreateLayer;
+    use crate::mutations::set_frame_layer::SetFrameLayer;
+    use crate::mutations::LayoutMutation;
+    use protocol::{Mutation, MutationDiff};
+    let base = crate::standards::v1::subsets::any::schema::default_document();
+    let created = LayoutMutation::CreateLayer(CreateLayer { page_id: "page-1".into(), id: "layer-2".into(), name: "Notes".into(), remove: false }).diff(&base).diff().apply(&base).expect("layer");
+    let mut doc = LayoutMutation::SetFrameLayer(SetFrameLayer { page_id: "page-1".into(), frame_id: "frame-1".into(), layer_id: "layer-2".into() }).diff(&created).diff().apply(&created).expect("move");
+    doc.pages[0].layers.iter_mut().find(|layer| layer.id == "layer-2").unwrap().visible = false;
+    let page = doc.pages[0].clone();
+    let mut engine = LayoutEngine::new();
+    let list = build_display_list_for_page(&mut engine, &doc, &page, "page-1", &[], None, false);
+    assert!(list.rects.iter().all(|rect| rect.object_id != "frame-1"));
+    assert!(list.text_runs.iter().any(|run| run.content == "Hello layout"));
+}
+
+#[test]
+fn background_drawing_fits_an_offset_plan_onto_the_page() {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
+    let point = |x: f64, y: f64| SemioPoint2 { x, y };
+    let content = SemioDrawingSnapshot {
+        schema: "stdio.semio.drawing".into(),
+        canvas: Default::default(),
+        styles: Vec::new(),
+        layers: vec![DrawLayer {
+            id: "imported".into(),
+            name: "Imported".into(),
+            visible: true,
+            root: DrawNode::Group {
+                transform: SemioTransform::identity(),
+                children: vec![DrawNode::Path {
+                    style: None,
+                    segments: vec![
+                        PathSegment::MoveTo { to: point(10.0, 20.0) },
+                        PathSegment::LineTo { to: point(110.0, 20.0) },
+                        PathSegment::LineTo { to: point(110.0, 70.0) },
+                        PathSegment::LineTo { to: point(10.0, 70.0) },
+                        PathSegment::Close,
+                    ],
+                }],
+            },
+        }],
+    };
+    let mut document = crate::standards::v1::subsets::any::schema::default_document();
+    document.pages[0].width = 100.0;
+    document.pages[0].height = 50.0;
+    document.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
+    let mut engine = LayoutEngine::new();
+    let list = build_display_list_for_page(&mut engine, &document, &document.pages[0], "", &[], None, false);
+    let stroke = &list.strokes[0];
+    assert!(stroke.closed);
+    assert_eq!(stroke.color, [0.15, 0.2, 0.28, 1.0]);
+    assert_eq!(stroke.width, 1.0);
+    assert!(stroke.fill.is_none());
+    assert_eq!(stroke.points[0], (0.0, 0.0));
+    assert_eq!(stroke.points[1], (100.0, 0.0));
+    assert_eq!(stroke.points[2], (100.0, 50.0));
+    document.background_drawing.as_mut().unwrap().content.layers[0].visible = false;
+    let hidden = build_display_list_for_page(&mut engine, &document, &document.pages[0], "", &[], None, false);
+    assert!(hidden.strokes.is_empty());
+}
+
+fn unit_square_drawing() -> semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
+    let point = |x: f64, y: f64| SemioPoint2 { x, y };
+    SemioDrawingSnapshot {
+        schema: "stdio.semio.drawing".into(),
+        canvas: Default::default(),
+        styles: Vec::new(),
+        layers: vec![DrawLayer {
+            id: "imported".into(),
+            name: "Imported".into(),
+            visible: true,
+            root: DrawNode::Group {
+                transform: SemioTransform::identity(),
+                children: vec![DrawNode::Path {
+                    style: None,
+                    segments: vec![
+                        PathSegment::MoveTo { to: point(0.0, 0.0) },
+                        PathSegment::LineTo { to: point(1.0, 0.0) },
+                        PathSegment::LineTo { to: point(1.0, 1.0) },
+                        PathSegment::LineTo { to: point(0.0, 1.0) },
+                        PathSegment::Close,
+                    ],
+                }],
+            },
+        }],
+    }
+}
+
+#[test]
+fn a_placed_drawing_frame_fits_the_plan_inside_its_bounds() {
+    let mut document = crate::standards::v1::subsets::any::schema::default_document();
+    document.links[0].artifact_kind = "s.draw.drawing".into();
+    document.links[0].artifact_ref = "plan-1".into();
+    document.background_drawing = Some(crate::background_drawing_child_handle("dwg", &unit_square_drawing()));
+    let mut engine = LayoutEngine::new();
+    let list = build_display_list_for_page(&mut engine, &document, &document.pages[0], "", &[], None, false);
+    assert_eq!(list.frame_strokes[0].points, vec![(146.0, 435.0), (186.0, 435.0), (186.0, 475.0), (146.0, 475.0)]);
+    assert!(list.text_runs.iter().all(|run| run.content != "s.draw.drawing"));
+    document.links[0].proxy_data_url = Some("data:image/png;base64,AA==".into());
+    let proxied = build_display_list_for_page(&mut engine, &document, &document.pages[0], "", &[], None, false);
+    assert!(proxied.frame_strokes.is_empty());
+}
+
+#[test]
+fn drawing_text_lands_on_the_page_and_inside_the_placed_frame() {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
+    let point = |x: f64, y: f64| SemioPoint2 { x, y };
+    let content = SemioDrawingSnapshot {
+        schema: "stdio.semio.drawing".into(),
+        canvas: Default::default(),
+        styles: Vec::new(),
+        layers: vec![DrawLayer {
+            id: "imported".into(),
+            name: "Imported".into(),
+            visible: true,
+            root: DrawNode::Group {
+                transform: SemioTransform::identity(),
+                children: vec![
+                    DrawNode::Path {
+                        style: None,
+                        segments: vec![
+                            PathSegment::MoveTo { to: point(0.0, 0.0) },
+                            PathSegment::LineTo { to: point(1.0, 0.0) },
+                            PathSegment::LineTo { to: point(1.0, 1.0) },
+                            PathSegment::LineTo { to: point(0.0, 1.0) },
+                            PathSegment::Close,
+                        ],
+                    },
+                    DrawNode::Text { value: "Plan".into(), at: point(0.0, 0.0), style: None },
+                ],
+            },
+        }],
+    };
+    let mut document = crate::standards::v1::subsets::any::schema::default_document();
+    document.links[0].artifact_kind = "s.draw.drawing".into();
+    document.links[0].artifact_ref = "plan-1".into();
+    document.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
+    let mut engine = LayoutEngine::new();
+    let list = build_display_list_for_page(&mut engine, &document, &document.pages[0], "", &[], None, false);
+    let labels: Vec<_> = list.text_runs.iter().filter(|run| run.content == "Plan").collect();
+    assert_eq!(labels.len(), 2);
+    assert!(labels.iter().any(|run| run.origin_x == 0.0 && run.origin_y == 50.0));
+    assert!(labels.iter().any(|run| run.origin_x == 146.0 && run.origin_y == 435.0));
+    assert!(labels.iter().all(|run| run.glyphs.len() == 4));
+}
+
+fn red_png() -> Vec<u8> {
+    let mut encoded = semio_s_artifact_stdio_png::PngSnapshot::default();
+    encoded.width = 1;
+    encoded.height = 1;
+    encoded.pixels = vec![255, 0, 0, 255];
+    semio_s_artifact_stdio_png::io::encode_png(&encoded).expect("png")
+}
+
+fn drawing_with_red_png() -> semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
+    let point = |x: f64, y: f64| SemioPoint2 { x, y };
+    SemioDrawingSnapshot {
+        schema: "stdio.semio.drawing".into(),
+        canvas: Default::default(),
+        styles: Vec::new(),
+        layers: vec![DrawLayer {
+            id: "imported".into(),
+            name: "Imported".into(),
+            visible: true,
+            root: DrawNode::Group {
+                transform: SemioTransform::identity(),
+                children: vec![
+                    DrawNode::Path {
+                        style: None,
+                        segments: vec![
+                            PathSegment::MoveTo { to: point(0.0, 0.0) },
+                            PathSegment::LineTo { to: point(1.0, 0.0) },
+                            PathSegment::LineTo { to: point(1.0, 1.0) },
+                            PathSegment::LineTo { to: point(0.0, 1.0) },
+                            PathSegment::Close,
+                        ],
+                    },
+                    DrawNode::Image { at: point(0.0, 0.0), width: 1.0, height: 1.0, mime: "image/png".into(), bytes: red_png() },
+                ],
+            },
+        }],
+    }
+}
+
+#[test]
+fn an_embedded_drawing_png_fits_the_page_and_the_placed_frame() {
+    let mut document = crate::standards::v1::subsets::any::schema::default_document();
+    document.links[0].artifact_kind = "s.draw.drawing".into();
+    document.links[0].artifact_ref = "plan-1".into();
+    document.background_drawing = Some(crate::background_drawing_child_handle("dwg", &drawing_with_red_png()));
+    let mut engine = LayoutEngine::new();
+    let list = build_display_list_for_page(&mut engine, &document, &document.pages[0], "", &[], None, false);
+    let rasters: Vec<_> = list.images.iter().filter(|image| image.proxy_data_url.as_deref().is_some_and(|url| url.starts_with("data:image/png;base64,"))).collect();
+    assert!(rasters.iter().any(|image| image.x == 0.0 && image.y == 50.0 && image.width == 400.0 && image.height == 400.0));
+    assert!(rasters.iter().any(|image| image.x == 146.0 && image.y == 435.0 && image.width == 40.0 && image.height == 40.0));
+}
+
+#[test]
+fn an_imported_arc_bulges_off_its_chord() {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
+    let point = |x: f64, y: f64| SemioPoint2 { x, y };
+    let content = SemioDrawingSnapshot {
+        schema: "stdio.semio.drawing".into(),
+        canvas: Default::default(),
+        styles: Vec::new(),
+        layers: vec![DrawLayer {
+            id: "imported".into(),
+            name: "Imported".into(),
+            visible: true,
+            root: DrawNode::Group {
+                transform: SemioTransform::identity(),
+                children: vec![DrawNode::Path {
+                    style: None,
+                    segments: vec![PathSegment::MoveTo { to: point(0.0, 0.0) }, PathSegment::ArcTo { rx: 1.0, ry: 1.0, x_rotation: 0.0, large_arc: false, sweep: true, to: point(2.0, 0.0) }],
+                }],
+            },
+        }],
+    };
+    let mut document = crate::standards::v1::subsets::any::schema::default_document();
+    document.pages[0].width = 200.0;
+    document.pages[0].height = 100.0;
+    document.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
+    let mut engine = LayoutEngine::new();
+    let list = build_display_list_for_page(&mut engine, &document, &document.pages[0], "", &[], None, false);
+    let stroke = &list.strokes[0];
+    assert!(stroke.points.len() > 2, "an arc is more than its endpoints");
+    assert!(stroke.points.iter().any(|(_, y)| *y < 20.0), "the semicircle leaves the chord: {:?}", stroke.points);
+}
+
+#[test]
+fn a_rotated_drawing_frame_turns_the_plan_and_keeps_its_png() {
+    let mut document = crate::standards::v1::subsets::any::schema::default_document();
+    document.links[0].artifact_kind = "s.draw.drawing".into();
+    document.links[0].artifact_ref = "plan-1".into();
+    let frame = document.pages[0].frames.iter_mut().find(|frame| frame.id() == "frame-image-1").expect("image");
+    let crate::Frame::Image { bounds, .. } = frame else { panic!("image") };
+    bounds.rotation = std::f64::consts::FRAC_PI_2;
+    document.background_drawing = Some(crate::background_drawing_child_handle("dwg", &drawing_with_red_png()));
+    let mut engine = LayoutEngine::new();
+    let list = build_display_list_for_page(&mut engine, &document, &document.pages[0], "", &[], None, false);
+    assert_eq!(list.frame_strokes[0].points[0], (186.0, 435.0));
+    let raster = list.images.iter().find(|image| image.width == 40.0 && image.proxy_data_url.as_deref().is_some_and(|url| url.starts_with("data:image/png;base64,"))).expect("rotated raster");
+    assert!((raster.rotation - std::f32::consts::FRAC_PI_2).abs() < 1.0e-4);
+    assert_eq!((raster.x, raster.y, raster.width, raster.height), (146.0, 435.0, 40.0, 40.0));
+    let json = crate::editor::layout::canvas::canvas_layers(
+        &document,
+        &crate::editor::layout::modes::edit::windows::blueprint::config::LayoutWindowConfig::default(),
+        &crate::editor::layout::modes::edit::windows::blueprint::transient::LayoutWindowTransient::default(),
+        &crate::editor::layout::LayoutInteractionSnapshot::default(),
+        false,
+    );
+    assert!(json.contains("\"kind\":\"image\"") && json.contains("data:image/png;base64,"), "{json}");
 }

@@ -10,4 +10,5 @@ message JackDiff {
   optional semio.s.trinity.jack.artifact.Camera camera = 5;
   optional semio.os.store.ArtifactChild content = 6;
   optional string root_node_id = 7;
+  optional string query = 8;
 }

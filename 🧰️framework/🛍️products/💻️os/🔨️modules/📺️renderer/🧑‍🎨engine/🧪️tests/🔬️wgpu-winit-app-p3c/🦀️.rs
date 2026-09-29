@@ -11,6 +11,7 @@ fn native_system_theme_change_merges_theme_into_the_pending_redraw_reason() {
     let reason = |tag: Option<&str>| match tag {
         Some("inputState") => Some(InvalidationReason::INPUT_STATE),
         Some("paint") => Some(InvalidationReason::PAINT),
+        Some("theme") => Some(InvalidationReason::THEME),
         None => None,
         other => panic!("unknown invalidation reason {other:?}"),
     };

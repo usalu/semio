@@ -954,7 +954,7 @@ impl<R: semio_framework_async::HostAsyncRuntime + 'static> InferenceHubTransport
         let response = self.transport.request_protected_json(context, self.credential.as_ref(), method, &url, body).await.map_err(|error| match error {
             TransportError::Cancelled => InferenceHubTransportErrorV1::Cancelled,
             TransportError::DeadlineExceeded => InferenceHubTransportErrorV1::DeadlineExceeded,
-            TransportError::Io(_) => InferenceHubTransportErrorV1::Unavailable,
+            TransportError::Io(_) | TransportError::BudgetExhausted => InferenceHubTransportErrorV1::Unavailable,
         })?;
         if response.body.len() > request.maximum_response_bytes {
             return Err(InferenceHubTransportErrorV1::ResourceLimit);

@@ -31,5 +31,7 @@ pub struct JackDiff {
     pub content: Option<JackContentChild>,
     #[state(artifact)]
     pub root_node_id: Option<Option<String>>,
+    #[state(artifact)]
+    pub query: Option<String>,
 }
 //#endregion 🔖️Diff

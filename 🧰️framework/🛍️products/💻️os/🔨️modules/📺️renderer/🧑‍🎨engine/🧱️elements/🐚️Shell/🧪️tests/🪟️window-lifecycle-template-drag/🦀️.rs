@@ -169,6 +169,9 @@ fn template_pointer_drag_promotes_and_escape_cancels_without_mutating_the_dock()
 #[test]
 fn closed_world3d_retires_every_input_and_scene_owner_before_id_reuse() {
     let mut shell = shell();
+    for id in ["world", "world-2"] {
+        assert!(shell.dock.split_root_with_window(id, crate::dock::DockSide::Right), "the committed dock holds {id}");
+    }
     shell.dock_window_plan = vec![("world".into(), Rect::new(0.0, 0.0, 100.0, 100.0)), ("world-2".into(), Rect::new(100.0, 0.0, 100.0, 100.0))];
     let mut retired_token = None;
     for id in ["world", "world-2"] {
@@ -190,6 +193,7 @@ fn closed_world3d_retires_every_input_and_scene_owner_before_id_reuse() {
         shell.settle_pump.watches.insert(id.into(), ShellSettleWatch::default());
     }
     assert!(shell.scene_surface_contains(50.0, 50.0));
+    assert!(shell.dock.close_window("world"), "the dock — the retention authority — closes the window");
     shell.dock_window_plan.remove(0);
     shell.sync_engine_surface_states();
     assert!(!shell.world3d_states.contains_key("world"));

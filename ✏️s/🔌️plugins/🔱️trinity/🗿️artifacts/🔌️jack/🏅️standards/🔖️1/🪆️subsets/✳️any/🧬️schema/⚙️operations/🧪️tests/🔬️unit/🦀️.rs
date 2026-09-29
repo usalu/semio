@@ -211,7 +211,7 @@ async fn dispatch_registers_semantic_descriptors() {
     for kind in <TrinityGraphMutation as protocol::SemanticMutation<JackSnapshot>>::kinds() {
         assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
     }
-    assert_eq!(<TrinityGraphMutation as protocol::SemanticMutation<JackSnapshot>>::kinds().len(), 8);
+    assert_eq!(<TrinityGraphMutation as protocol::SemanticMutation<JackSnapshot>>::kinds().len(), 9);
 }
 
 //#region 🧪️OutcomeLaws

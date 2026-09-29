@@ -11,6 +11,7 @@ import { surfaceOpensArtifactKindV1, type SurfaceArtifactKindV1, type SurfaceKin
 type SurfaceOpensKindCase = {
   readonly name: string;
   readonly pluginArtifactKinds: readonly SurfaceArtifactKindV1[];
+  readonly hostedArtifactKinds: readonly SurfaceArtifactKindV1[];
   readonly apps: readonly SurfaceKindAppV1[];
   readonly app: number;
   readonly artifact: { readonly kind: string; readonly schema: string };
@@ -19,7 +20,7 @@ type SurfaceOpensKindCase = {
 type DescriptorOpenTargetsCase = {
   readonly name: string;
   readonly kindId: string;
-  readonly declaredOn: "plugin" | "editor" | "plugin-and-editor";
+  readonly declaredOn: "plugin" | "editor" | "plugin-and-editor" | "hosted" | "hosted-presented";
   readonly execution: "isolated" | "linked";
   readonly targets: readonly { readonly role: "editor" | "viewer"; readonly surfaceId: string; readonly write: boolean }[];
 };
@@ -29,13 +30,14 @@ const pairing = read<{ readonly cases: readonly SurfaceOpensKindCase[] }>("🗂�
 const openTargets = read<{ readonly cases: readonly DescriptorOpenTargetsCase[] }>("🎯️descriptor-open-targets");
 
 describe("🗂️ surface opens artifact kind", () => {
-  it("replays the declaration-tree, plugin-level, sibling-dialect and viewer cases", () => {
-    expect(pairing.cases.length).toBeGreaterThanOrEqual(13);
+  it("replays the declaration-tree, plugin-level, sibling-dialect, viewer and hosted cases", () => {
+    expect(pairing.cases.length).toBeGreaterThanOrEqual(19);
+    expect(pairing.cases.some((testCase) => testCase.hostedArtifactKinds.length > 0 && testCase.opens)).toBe(true);
     expect(pairing.cases.some((testCase) => testCase.apps[testCase.app]!.role === "viewer" && testCase.opens)).toBe(true);
   });
   for (const testCase of pairing.cases) {
     it(testCase.name, () => {
-      expect(surfaceOpensArtifactKindV1(testCase.pluginArtifactKinds, testCase.apps, testCase.apps[testCase.app]!, testCase.artifact)).toBe(testCase.opens);
+      expect(surfaceOpensArtifactKindV1(testCase.pluginArtifactKinds, testCase.hostedArtifactKinds, testCase.apps, testCase.apps[testCase.app]!, testCase.artifact)).toBe(testCase.opens);
     });
   }
 });
@@ -46,12 +48,14 @@ describe("🎯️ the hub's descriptor open targets", () => {
   for (const testCase of openTargets.cases) {
     it(testCase.name, () => {
       const kind: SurfaceArtifactKindV1 = { id: testCase.kindId, schema };
-      const pluginArtifactKinds = testCase.declaredOn === "editor" ? [] : [kind];
+      const hosted = testCase.declaredOn === "hosted" || testCase.declaredOn === "hosted-presented";
+      const pluginArtifactKinds = testCase.declaredOn === "plugin" || testCase.declaredOn === "plugin-and-editor" ? [kind] : [];
+      const hostedArtifactKinds = hosted ? [kind] : [];
       const apps: SurfaceKindAppV1[] = [
-        { role: "editor", dialect, artifactKinds: testCase.declaredOn === "plugin" ? [] : [kind] },
-        { role: "viewer", dialect, artifactKinds: [] },
+        { role: "editor", dialect, artifactKinds: testCase.declaredOn === "editor" || testCase.declaredOn === "plugin-and-editor" ? [kind] : [], presents: testCase.declaredOn === "hosted-presented" ? kind : null },
+        { role: "viewer", dialect, artifactKinds: [], presents: null },
       ];
-      const opened = testCase.execution !== "isolated" ? [] : apps.filter((app) => surfaceOpensArtifactKindV1(pluginArtifactKinds, apps, app, { kind: kind.id, schema })).map((app) => `${dialect.artifactKind}@${dialect.standard}/${dialect.subset}#${app.role}`);
+      const opened = testCase.execution !== "isolated" ? [] : apps.filter((app) => surfaceOpensArtifactKindV1(pluginArtifactKinds, hostedArtifactKinds, apps, app, { kind: kind.id, schema })).map((app) => `${dialect.artifactKind}@${dialect.standard}/${dialect.subset}#${app.role}`);
       expect(opened).toEqual(testCase.targets.map((target) => target.surfaceId));
     });
   }

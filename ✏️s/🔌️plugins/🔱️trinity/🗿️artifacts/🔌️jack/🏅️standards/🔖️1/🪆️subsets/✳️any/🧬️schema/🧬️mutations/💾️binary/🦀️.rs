@@ -12,4 +12,5 @@ pub const BINARY_TAG_REGISTRY: &[(&str, u8)] = &[
     ("MoveNode", super::move_node::binary::BINARY_TAG),
     ("ChangeDataProperty", super::change_data_property::binary::BINARY_TAG),
     ("RemoveDataProperty", super::remove_data_property::binary::BINARY_TAG),
+    ("SetQuery", super::set_query::binary::BINARY_TAG),
 ];

@@ -1,4 +1,17 @@
 {
   "values": [null, true, false, 3, -4, 2.5, "雪", ["a", 1, null], {"empty": {}, "items": [true, {"child": "value"}]}],
-  "rejectedConstructions": ["not-a-number", "infinity", "undefined", "cycle", "sparse-array", "symbol-field", "hidden-field", "accessor-field", "array-extra-field"]
+  "rejectedConstructions": ["not-a-number", "infinity", "undefined", "cycle", "sparse-array", "symbol-field", "hidden-field", "accessor-field", "array-extra-field"],
+  "numbers": [
+    {"literal": "7.0", "json": "7", "kind": "uint"},
+    {"literal": "0.0", "json": "0", "kind": "uint"},
+    {"literal": "-0.0", "json": "0", "kind": "uint"},
+    {"literal": "-3.0", "json": "-3", "kind": "int"},
+    {"literal": "2.5", "json": "2.5", "kind": "float"},
+    {"literal": "9007199254740991.0", "json": "9007199254740991", "kind": "uint"},
+    {"literal": "-9007199254740991.0", "json": "-9007199254740991", "kind": "int"},
+    {"literal": "9007199254740992.0", "json": "9007199254740992", "kind": "float"},
+    {"literal": "1e21", "json": "1e+21", "kind": "float"},
+    {"literal": "NaN", "json": "null", "kind": "null"},
+    {"literal": "Infinity", "json": "null", "kind": "null"}
+  ]
 }

@@ -289,7 +289,7 @@ semio_framework_plugin::derive_artifact_facets!(
 
 //#region 🔖️DocumentHelpers
 // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
-// `empty_gif_snapshot`/`demo_gif_snapshot` relocated here verbatim (pure helpers over the
+// `blank_gif_snapshot`/`demo_gif_snapshot` relocated here verbatim (pure helpers over the
 // document type, destination rule 5); `GifEngine` (zero construction sites) deleted outright;
 // the real GIF89a codec (multi-frame animation, Graphic Control Extension, NETSCAPE2.0 loop —
 // reusing 87a's own `pub` byte-level LZW/sub-block/color-table/quantize/interlace helpers
@@ -297,9 +297,15 @@ semio_framework_plugin::derive_artifact_facets!(
 // own local override explicitly calls BOTH `standards::v87a::engine::register()` AND
 // `standards::v89a::engine::register()` — untouched) + `io_registry` all moved to `../🚪️io`;
 // tests moved beside what they now test.
+/// 🆕️ A new gif (89a) document: a 1×1 logical screen with one frame of one white pixel as the real codec round-trips it —
+/// GIF89a has no empty screen nor a frame-less stream, and a new document must save and reopen as itself.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn empty_gif_snapshot() -> GifSnapshot {
-    GifSnapshot::default()
+pub fn blank_gif_snapshot() -> GifSnapshot {
+    use crate::standards::v89a::subsets::any::io::{decode_gif, encode_gif};
+    use crate::standards::v89a::subsets::any::schema::snapshot::{GifColorTable, GifFrame, GifRgb};
+    let white = GifRgb { r: 255, g: 255, b: 255 };
+    let seed = GifSnapshot { width: 1, height: 1, gct: Some(GifColorTable { sorted: false, colors: vec![white, white] }), frames: vec![GifFrame { width: 1, height: 1, indices: vec![0], ..GifFrame::default() }], ..GifSnapshot::default() };
+    encode_gif(&seed).and_then(|bytes| decode_gif(&bytes)).expect("blank_gif_snapshot: the 1×1 seed round-trips through the real codec")
 }
 
 /// 🧪️ P2-FG2: real, deterministic demo `GifSnapshot` for `conformance_laws` (in `../🚪️io`'s own

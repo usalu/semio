@@ -183,15 +183,18 @@ fn typed_snapshot_source_preserves_ancillary_and_unknown_chunk_details() {
     let mut base = crate::schema::demo_png_snapshot();
     base.gama = Some(u32::MAX - 1);
     base.unknown_chunks.push(crate::schema::snapshot::PngChunk { kind: *b"vpAg", data: vec![0, 1, 127, 128, 255] });
+    let idat = base.chunk_order.iter().position(|marker| *marker == crate::schema::snapshot::PngChunkMarker::Idat).expect("IDAT marker");
+    base.chunk_order.insert(idat, crate::schema::snapshot::PngChunkMarker::Unknown { index: base.unknown_chunks.len() - 1 });
     let source = editing::snapshot_edit_source(&base);
     let event = editing::SnapshotEditEvent::ReplaceSource { source };
-    let emit = <PngEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &base).expect("lossless typed source");
-    let PngMutation::SetSnapshot(mutation) = &emit.artifact_mutations[0] else { panic!("whole snapshot mutation") };
-    assert_eq!(mutation.snapshot, base);
-    let native = crate::io::encode_png(&mutation.snapshot).expect("typed snapshot encodes to native PNG");
+    let current = crate::schema::demo_png_snapshot();
+    let emit = <PngEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &current).expect("lossless typed source");
+    let edited = emit.artifact_mutations.iter().fold(current, |snapshot, mutation| protocol::MutationDiff::apply(<PngMutation as protocol::Mutation<PngSnapshot>>::diff(mutation, &snapshot).diff(), &snapshot).expect("typed source mutation applies"));
+    assert_eq!(edited, base);
+    let native = crate::io::encode_png(&edited).expect("typed snapshot encodes to native PNG");
     let reopened = crate::io::decode_png(&native).expect("native PNG with ancillary data reopens");
-    assert_eq!(reopened.gama, mutation.snapshot.gama);
-    assert_eq!(reopened.unknown_chunks, mutation.snapshot.unknown_chunks);
+    assert_eq!(reopened.gama, edited.gama);
+    assert_eq!(reopened.unknown_chunks, edited.unknown_chunks);
 }
 
 #[semio_framework_async_macros::async_test]

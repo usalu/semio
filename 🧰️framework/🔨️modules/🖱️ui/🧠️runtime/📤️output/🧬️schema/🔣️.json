@@ -44,11 +44,11 @@
                 "capacity": 6
               },
               {
-                "fixedBytes": 2228224,
+                "fixedBytes": 3670016,
                 "capacity": 6
               },
               {
-                "fixedBytes": 2228225,
+                "fixedBytes": 3670017,
                 "capacity": 5
               },
               {
@@ -56,7 +56,7 @@
                 "capacity": 5
               },
               {
-                "fixedBytes": 52559872,
+                "fixedBytes": 54001664,
                 "capacity": 0
               }
             ],
@@ -154,7 +154,7 @@
           "const": false
         },
         "aggregateCeilingBytes": {
-          "const": 52559872
+          "const": 54001664
         },
         "returnedEntryReusableBeforeDrain": {
           "const": false

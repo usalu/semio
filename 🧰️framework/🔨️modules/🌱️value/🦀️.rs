@@ -19,7 +19,7 @@ pub mod bounded_clone;
 //#region 🔁️Codec
 #[path = "🔁️codec/🦀️.rs"]
 mod codec;
-pub use codec::{FromValue, ToValue, ValueEdit, ValueError, ValueShape};
+pub use codec::{edit_through_value, FromValue, ToValue, ValueEdit, ValueError, ValueShape};
 //#endregion 🔁️Codec
 
 //#region 🔖️Number
@@ -97,6 +97,25 @@ impl From<f64> for Number {
         Number::Float(v)
     }
 }
+
+/// 🔢️ The integer one finite JSON number reads back as — [`json_integer`]'s answer.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum JsonInteger {
+    Unsigned(u64),
+    Signed(i64),
+}
+
+/// 🔢️ The integer an `f64` reads back as from its JSON text: `JSON.stringify(7.0)` is `"7"`, so a finite, integral number
+/// within the safe integer range (`Number.isSafeInteger`, |v| ≤ 2^53 − 1) is an integer — unsigned unless negative — and
+/// anything else (a fraction, a non-finite value, an integral value past the safe range) is not. The ONE rule every Rust
+/// boundary that carries a JSON number as `f64` reads it by (`DslValue::json_number`, the UI contract's `UiValue` serializer).
+pub fn json_integer(v: f64) -> Option<JsonInteger> {
+    const SAFE_INTEGER_MAX: f64 = 9_007_199_254_740_991.0;
+    if !v.is_finite() || v.fract() != 0.0 || v.abs() > SAFE_INTEGER_MAX {
+        return None;
+    }
+    Some(if v >= 0.0 { JsonInteger::Unsigned(v as u64) } else { JsonInteger::Signed(v as i64) })
+}
 //#endregion 🔖️Number
 
 //#region 🔖️Value
@@ -139,6 +158,18 @@ impl DslValue {
     /// never collapses onto its integer twin.
     pub fn float(v: f64) -> Self {
         Self::Number(Number::Float(v))
+    }
+
+    /// 🔢️ A JSON number carried as `f64` (the UI contract's `UiValue::Number`), read the way its JSON text reads back
+    /// ([`json_integer`]): an integer stays an integer, a non-finite value is `Null` (JSON text has neither NaN nor Infinity),
+    /// anything else a float — so an integer argument a renderer hands back decodes as the integer React's wire delivers.
+    pub fn json_number(v: f64) -> Self {
+        match json_integer(v) {
+            Some(JsonInteger::Unsigned(value)) => Self::uint(value),
+            Some(JsonInteger::Signed(value)) => Self::int(value),
+            None if v.is_finite() => Self::float(v),
+            None => Self::Null,
+        }
     }
 
     pub fn is_null(&self) -> bool {

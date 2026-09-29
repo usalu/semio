@@ -1,9 +1,9 @@
 //! 📊️ Windowed submission history with original field labels and explicit export actions.
-use crate::editor::forms::{forms_action, ui_admit, ui_label, ui_text_value, ui_value_map, ui_value_text};
+use crate::editor::forms::{forms_action, ui_admit, ui_label, ui_value_map, ui_value_text, FORMS_PLAY_APP_ID};
 use crate::editor::forms::terminology::FormsLabels;
 use crate::schema::response::{FormsAnswer, FormsResponse};
 use crate::FormsSnapshot;
-use semio_framework_plugin::{tree_item_with_action, tree_window_item, ui_node_list, BuiltNode, LocalizedLabel, PanelTreeBuilder, SurfaceKind, TreeWindows, UiAssemblyResult, UiText, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{row_action, row_target, tree_item_with_action, tree_window_item, ui_node_list, BuiltNode, LocalizedLabel, PanelTreeBuilder, RowActionPlacement, SurfaceKind, TreeWindows, UiAssemblyResult, UiText, WindowKindDefinition, WindowOptions};
 use semio_framework_ui_contract as ui;
 use ui::{Buildable, HasBase};
 
@@ -32,13 +32,11 @@ fn answer_row(answer: &FormsAnswer, labels: &FormsLabels) -> UiAssemblyResult<Bu
 
 fn response_row(response: &FormsResponse, labels: &FormsLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let submitted_at = i64::try_from(response.submitted_at).map(protocol::scalar::format_rfc3339_ms).unwrap_or_else(|_| response.submitted_at.to_string());
-    let (action, args) = forms_action("discardResponse", Some(ui_value_map([("id", ui_value_text(&response.id)?)])?))?;
+    let target = row_target(FORMS_PLAY_APP_ID, Some(ui_value_map([("id", ui_value_text(&response.id)?)])?), None)?;
     let item = ui_admit(ui::tree_item(ui_label(&response.id)?).try_id(&response.id))?
-        .description(UiText::clipped(&format!("{}: {} · {}: {}", labels.answers.as_str(), response.answers.len(), labels.submitted_at.as_str(), submitted_at)));
-    let item = ui_admit(item.try_row_action(ui::RowAction {
-        icon: ui_text_value("trash-2")?, label: Some(ui_label(labels.discard_response.as_str())?),
-        action: ui::ActionBinding { trigger: ui::Trigger::Activate, action, args, capability: None }, placement: ui::RowActionPlacement::Menu,
-    }))?;
+        .description(UiText::clipped(&format!("{}: {} · {}: {}", labels.answers.as_str(), response.answers.len(), labels.submitted_at.as_str(), submitted_at)))
+        .target(target);
+    let item = ui_admit(item.try_row_action(row_action("trash-2", labels.discard_response.as_str(), "discardResponse", RowActionPlacement::Menu)?))?;
     tree_window_item(windows, item, &response.id, true, &response.answers, |answer| answer_row(answer, labels))
 }
 

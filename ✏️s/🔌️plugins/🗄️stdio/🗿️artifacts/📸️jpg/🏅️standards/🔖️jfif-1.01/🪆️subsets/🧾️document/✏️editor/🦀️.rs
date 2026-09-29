@@ -180,7 +180,7 @@ impl ArtifactEditor for JpgAnyEditor {
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> { jpgAnyEditor_command_from_action(action, args) }
 
     fn initial_snapshot() -> Self::Snapshot {
-        JpgSnapshot::default()
+        crate::standards::v_jfif_1_01::subsets::document::schema::blank_jpg_snapshot()
     }
 
     fn handle(

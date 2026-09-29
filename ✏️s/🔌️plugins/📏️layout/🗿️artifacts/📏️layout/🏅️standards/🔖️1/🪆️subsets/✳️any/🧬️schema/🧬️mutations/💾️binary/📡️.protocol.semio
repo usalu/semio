@@ -91,3 +91,12 @@ record set-story-runs tag=39
 field payload bytes
 record update-link tag=40
 field payload bytes
+record set-page-overrides tag=41
+field payload bytes
+record create-layer tag=42
+field payload bytes
+record set-frame-layer tag=43
+field payload bytes
+record set-drawing-text tag=44
+record reorder-frame tag=45
+field payload bytes

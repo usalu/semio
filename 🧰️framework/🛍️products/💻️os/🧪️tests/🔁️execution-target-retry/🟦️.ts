@@ -15,8 +15,8 @@ describe("🔁️ execution-target retry policy", () => {
   });
 
   it("declares only the hub's and a proxy's temporary answers transient", () => {
-    for (const status of [200, 206, 400, 401, 403, 404, 408, 409, 410, 429, 500, 501, 505]) expect(executionTargetTransientStatusV1(status), String(status)).toBe(false);
-    for (const status of [502, 503, 504]) expect(executionTargetTransientStatusV1(status), String(status)).toBe(true);
+    for (const status of [200, 206, 400, 401, 403, 404, 408, 409, 410, 500, 501, 505]) expect(executionTargetTransientStatusV1(status), String(status)).toBe(false);
+    for (const status of [429, 502, 503, 504]) expect(executionTargetTransientStatusV1(status), String(status)).toBe(true);
   });
 
   it("asks again after each transient answer up to the attempt bound, announcing every retry and releasing each dropped body", async () => {

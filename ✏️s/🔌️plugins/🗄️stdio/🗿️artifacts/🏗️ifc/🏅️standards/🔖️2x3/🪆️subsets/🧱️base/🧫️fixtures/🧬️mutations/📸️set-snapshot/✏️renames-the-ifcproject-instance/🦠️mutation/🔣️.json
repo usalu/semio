@@ -4,28 +4,34 @@
     "schema": "stdio.ifc.2x3",
     "document": {
       "header": {
-        "file_description": [
+        "fileDescription": [
           {
-            "List": [
+            "kind": "list",
+            "values": [
               {
-                "Str": "ViewDefinition [CoordinationView_V2.0]"
+                "kind": "str",
+                "value": "ViewDefinition [CoordinationView_V2.0]"
               }
             ]
           },
           {
-            "Str": "2;1"
+            "kind": "str",
+            "value": "2;1"
           }
         ],
-        "file_name": [
+        "fileName": [
           {
-            "Str": "capsule.ifc"
+            "kind": "str",
+            "value": "capsule.ifc"
           }
         ],
-        "file_schema": [
+        "fileSchema": [
           {
-            "List": [
+            "kind": "list",
+            "values": [
               {
-                "Str": "IFC2X3"
+                "kind": "str",
+                "value": "IFC2X3"
               }
             ]
           }
@@ -35,22 +41,25 @@
         {
           "id": 1,
           "entities": [
-            [
-              "IFCPROJECT",
-              [
+            {
+              "typeName": "IFCPROJECT",
+              "arguments": [
                 {
-                  "Str": "0Xk$Q1nMz9wgLp2vBcRt4A"
+                  "kind": "str",
+                  "value": "0Xk$Q1nMz9wgLp2vBcRt4A"
                 },
-                "Unset",
                 {
-                  "Str": "Nakagin Capsule Tower"
+                  "kind": "unset"
+                },
+                {
+                  "kind": "str",
+                  "value": "Nakagin Capsule Tower"
                 }
               ]
-            ]
+            }
           ]
         }
       ]
-    },
-    "edmPreamble": null
+    }
   }
 }

@@ -149,7 +149,7 @@ impl ArtifactEditor for Gif87aEditor {
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> { gif87aEditor_command_from_action(action, args) }
 
     fn initial_snapshot() -> Self::Snapshot {
-        GifSnapshot::default()
+        crate::standards::v87a::subsets::any::schema::blank_gif_snapshot()
     }
 
     fn handle(

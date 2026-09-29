@@ -20,7 +20,7 @@
 //! @see 🦀️oracle.rs — the reference Part-21 codec the same three subsets' oracles share.
 
 use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-use semio_s_artifact_stdio_step::engine::part21::{Part21Instance, Part21Value};
+use semio_s_artifact_stdio_contract::part21::{Part21Instance, Part21Value};
 
 //#region 🔖️ViewDefinition
 /// 🏷️ The view definition the document declares — `FILE_DESCRIPTION`'s first description string,

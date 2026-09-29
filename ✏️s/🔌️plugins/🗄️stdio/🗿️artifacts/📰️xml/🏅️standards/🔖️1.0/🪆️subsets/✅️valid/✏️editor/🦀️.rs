@@ -499,7 +499,7 @@ impl ArtifactEditor for XmlValidEditor {
     }
 
     fn initial_snapshot() -> XmlSnapshot {
-        XmlSnapshot::default()
+        crate::standards::v1_0::subsets::valid::schema::blank_valid_xml_snapshot()
     }
 
     /// ✏️ Only a `Text` node found at `node_id` accepts `set-node` — anything else (unparseable

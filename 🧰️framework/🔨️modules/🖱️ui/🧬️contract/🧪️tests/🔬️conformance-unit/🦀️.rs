@@ -171,8 +171,21 @@ mod tests {
         }
         let mut ids: Vec<crate::UiNodeId> = state.nodes.keys().copied().collect();
         ids.sort();
-        let action_ids: Vec<String> = ids.iter().flat_map(|id| state.nodes.get(id).expect("enumerated node remains present").bindings.iter().map(|binding| binding.action.to_string())).collect();
+        let action_ids: Vec<String> = ids.iter().flat_map(|id| reachable_action_ids(state.nodes.get(id).expect("enumerated node remains present"))).collect();
         assert_eq!(action_ids, expectation.action_ids, "{case_id}: reachable action ids mismatch");
+    }
+
+    /// 🎯️ Every action a record makes reachable, in order: its record bindings, then — for a TreeItem or TableRow — its
+    /// target's `activation` and its row actions, each the verb's binding on the row's ONE target.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn reachable_action_ids(record: &crate::UiNodeRecord) -> Vec<String> {
+        let row = match &record.component {
+            crate::Component::TreeItem(props) => props.target.as_ref().map(|target| (target, &props.row_actions)),
+            crate::Component::TableRow(props) => props.target.as_ref().map(|target| (target, &props.row_actions)),
+            _ => None,
+        };
+        let verbs = row.into_iter().flat_map(|(target, row_actions)| target.activation.iter().chain(row_actions.iter().map(|action| &action.verb)).map(move |verb| target.binding(verb).expect("credited row binding").action.to_string()));
+        record.bindings.iter().map(|binding| binding.action.to_string()).chain(verbs).collect()
     }
     //#endregion 📄️Expectation
 

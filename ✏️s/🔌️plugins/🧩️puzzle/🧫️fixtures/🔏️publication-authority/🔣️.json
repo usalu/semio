@@ -43,7 +43,11 @@
             "scaleSelection",
             "setActiveExample",
             "setSelectionFlag",
+            "setSelectionHidden",
+            "setSelectionLocked",
             "setTargetRegionFlag",
+            "setTargetRegionHidden",
+            "setTargetRegionLocked",
             "translateSelection"
           ]
         },
@@ -224,6 +228,8 @@
             "rotateSelection",
             "scaleSelection",
             "setSelectionFlag",
+            "setSelectionHidden",
+            "setSelectionLocked",
             "setTargetVolumeFlag",
             "translateSelection",
             "worldRelocate"
@@ -350,7 +356,11 @@
             "rotateSelection",
             "scaleSelection",
             "setSelectionFlag",
+            "setSelectionHidden",
+            "setSelectionLocked",
             "setTargetVolumeFlag",
+            "setTargetVolumeHidden",
+            "setTargetVolumeLocked",
             "translateSelection",
             "worldRelocate"
           ]

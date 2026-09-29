@@ -13,6 +13,7 @@ pub use super::delete_node::{delete_node, DeleteNode};
 pub use super::move_node::{move_node, MoveNode};
 pub use super::remove_data_property::{remove_data_property, RemoveDataProperty};
 pub use super::rename_node::{rename_node, RenameNode};
+pub use super::set_query::{set_query, SetQuery};
 
 //#region 🔖️Aggregate
 /// 🧮️ Semantic trinity graph mutation vocabulary.
@@ -28,6 +29,7 @@ pub enum TrinityGraphMutation {
     MoveNode(MoveNode),
     ChangeDataProperty(ChangeDataProperty),
     RemoveDataProperty(RemoveDataProperty),
+    SetQuery(SetQuery),
 }
 //#endregion 🔖️Aggregate
 

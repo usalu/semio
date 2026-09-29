@@ -149,7 +149,7 @@ fn layer_creation_controls_include_nondestructive_adjustments_in_both_languages(
         while let Some(node)=pending.pop() {
             for action in fixture["actions"].as_array().unwrap() {
                 if node["key"]==format!("{RASTER_TREE_PREFIX}.add.{}",action["kind"].as_str().unwrap()) {
-                    let row=node.to_string();assert!(row.contains(action[locale].as_str().unwrap()));assert_eq!(node["bindings"][0]["action"]["name"],fixture["command"]);assert_eq!(node["bindings"][0]["args"]["kind"],action["kind"]);found+=1;
+                    let row=node.to_string();assert!(row.contains(action[locale].as_str().unwrap()));assert_eq!(node["component"]["target"]["activation"],fixture["command"]);assert_eq!(node["component"]["target"]["args"]["kind"],action["kind"]);found+=1;
                 }
             }
             pending.extend(node["children"].as_array().unwrap());

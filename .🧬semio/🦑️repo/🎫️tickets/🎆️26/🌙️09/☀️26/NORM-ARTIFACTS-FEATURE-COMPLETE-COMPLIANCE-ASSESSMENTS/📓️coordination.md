@@ -32,6 +32,18 @@ Repo-default shared cargo cache (`.cargo/config.toml`: `build-dir`/`target-dir` 
 
 ## Status log
 
+- 14:25 2026-09-29 VDI 3805 family Summary [3.406s] 283 tests run: 283 passed, 0 skipped. Nesting depth is counted from the catalogue. EN 1993 was 159/159. Four edited families are green: DIN 18599, EN 1993, EN 1994, VDI 3805. The other eleven audit gaps remain.
+
+- 14:16 2026-09-29 EN 1994 family Summary [0.584s] 78 tests run: 78 passed, 0 skipped. Shear falls back to a load cut when no catalogue web clears. Bending OneOf stays present. VDI nesting-depth edit is not test-run yet.
+
+- 13:58 2026-09-29 DIN 18599 family Summary [1.275s] 113 tests run: 113 passed, 0 skipped, after the net-floor remedy and per-zone 26 °C cooling setpoint.
+
+- 13:46 2026-09-29 Audit fleet complete. EN 1993 and EN 1994 GAPS confirmed in source and added to 📓️audit-2026-09-29-wave.md. All 15 families GAPS. Shared report PASS. No fixer launched.
+
+- 13:40 2026-09-29 DIN 18599 audit GAPS, confirmed in source. Note: 📓️audit-2026-09-29-din18599.md. Fix waits for the rest of the fleet.
+
+- 13:36 2026-09-29 Goal re-armed. Read-only Composer 2.5 audit fleet started on all 15 families plus the shared report path. Grok 4.7 High is not in the available model list (`grok-4.7-xhigh` is). No execution agents launched on a substitute. Prior gate and browser notes are not treated as proof until this audit returns.
+
 - 17:45 DIN 4108 browser walk at http://127.0.0.1:6091/ recorded in 📓️e2e-din4108-walk.md. Open example, evaluate, n₅₀ 1.5→4.5 fail, apply remedy, evaluate pass, English and Deutsch. Goal can close.
 
 - 17:20 Fleet gate 9479e17d PASS. Summary [2.076s] 1 test run: 1 passed, 0 skipped. Blocking list read as None in 📓️verify-gate-fleet.md. E2E DIN 4108 browser walk is next. Goal not closed.

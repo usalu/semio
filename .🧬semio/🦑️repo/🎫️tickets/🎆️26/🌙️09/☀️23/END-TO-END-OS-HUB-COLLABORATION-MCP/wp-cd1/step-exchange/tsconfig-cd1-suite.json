@@ -1,0 +1,11 @@
+{
+  "extends": "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-cd1-overlay/tsconfig.json",
+  "compilerOptions": { "noEmit": true, "incremental": true, "tsBuildInfoFile": "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-cd1-work/s15/tsconfig-cd1-suite.tsbuildinfo" },
+  "include": [
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-cd1-overlay/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🟦️.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-cd1-overlay/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🧪️tests/🧪️semio-tech-cad-js-spatial-kernel-semio/🟦️.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-cd1-overlay/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧪️tests/🧪️semio-tech-cad-js-core-vec/🟦️.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-cd1-overlay/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🧪️tests/🧪️semio-tech-cad-js-brepjs/🟦️.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-cd1-overlay/✏️s/🔌️plugins/📐️cad/⚙️engine/🧱️brepjs/🟦️.ts"
+  ]
+}

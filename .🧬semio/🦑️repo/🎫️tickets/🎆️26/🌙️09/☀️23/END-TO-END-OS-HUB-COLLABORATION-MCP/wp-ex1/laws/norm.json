@@ -1,0 +1,434 @@
+{
+ "plugin": "norm",
+ "dir": "📕️norm",
+ "apps": [
+  {
+   "app": "s.norm.en1995@1/*#editor",
+   "examples": [
+    {
+     "id": "glulam-floor-beam",
+     "document": "distinct"
+    },
+    {
+     "id": "glulam-footbridge",
+     "document": "distinct"
+    },
+    {
+     "id": "multi-fail-timber",
+     "document": "distinct"
+    },
+    {
+     "id": "overloaded-footbridge",
+     "document": "distinct"
+    }
+   ]
+  },
+  {
+   "app": "s.norm.en1999@1/*#editor",
+   "examples": [
+    {
+     "id": "aluminium-roof-purlin",
+     "document": "distinct"
+    },
+    {
+     "id": "noncompliant-multi-fail",
+     "document": "distinct"
+    }
+   ]
+  },
+  {
+   "app": "s.norm.din4108@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    },
+    {
+     "id": "failing-thin-insulation",
+     "document": "distinct"
+    }
+   ]
+  },
+  {
+   "app": "s.norm.en1998@1/*#editor",
+   "examples": [
+    {
+     "id": "seismic-rc-frame",
+     "document": "distinct"
+    },
+    {
+     "id": "seismic-rc-frame-fail",
+     "document": "distinct"
+    },
+    {
+     "id": "seismic-multipart",
+     "document": "distinct"
+    },
+    {
+     "id": "seismic-multipart-fail",
+     "document": "distinct"
+    }
+   ]
+  },
+  {
+   "app": "s.norm.en1991@1/*#editor",
+   "examples": [
+    {
+     "id": "de-office-compliant",
+     "document": "distinct"
+    },
+    {
+     "id": "multi-fail-noncompliant",
+     "document": "distinct"
+    }
+   ]
+  },
+  {
+   "app": "s.norm.en1990@1/*#editor",
+   "examples": [
+    {
+     "id": "high-consequence-office",
+     "document": "distinct"
+    },
+    {
+     "id": "road-bridge-compliant",
+     "document": "distinct"
+    },
+    {
+     "id": "road-bridge-failing",
+     "document": "distinct"
+    },
+    {
+     "id": "accidental-seismic-compliant",
+     "document": "distinct"
+    },
+    {
+     "id": "accidental-seismic-failing",
+     "document": "distinct"
+    },
+    {
+     "id": "fatigue-compliant",
+     "document": "distinct"
+    },
+    {
+     "id": "fatigue-failing",
+     "document": "distinct"
+    }
+   ]
+  },
+  {
+   "app": "s.norm.en1996@1/*#editor",
+   "examples": [
+    {
+     "id": "loadbearing-wall",
+     "document": "distinct"
+    },
+    {
+     "id": "multi-fail-masonry",
+     "document": "distinct"
+    }
+   ]
+  },
+  {
+   "app": "s.norm.en1994@1/*#editor",
+   "examples": [
+    {
+     "id": "composite-floor-beam",
+     "document": "distinct"
+    },
+    {
+     "id": "composite-floor-beam-failing",
+     "document": "distinct"
+    },
+    {
+     "id": "composite-bridge-girder",
+     "document": "distinct"
+    }
+   ]
+  },
+  {
+   "app": "s.norm.en1992@1/*#editor",
+   "examples": [
+    {
+     "id": "compliant-office-frame",
+     "document": "distinct"
+    },
+    {
+     "id": "failing-under-reinforced",
+     "document": "distinct"
+    },
+    {
+     "id": "compliant-prestressed-beam",
+     "document": "distinct"
+    },
+    {
+     "id": "failing-prestressed-beam",
+     "document": "distinct"
+    },
+    {
+     "id": "liquid-retaining-fem-anchor",
+     "document": "distinct"
+    }
+   ]
+  },
+  {
+   "app": "s.norm.din16798@1/*#editor",
+   "examples": [
+    {
+     "id": "compliant-office",
+     "document": "distinct"
+    },
+    {
+     "id": "noncompliant-office",
+     "document": "distinct"
+    },
+    {
+     "id": "residential-method3",
+     "document": "distinct"
+    },
+    {
+     "id": "demo",
+     "document": "distinct"
+    }
+   ]
+  },
+  {
+   "app": "s.norm.din18599@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    },
+    {
+     "id": "compliant-detached",
+     "document": "distinct"
+    },
+    {
+     "id": "noncompliant-detached",
+     "document": "distinct"
+    },
+    {
+     "id": "compliant-two-zone",
+     "document": "distinct"
+    },
+    {
+     "id": "cooled-office",
+     "document": "distinct"
+    }
+   ]
+  },
+  {
+   "app": "s.norm.en1993@1/*#editor",
+   "examples": [
+    {
+     "id": "heb240-compliant",
+     "document": "distinct"
+    },
+    {
+     "id": "high-strength-connection",
+     "document": "distinct"
+    }
+   ]
+  },
+  {
+   "app": "s.norm.iso16757@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    },
+    {
+     "id": "broken",
+     "document": "distinct"
+    }
+   ]
+  },
+  {
+   "app": "s.norm.vdi3805@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    },
+    {
+     "id": "nonconforming",
+     "document": "distinct"
+    },
+    {
+     "id": "blatt-3",
+     "document": "distinct"
+    },
+    {
+     "id": "blatt-3-fail",
+     "document": "distinct"
+    },
+    {
+     "id": "blatt-4",
+     "document": "distinct"
+    },
+    {
+     "id": "blatt-4-fail",
+     "document": "distinct"
+    },
+    {
+     "id": "blatt-5",
+     "document": "distinct"
+    },
+    {
+     "id": "blatt-5-fail",
+     "document": "distinct"
+    },
+    {
+     "id": "blatt-6",
+     "document": "distinct"
+    },
+    {
+     "id": "blatt-6-fail",
+     "document": "distinct"
+    },
+    {
+     "id": "blatt-7",
+     "document": "distinct"
+    },
+    {
+     "id": "blatt-7-fail",
+     "document": "distinct"
+    },
+    {
+     "id": "blatt-8",
+     "document": "distinct"
+    },
+    {
+     "id": "blatt-8-fail",
+     "document": "distinct"
+    },
+    {
+     "id": "blatt-16",
+     "document": "distinct"
+    },
+    {
+     "id": "blatt-16-fail",
+     "document": "distinct"
+    },
+    {
+     "id": "blatt-19",
+     "document": "distinct"
+    },
+    {
+     "id": "blatt-19-fail",
+     "document": "distinct"
+    },
+    {
+     "id": "blatt-53",
+     "document": "distinct"
+    },
+    {
+     "id": "blatt-53-fail",
+     "document": "distinct"
+    },
+    {
+     "id": "blatt-60",
+     "document": "distinct"
+    },
+    {
+     "id": "blatt-60-fail",
+     "document": "distinct"
+    }
+   ]
+  },
+  {
+   "app": "s.norm.en1997@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    },
+    {
+     "id": "compliant",
+     "document": "distinct"
+    },
+    {
+     "id": "noncompliant",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "semio_s_artifact_norm_en1995::editor::en1995::En1995PlayApp",
+   "create": "semio_s_artifact_norm_en1995::editor::en1995::create_en1995_app",
+   "app": "s.norm.en1995@1/*#editor"
+  },
+  {
+   "editor": "semio_s_artifact_norm_en1999::editor::en1999::En1999PlayApp",
+   "create": "semio_s_artifact_norm_en1999::editor::en1999::create_en1999_app",
+   "app": "s.norm.en1999@1/*#editor"
+  },
+  {
+   "editor": "semio_s_artifact_norm_din4108::editor::din4108::Din4108PlayApp",
+   "create": "semio_s_artifact_norm_din4108::editor::din4108::create_din4108_app",
+   "app": "s.norm.din4108@1/*#editor"
+  },
+  {
+   "editor": "semio_s_artifact_norm_en1998::editor::en1998::En1998PlayApp",
+   "create": "semio_s_artifact_norm_en1998::editor::en1998::create_en1998_app",
+   "app": "s.norm.en1998@1/*#editor"
+  },
+  {
+   "editor": "semio_s_artifact_norm_en1991::editor::en1991::En1991PlayApp",
+   "create": "semio_s_artifact_norm_en1991::editor::en1991::create_en1991_app",
+   "app": "s.norm.en1991@1/*#editor"
+  },
+  {
+   "editor": "semio_s_artifact_norm_en1990::editor::en1990::En1990PlayApp",
+   "create": "semio_s_artifact_norm_en1990::editor::en1990::create_en1990_app",
+   "app": "s.norm.en1990@1/*#editor"
+  },
+  {
+   "editor": "semio_s_artifact_norm_en1996::editor::en1996::En1996PlayApp",
+   "create": "semio_s_artifact_norm_en1996::editor::en1996::create_en1996_app",
+   "app": "s.norm.en1996@1/*#editor"
+  },
+  {
+   "editor": "semio_s_artifact_norm_en1994::editor::en1994::En1994PlayApp",
+   "create": "semio_s_artifact_norm_en1994::editor::en1994::create_en1994_app",
+   "app": "s.norm.en1994@1/*#editor"
+  },
+  {
+   "editor": "semio_s_artifact_norm_en1992::editor::en1992::En1992PlayApp",
+   "create": "semio_s_artifact_norm_en1992::editor::en1992::create_en1992_app",
+   "app": "s.norm.en1992@1/*#editor"
+  },
+  {
+   "editor": "semio_s_artifact_norm_din16798::editor::din16798::Din16798PlayApp",
+   "create": "semio_s_artifact_norm_din16798::editor::din16798::create_din16798_app",
+   "app": "s.norm.din16798@1/*#editor"
+  },
+  {
+   "editor": "semio_s_artifact_norm_din18599::editor::din18599::Din18599PlayApp",
+   "create": "semio_s_artifact_norm_din18599::editor::din18599::create_din18599_app",
+   "app": "s.norm.din18599@1/*#editor"
+  },
+  {
+   "editor": "semio_s_artifact_norm_en1993::editor::en1993::En1993PlayApp",
+   "create": "semio_s_artifact_norm_en1993::editor::en1993::create_en1993_app",
+   "app": "s.norm.en1993@1/*#editor"
+  },
+  {
+   "editor": "semio_s_artifact_norm_iso16757::editor::iso16757::Iso16757PlayApp",
+   "create": "semio_s_artifact_norm_iso16757::editor::iso16757::create_iso16757_app",
+   "app": "s.norm.iso16757@1/*#editor"
+  },
+  {
+   "editor": "semio_s_artifact_norm_vdi3805::editor::vdi3805::Vdi3805PlayApp",
+   "create": "semio_s_artifact_norm_vdi3805::editor::vdi3805::create_vdi3805_app",
+   "app": "s.norm.vdi3805@1/*#editor"
+  },
+  {
+   "editor": "semio_s_artifact_norm_en1997::editor::en1997::En1997PlayApp",
+   "create": "semio_s_artifact_norm_en1997::editor::en1997::create_en1997_app",
+   "app": "s.norm.en1997@1/*#editor"
+  }
+ ]
+}

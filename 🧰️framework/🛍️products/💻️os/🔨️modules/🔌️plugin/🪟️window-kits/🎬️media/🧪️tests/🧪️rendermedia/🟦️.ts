@@ -36,7 +36,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("matches the language-agnostic JSON Schema through Ajv", async () => {
       const { readFile } = await import("node:fs/promises");
-      const { default: Ajv2020 } = await import("ajv/dist/2020.js");
+      const { default: Ajv2020 } = await import("ajv/dist/2020");
       const schema = JSON.parse(await readFile(new URL("../../🧬️contract/🔣️.json", source.url), "utf8"));
       const node = renderMedia(view);
       if (node.component.type !== "extension") throw new Error("expected extension");

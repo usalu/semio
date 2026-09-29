@@ -114,9 +114,9 @@ fn tool_run_panel_of_a_running_run_paints_and_its_buttons_dispatch_the_run() {
     assert_eq!(
         dispatched(&mut painted.input),
         vec![
-            serde_json::json!({ "action": "toolRunPause", "runId": "1", "generation": 0.0 }),
-            serde_json::json!({ "action": "toolRunFinalize", "runId": "1", "generation": 0.0 }),
-            serde_json::json!({ "action": "toolRunAbort", "runId": "1", "generation": 0.0 }),
+            serde_json::json!({ "action": "toolRunPause", "runId": "1", "generation": 0 }),
+            serde_json::json!({ "action": "toolRunFinalize", "runId": "1", "generation": 0 }),
+            serde_json::json!({ "action": "toolRunAbort", "runId": "1", "generation": 0 }),
         ],
         "enabled buttons dispatch the run's own action and disabled ones dispatch nothing"
     );
@@ -162,7 +162,7 @@ fn tool_run_panel_buttons_are_keyboard_reachable() {
     }
     assert_eq!(wrapped.as_deref(), Some("framework.toolRun.1.toolRunPause"), "Tab wraps past the last enabled button back onto the first");
     crate::interpreter::dispatch_ui_event(surface, ui_wgpu::wgpu::UiEvent::KeyDown { key: "Enter".into(), modifiers: ui_wgpu::wgpu::EventModifiers::default() }, &mut painted.input);
-    assert_eq!(dispatched(&mut painted.input), vec![serde_json::json!({ "action": "toolRunPause", "runId": "1", "generation": 0.0 })], "Enter on the focused Pause button dispatches the run's pause");
+    assert_eq!(dispatched(&mut painted.input), vec![serde_json::json!({ "action": "toolRunPause", "runId": "1", "generation": 0 })], "Enter on the focused Pause button dispatches the run's pause");
     close_panel(surface, &mut document);
 }
 

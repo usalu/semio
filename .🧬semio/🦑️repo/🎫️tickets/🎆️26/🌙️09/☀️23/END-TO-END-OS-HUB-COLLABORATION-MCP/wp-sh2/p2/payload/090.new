@@ -1,0 +1,51 @@
+@capability-s-space-1-any-viewer-transient-mutate
+@no-oracle-s-space-1-any-viewer-transient-state-lane-semantics
+@comparison-ordered-json-v1
+@mutations-s-space-1-any-viewer-transient
+Feature: Fold every committed directory batch and presence vector of s.space.space's 👁️viewer/🫧️transient lane
+  `SpaceIndexTransientMutation` is the transient lane of the Space index (owned by its read-only viewer, reused by its
+  editor): it folds bounded batches of one space's directory events into the Space table's projection through the canonical
+  kernel fold, and replaces per-artifact presence rows. The projection is derived hub state — never persisted, shared or
+  undone — so both verbs, `apply-directory-events` and `set-artifact-presence`, are non-invertible by declaration, and each
+  batch is one bounded item priced by the batch, never by the space's history. It is this repository's own state record, so
+  the case records the no-oracle decision `s-space-1-any-viewer-transient-state-lane-semantics` in
+  `👁️viewer/🫧️transient/🔮️oracles/🔣️.json` and asserts every law inside the subject handlers through the shared
+  `semio_s_plugin_stdio_test_oracle::law::vector` module: the applied snapshot is the committed after-snapshot, the produced
+  delta is the committed `🔺️diff`, the diagnostics are the ones the committed `🎯️outcome` declares, and only an applied
+  vector moves the snapshot. Production dispatch is reached through `space_index_transient_mutation_report_json`, which runs
+  `Mutation::diff(..).apply_to` exactly as the transient store does.
+
+  Both kinds are non-invertible, so their inverse law is asserted where it is meaningful: a verb that changes nothing (a
+  replayed history, a refused race, an equal or refused presence row) leaves nothing to undo — the kind computes no inverse
+  step and the projection stays the committed before-snapshot. A folded batch is never undone; the host replays the space's
+  history from its origin instead.
+
+  @id-mutate
+  @level-exhaustive
+  @mode-conformance
+  Scenario Outline: Fold <id> and land on the committed after-snapshot, diff and outcome
+    Given the committed <id> vector under 👁️viewer/🫧️transient/🧫️fixtures
+    When its verb is folded into that vector's before-snapshot through space_index_transient_mutation_report_json
+    Then the folded snapshot, the produced diff and the diagnostics are exactly what the vector commits
+    Examples:
+      | id |
+      | apply-directory-events-applied |
+      | apply-directory-events-no-op |
+      | apply-directory-events-rejected |
+      | set-artifact-presence-applied |
+      | set-artifact-presence-no-op |
+      | set-artifact-presence-rejected |
+
+  @id-inverse
+  @level-exhaustive
+  @mode-property
+  Scenario Outline: Undoing <id> leaves the committed before-snapshot
+    Given the committed <id> vector under 👁️viewer/🫧️transient/🧫️fixtures
+    When its verb is folded into that vector's before-snapshot through space_index_transient_mutation_report_json
+    Then the kind computes no inverse step and the projection is exactly the committed before-snapshot
+    Examples:
+      | id |
+      | apply-directory-events-no-op |
+      | apply-directory-events-rejected |
+      | set-artifact-presence-no-op |
+      | set-artifact-presence-rejected |

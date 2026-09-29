@@ -21,7 +21,7 @@ pub mod derived_construction {
     use crate::standards::v2x3::subsets::sav::schema::check_sav_conformance;
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
-    use semio_s_artifact_stdio_step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
+    use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn stage_mutation_errors(diagnostics: &mut Vec<Diagnostic>, outcome: &protocol::MutationOutcome<Ifc2x3Diff>) {

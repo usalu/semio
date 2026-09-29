@@ -19,8 +19,8 @@
         },
         "cases": {
           "type": "array",
-          "minItems": 9,
-          "maxItems": 9,
+          "minItems": 11,
+          "maxItems": 11,
           "items": {
             "type": "object",
             "additionalProperties": false,
@@ -42,7 +42,9 @@
                   "optionalString",
                   "pair",
                   "stringMap",
-                  "value"
+                  "value",
+                  "bytes",
+                  "words"
                 ]
               },
               "value": {
@@ -60,6 +62,14 @@
                     "type": "array",
                     "items": {
                       "type": "string"
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 4294967295
                     }
                   }
                 ]

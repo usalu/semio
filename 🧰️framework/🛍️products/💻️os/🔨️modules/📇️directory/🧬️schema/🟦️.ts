@@ -1188,7 +1188,7 @@ export interface DocumentOpenCatalogV1 {
   generationId: string;
 }
 
-export const DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 = 19;
+export const DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 = 20;
 
 export interface DocumentExecutionProtocolV1 {
   appChannelVersion: typeof DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1;
@@ -1581,18 +1581,21 @@ export function leaseFieldsFromPlanV1(plan: DocumentOpenPlanV1, byteLengths: { r
 /** 🗂️ One artifact kind a descriptor declares, reduced to the pair a document open is admitted on. */
 export type SurfaceArtifactKindV1 = { readonly id: string; readonly schema: string };
 
-/** 🎯️ One surface app of a verified descriptor as the pairing rule reads it: its role, its full dialect coordinate and the
- * artifact kinds it declares itself. */
+/** 🎯️ One surface app of a verified descriptor as the pairing rule reads it: its role, its full dialect coordinate, the
+ * artifact kinds it declares itself and the kind its io presents (`null` when it presents none). */
 export type SurfaceKindAppV1 = {
   readonly role: "editor" | "viewer";
   readonly dialect: { readonly artifactKind: string; readonly standard: string; readonly subset: string };
   readonly artifactKinds: readonly SurfaceArtifactKindV1[];
+  readonly presents: SurfaceArtifactKindV1 | null;
 };
 
 /** 🗂️ The one surface ↔ artifact-kind pairing rule, the browser twin of the hub's `app_opens_kind`
  * (`🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs`) that publishes and verifies every open target: a plugin-level
  * kind (`PluginBuilder::artifact_kind`) is opened only by the surfaces whose own dialect names it, even when a sibling app
- * lists it as an input; any other kind is opened by the editor that declares it itself (a plugin on the declaration tree
+ * lists it as an input; a HOSTED kind (`hostedArtifactKinds`) by the surfaces whose dialect names it or whose io presents it
+ * and by the viewers of a presenting editor's exact dialect; any other kind is opened by the editor that declares it itself
+ * (a plugin on the declaration tree
  * stitches its spec onto the app) and by the viewers of that editor's dialect — the read-only surface of the same
  * documents. Replayed from `🔏️trusted-catalog/🧫️fixtures/🗂️surface-opens-kind/🔣️.json` and from the hub's own
  * `🔏️trusted-catalog/🧫️fixtures/🎯️descriptor-open-targets/🔣️.json`.
@@ -1604,12 +1607,29 @@ export type SurfaceKindAppV1 = {
  * Spectator's open ended in "The document target changed" and an unmounted viewer (ticket 26/09/23 C13, row 3.4). */
 export function surfaceOpensArtifactKindV1(
   pluginArtifactKinds: readonly SurfaceArtifactKindV1[],
+  hostedArtifactKinds: readonly SurfaceArtifactKindV1[],
   apps: readonly SurfaceKindAppV1[],
   app: SurfaceKindAppV1,
   artifact: { readonly kind: string; readonly schema: string },
 ): boolean {
   const declares = (kinds: readonly SurfaceArtifactKindV1[]): boolean => kinds.some((kind) => kind.id === artifact.kind && kind.schema === artifact.schema);
   if (declares(pluginArtifactKinds)) return app.dialect.artifactKind === artifact.kind;
+  if (declares(hostedArtifactKinds)) {
+    const presents = (candidate: SurfaceKindAppV1): boolean => candidate.presents !== null && candidate.presents.id === artifact.kind && candidate.presents.schema === artifact.schema;
+    return (
+      app.dialect.artifactKind === artifact.kind ||
+      presents(app) ||
+      (app.role === "viewer" &&
+        apps.some(
+          (editor) =>
+            editor.role === "editor" &&
+            editor.dialect.artifactKind === app.dialect.artifactKind &&
+            editor.dialect.standard === app.dialect.standard &&
+            editor.dialect.subset === app.dialect.subset &&
+            presents(editor),
+        ))
+    );
+  }
   return (
     declares(app.artifactKinds) ||
     (app.role === "viewer" &&

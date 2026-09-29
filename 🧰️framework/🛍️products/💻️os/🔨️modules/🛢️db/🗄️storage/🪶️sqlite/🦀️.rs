@@ -951,7 +951,11 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
 
     impl WalStorage for SqliteStorage {
         async fn acquire_writer(&self, document: &ArtifactId) -> Result<WalWriterPermit, DbError> {
-            wal_writer(execute(DbIoTask::WalWriterAcquire { backend: self.control, document: document_text(document)? }).await?)
+            let document = document_text(document)?;
+            crate::db_storage::writer::admitted_acquire(self.control, std::time::Duration::from_millis(crate::db_storage::writer::WAL_WRITER_ADMISSION_WAIT_MS), || async {
+                wal_writer(execute(DbIoTask::WalWriterAcquire { backend: self.control, document: document.clone() }).await?)
+            })
+            .await
         }
 
         async fn create_segment(&self, writer: &WalWriterPermit, index: u64) -> Result<(), DbError> {

@@ -13,7 +13,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     import("node:path"),
     import("node:url"),
     import("../../../../../../🔌️plugin/🪟️window-kits/🎬️media/🟦️.ts"),
-    import("../../🚚️lifecycle/🟦️.ts"),
+    import("../../../../🎬️media/🚚️lifecycle/🟦️.ts"),
     import("../../../📤️SegmentedDownload/🟦️.ts"),
   ]);
   const { createElement } = React;
@@ -183,6 +183,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         await page.setContent('<div id="root"></div>');
         await page.addScriptTag({ content: bundle.outputFiles[0]!.text });
         await page.evaluate((input) => window.mountMediaTransportOracle(input), fixture);
+        await page.waitForFunction(() => (document.querySelector("audio")?.readyState ?? 0) >= 1);
         const observed = await page.locator('[data-media-state="ready"]').evaluate((host) => {
           const media = host.querySelector("audio,video") as HTMLMediaElement | null;
           const sliders = [...host.querySelectorAll<HTMLInputElement>('input[type="range"]')];
@@ -196,6 +197,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           };
         });
         expect(observed).toEqual({ tag: "AUDIO", autoplay: false, paused: true, labels: ["Seek", "Selection start", "Selection end"], ranges: [["0", "1000", "250"], ["0", "899", "100"], ["101", "1000", "900"]], window: fixture.identity.windowId });
+        const decoded = await page.evaluate(() => { const audio = document.querySelector("audio")!; console.debug(`[DEBUG] React media Chromium decoded ${audio.duration}s initial=${audio.currentTime}s`); return { duration: audio.duration, position: audio.currentTime }; });
+        expect(decoded).toEqual({ duration: 1, position: 0.25 });
+        console.debug(`[DEBUG] React media Chromium decoded ${decoded.duration}s initial=${decoded.position}s`);
         expect(await page.evaluate(() => window.mediaTransportCalls)).toEqual([
           `submit:${fixture.identity.instanceId}:${fixture.identity.outputPort}:${fixture.identity.parentDocumentId}:${fixture.identity.revision}`,
           "poll:0", "poll:1", "poll:2", "chunk:0", "chunk:1",

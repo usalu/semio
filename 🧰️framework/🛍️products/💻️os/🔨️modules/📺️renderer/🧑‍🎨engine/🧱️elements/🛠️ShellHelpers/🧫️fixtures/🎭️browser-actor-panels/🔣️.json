@@ -1,5 +1,5 @@
 {
-  "description": "Per-surface verdicts of one browser-actor patch offer on the shell (G-P1-4, S15 finding b). Every window kind of the app and every bodied panel is a surface of the document's one actor. Each step applies `patches` to the stores the previous steps retained; `retained: false` starts an opening.",
+  "description": "Per-surface verdicts of one browser-actor patch offer on the shell (G-P1-4, S15 finding b, C13 P1). Every window kind of the app, every bodied panel and every reserved refresh section (`framework.section.*`, keyed by its body key) is a surface of the document's one actor. Each step applies `patches` to the stores the previous steps retained; `retained: false` starts an opening. `sectionsChanged` says an acknowledged patch moved a section; `sections` is what the shell decodes from the retained section stores after the step (the local refresh's own carrier: packed text leaves, `value` then sorted `dataAttributes`).",
   "windowKeys": [
     "note-composite",
     "note-navigator"
@@ -226,7 +226,9 @@
         "note-navigator": 1,
         "framework.panel.inspection": 1
       },
-      "surfacesAdded": true
+      "surfacesAdded": true,
+      "sectionsChanged": false,
+      "sections": {}
     },
     {
       "name": "remote edit moves only the panel",
@@ -263,7 +265,9 @@
         "note-navigator": 1,
         "framework.panel.inspection": 2
       },
-      "surfacesAdded": false
+      "surfacesAdded": false,
+      "sectionsChanged": false,
+      "sections": {}
     },
     {
       "name": "the second window's own frame moves alone",
@@ -300,7 +304,9 @@
         "note-composite": 1,
         "note-navigator": 2,
         "framework.panel.inspection": 2
-      }
+      },
+      "sectionsChanged": false,
+      "sections": {}
     },
     {
       "name": "stale panel is refused and reset while the window keeps its frame",
@@ -379,7 +385,9 @@
         "note-navigator": 2,
         "framework.panel.inspection": 0
       },
-      "surfacesAdded": false
+      "surfacesAdded": false,
+      "sectionsChanged": false,
+      "sections": {}
     },
     {
       "name": "full resend after the reset applies from zero",
@@ -446,7 +454,9 @@
         "note-navigator": 2,
         "framework.panel.inspection": 1
       },
-      "surfacesAdded": false
+      "surfacesAdded": false,
+      "sectionsChanged": false,
+      "sections": {}
     },
     {
       "name": "a surface this app does not render is refused",
@@ -514,7 +524,9 @@
         "note-navigator": 2,
         "framework.panel.inspection": 1
       },
-      "surfacesAdded": false
+      "surfacesAdded": false,
+      "sectionsChanged": false,
+      "sections": {}
     },
     {
       "name": "an opening whose first offer leaves every window unpainted retains nothing",
@@ -578,7 +590,9 @@
       ],
       "stored": false,
       "revisions": {},
-      "surfacesAdded": false
+      "surfacesAdded": false,
+      "sectionsChanged": false,
+      "sections": {}
     },
     {
       "name": "a failing first window patch refuses every surface",
@@ -695,7 +709,9 @@
       ],
       "stored": false,
       "revisions": {},
-      "surfacesAdded": false
+      "surfacesAdded": false,
+      "sectionsChanged": false,
+      "sections": {}
     },
     {
       "name": "an opening whose first offer paints only the second window is retained",
@@ -760,7 +776,573 @@
       "surfacesAdded": true,
       "revisions": {
         "note-navigator": 1
+      },
+      "sectionsChanged": false,
+      "sections": {}
+    },
+    {
+      "name": "reserved sections are retained beside the windows and decode to the refresh values",
+      "retained": true,
+      "patches": [
+        {
+          "surface": "framework.section.engagements",
+          "baseRevision": 0,
+          "revision": 1,
+          "ops": [
+            {
+              "type": "upsert",
+              "id": 2,
+              "key": "c2",
+              "component": {
+                "type": "text",
+                "value": "{\"note-navigator\":{\"status\":[{\"id\":\"words\",\"text\":\"2 words\"}]}}",
+                "emphasize": null,
+                "dataAttributes": null
+              },
+              "layout": {
+                "kind": "leaf",
+                "width": "hug",
+                "height": "hug"
+              },
+              "style": {
+                "variant": "plain",
+                "size": "md",
+                "density": "standard",
+                "tone": "neutral",
+                "emphasis": "regular"
+              },
+              "activity": "idle",
+              "disabled": false,
+              "transition": null,
+              "accessibility": {
+                "label": null,
+                "description": null,
+                "live": "off",
+                "shortcut": null,
+                "hidden": false
+              },
+              "bindings": [],
+              "menu": null,
+              "children": []
+            },
+            {
+              "type": "upsert",
+              "id": 1,
+              "key": "framework.section.engagements",
+              "component": {
+                "type": "container",
+                "role": "plain"
+              },
+              "layout": {
+                "kind": "stack",
+                "axis": "vertical",
+                "gap": "none",
+                "padding": {
+                  "all": "none"
+                },
+                "align": "stretch",
+                "justify": "start",
+                "grow": false,
+                "wrap": false
+              },
+              "style": {
+                "variant": "plain",
+                "size": "md",
+                "density": "standard",
+                "tone": "neutral",
+                "emphasis": "regular"
+              },
+              "activity": "idle",
+              "disabled": false,
+              "transition": null,
+              "accessibility": {
+                "label": null,
+                "description": null,
+                "live": "off",
+                "shortcut": null,
+                "hidden": false
+              },
+              "bindings": [],
+              "menu": null,
+              "children": [
+                2
+              ]
+            },
+            {
+              "type": "setRoot",
+              "id": 1
+            }
+          ]
+        },
+        {
+          "surface": "framework.section.measures",
+          "baseRevision": 0,
+          "revision": 1,
+          "ops": [
+            {
+              "type": "upsert",
+              "id": 2,
+              "key": "c2",
+              "component": {
+                "type": "text",
+                "value": "{\"note-navigator\":[{\"kind\":\"toggle\",\"id\":\"wrap\",\"label\":\"Wrap\",",
+                "emphasize": null,
+                "dataAttributes": null
+              },
+              "layout": {
+                "kind": "leaf",
+                "width": "hug",
+                "height": "hug"
+              },
+              "style": {
+                "variant": "plain",
+                "size": "md",
+                "density": "standard",
+                "tone": "neutral",
+                "emphasis": "regular"
+              },
+              "activity": "idle",
+              "disabled": false,
+              "transition": null,
+              "accessibility": {
+                "label": null,
+                "description": null,
+                "live": "off",
+                "shortcut": null,
+                "hidden": false
+              },
+              "bindings": [],
+              "menu": null,
+              "children": []
+            },
+            {
+              "type": "upsert",
+              "id": 3,
+              "key": "c3",
+              "component": {
+                "type": "text",
+                "value": "\"value\":true,",
+                "emphasize": null,
+                "dataAttributes": {
+                  "01": "\"onChange\":{\"controllerId\":\"note\",",
+                  "02": "\"action\":\"setWrap\"}}]}"
+                }
+              },
+              "layout": {
+                "kind": "leaf",
+                "width": "hug",
+                "height": "hug"
+              },
+              "style": {
+                "variant": "plain",
+                "size": "md",
+                "density": "standard",
+                "tone": "neutral",
+                "emphasis": "regular"
+              },
+              "activity": "idle",
+              "disabled": false,
+              "transition": null,
+              "accessibility": {
+                "label": null,
+                "description": null,
+                "live": "off",
+                "shortcut": null,
+                "hidden": false
+              },
+              "bindings": [],
+              "menu": null,
+              "children": []
+            },
+            {
+              "type": "upsert",
+              "id": 1,
+              "key": "framework.section.measures",
+              "component": {
+                "type": "container",
+                "role": "plain"
+              },
+              "layout": {
+                "kind": "stack",
+                "axis": "vertical",
+                "gap": "none",
+                "padding": {
+                  "all": "none"
+                },
+                "align": "stretch",
+                "justify": "start",
+                "grow": false,
+                "wrap": false
+              },
+              "style": {
+                "variant": "plain",
+                "size": "md",
+                "density": "standard",
+                "tone": "neutral",
+                "emphasis": "regular"
+              },
+              "activity": "idle",
+              "disabled": false,
+              "transition": null,
+              "accessibility": {
+                "label": null,
+                "description": null,
+                "live": "off",
+                "shortcut": null,
+                "hidden": false
+              },
+              "bindings": [],
+              "menu": null,
+              "children": [
+                2,
+                3
+              ]
+            },
+            {
+              "type": "setRoot",
+              "id": 1
+            }
+          ]
+        }
+      ],
+      "verdicts": [
+        {
+          "surface": "framework.section.engagements",
+          "outcome": "acknowledged",
+          "revision": 1
+        },
+        {
+          "surface": "framework.section.measures",
+          "outcome": "acknowledged",
+          "revision": 1
+        }
+      ],
+      "stored": true,
+      "surfacesAdded": true,
+      "revisions": {
+        "note-navigator": 1,
+        "framework.section.engagements": 1,
+        "framework.section.measures": 1
+      },
+      "sectionsChanged": true,
+      "sections": {
+        "engagements": {
+          "note-navigator": {
+            "status": [
+              {
+                "id": "words",
+                "text": "2 words"
+              }
+            ]
+          }
+        },
+        "measures": {
+          "note-navigator": [
+            {
+              "kind": "toggle",
+              "id": "wrap",
+              "label": "Wrap",
+              "value": true,
+              "onChange": {
+                "controllerId": "note",
+                "action": "setWrap"
+              }
+            }
+          ]
+        }
       }
+    },
+    {
+      "name": "a committed edit moves only the engagements section, in the human's locale",
+      "retained": true,
+      "patches": [
+        {
+          "surface": "framework.section.engagements",
+          "baseRevision": 1,
+          "revision": 2,
+          "ops": [
+            {
+              "type": "setComponent",
+              "id": 2,
+              "component": {
+                "type": "text",
+                "value": "{\"note-navigator\":{\"status\":[{\"id\":\"words\",\"text\":\"3 Wörter\"}]}}",
+                "emphasize": null,
+                "dataAttributes": null
+              }
+            }
+          ]
+        }
+      ],
+      "verdicts": [
+        {
+          "surface": "framework.section.engagements",
+          "outcome": "acknowledged",
+          "revision": 2
+        }
+      ],
+      "stored": true,
+      "surfacesAdded": false,
+      "revisions": {
+        "note-navigator": 1,
+        "framework.section.engagements": 2,
+        "framework.section.measures": 1
+      },
+      "sectionsChanged": true,
+      "sections": {
+        "engagements": {
+          "note-navigator": {
+            "status": [
+              {
+                "id": "words",
+                "text": "3 Wörter"
+              }
+            ]
+          }
+        },
+        "measures": {
+          "note-navigator": [
+            {
+              "kind": "toggle",
+              "id": "wrap",
+              "label": "Wrap",
+              "value": true,
+              "onChange": {
+                "controllerId": "note",
+                "action": "setWrap"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "a window-only frame leaves every section as it was",
+      "retained": true,
+      "patches": [
+        {
+          "surface": "note-navigator",
+          "baseRevision": 1,
+          "revision": 2,
+          "ops": [
+            {
+              "type": "setComponent",
+              "id": 1,
+              "component": {
+                "type": "text",
+                "value": "note-navigator.body 2",
+                "emphasize": null,
+                "dataAttributes": null
+              }
+            }
+          ]
+        }
+      ],
+      "verdicts": [
+        {
+          "surface": "note-navigator",
+          "outcome": "acknowledged",
+          "revision": 2
+        }
+      ],
+      "stored": true,
+      "surfacesAdded": false,
+      "revisions": {
+        "note-navigator": 2,
+        "framework.section.engagements": 2,
+        "framework.section.measures": 1
+      },
+      "sectionsChanged": false,
+      "sections": {
+        "engagements": {
+          "note-navigator": {
+            "status": [
+              {
+                "id": "words",
+                "text": "3 Wörter"
+              }
+            ]
+          }
+        },
+        "measures": {
+          "note-navigator": [
+            {
+              "kind": "toggle",
+              "id": "wrap",
+              "label": "Wrap",
+              "value": true,
+              "onChange": {
+                "controllerId": "note",
+                "action": "setWrap"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "a stale section is refused and reset, and the shell holds no value for it until the resend",
+      "retained": true,
+      "patches": [
+        {
+          "surface": "framework.section.engagements",
+          "baseRevision": 1,
+          "revision": 2,
+          "ops": [
+            {
+              "type": "setComponent",
+              "id": 2,
+              "component": {
+                "type": "text",
+                "value": "{\"note-navigator\":{\"status\":[{\"id\":\"words\",\"text\":\"2 words\"}]}}",
+                "emphasize": null,
+                "dataAttributes": null
+              }
+            }
+          ]
+        }
+      ],
+      "verdicts": [
+        {
+          "surface": "framework.section.engagements",
+          "outcome": "rejected",
+          "revision": 0,
+          "reason": "revisionMismatch"
+        }
+      ],
+      "stored": true,
+      "surfacesAdded": false,
+      "revisions": {
+        "note-navigator": 2,
+        "framework.section.engagements": 0,
+        "framework.section.measures": 1
+      },
+      "sectionsChanged": false,
+      "sections": {
+        "measures": {
+          "note-navigator": [
+            {
+              "kind": "toggle",
+              "id": "wrap",
+              "label": "Wrap",
+              "value": true,
+              "onChange": {
+                "controllerId": "note",
+                "action": "setWrap"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "a section alone never opens a document",
+      "retained": false,
+      "patches": [
+        {
+          "surface": "framework.section.tools",
+          "baseRevision": 0,
+          "revision": 1,
+          "ops": [
+            {
+              "type": "upsert",
+              "id": 2,
+              "key": "c2",
+              "component": {
+                "type": "text",
+                "value": "{}",
+                "emphasize": null,
+                "dataAttributes": null
+              },
+              "layout": {
+                "kind": "leaf",
+                "width": "hug",
+                "height": "hug"
+              },
+              "style": {
+                "variant": "plain",
+                "size": "md",
+                "density": "standard",
+                "tone": "neutral",
+                "emphasis": "regular"
+              },
+              "activity": "idle",
+              "disabled": false,
+              "transition": null,
+              "accessibility": {
+                "label": null,
+                "description": null,
+                "live": "off",
+                "shortcut": null,
+                "hidden": false
+              },
+              "bindings": [],
+              "menu": null,
+              "children": []
+            },
+            {
+              "type": "upsert",
+              "id": 1,
+              "key": "framework.section.tools",
+              "component": {
+                "type": "container",
+                "role": "plain"
+              },
+              "layout": {
+                "kind": "stack",
+                "axis": "vertical",
+                "gap": "none",
+                "padding": {
+                  "all": "none"
+                },
+                "align": "stretch",
+                "justify": "start",
+                "grow": false,
+                "wrap": false
+              },
+              "style": {
+                "variant": "plain",
+                "size": "md",
+                "density": "standard",
+                "tone": "neutral",
+                "emphasis": "regular"
+              },
+              "activity": "idle",
+              "disabled": false,
+              "transition": null,
+              "accessibility": {
+                "label": null,
+                "description": null,
+                "live": "off",
+                "shortcut": null,
+                "hidden": false
+              },
+              "bindings": [],
+              "menu": null,
+              "children": [
+                2
+              ]
+            },
+            {
+              "type": "setRoot",
+              "id": 1
+            }
+          ]
+        }
+      ],
+      "verdicts": [
+        {
+          "surface": "framework.section.tools",
+          "outcome": "rejected",
+          "revision": 0,
+          "reason": "window-surface-unpainted"
+        }
+      ],
+      "stored": false,
+      "surfacesAdded": false,
+      "revisions": {},
+      "sectionsChanged": false,
+      "sections": {}
     }
   ]
 }

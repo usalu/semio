@@ -1624,9 +1624,9 @@ interface TreeRootProps {
   onSelectionChange?: (selectedIds: string[], items: TreeDataItem[]) => void;
   highlightedIds?: readonly string[];
   dragAndDropController?: TreeDragAndDropController;
-  /** 🈳️ What the tree shows while it has no sections — a message or a whole window (Tasks, Chat). It is
-   * CONTENT, so it reads in its own direction (`dir="auto"`): a panel mirrored for its anchor (`useFlow().inline`
-   * `"rtl"` on the right edge) mirrors its chrome, never a sentence — ".No task is running" was measured live. */
+  /** 🈳️ What the tree shows while it has no sections — a message or a whole window (Tasks, Chat). The tree
+   * itself stays `dir="auto"` and left-to-right inline flow, so a right-docked panel can mirror its chrome
+   * without flipping rows. The empty message keeps its own `dir="auto"` so a sentence is never reversed. */
   emptyState?: React.ReactNode;
   indentMultiplier?: number;
   /** 🧭️ `"up"` makes every foldable group in this tree unfold above its own header (children in reverse order), mirroring the {@link Ribbon} `"up"` pattern — for trees hosted in a panel that grows upward. Defaults to `"down"`. */
@@ -3624,7 +3624,6 @@ export const Tree = (({
     throw new Error("Tree only accepts section data through the sections prop.");
   }
   const panelGhost = usePanelGhost();
-  const { inline: treeInline } = useFlow();
   const [sectionItemsById, setSectionItemsById] = reactHostPort.useState<Record<string, TreeDataItem[]>>(() =>
     (sections ?? EMPTY_TREE_SECTIONS).reduce<Record<string, TreeDataItem[]>>((result, section) => {
       if (section.items) {
@@ -4064,53 +4063,55 @@ export const Tree = (({
   const orderedSections = direction === "up" ? [...orderedByPreference].reverse() : orderedByPreference;
 
   return (
-    <TreeStateProvider openStates={openStates} onOpenStateChange={onOpenStateChange}>
-      <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines, isTree: true, indentMultiplier, direction }}>
-        <TreeReorderDropPreview preview={dropPreview} />
-        <div
-          ref={treeRootRef}
-          data-slot="tree"
-          tabIndex={-1}
-          data-tree-presentation={presentation}
-          role="tree"
-          aria-multiselectable={selectionMode === "multiple" ? true : undefined}
-          dir={treeInline}
-          className={`w-full min-w-0 overflow-hidden ${className}`}
-          style={{
-            "--tree-row-height": presentation === "compact" ? "auto" : "var(--size-workbench)",
-            "--tree-row-min-height": presentation === "compact" ? "calc(var(--size-tiny) * 1.5)" : "var(--size-workbench)",
-            "--tree-row-max-height": presentation === "compact" ? "none" : "var(--size-workbench)",
-            "--tree-label-size": presentation === "compact" ? "var(--size-tiny)" : "var(--text-xs)",
-            "--tree-label-line-height": presentation === "compact" ? "1.5" : "1",
-            "--tree-gutter-center": presentation === "compact" ? "50%" : "calc(var(--size-workbench) / 2)",
-            "--tree-inline-control-height": presentation === "compact" ? "var(--size-small)" : "var(--size-medium)",
-            "--tree-value-justify": presentation === "compact" ? "flex-start" : "flex-end",
-            "--tree-value-column": uiSpacingLen(presentation === "compact" ? STYLING_DOM.windowMeasureValueColumnUiSpacing : STYLING_DOM.controlValueColumnUiSpacing),
-          } as React.CSSProperties}
-          onPointerOver={handleTreePointerOver}
-          onPointerLeave={handleTreePointerLeave}
-        >
-          <TreeHoverPathRefreshContext.Provider value={refreshTreeHoverPath}>
-            <TreeSelectionContext.Provider value={selectionStore}>
-              <TreeHighlightContext.Provider value={highlightStore}>
-                <TreeDataRenderingContext.Provider value={treeDataRenderingValue}>
-                  {orderedSections.map((section, sectionIndex) => (
-                    <div key={section.id} data-slot="tree-section-wrapper" className="w-full min-w-0">
-                      <TreeDataSectionView section={section} isLastSection={sectionIndex === orderedSections.length - 1} />
-                    </div>
-                  ))}
-                </TreeDataRenderingContext.Provider>
-              </TreeHighlightContext.Provider>
-            </TreeSelectionContext.Provider>
-          </TreeHoverPathRefreshContext.Provider>
-          {resolvedSections.length === 0 && emptyState ? (
-            <div data-slot="tree-empty-state" dir="auto" className="w-full min-w-0">
-              {emptyState}
-            </div>
-          ) : null}
-        </div>
-      </TreeContext.Provider>
-    </TreeStateProvider>
+    <FlowProvider inline="ltr">
+      <TreeStateProvider openStates={openStates} onOpenStateChange={onOpenStateChange}>
+        <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines, isTree: true, indentMultiplier, direction }}>
+          <TreeReorderDropPreview preview={dropPreview} />
+          <div
+            ref={treeRootRef}
+            data-slot="tree"
+            tabIndex={-1}
+            data-tree-presentation={presentation}
+            role="tree"
+            aria-multiselectable={selectionMode === "multiple" ? true : undefined}
+            dir="auto"
+            className={`w-full min-w-0 overflow-hidden ${className}`}
+            style={{
+              "--tree-row-height": presentation === "compact" ? "auto" : "var(--size-workbench)",
+              "--tree-row-min-height": presentation === "compact" ? "calc(var(--size-tiny) * 1.5)" : "var(--size-workbench)",
+              "--tree-row-max-height": presentation === "compact" ? "none" : "var(--size-workbench)",
+              "--tree-label-size": presentation === "compact" ? "var(--size-tiny)" : "var(--text-xs)",
+              "--tree-label-line-height": presentation === "compact" ? "1.5" : "1",
+              "--tree-gutter-center": presentation === "compact" ? "50%" : "calc(var(--size-workbench) / 2)",
+              "--tree-inline-control-height": presentation === "compact" ? "var(--size-small)" : "var(--size-medium)",
+              "--tree-value-justify": presentation === "compact" ? "flex-start" : "flex-end",
+              "--tree-value-column": uiSpacingLen(presentation === "compact" ? STYLING_DOM.windowMeasureValueColumnUiSpacing : STYLING_DOM.controlValueColumnUiSpacing),
+            } as React.CSSProperties}
+            onPointerOver={handleTreePointerOver}
+            onPointerLeave={handleTreePointerLeave}
+          >
+            <TreeHoverPathRefreshContext.Provider value={refreshTreeHoverPath}>
+              <TreeSelectionContext.Provider value={selectionStore}>
+                <TreeHighlightContext.Provider value={highlightStore}>
+                  <TreeDataRenderingContext.Provider value={treeDataRenderingValue}>
+                    {orderedSections.map((section, sectionIndex) => (
+                      <div key={section.id} data-slot="tree-section-wrapper" className="w-full min-w-0">
+                        <TreeDataSectionView section={section} isLastSection={sectionIndex === orderedSections.length - 1} />
+                      </div>
+                    ))}
+                  </TreeDataRenderingContext.Provider>
+                </TreeHighlightContext.Provider>
+              </TreeSelectionContext.Provider>
+            </TreeHoverPathRefreshContext.Provider>
+            {resolvedSections.length === 0 && emptyState ? (
+              <div data-slot="tree-empty-state" dir="auto" className="w-full min-w-0">
+                {emptyState}
+              </div>
+            ) : null}
+          </div>
+        </TreeContext.Provider>
+      </TreeStateProvider>
+    </FlowProvider>
   );
 }) as TreeComponent;
 
@@ -4508,19 +4509,21 @@ export const ControlTree: React.FC<ControlTreeProps> = ({ controls, filterText =
   const tree = reactHostPort.useMemo(() => buildControlTree(controls, filterText, folderSettings), [controls, filterText, folderSettings]);
   const sorted = reactHostPort.useMemo(() => sortControlTreeNodes(tree), [tree]);
   return (
-    <div data-slot="control-tree" className={cn("w-full min-w-0", classNames?.panel, className)}>
-      <TreeStateProvider>
-        <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
-          {sorted.map((node) =>
-            node.kind === "folder" ? (
-              <ControlTreeFolder key={node.path} node={node} folderSettings={folderSettings} onToggleFolder={onToggleFolder} renderControl={renderControl} classNames={classNames} />
-            ) : (
-              <ControlTreeLeafRow key={node.path} node={node} renderControl={renderControl} classNames={classNames} />
-            ),
-          )}
-        </TreeContext.Provider>
-      </TreeStateProvider>
-    </div>
+    <FlowProvider inline="ltr">
+      <div data-slot="control-tree" dir="auto" className={cn("w-full min-w-0", classNames?.panel, className)}>
+        <TreeStateProvider>
+          <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
+            {sorted.map((node) =>
+              node.kind === "folder" ? (
+                <ControlTreeFolder key={node.path} node={node} folderSettings={folderSettings} onToggleFolder={onToggleFolder} renderControl={renderControl} classNames={classNames} />
+              ) : (
+                <ControlTreeLeafRow key={node.path} node={node} renderControl={renderControl} classNames={classNames} />
+              ),
+            )}
+          </TreeContext.Provider>
+        </TreeStateProvider>
+      </div>
+    </FlowProvider>
   );
 };
 
@@ -4565,10 +4568,11 @@ export const WindowMeasuresTree: React.FC<{ children: React.ReactNode; className
   const orderedChildren = direction === "up" ? React.Children.toArray(children).reverse() : children;
 
   return (
-    <FlowProvider block={direction}>
+    <FlowProvider inline="ltr" block={direction}>
       <div
         ref={treeRootRef}
         data-slot="window-measures-tree"
+        dir="auto"
         data-direction={direction}
         className={cn("pointer-events-auto w-full min-w-0", windowMeasureTreeChromeClass, className)}
         onPointerOver={handleTreePointerOver}

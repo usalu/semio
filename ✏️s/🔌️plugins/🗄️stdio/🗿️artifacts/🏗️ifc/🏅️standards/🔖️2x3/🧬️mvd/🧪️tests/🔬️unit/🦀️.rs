@@ -1,5 +1,5 @@
 use super::*;
-use semio_s_artifact_stdio_step::engine::part21::{Part21Document, Part21Header};
+use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header};
 
 fn snapshot() -> Ifc2x3Snapshot {
     let header = Part21Header {

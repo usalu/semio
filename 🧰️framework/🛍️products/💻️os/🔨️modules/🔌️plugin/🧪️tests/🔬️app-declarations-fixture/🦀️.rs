@@ -340,6 +340,19 @@ pub(crate) mod fixture {
         assert_eq!(opened, expected);
     }
 
+    #[test]
+    fn subset_examples_reach_the_editor_catalogue_without_an_editor_method() {
+        let mut declaration = build_declaration();
+        let leaked: &'static [ExampleSource] = Box::leak(vec![ExampleSource::new("demo", LocalizedLabel::data("Demo"), "semio fixture.dsl v1", "file")].into_boxed_slice());
+        declaration.standards[0].subsets[0].examples = leaked;
+        let projected = project_artifact_declarations(std::slice::from_ref(&declaration));
+        let (app, _) = projected.app_defs.iter().find(|(app, _)| app.definition.role == AppRole::Editor && app.examples.iter().any(|example| example.id() == "demo")).expect("editor row");
+        assert_eq!(app.examples[0].document(), "semio fixture.dsl v1");
+        let body = EditorApp::<Std1AnyEditor>::catalogue_example_document("demo").expect("catalogue").expect("body");
+        assert_eq!(body, "semio fixture.dsl v1");
+        assert!(EditorApp::<Std1AnyEditor>::catalogue_example_document("missing").expect("catalogue").is_err());
+    }
+
     /// 🪪️ A codec call constructs no app: every registered app records the document schema and the codec answers of
     /// its own type, each schema's owners are exactly its own editor and viewer (two of the fixture's six apps), the
     /// one answering is the editor, and a bundle whose every app factory refuses to run answers every codec call of

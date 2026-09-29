@@ -7,7 +7,7 @@ const FIXTURE: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFI
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn fixture_step_snapshot() -> StepSnapshot {
-    let doc = semio_s_artifact_stdio_step::engine::part21::parse_part21(FIXTURE).expect("parse real AP214 fixture");
+    let doc = semio_s_artifact_stdio_contract::part21::parse_part21(FIXTURE).expect("parse real AP214 fixture");
     StepSnapshot::from_part21_document(&doc)
 }
 
@@ -46,7 +46,7 @@ async fn dangling_curve_reference_errors_rather_than_fabricating() {
     // A LINE whose `dir` points at a nonexistent VECTOR must fail loudly, not silently
     // produce a zero direction.
     let bad = FIXTURE.replace("#20=LINE('',#1,#30);", "#20=LINE('',#1,#999);");
-    let doc = semio_s_artifact_stdio_step::engine::part21::parse_part21(&bad).expect("parse");
+    let doc = semio_s_artifact_stdio_contract::part21::parse_part21(&bad).expect("parse");
     let step = StepSnapshot::from_part21_document(&doc);
     let result = semio_framework_plugin::resolve_ready(SemioBrepFromStep::deserialize(&step));
     assert!(result.is_err(), "dangling VECTOR reference must surface as an error, not a fabricated direction");
@@ -56,7 +56,7 @@ async fn dangling_curve_reference_errors_rather_than_fabricating() {
 async fn unsupported_surface_kind_errors_rather_than_fabricating() {
     // Swap PLANE for a surface kind outside this leaf's supported vocabulary.
     let bad = FIXTURE.replace("#16=PLANE('',#40);", "#16=SURFACE_OF_REVOLUTION('',#20,#40);");
-    let doc = semio_s_artifact_stdio_step::engine::part21::parse_part21(&bad).expect("parse");
+    let doc = semio_s_artifact_stdio_contract::part21::parse_part21(&bad).expect("parse");
     let step = StepSnapshot::from_part21_document(&doc);
     let result = semio_framework_plugin::resolve_ready(SemioBrepFromStep::deserialize(&step));
     assert!(result.is_err(), "an unsupported surface entity must error, never silently become a Plane");

@@ -4,7 +4,7 @@
   "title": "JackDiff",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "name", "manifestId", "manifest", "camera", "content", "rootNodeId"],
+  "required": ["schema", "name", "manifestId", "manifest", "camera", "content", "rootNodeId", "query"],
   "properties": {
     "schema": { "type": ["string", "null"], "x-semio-state": "artifact" },
     "name": { "type": ["string", "null"], "x-semio-state": "artifact" },
@@ -31,6 +31,7 @@
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio"
     },
-    "rootNodeId": { "type": ["string", "null"], "x-semio-state": "artifact" }
+    "rootNodeId": { "type": ["string", "null"], "x-semio-state": "artifact" },
+    "query": { "type": ["string", "null"], "x-semio-state": "artifact" }
   }
 }

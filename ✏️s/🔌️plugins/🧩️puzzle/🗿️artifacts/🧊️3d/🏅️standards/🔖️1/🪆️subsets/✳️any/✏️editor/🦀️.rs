@@ -681,6 +681,25 @@ pub fn mesh_selection_ids(args: Option<&Value>, fallback: &[String]) -> Vec<Stri
     args.and_then(|value| value.get("ids")).and_then(|value| dsl::FromValue::from_value(json::to_dsl_value(value)).ok()).filter(|ids: &Vec<String>| !ids.is_empty()).unwrap_or_else(|| fallback.to_vec())
 }
 
+/// 🙈️ The flag a set-verb sets to exactly the boolean its arguments carry (`setSelectionHidden{hidden}`,
+/// `setSelectionLocked{locked}`) — the row target's explicit next state, so a stale view sets a value and never flips one.
+fn puzzle3d_flag_value_argument(action: &str) -> Option<&'static str> {
+    match action {
+        "setSelectionHidden" => Some("hidden"),
+        "setSelectionLocked" => Some("locked"),
+        _ => None,
+    }
+}
+
+/// 🙈️ A set-verb's definition: the explicit `{entity, ids}` a row names (or, left empty, the live selection) and the REQUIRED
+/// boolean `flag` it sets — a missing value is refused, never defaulted.
+fn puzzle3d_flag_value_action(id: &str, flag: &str, label: LocalizedLabel, value: LocalizedLabel) -> ActionDefinition {
+    ActionDefinition::bounded_catalog(id, label, ActionKind::Mutation)
+        .category("hand")
+        .with_args([ActionArgDef::text("entity", LocalizedLabel::native("Entity", "Entität")), ActionArgDef::text_list("ids", LocalizedLabel::native("Ids", "IDs")), ActionArgDef::toggle(flag, value).required()])
+        .in_palette(false)
+}
+
 /** 🧭️ Whether `handle` may emit VCS operations from a fixture before/after delta — view-only actions skip the persisted artifact snapshot entirely. */
 fn puzzle3d_action_artifact_intent(action: &str) -> bool {
     matches!(
@@ -694,6 +713,8 @@ fn puzzle3d_action_artifact_intent(action: &str) -> bool {
             | "scaleSelection"
             | "worldRelocate"
             | "setSelectionFlag"
+            | "setSelectionHidden"
+            | "setSelectionLocked"
             | "patchInspector"
             | "engagementSubmit"
             | "engagementRepeatLast"
@@ -2496,7 +2517,7 @@ pub fn puzzle3d_command_scope_class(action: &str) -> Puzzle3dScopeClass {
         "registerBrushMesh" | "exportFixture" | "openImportFixture" | "targetBrushSuggestions" => Puzzle3dScopeClass::Quiet,
         "setActiveUtility" | "setActiveTool" => Puzzle3dScopeClass::Viewport,
         "selectSameKindSelection" => Puzzle3dScopeClass::Selection,
-        "duplicateSelection" | "deleteSelection" | "translateSelection" | "rotateSelection" | "scaleSelection" | "patchInspector" | "setSelectionFlag" | "setTargetVolumeFlag" | "deleteAttraction" | "deleteTargetVolume" | "createAttraction"
+        "duplicateSelection" | "deleteSelection" | "translateSelection" | "rotateSelection" | "scaleSelection" | "patchInspector" | "setSelectionFlag" | "setSelectionHidden" | "setSelectionLocked" | "setTargetVolumeFlag" | "deleteAttraction" | "deleteTargetVolume" | "createAttraction"
         | "worldRelocate" | "relocateTargetVolume" | "addObjectKind" | "addTargetVolume" | "importFixture" => Puzzle3dScopeClass::Artifact,
         "setActiveExample" => Puzzle3dScopeClass::Chrome,
         _ => Puzzle3dScopeClass::Chrome,
@@ -2622,6 +2643,8 @@ puzzle3d_command_variants! {
     SetChunkSize = "setChunkSize",
     SetSelectableKind = "setSelectableKind",
     SetSelectionFlag = "setSelectionFlag",
+    SetSelectionHidden = "setSelectionHidden",
+    SetSelectionLocked = "setSelectionLocked",
     PatchInspector = "patchInspector",
     FocusSelection = "focusSelection",
     EngagementInput = "engagementInput",
@@ -2691,6 +2714,8 @@ impl protocol::OpBinary for Puzzle3dCommand {
         "setChunkSize",
         "setSelectableKind",
         "setSelectionFlag",
+        "setSelectionHidden",
+        "setSelectionLocked",
         "patchInspector",
         "focusSelection",
         "engagementInput",
@@ -3647,6 +3672,8 @@ fn dispatch_puzzle3d_action(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args:
         "importFixture" => import_fixture::import_fixture(ctx, args),
         "openImportFixture" => open_import_fixture::open_import_fixture(ctx),
         "setSelectionFlag" => set_selection_flag::set_selection_flag(ctx, args),
+        "setSelectionHidden" => set_selection_flag::set_selection_flag_value(ctx, args, "hidden"),
+        "setSelectionLocked" => set_selection_flag::set_selection_flag_value(ctx, args, "locked"),
         "patchInspector" => patch_inspector::patch_inspector(ctx, args),
         "createAttraction" => create_attraction::create_attraction(ctx, args),
         "deleteAttraction" => delete_attraction::delete_attraction(ctx, args),
@@ -3758,6 +3785,8 @@ pub(crate) const PUZZLE3D_RETAINED_TOOL_IDS: &[&str] = &[
     "rotateSelection",
     "scaleSelection",
     "setSelectionFlag",
+    "setSelectionHidden",
+    "setSelectionLocked",
     "setTargetVolumeFlag",
     "translateSelection",
     "worldRelocate",
@@ -3800,7 +3829,7 @@ pub(crate) const PUZZLE3D_RETAINED_TOOL_IDS: &[&str] = &[
     "targetBrushSuggestions",
     "toggleSun",
 ];
-const PUZZLE3D_RETAINED_PAYLOAD_SCHEMA: &str = "puzzle.3d.fixture.tool-command.v1";
+const PUZZLE3D_RETAINED_PAYLOAD_SCHEMA: &str = "puzzle.3d.tool-command.v1";
 
 fn puzzle3d_retained_extent(command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
     if matches!(command.action_id(), "addTargetVolume" | "openAddObjectDialog" | "worldPointerDown" | "transformBegin" | "transformEnd") {
@@ -7178,7 +7207,7 @@ impl ToolJobFactory for Puzzle3dRetainedCommandJobFactory {
 impl ArtifactOwnedToolJobFactory for Puzzle3dRetainedCommandJobFactory {
     type Owner = EditorApp<Puzzle3dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = PUZZLE3D_RETAINED_TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = PUZZLE3D_FIXTURE_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = crate::PUZZLE_3D_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
         ArtifactToolPublicationContract { tool_id: "openAddObjectDialog", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "worldPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -7202,6 +7231,8 @@ impl ArtifactOwnedToolJobFactory for Puzzle3dRetainedCommandJobFactory {
         ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "setSelectionFlag", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setSelectionHidden", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setSelectionLocked", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "setTargetVolumeFlag", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "worldRelocate", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -7622,14 +7653,14 @@ impl Puzzle3dRetainedCommandProofs {
         owner: EditorApp<Puzzle3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.puzzle.puzzle3d@1/*#editor",
-        artifact_schema: "puzzle.3d.fixture",
+        artifact_schema: "puzzle.3d",
         factory: "Puzzle3dRetainedCommandJobFactory",
         factory_type: Puzzle3dRetainedCommandJobFactory,
         contract: semio_framework::ToolExecutionContract::resumable(PUZZLE3D_IMPORT_RAW_BYTES, PUZZLE3D_IMPORT_DECODED_ITEMS, 1, crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES, crate::retained_command::PUZZLE_COMMAND_STEP_MICROS, 1, 1),
         tools: [
             "openAddObjectDialog", "worldPointerDown", "transformBegin", "transformEnd", "setActiveExample", "setFillCount",
             "addTargetVolume",
-            "acceptSuggestion", "addBrushObject", "addObjectKind", "createAttraction", "deleteAttraction", "deleteSelection", "deleteTargetVolume", "duplicateSelection", "exportFixture", "importFixture", "openImportFixture", "patchInspector", "rotateSelection", "scaleSelection", "setSelectionFlag", "setTargetVolumeFlag", "translateSelection", "worldRelocate", "relocateTargetVolume",
+            "acceptSuggestion", "addBrushObject", "addObjectKind", "createAttraction", "deleteAttraction", "deleteSelection", "deleteTargetVolume", "duplicateSelection", "exportFixture", "importFixture", "openImportFixture", "patchInspector", "rotateSelection", "scaleSelection", "setSelectionFlag", "setSelectionHidden", "setSelectionLocked", "setTargetVolumeFlag", "translateSelection", "worldRelocate", "relocateTargetVolume",
             "closeVortexSuggestions", "cycleBrushCandidate", "cycleBrushCandidateBack", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementRepeatLast", "engagementSubmit", "focusSelection", "hoverSuggestion", "openVortexSuggestions", "registerBrushMesh", "selectSameKindSelection", "setBrushPlacementContactTolerance", "setCamera", "setChunkSize", "setGridSnapEnabled", "setGridSpacing", "setGridVisible", "setLodAutomatic", "setLodDepthVariable", "setLodManual", "setObjectKindWeight", "setProjection", "setProjectionParam", "setProximityRadius", "setSelectableKind", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setTransformGumballFlag", "setVortexDirection", "setVortexKindWeight", "setVortexShow", "setVoxelDims", "targetBrushSuggestions", "toggleSun",
         ]
     }
@@ -7647,7 +7678,7 @@ impl Puzzle3dHostConfigurationProofs {
         owner: EditorApp<Puzzle3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.puzzle.puzzle3d@1/*#editor",
-        artifact_schema: "puzzle.3d.fixture",
+        artifact_schema: "puzzle.3d",
         factory: "BoundedFirstStepCommandJobFactory",
         contract: semio_framework::ToolExecutionContract::resumable(8_192, 8, 1, 8_192, 7_500, 1, 1),
         tools: ["setActiveTool", "setActiveUtility"]
@@ -7765,7 +7796,7 @@ impl ArtifactReservedJob for Puzzle3dClipboardJob {
 
 impl ArtifactEditor for Puzzle3dPlayApp {
     const DIALECT: Dialect = crate::PUZZLE3D_DIALECT;
-    const DOCUMENT_SCHEMA: &'static str = PUZZLE3D_FIXTURE_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = crate::PUZZLE_3D_SCHEMA;
     type Snapshot = Puzzle3dPlaySnapshot;
     type Mutation = Puzzle3dMutation;
     type Config = Puzzle3dConfig;
@@ -8029,6 +8060,9 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     /// enum until React and wgpu send `OpBinary` command bytes directly.
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
         let window_id = args.and_then(|value| value.get("windowId").or_else(|| value.get("window_id"))).and_then(dsl::DslValue::as_str).map(str::to_string);
+        if let Some(flag) = puzzle3d_flag_value_argument(action) {
+            args.and_then(|value| value.get(flag)).and_then(dsl::DslValue::as_bool).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("puzzle3d.action.flag-value-required"), format!("action '{action}' requires the boolean '{flag}' it sets")))?;
+        }
         let args = args.map(json::from_dsl_value);
         Puzzle3dCommand::from_action(action, args, window_id).ok_or_else(|| Fault::from(format!("unknown Puzzle 3D action '{action}'")))
     }
@@ -8496,6 +8530,8 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .mutation("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"))
             .mutation("worldRelocate", puzzle3d_localized_phrase(|l| l.object, |w| format!("Relocate {w}"), |w| format!("{w} verlagern")))
             .action_with(ActionDefinition::bounded_catalog("setSelectionFlag", LocalizedLabel::native("Set Selection Flag", "Auswahlmarkierung festlegen"), ActionKind::Mutation).category("hand"))
+            .action_with(puzzle3d_flag_value_action("setSelectionHidden", "hidden", LocalizedLabel::native("Set Hidden", "Verborgen festlegen"), LocalizedLabel::native("Hidden", "Verborgen")))
+            .action_with(puzzle3d_flag_value_action("setSelectionLocked", "locked", LocalizedLabel::native("Set Locked", "Gesperrt festlegen"), LocalizedLabel::native("Locked", "Gesperrt")))
             .mutation("patchInspector", LocalizedLabel::native("Patch Inspector", "Inspektor aktualisieren"))
             .mutation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
             .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
@@ -8703,6 +8739,8 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setProximityRadius", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setSelectableKind", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setSelectionFlag", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSelectionHidden", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSelectionLocked", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setSunAzimuth", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setSunElevation", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setSunIntensity", semio_framework_plugin::InteractiveJobClassification::Migrated)
@@ -8730,6 +8768,8 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("openImportFixture", LocalizedLabel::native("Opens the host's file picker for a 3D puzzle JSON file; the chosen file then replaces the whole puzzle.", "Öffnet die Dateiauswahl des Hosts für eine 3D-Puzzle-JSON-Datei; die gewählte Datei ersetzt dann das gesamte Puzzle."))
             .action_describe("importFixture", LocalizedLabel::native("Replaces the whole 3D puzzle with one read from an imported JSON file; the previous puzzle is discarded.", "Ersetzt das gesamte 3D-Puzzle durch eines aus einer importierten JSON-Datei; das bisherige Puzzle wird verworfen."))
             .action_describe("setSelectionFlag", LocalizedLabel::native("Sets one flag (such as hidden or locked) on the given or selected objects.", "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen oder ausgewählten Objekte."))
+            .action_describe("setSelectionHidden", LocalizedLabel::native("Sets the given or selected objects hidden or shown, to exactly the value passed; repeating it changes nothing.", "Verbirgt die angegebenen oder ausgewählten Objekte oder zeigt sie, genau auf den übergebenen Wert; eine Wiederholung ändert nichts."))
+            .action_describe("setSelectionLocked", LocalizedLabel::native("Sets the given or selected objects locked or unlocked, to exactly the value passed; repeating it changes nothing.", "Sperrt die angegebenen oder ausgewählten Objekte oder entsperrt sie, genau auf den übergebenen Wert; eine Wiederholung ändert nichts."))
             .action_describe("acceptSuggestion", LocalizedLabel::native("Places the suggested piece chosen from the suggestion list (by index, or the highlighted one) at its connection point.", "Setzt das aus der Vorschlagsliste gewählte Teil (per Index oder das hervorgehobene) an seinem Anschlusspunkt."))
             .action_describe("selectSameKindSelection", LocalizedLabel::native("Extends the selection to every piece of the same kind as the selected one.", "Erweitert die Auswahl auf alle Teile derselben Art wie das ausgewählte."))
             .action_describe("toggleSun", LocalizedLabel::native("Switches the 3D view's sun light on or off; only the view changes.", "Schaltet das Sonnenlicht der 3D-Ansicht ein oder aus; nur die Ansicht ändert sich."))

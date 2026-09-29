@@ -1,0 +1,40 @@
+{
+ "plugin": "trinity",
+ "dir": "🔱️trinity",
+ "apps": [
+  {
+   "app": "s.trinity.jack@1/*#editor",
+   "examples": [
+    {
+     "id": "branch-chain",
+     "document": "distinct"
+    },
+    {
+     "id": "demo",
+     "document": "distinct"
+    }
+   ]
+  },
+  {
+   "app": "s.trinity.rewriting@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "semio_s_artifact_trinity_jack::editor::jack::TrinityJackPlayApp",
+   "create": "semio_s_artifact_trinity_jack::editor::jack::create_trinity_jack_app",
+   "app": "s.trinity.jack@1/*#editor"
+  },
+  {
+   "editor": "semio_s_artifact_trinity_rewriting::editor::rewriting::TrinityRewritingPlayApp",
+   "create": "semio_s_artifact_trinity_rewriting::editor::rewriting::create_rewriting_app",
+   "app": "s.trinity.rewriting@1/*#editor"
+  }
+ ]
+}

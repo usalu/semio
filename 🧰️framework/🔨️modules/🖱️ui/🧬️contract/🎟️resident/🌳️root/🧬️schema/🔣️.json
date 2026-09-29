@@ -95,7 +95,7 @@
           "const": 8388608
         },
         "pressureAggregateBytes": {
-          "const": 52559872
+          "const": 54001664
         },
         "slotReuseRequiresTypedTerminal": {
           "const": true

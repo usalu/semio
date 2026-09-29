@@ -7,6 +7,41 @@ wasm32 only via `📜️fleet-mutex.sh wasm l1` (default build-dir = warms the n
 [📓️landing.md](📓️landing.md) § Session 14 (one row per set). L1 never rewrites another slice's patch logic: a red set is reverted
 (its own `--revert` or L1's byte backup) and routed to its owner via `RELAY <slice>:` to main.
 
+## Session 15
+
+Successor L1 (2026-09-29 19:1x, Opus 5.5). Rules: `📓️session-15-preamble.md` (29–33) + session-14 rules 1–28. GUEST FREEZE ON until
+"WINDOW 5 OPEN" in `📓️fleet-15-agents.md`. Captures `.🧬semio/🌐hub/s14-l1-logs/T6R4*`, records `.🧬semio/🌐hub/s14-l1-backup/<set>/`.
+
+| # | Item | State |
+|---|---|---|
+| R | reconcile predecessor (died ~18:45) | **done 19:2x**: last L1 step = T6R3a GREEN 18:15 + report 18:2x; no L1 process alive, no record without manifest; round-3a after-images vs live: every mismatch is a LATER set of the same round (u6-row-target rewrote c13-p3 files 17:36, wg11-marketplace rewrote u6's wgpu Shell) — C13 p3 dry run answers `already applied` ×7 → no torn file |
+| 1 | which t6-queue rows already landed | **done**: records + rc 0 for R1 (1, 2, 6b, 7 ×12, T7a, T7b, 9, 11, 13, 14, 15), R2 (3, 3b, 4–5c), R3a (16, 17 H14, 6, 8); `📓️t6-queue.md` gained a Landed column + status line |
+| 2 | round-4 manifest + live dry runs | **done 19:4x**: `wp-l1/w3-trains.json` train **T6R4** (9 sets, order below) + **T6R5** (row 12); `l1-train.py dry` of all 9 on live **rc 0, 0 problems** (`s14-l1-logs/T6R4/*-dry.txt`); composition proven on an L1 mini tree (copies of the 347 touched files + stdio protocols): every write rc 0 in order |
+| 3 | combined proof commands | **ready**: `zsh wp-l1/l1-proof.sh T6R4` (native 228 + 59 features → wasm32-wasip2 178 → wasm32-unknown-unknown renderer + kernel → tsc os/ui-react/renderer-react/hub → boot 6700); every R4 Rust crate (76) is inside the 228 native list, all but os-mcp (host) inside the wasm list |
+| 4 | WINDOW 5: land R4 → R5 row 12 → (T7 rides R4) | waiting on WINDOW 5 OPEN |
+
+**Round 4 order (T6R4):** c13-p4-ephemeral (18) → lb2-p2-declared-arguments → lb2-p2b-plugin-calls → c12-hub-order (21) → sh2-p2-space-activity
+(20) → u6-e1-paged-docx (19) → s18-draw-layer-status (22) → p9-jack-headless-query (T7c) → lb2-p17-pack-schema-identity (T7d). Shared files:
+SDK `🔌️plugin/🦀️.rs` (c13-p4, lb2-p2, lb2-p17), store `🏪️store/🦀️.rs` (c12, u6-e1, lb2-p17), ShellHost / wgpu Shell / os `🟦️.ts` /
+backbone-envelope-io (c12, sh2 → SH2's apply 3-way merges them clean), space surface test (lb2-p2b, sh2). Not idempotent after write:
+u6-e1 (removal target), lb2-p17 (anchors consumed), sh2 (3-way files re-merge) → never re-run; `l1-run.sh` skips recorded sets.
+**R4 RUNBOOK (after GREEN):** describe regen space (SH2), draw (S18), trinity (P9), stdio + 9 families (LB2 p17, U6 E1) — the SDK changed
+(c13-p4, lb2-p2, lb2-p17) so every guest component rebuilds → chain #3 = full rebuild-all + publish all; taxonomy registration of the new
+dirs (SH2 `👁️viewer/🫧️transient/**` + case dir + `🕒️document-activity-v1.json`, C12 `🧭️hub-order` fixture/schema, LB2 p2b stdio
+`🧪️tests/🔑️declared-arguments`, S18 `🧫️fixtures/🔢️layer-status` + `🧪️tests/🔢️layer-status`, U6 E1 stdio-contract `✏️editing/🏗️structural`).
+
+### Log 15
+
+- 19:1x start: read preambles 15 + 14 (1–28), `📓️t6-queue.md`, `📓️fleet-15-agents.md`, own 14c table/log, landing tail.
+- 19:2x reconcile (table R). Lanes: native held by U6 orphan r6-base (60943), queued S19/LW1/G12; overlay LB2 p17-s1 (70960); wasm = chain 57946
+  (hold 57953, rebuild-all components); load 24–28.
+- 19:2x–19:4x live dry runs (captures `.🧬semio/🌐hub/s14-l1-logs/T6R4/`): C13 p4 2 files / 0 problems; C12 hub-order 86 ops / 0; SH2 P2 123/123 apply,
+  0 conflicts; P9 T7c 22 hunks / 4 files (after P9's 19:4x fix); LB2 p17 116 / 0; LB2 p2 1 file / 3 hunks / 0; p2b 38 files / 0; U6 E1 12 + 1 new +
+  1 removed, faults 0; S18 row 22 8 changes / 0. Composition on a mini tree (scratchpad `compose2`, set scripts with backups redirected to the
+  scratchpad): all 8 multi-file writes rc 0 in the R4 order; p17 dry clean after c13-p4 + c12 + sh2 (first test) and wrote clean last.
+- 19:4x manifest T6R4/T6R5 appended to `wp-l1/w3-trains.json`; `l1-train.py dry` ×9 rc 0; `wp-l1/l1-proof.sh` written; t6-queue Landed column;
+  stale 14c notes fixed (p9/p11/p12 "ON HOLD" → superseded, landed R2).
+
 ## Session 14c
 
 | Train | Sets | State |
@@ -18,7 +53,12 @@ wasm32 only via `📜️fleet-mutex.sh wasm l1` (default build-dir = warms the n
 | T2 | stdio: st2-code (40) · st2-r10 (R10, 9 + 9 new + move) · cx1 (34, generation 7d60c569…) · nx1b-rebuild (1) · lb2-p5 (12) · u6-dead-docx-xlsx (10) · u6-txt-replace-lowering (7) · u6-wav-kind-retag (2) · lb2-p3-wg11 (17) | **GREEN 04:27**: native 53 crates green except pre-existing docx/xlsx lib-test drift (fixed later by U6); lb2-p3-wg11 reverted (re-landed in T3-late with U6's capacity fix); wasm32 50 rc 0; stdio + 9 families describe + generate rc 0 after `l1-stdio-semio-strip`; os/hub tsc 0; boot ok |
 | T3 | **GREEN 05:37** (c12-splice out; w4 ×2 + t14-kind-choices re-landed 06:15 and proven with T4) — 33 sets: c13-p1/p2 · u6 fragment/bcf-mesh/fault-terminal · sh2 space-home (80) + b1 (44) · s18 twin · wg11 reseed/board/a11y/harness/replay-routes/offer-scope/shell-turn · c12 splice + child-payload · av2 · en2 (12 sets) · s19 norm ×4 + flow-extensions · s20 cad/process/silent · w4 kind-specs + codec-gate · t14 kind-choices · lb2-p3-wg11 (re-landed, U6 capacity fix) · u6 xlsx-canonical-save + docx-set-page-owner | **all written 04:28–04:48**; os tsc 0; R10 taxonomy for the new dirs 04:48; combined native check 193 crates running (`s14-l1-logs/T3-native-1.txt`), then wasm32 176, renderer, p5 fixture writers, boot. Descriptors of T3 plugins are left to the next chain's rebuild-all (R10's registry probe red on stale space/animate descriptors = expected) |
 | pre-chain | R10 T5 codemods (1 475 files: [DEBUG]→[TRACE] 1 931, comment hoist 1 333, @emoji 9 155) + c12-splice (58) + `l1-c12-test-import` | **PRE-CHAIN GREEN 07:18**: native 228 crates green except pre-existing value-derive `flatten_with_skip` test (untouched, unowned); wasm32 178 rc 0; renderer rc 0; os tsc 0 (+7 other programs 0; 9 standalone package tsconfigs only pre-existing config-class errors, no syntax class); boot ok |
-| T6 (queued, post-chain) | **LB2 p9/p11/p12 ON HOLD (LB2 08:3x: scratch s9 red — shipped_fleet 4/6, editor_catalog 59/90; p9 grows again)** · LB2 p9 hosted-artifacts (49) → p11 editor-documents (32) → p12 document-schema-identity (24) (revert reverse; shared: p9∩p12 gif root, p11∩p12 gif 89a editor/viewer) · H14 retire-pages · WG11 json-number · U6 (a') row-target | coordinator 07:1x + LB2 07:2x–07:4x; LB2's test-only p10 (editor_catalog law + fixture, 2 files disjoint from p9/p11/p12) lands by LB2 under rule 22; family `descriptor_is_fresh` on LB2's scratch: 7/9 unchanged, stdio-image + stdio-pdf change (p12) → T6 describe = stdio + image + pdf; LB2 p9 grew to 55 files (kernel store/io schema docs, SDK `schema_documents`, framework schema inference export) → kernel-wide, full guest proof; P9 `p9-fail-closed` (8 files, SDK agent lane fails closed) queued after LB2's sets |
+| T6 round 1 (window 4) | 22 sets: h14-retire-pages · h13-vcs-removal-w4 · u6-stdio-wire-drift · wg11 ×14 (json-number … board-lane + T7a text-advances + T7b text-kerning) · c12-sdk-composition · c12-jack-query-document · cd1-brep-invoke · cd1-typology · p9-fail-closed | **GREEN 16:12**: written 15:39–15:50; taxonomy probe valid; native 228 crates rc 0 (774 s, incl. the formerly red value-derive test); wasm32 178 rc 0 (294 s); renderer rc 0 (135 s); tsc os/ui-react/renderer-react/repo 0; boot ok (10 s) |
+| T6 round 2 | LB2 row 3 (p9 58, p15 25) · 4 (p11 118) · 5 (p12 27) · 5a (p13 13) · 5b (p14 5) · 5b2 (p16 105) · 5c (p10 2) · typegen regen (framework-rs:generate) · S19 row 3b hosted-surfaces (16) | written 16:13–17:07; proof 1: native red only note (p11 renamed png `empty_png_snapshot` → `blank_png_snapshot`) + os host-unit test (p15's name-keyed anchor hit the AppDefinition literal) → LB2 in-tree hotfixes 17:0x; wasm32 red only note; os/hub tsc 0. Re-proof **GREEN 17:33**: native 228 rc 0 (812 s), wasm32 178 rc 0 (460 s), renderer rc 0, os/hub tsc 0, pptx demo fixtures rewritten (p13 runbook, 2 assets), boot ok. Describe regen left to the publish (stdio + 9 families + demonstrator) |
+| T6 round 3a | c13-p3-a (4) · c13-p3-b (1, SDK guard) · h14-rust-link-live-socket (2) · u6-row-target (145, rebased) · ui-contract-rs + framework-rs typegen · wg11-marketplace-window (2) | **GREEN 18:15**: native 228 rc 0 (556 s), wasm32 178 rc 0, wasm32-unknown-unknown renderer + os-kernel rc 0, tsc os/ui-react/renderer-react/hub 0, boot ok. Open: C13 B's describe-level proof (assembly guard) = next full describe |
+| chain (T6) | coordinator 18:2x: next all-packages chain on the round-3a tree (catalog `s14-w4-catalog-t6`, root `s14-w4-hub-7800-t6`); its describe step is C13 part B's proof — if B names a drift, L1 reverts B (1 SDK file) and relays C13. GUEST FREEZE until publish: row 12 (S20 faults) + C13 p4 prepared only | chain #2 running in session 15 (see `## Session 15`) |
+| T6 round 3 (superseded by 3a) | U6 row 6 row-target → WG11 row 8 Marketplace → S20 row 12 faults (last) | 17:3x U6 row 6 dry run on the post-round-2 tree: FAULT ×44, all read faults in the gitignored `🛂️manifest/🤖️generated/🪪️manifest/🟦️.ts` (regenerated by round 2's typegen) → RELAY U6 (drop the generated-file hunks, L1 regenerates after the write); row 8 anchors on row 6's post-state |
+| T6 (queued, post-chain) — SUPERSEDED: p9/p11/p12 + H14 retire-pages + WG11 json-number + U6 row-target all LANDED (R1 16:12 / R2 17:33 / R3a 18:15) | ~~LB2 p9/p11/p12 ON HOLD (LB2 08:3x: scratch s9 red — shipped_fleet 4/6, editor_catalog 59/90; p9 grows again)~~ · LB2 p9 hosted-artifacts (49) → p11 editor-documents (32) → p12 document-schema-identity (24) (revert reverse; shared: p9∩p12 gif root, p11∩p12 gif 89a editor/viewer) · H14 retire-pages · WG11 json-number · U6 (a') row-target | coordinator 07:1x + LB2 07:2x–07:4x; LB2's test-only p10 (editor_catalog law + fixture, 2 files disjoint from p9/p11/p12) lands by LB2 under rule 22; family `descriptor_is_fresh` on LB2's scratch: 7/9 unchanged, stdio-image + stdio-pdf change (p12) → T6 describe = stdio + image + pdf; LB2 p9 grew to 55 files (kernel store/io schema docs, SDK `schema_documents`, framework schema inference export) → kernel-wide, full guest proof; P9 `p9-fail-closed` (8 files, SDK agent lane fails closed) queued after LB2's sets |
 | T4 | c12-catchup-status (6) · h14-codec-origin (3, 3-way merge over G12's plugin-host edit) · z4-b123 (12) · z4-lifecycle (18) · r10-png (3) · r10-zip (9) · r10-image (2) · r10-three (4) (+ H13 refill + G12 live catalog landed as T1a) | **written 05:37–05:39**; R10 taxonomy 05:49; native 196 crates **rc 0** (469 s, 0 errors — docx/xlsx tests compile now), wasm32-wasip2 177 **rc 0** (204 s), renderer wasm32-unknown-unknown **rc 0** (97 s), os tsc 0, hub tsc 0. T3-late re-land 06:14–06:15 (w4-kind-specs 39, w4-codec-gate 3, t14-kind-choices 3; T14 scratch-proven) → combined re-check: native 196 **rc 0** (425 s), wasm32 177 **rc 0** (202 s), renderer **rc 0** (75 s), os tsc 0, boot to Home ok (6 s, 0 faults) ⇒ **T4 GREEN 06:32** (c12-splice still out, waiting for C12) |
 
 ### Pre-existing reds (T1 baseline, before any T1 write)
@@ -203,4 +243,13 @@ feature). Not caused by any window-3 set; errors in these files are excluded fro
   imported `settle_framework_reserved_admission` from the wrong module (revert not clean: T5 touched 4 of its files) → L1 test-only
   import fix, writer re-check rc 0; value-derive `flatten_with_skip` = pre-existing. 07:09–07:17 wasm32 178 + renderer rc 0; 07:18
   os tsc 0 + boot ok ⇒ **PRE-CHAIN GREEN** relayed.
+- 15:3x WINDOW 4 OPEN (p33 on 7800); read rules 25–27 + `📓️t6-queue.md`. Round 1 = rows 1, 2 (H13 patch via plain `patch -p1 -E`), 6b, 7 (all
+  12 WG11 scripts in the listed order), T7a, T7b, 11, 13, 14, 15, 9 (P9 overlay-t6-4 EXIT 0 13:30 = proven). All dry runs clean; landed 15:39–15:50;
+  16:12 round 1 GREEN (see table).
+- 16:13–16:23 round 2 LB2 rows 3–5c landed; 16:24–16:33 typegen regen (rc 0; the manifest TS is gitignored → not in the record);
+  16:37–16:58 native: note E0432 (p11 rename) + os host-unit E0063/E0560 (p15 anchor) → RELAY LB2 → hotfixed in-tree 17:0x;
+  16:58–17:05 wasm32: only note. 17:07 S19 row 3b landed (proven: `s14-s19-logs/t6-proof-2.txt`). 17:08 re-proof launched.
+- 17:34–18:15 round 3a (rows 16 A+B, 17 H14, U6 row 6 rebased + both typegens, WG11 row 8) GREEN; the 18-min typegen record caught 28
+  concurrent peer host edits → forgotten (generated outputs are gitignored). 18:2x coordinator chose (b): the next chain's describe
+  proves C13 part B; freeze until publish.
 - 21:5x S20 relay: chunk-staging phase 2 ready (`s20-patch-chunk-staging-2.py`, 27 files) → both phases land in ONE T1 step (hold lifted).

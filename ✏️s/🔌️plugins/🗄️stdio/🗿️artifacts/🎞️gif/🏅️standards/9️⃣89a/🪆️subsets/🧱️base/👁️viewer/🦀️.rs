@@ -8,7 +8,7 @@ use crate::standards::v89a::subsets::any::schema::mutations::GifMutation;
 use crate::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
 use crate::viewer::gif_89a::modes::view;
 use crate::viewer::gif_89a::modes::view::windows::main;
-use crate::{GIF_89A_DIALECT, STDIO_GIF_DOCUMENT_SCHEMA};
+use crate::{GIF_89A_DIALECT, STDIO_GIF89A_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 
@@ -45,10 +45,10 @@ impl ArtifactViewer for Gif89aViewer {
     type Command = Gif89aViewCommand;
 
     const DIALECT: Dialect = GIF_89A_DIALECT;
-    const DOCUMENT_SCHEMA: &'static str = STDIO_GIF_DOCUMENT_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = STDIO_GIF89A_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> Self::Snapshot {
-        GifSnapshot::default()
+        crate::standards::v89a::subsets::any::schema::blank_gif_snapshot()
     }
 
     fn handle(

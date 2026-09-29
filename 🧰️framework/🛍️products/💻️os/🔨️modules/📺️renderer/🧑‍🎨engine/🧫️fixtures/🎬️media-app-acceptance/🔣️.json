@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "plugin": "stdio-media",
+  "example": "demo",
+  "role": "viewer",
+  "mode": "view",
+  "cases": [
+    {
+      "id": "wav-viewer",
+      "app": "s.stdio.wav@riff-pcm/*#viewer",
+      "kind": "audio",
+      "mediaType": "audio/wav"
+    },
+    {
+      "id": "mp4-viewer",
+      "app": "s.stdio.mp4@isobmff/*#viewer",
+      "kind": "video",
+      "mediaType": "video/mp4"
+    }
+  ],
+  "capability": "unsupported",
+  "reason": {
+    "en": "Encoded playback export is not registered for this app.",
+    "de": "Der kodierte Wiedergabeexport ist für diese App nicht registriert."
+  }
+}

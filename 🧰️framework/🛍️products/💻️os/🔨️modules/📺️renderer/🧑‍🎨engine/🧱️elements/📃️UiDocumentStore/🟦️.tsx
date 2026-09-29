@@ -30,6 +30,8 @@ import {
   type MenuRef,
   type PatchRejection,
   type QuotaKind,
+  type RowAction,
+  type RowTarget,
   type StyleSpec,
   type SurfaceId,
   type UiContractViolation,
@@ -528,19 +530,49 @@ export class UiDocumentStore {
   }
 }
 
-/** 🎬️ Finds `record`'s own binding for `trigger` and builds the `UiIntent`, or `undefined` when the
- * node declares no binding for that lifecycle moment — the one place a component decides "do I even
- * have an action to fire here" before asking the store to mint the intent. */
+/** 🎯️ The `activate` binding `verb` fires on a row's ONE target — its scope, version and argument map — the twin of the
+ * contract's `RowTarget::binding`, so a tree row and a table row with the same target dispatch identically. */
+export function rowTargetBinding(target: RowTarget, verb: string): ActionBinding {
+  return { trigger: "activate", action: { scope: target.scope, name: verb, version: target.version }, args: target.args ?? null, capability: null };
+}
+
+/** 🚫️ Why a row action does not dispatch — the twin of the contract's `RowActionRefusal`. */
+export type RowActionRefusal = "disabled";
+
+/** 🎬️ The binding one of a row's actions fires on its target, refused typed when the action is disabled — the twin of the
+ * contract's `RowTarget::action_binding`, so no host dispatches what the row paints disabled. */
+export function rowActionBinding(target: RowTarget, action: RowAction): { readonly ok: true; readonly binding: ActionBinding } | { readonly ok: false; readonly refusal: RowActionRefusal } {
+  return action.disabled ? { ok: false, refusal: "disabled" } : { ok: true, binding: rowTargetBinding(target, action.verb) };
+}
+
+/** ▶️ A tree or table row's activation — its target's activation verb — or `undefined`; a row never carries a record
+ * `activate` binding. */
+export function rowActivationBinding(record: UiNodeRecord): ActionBinding | undefined {
+  const component = record.component;
+  if (component.type !== "treeItem" && component.type !== "tableRow") return undefined;
+  const target = component.target;
+  return target?.activation ? rowTargetBinding(target, target.activation) : undefined;
+}
+
+/** 🎬️ The binding `record` fires for `trigger`: a row's activation is its target verb, every other moment its own record
+ * binding. */
+function bindingForTrigger(record: UiNodeRecord, trigger: UiTrigger): ActionBinding | undefined {
+  return (trigger === "activate" ? rowActivationBinding(record) : undefined) ?? (record.bindings ?? []).find((candidate) => candidate.trigger === trigger);
+}
+
+/** 🎬️ Finds `record`'s binding for `trigger` and builds the `UiIntent`, or `undefined` when the node declares no binding for
+ * that lifecycle moment — the one place a component decides "do I even have an action to fire here" before asking the
+ * store to mint the intent. */
 export function emitIntent(store: UiDocumentStore, record: UiNodeRecord, trigger: UiTrigger, input?: UiValue): UiIntent | undefined {
-  const binding = (record.bindings ?? []).find((candidate) => candidate.trigger === trigger);
+  const binding = bindingForTrigger(record, trigger);
   if (!binding) return undefined;
   return store.buildIntent(record, binding, input);
 }
 
-/** 🔎️ The `UiActionId` a node binds for `trigger`, or `undefined` — used by the conformance suite to
+/** 🔎️ The `UiActionId` a node fires for `trigger`, or `undefined` — used by the conformance suite to
  * assert reachable action ids without duplicating {@link emitIntent}'s lookup. */
 export function actionIdForTrigger(record: UiNodeRecord, trigger: UiTrigger): UiActionId | undefined {
-  return (record.bindings ?? []).find((candidate) => candidate.trigger === trigger)?.action;
+  return bindingForTrigger(record, trigger)?.action;
 }
 //#endregion 🔖️Store
 

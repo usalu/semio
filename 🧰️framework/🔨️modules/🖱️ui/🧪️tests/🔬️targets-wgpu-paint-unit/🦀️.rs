@@ -447,7 +447,7 @@ fn painting_a_field_with_description_required_and_error_emits_extra_glyphs() {
 fn tree_with_item_description() -> UiNode {
     let mut item = UiTreeItemNode::base("i1", Label::data("Item One"));
     item.description = Some("desc".into());
-    item.actions = Some(vec![UiTreeItemAction { icon_id: IconName::Sparkles, label: None, action: action(), placement: None }]);
+    item.actions = Some(vec![UiTreeItemAction { icon_id: IconName::Sparkles, label: None, action: action(), placement: None, disabled: false }]);
     UiNode::Tree(UiTreeNode {
         presentation: Default::default(),
         sections: vec![UiTreeSectionNode { header_toolbar: None, window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }],
@@ -1616,7 +1616,7 @@ fn section_and_field_chrome_paint_only_inside_their_measured_bands() {
     section_tree.apply_tree(&section);
     let section_root = section_tree.root.expect("section root");
     let theme = Theme::default();
-    let mut atlas = FontAtlas::builtin();
+    let mut atlas = FontAtlas::shaped_default();
     assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut section_tree, section_root, theme, number(&["section", "width"]), 400.0));
     let section_child = section_tree.node(section_root).and_then(|node| node.first_child).expect("section child");
     let title_bottom = section_tree.accepted_layout(section_child).expect("section child layout").y - crate::wgpu::flex::SECTION_TITLE_BODY_GAP;
@@ -1641,7 +1641,7 @@ fn section_and_field_chrome_paint_only_inside_their_measured_bands() {
     field_tree.apply_tree(&field);
     let field_root = field_tree.root.expect("field root");
     let field_control = field_tree.node(field_root).and_then(|node| node.first_child).expect("field control");
-    let mut field_atlas = FontAtlas::builtin();
+    let mut field_atlas = FontAtlas::shaped_default();
     assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut field_tree, field_root, theme, number(&["field", "width"]), 400.0));
     let control_layout = field_tree.accepted_layout(field_control).expect("field control layout");
     let mut field_draw = DrawList::default();

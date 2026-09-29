@@ -1,0 +1,71 @@
+{
+  "cases": [
+    {
+      "operator": "brep.xform.gridPattern",
+      "direction": "inputs",
+      "expected": {
+        "dirX": {
+          "code": "DIRX",
+          "abbreviation": "dirX",
+          "valueTypes": [
+            "point",
+            "vector"
+          ]
+        },
+        "dirY": {
+          "code": "DIRY",
+          "abbreviation": "dirY",
+          "valueTypes": [
+            "point",
+            "vector"
+          ]
+        },
+        "countX": {
+          "code": "COUNTX",
+          "abbreviation": "countX",
+          "valueTypes": [
+            "number"
+          ]
+        },
+        "countY": {
+          "code": "COUNTY",
+          "abbreviation": "countY",
+          "valueTypes": [
+            "number"
+          ]
+        }
+      }
+    },
+    {
+      "operator": "brep.mesh.analyze",
+      "direction": "outputs",
+      "expected": {
+        "minimum": {
+          "code": "MINIMUM",
+          "abbreviation": "minimum",
+          "valueTypes": [
+            "point"
+          ]
+        },
+        "maximum": {
+          "code": "MAXIMUM",
+          "abbreviation": "maximum",
+          "valueTypes": [
+            "point"
+          ]
+        }
+      }
+    },
+    {
+      "operator": "brep.eval.curveTangent",
+      "direction": "outputs",
+      "expected": {
+        "tangent": {
+          "valueTypes": [
+            "vector"
+          ]
+        }
+      }
+    }
+  ]
+}

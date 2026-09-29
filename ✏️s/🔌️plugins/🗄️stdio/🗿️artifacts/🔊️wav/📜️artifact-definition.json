@@ -81,7 +81,71 @@
       "fixtures": []
     }
   ],
-  "runtime_capabilities": [],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.wav.composer.dialect-s-stdio-wav-riff-pcm.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.wav@riff-pcm/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.wav@riff-pcm/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.wav.inference.schema-s-stdio-wav-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.wav.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.wav.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.wav.schema.schema-s-stdio-wav.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.wav",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.wav"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.wav.standard.riff-pcm.codec.codec-stdio-wav-extension-wav.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:9:stdio.wav:wav|codec:stdio.wav",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.wav"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "9:stdio.wav:wav"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.wav.standard.riff-pcm.representation.mime-audio-wav-extension-wav",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:audio/wav|extension:.wav",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "audio/wav"
+        },
+        {
+          "namespace": "extension",
+          "value": ".wav"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

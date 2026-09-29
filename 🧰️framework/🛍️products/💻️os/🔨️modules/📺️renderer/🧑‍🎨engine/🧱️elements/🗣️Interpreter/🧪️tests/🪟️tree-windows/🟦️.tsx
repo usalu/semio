@@ -23,7 +23,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   }
 
   function treeItem(id: number, key: string, label: string, extra: AnyRecord = {}, children: readonly number[] = [], bindings: readonly AnyRecord[] = []): AnyRecord {
-    return node(id, key, { type: "treeItem", label, description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, rowActions: [], ...extra }, children, bindings);
+    return node(id, key, { type: "treeItem", label, description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, rowActions: [], target: null, ...extra }, children, bindings);
   }
 
   const selectBinding = { trigger: "activate", action: { scope: "outliner", name: "interactionSelect", version: 1 }, args: { domainId: "outliner.objects" }, capability: null };
@@ -163,14 +163,14 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(intents[0].input).toEqual({ merge: "replace", method: "pick", targets: JSON.stringify([{ granularity: "piece", id: "seed-left-001" }]) });
     });
 
-    it("leaves a row that binds its own activate on its own action, granularity or not", () => {
+    it("leaves a row that activates its own target verb on that verb, granularity or not", () => {
       const intents: any[] = [];
-      const own = { trigger: "activate", action: { scope: "outliner", name: "addObjectKind", version: 1 }, args: { objectKind: "Seed Left" }, capability: null };
+      const own = { scope: "outliner", version: 1, args: { objectKind: "Seed Left" }, activation: "addObjectKind" };
       const rendered = mount(
         [
           node(1, "outliner", { type: "tree", interactionDomain: "outliner.objects" }, [2], [selectBinding]),
           node(2, "outliner.objects", { type: "treeSection", label: "Objects", defaultOpen: true, headerToolbar: null, window: null }, [3]),
-          treeItem(3, "seed-left-001", "Seed Left", { granularity: "piece" }, [], [own]),
+          treeItem(3, "seed-left-001", "Seed Left", { granularity: "piece", target: own }),
         ],
         1,
         (intent) => intents.push(intent),
@@ -517,6 +517,28 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const { dirname, join } = await import("node:path");
   const { fileURLToPath } = await import("node:url");
   const servedFixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🪟️tree-window-served.json"), "utf8"));
+
+  const requestsFixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧫️fixtures/🪟️window-requests/🔣️.json"), "utf8"));
+  const requestsSchema = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧬️schema/🪟️window-requests/🔣️.json"), "utf8"));
+  const { default: Ajv } = await import("ajv");
+  const { TREE_WINDOW_OVERSCAN_ROWS, treeWindowRequestsForViewport, treeWindowVisibleRowsForViewport } = await import("@semio-tech/ui-react");
+
+  describe("🪟️ the neutral viewport vectors both hosts answer (WG11 P5)", () => {
+    it("the vectors satisfy their schema and were written against this host's body budget", () => {
+      const validate = new Ajv({ allErrors: true, strict: true }).compile(requestsSchema);
+      expect(validate(requestsFixture), JSON.stringify(validate.errors)).toBe(true);
+      expect(requestsFixture.budget).toBe(TREE_WINDOW_BODY_NODE_BUDGET);
+      expect(requestsFixture.overscan).toBe(TREE_WINDOW_OVERSCAN_ROWS);
+    });
+    for (const law of requestsFixture.cases) {
+      it(law.name, () => {
+        const containers = law.containers.map((container: AnyRecord) => ({ ...container, rows: container.rows.map(([index, top]: [number, number]) => ({ index, top })) }));
+        expect([...treeWindowVisibleRowsForViewport(containers, 0, law.viewportHeight).entries()].map(([key, rows]: [string, AnyRecord]) => ({ key, ...rows }))).toEqual(law.visible);
+        expect(treeWindowRequestsForViewport(containers, 0, law.viewportHeight, TREE_WINDOW_OVERSCAN_ROWS)).toEqual(law.requests);
+        expect(treeWindowBodyRequestsV1(containers, law.viewportHeight)).toEqual(law.body);
+      });
+    }
+  });
 
   describe("🧠️ a window the guest answers short", () => {
 

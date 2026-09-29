@@ -1,0 +1,422 @@
+{
+  "schema": "semio.os.shell-local-catalog/v1",
+  "description": "The host-owned local document catalog lane (`os.config.local-catalog`, persisted local-only in `<S_DATA_DIR>/os`) both shells serve: the guest commands, the landing app's re-hydration action, the bounds, what the lane tells the user (en, de; any other locale reads en; `{name}` is the document's name) under which fault code, and the shared vectors both shells' laws answer — an admission request resolves to its catalog entry, event folder and exact archive bytes or to a refusal; a catalog persists as exactly its archive bytes.",
+  "actions": {
+    "admit": "os.local-catalog.admit",
+    "retire": "os.local-catalog.retire",
+    "rehydrate": "applyLocalCatalogDocument"
+  },
+  "codePrefix": "shell.localCatalog.",
+  "bounds": {
+    "textMaximumBytes": 256,
+    "targetMaximumBytes": 4096,
+    "documentMaximumBase64Bytes": 8388608,
+    "writeDeadlineMs": 30000,
+    "readDeadlineMs": 10000
+  },
+  "notices": {
+    "keeping": {
+      "en": "Keeping “{name}” on this device…",
+      "de": "„{name}“ wird auf diesem Gerät gespeichert…"
+    },
+    "kept": {
+      "en": "“{name}” is kept on this device.",
+      "de": "„{name}“ ist auf diesem Gerät gespeichert."
+    },
+    "retired": {
+      "en": "“{name}” is no longer listed on this device; its files stay where they are.",
+      "de": "„{name}“ wird auf diesem Gerät nicht mehr aufgeführt; seine Dateien bleiben erhalten."
+    },
+    "no-data-folder": {
+      "en": "This shell has no data folder, so it cannot keep documents on this device.",
+      "de": "Diese Shell hat keinen Datenordner und kann daher keine Dokumente auf diesem Gerät speichern."
+    },
+    "invalid-request": {
+      "en": "That request to keep a document was incomplete and was not run.",
+      "de": "Diese Anfrage zum Speichern eines Dokuments war unvollständig und wurde nicht ausgeführt."
+    },
+    "document-unknown": {
+      "en": "That document is not kept on this device.",
+      "de": "Dieses Dokument ist auf diesem Gerät nicht gespeichert."
+    },
+    "write-failed": {
+      "en": "“{name}” could not be written to this device.",
+      "de": "„{name}“ konnte nicht auf diesem Gerät gespeichert werden."
+    },
+    "cancelled": {
+      "en": "Keeping “{name}” on this device was cancelled; nothing was written.",
+      "de": "Das Speichern von „{name}“ auf diesem Gerät wurde abgebrochen; nichts wurde geschrieben."
+    }
+  },
+  "admissions": [
+    {
+      "name": "an empty folder target lands in the data folder",
+      "args": {
+        "documentId": "studio-1",
+        "schema": "s.space",
+        "name": "Studio",
+        "storage": "folder",
+        "pack": "AQID",
+        "spr": "BAU="
+      },
+      "dataDir": "/data/",
+      "nowMs": 1727600000123,
+      "expect": {
+        "document": {
+          "documentId": "studio-1",
+          "schema": "s.space",
+          "name": "Studio",
+          "storage": "folder",
+          "target": "/data/os/local-documents/studio-1",
+          "admittedAtMs": 1727600000123
+        },
+        "folder": "/data/os/local-documents/studio-1",
+        "archiveHex": "010301020302040500"
+      }
+    },
+    {
+      "name": "a file target keeps its events in the file's folder",
+      "args": {
+        "documentId": "studio-1",
+        "schema": "s.space",
+        "name": "",
+        "storage": "file",
+        "pack": "AQID",
+        "spr": "BAU=",
+        "target": "/home/ada/plans/studio.semio"
+      },
+      "dataDir": null,
+      "nowMs": 1727600000123,
+      "expect": {
+        "document": {
+          "documentId": "studio-1",
+          "schema": "s.space",
+          "name": "",
+          "storage": "file",
+          "target": "/home/ada/plans/studio.semio",
+          "admittedAtMs": 1727600000123
+        },
+        "folder": "/home/ada/plans",
+        "archiveHex": "010301020302040500"
+      }
+    },
+    {
+      "name": "a file at the root keeps its events in the root",
+      "args": {
+        "documentId": "studio-1",
+        "schema": "s.space",
+        "name": "Studio",
+        "storage": "file",
+        "pack": "AQID",
+        "spr": "BAU=",
+        "target": "/studio.semio"
+      },
+      "dataDir": null,
+      "nowMs": 1727600000123,
+      "expect": {
+        "document": {
+          "documentId": "studio-1",
+          "schema": "s.space",
+          "name": "Studio",
+          "storage": "file",
+          "target": "/studio.semio",
+          "admittedAtMs": 1727600000123
+        },
+        "folder": "/",
+        "archiveHex": "010301020302040500"
+      }
+    },
+    {
+      "name": "an explicit folder target needs no data folder",
+      "args": {
+        "documentId": "studio-1",
+        "schema": "s.space",
+        "name": "Studio",
+        "storage": "folder",
+        "pack": "AQID",
+        "spr": "BAU=",
+        "target": "/srv/studios/a"
+      },
+      "dataDir": null,
+      "nowMs": 1727600000123,
+      "expect": {
+        "document": {
+          "documentId": "studio-1",
+          "schema": "s.space",
+          "name": "Studio",
+          "storage": "folder",
+          "target": "/srv/studios/a",
+          "admittedAtMs": 1727600000123
+        },
+        "folder": "/srv/studios/a",
+        "archiveHex": "010301020302040500"
+      }
+    },
+    {
+      "name": "an empty folder target without a data folder",
+      "args": {
+        "documentId": "studio-1",
+        "schema": "s.space",
+        "name": "Studio",
+        "storage": "folder",
+        "pack": "AQID",
+        "spr": "BAU="
+      },
+      "dataDir": null,
+      "nowMs": 1727600000123,
+      "expect": {
+        "refusal": "no-data-folder"
+      }
+    },
+    {
+      "name": "a data folder that is only the root is none",
+      "args": {
+        "documentId": "studio-1",
+        "schema": "s.space",
+        "name": "Studio",
+        "storage": "folder",
+        "pack": "AQID",
+        "spr": "BAU="
+      },
+      "dataDir": "/",
+      "nowMs": 1727600000123,
+      "expect": {
+        "refusal": "no-data-folder"
+      }
+    },
+    {
+      "name": "a relative file target",
+      "args": {
+        "documentId": "studio-1",
+        "schema": "s.space",
+        "name": "Studio",
+        "storage": "file",
+        "pack": "AQID",
+        "spr": "BAU=",
+        "target": "plans/studio.semio"
+      },
+      "dataDir": "/data",
+      "nowMs": 1727600000123,
+      "expect": {
+        "refusal": "invalid-request"
+      }
+    },
+    {
+      "name": "a file without a target",
+      "args": {
+        "documentId": "studio-1",
+        "schema": "s.space",
+        "name": "Studio",
+        "storage": "file",
+        "pack": "AQID",
+        "spr": "BAU="
+      },
+      "dataDir": "/data",
+      "nowMs": 1727600000123,
+      "expect": {
+        "refusal": "invalid-request"
+      }
+    },
+    {
+      "name": "a relative folder target",
+      "args": {
+        "documentId": "studio-1",
+        "schema": "s.space",
+        "name": "Studio",
+        "storage": "folder",
+        "pack": "AQID",
+        "spr": "BAU=",
+        "target": "studios/a"
+      },
+      "dataDir": "/data",
+      "nowMs": 1727600000123,
+      "expect": {
+        "refusal": "invalid-request"
+      }
+    },
+    {
+      "name": "an empty pack",
+      "args": {
+        "documentId": "studio-1",
+        "schema": "s.space",
+        "name": "Studio",
+        "storage": "folder",
+        "pack": "",
+        "spr": "BAU="
+      },
+      "dataDir": "/data",
+      "nowMs": 1727600000123,
+      "expect": {
+        "refusal": "invalid-request"
+      }
+    },
+    {
+      "name": "a pack that is not base64",
+      "args": {
+        "documentId": "studio-1",
+        "schema": "s.space",
+        "name": "Studio",
+        "storage": "folder",
+        "pack": "AQI",
+        "spr": "BAU="
+      },
+      "dataDir": "/data",
+      "nowMs": 1727600000123,
+      "expect": {
+        "refusal": "invalid-request"
+      }
+    },
+    {
+      "name": "an id with a slash",
+      "args": {
+        "documentId": "a/b",
+        "schema": "s.space",
+        "name": "Studio",
+        "storage": "folder",
+        "pack": "AQID",
+        "spr": "BAU="
+      },
+      "dataDir": "/data",
+      "nowMs": 1727600000123,
+      "expect": {
+        "refusal": "invalid-request"
+      }
+    },
+    {
+      "name": "an id that is the parent folder",
+      "args": {
+        "documentId": "..",
+        "schema": "s.space",
+        "name": "Studio",
+        "storage": "folder",
+        "pack": "AQID",
+        "spr": "BAU="
+      },
+      "dataDir": "/data",
+      "nowMs": 1727600000123,
+      "expect": {
+        "refusal": "invalid-request"
+      }
+    },
+    {
+      "name": "an id that is the folder itself",
+      "args": {
+        "documentId": ".",
+        "schema": "s.space",
+        "name": "Studio",
+        "storage": "folder",
+        "pack": "AQID",
+        "spr": "BAU="
+      },
+      "dataDir": "/data",
+      "nowMs": 1727600000123,
+      "expect": {
+        "refusal": "invalid-request"
+      }
+    },
+    {
+      "name": "a name with a control character",
+      "args": {
+        "documentId": "studio-1",
+        "schema": "s.space",
+        "name": "Stu\u0007dio",
+        "storage": "folder",
+        "pack": "AQID",
+        "spr": "BAU="
+      },
+      "dataDir": "/data",
+      "nowMs": 1727600000123,
+      "expect": {
+        "refusal": "invalid-request"
+      }
+    },
+    {
+      "name": "a schema with surrounding space",
+      "args": {
+        "documentId": "studio-1",
+        "schema": " s.space",
+        "name": "Studio",
+        "storage": "folder",
+        "pack": "AQID",
+        "spr": "BAU="
+      },
+      "dataDir": "/data",
+      "nowMs": 1727600000123,
+      "expect": {
+        "refusal": "invalid-request"
+      }
+    },
+    {
+      "name": "an unknown storage",
+      "args": {
+        "documentId": "studio-1",
+        "schema": "s.space",
+        "name": "Studio",
+        "storage": "cloud",
+        "pack": "AQID",
+        "spr": "BAU="
+      },
+      "dataDir": "/data",
+      "nowMs": 1727600000123,
+      "expect": {
+        "refusal": "invalid-request"
+      }
+    },
+    {
+      "name": "an id longer than its bound",
+      "args": {
+        "documentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "schema": "s.space",
+        "name": "Studio",
+        "storage": "folder",
+        "pack": "AQID",
+        "spr": "BAU="
+      },
+      "dataDir": "/data",
+      "nowMs": 1727600000123,
+      "expect": {
+        "refusal": "invalid-request"
+      }
+    },
+    {
+      "name": "no arguments at all",
+      "args": null,
+      "dataDir": "/data",
+      "nowMs": 1727600000123,
+      "expect": {
+        "refusal": "invalid-request"
+      }
+    }
+  ],
+  "catalogArchives": [
+    {
+      "catalog": {
+        "documents": []
+      },
+      "archiveHex": "01130001011110010709646f63756d656e74730c000000"
+    },
+    {
+      "catalog": {
+        "documents": [
+          {
+            "documentId": "plan-a",
+            "schema": "s.space",
+            "name": "Plan A",
+            "storage": "file",
+            "target": "/home/ada/plan-a.semio",
+            "admittedAtMs": 1727600000000
+          },
+          {
+            "documentId": "studio-1",
+            "schema": "s.space",
+            "name": "Studio",
+            "storage": "folder",
+            "target": "/data/os/local-documents/studio-1",
+            "admittedAtMs": 1727600000123
+          }
+        ]
+      },
+      "archiveHex": "01960209212f646174612f6f732f6c6f63616c2d646f63756d656e74732f73747564696f2d31162f686f6d652f6164612f706c616e2d612e73656d696f06506c616e20410653747564696f0466696c6506666f6c64657206706c616e2d6107732e73706163650873747564696f2d3101011110010709646f63756d656e74730c021006070c61646d697474656441744d730480f8efe7a332070a646f63756d656e744964060607046e616d6506020706736368656d610607070773746f726167650604070674617267657406011006070c61646d697474656441744d7304fbf8efe7a332070a646f63756d656e744964060807046e616d6506030706736368656d610607070773746f726167650605070674617267657406000000"
+    }
+  ]
+}

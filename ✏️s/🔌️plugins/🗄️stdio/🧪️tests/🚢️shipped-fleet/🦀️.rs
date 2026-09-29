@@ -4,8 +4,9 @@
 use semio_framework::{AppRole, PackageDescriptor};
 use semio_framework_plugin::kernel::ActivationEvent;
 use semio_framework_plugin::plugin_runtime::{install_plugin_bundle_result, PluginRuntime};
-use semio_framework_plugin::{Plugin, PluginApp, PluginAssemblyError};
+use semio_framework_plugin::{ArtifactRuntimeCapabilityRequirement, Plugin, PluginApp, PluginAssemblyError};
 use semio_s_artifact_stdio_contract::editing::SNAPSHOT_EDIT_ACTION_IDS;
+use semio_s_plugin_stdio::registry::ArtifactAssembly;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::OnceLock;
 
@@ -34,23 +35,31 @@ fn describe<PA: PluginApp>(bundle: Result<Plugin<PA>, PluginAssemblyError>) -> P
     semio_framework::from_dsl_value(semio_framework_os_kernel::pack_rt::decode_wire_value(&bytes).expect("descriptor bytes")).expect("strict descriptor")
 }
 
-/// 📦️ The stdio component and its nine family components, each described once.
+/// 📦️ The stdio component and its nine family components.
+const PACKAGE_IDS: [&str; 10] = ["stdio", "stdio-image", "stdio-media", "stdio-cad", "stdio-bim", "stdio-mesh", "stdio-pdf", "stdio-office", "stdio-semio", "stdio-binary"];
+
+/// 🧾️ Assembles and describes one stdio package by id.
+fn shipped(id: &'static str) -> ShippedPackage {
+    let (manifest, descriptor) = match id {
+        "stdio" => (include_str!("../../📦️packages/🦀️rust/Cargo.toml"), describe(semio_s_plugin_stdio::plugin())),
+        "stdio-image" => (include_str!("../../🧩️extensions/🖼️image/📦️packages/🦀️rust/Cargo.toml"), describe(semio_s_plugin_stdio_image::plugin())),
+        "stdio-media" => (include_str!("../../🧩️extensions/🎵️media/📦️packages/🦀️rust/Cargo.toml"), describe(semio_s_plugin_stdio_media::plugin())),
+        "stdio-cad" => (include_str!("../../🧩️extensions/🛠️cad/📦️packages/🦀️rust/Cargo.toml"), describe(semio_s_plugin_stdio_cad::plugin())),
+        "stdio-bim" => (include_str!("../../🧩️extensions/🏠️bim/📦️packages/🦀️rust/Cargo.toml"), describe(semio_s_plugin_stdio_bim::plugin())),
+        "stdio-mesh" => (include_str!("../../🧩️extensions/🔺️mesh/📦️packages/🦀️rust/Cargo.toml"), describe(semio_s_plugin_stdio_mesh::plugin())),
+        "stdio-pdf" => (include_str!("../../🧩️extensions/📘️pdf/📦️packages/🦀️rust/Cargo.toml"), describe(semio_s_plugin_stdio_pdf::plugin())),
+        "stdio-office" => (include_str!("../../🧩️extensions/💼️office/📦️packages/🦀️rust/Cargo.toml"), describe(semio_s_plugin_stdio_office::plugin())),
+        "stdio-semio" => (include_str!("../../🧩️extensions/🧿️semio/📦️packages/🦀️rust/Cargo.toml"), describe(semio_s_plugin_stdio_semio::plugin())),
+        "stdio-binary" => (include_str!("../../🧩️extensions/🔢️binary/📦️packages/🦀️rust/Cargo.toml"), describe(semio_s_plugin_stdio_binary::plugin())),
+        other => panic!("{other} is not a stdio package"),
+    };
+    ShippedPackage { id, manifest, descriptor }
+}
+
+/// 📦️ Every stdio package, each assembled and described once per process.
 fn packages() -> &'static [ShippedPackage] {
     static PACKAGES: OnceLock<Vec<ShippedPackage>> = OnceLock::new();
-    PACKAGES.get_or_init(|| {
-        vec![
-        ShippedPackage { id: "stdio", manifest: include_str!("../../📦️packages/🦀️rust/Cargo.toml"), descriptor: describe(semio_s_plugin_stdio::plugin()) },
-        ShippedPackage { id: "stdio-image", manifest: include_str!("../../🧩️extensions/🖼️image/📦️packages/🦀️rust/Cargo.toml"), descriptor: describe(semio_s_plugin_stdio_image::plugin()) },
-        ShippedPackage { id: "stdio-media", manifest: include_str!("../../🧩️extensions/🎵️media/📦️packages/🦀️rust/Cargo.toml"), descriptor: describe(semio_s_plugin_stdio_media::plugin()) },
-        ShippedPackage { id: "stdio-cad", manifest: include_str!("../../🧩️extensions/🛠️cad/📦️packages/🦀️rust/Cargo.toml"), descriptor: describe(semio_s_plugin_stdio_cad::plugin()) },
-        ShippedPackage { id: "stdio-bim", manifest: include_str!("../../🧩️extensions/🏠️bim/📦️packages/🦀️rust/Cargo.toml"), descriptor: describe(semio_s_plugin_stdio_bim::plugin()) },
-        ShippedPackage { id: "stdio-mesh", manifest: include_str!("../../🧩️extensions/🔺️mesh/📦️packages/🦀️rust/Cargo.toml"), descriptor: describe(semio_s_plugin_stdio_mesh::plugin()) },
-        ShippedPackage { id: "stdio-pdf", manifest: include_str!("../../🧩️extensions/📘️pdf/📦️packages/🦀️rust/Cargo.toml"), descriptor: describe(semio_s_plugin_stdio_pdf::plugin()) },
-        ShippedPackage { id: "stdio-office", manifest: include_str!("../../🧩️extensions/💼️office/📦️packages/🦀️rust/Cargo.toml"), descriptor: describe(semio_s_plugin_stdio_office::plugin()) },
-        ShippedPackage { id: "stdio-semio", manifest: include_str!("../../🧩️extensions/🧿️semio/📦️packages/🦀️rust/Cargo.toml"), descriptor: describe(semio_s_plugin_stdio_semio::plugin()) },
-        ShippedPackage { id: "stdio-binary", manifest: include_str!("../../🧩️extensions/🔢️binary/📦️packages/🦀️rust/Cargo.toml"), descriptor: describe(semio_s_plugin_stdio_binary::plugin()) },
-        ]
-    })
+    PACKAGES.get_or_init(|| PACKAGE_IDS.into_iter().map(shipped).collect())
 }
 
 /// 📋️ The `app` of every `[[package.metadata.semio.playground]]` row of one manifest — one row per shipped editor.
@@ -178,4 +187,144 @@ async fn the_shipped_assembly_publishes_every_editor_document_schema_and_a_json_
     let edited = semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::snapshot::write_json_text(&app.snapshot().expect("json snapshot").value);
     assert_eq!(serde_json::from_str::<serde_json::Value>(&edited).expect("the edited document is JSON"), serde_json::from_str::<serde_json::Value>(source).expect("serde_json oracle"), "the published document is exactly the applied source");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+
+/// 🧪️ The environment variable naming the one package [`package_runtime_probe`] assembles in its child process.
+const PROBE_PACKAGE: &str = "SEMIO_STDIO_RUNTIME_PROBE_PACKAGE";
+
+/// 🏠️ LAW (d): every stdio package, assembled ALONE in its own process as its wasm guest is, hosts the complete runtime of
+/// every artifact kind it opens — each schema, inference descriptor, document codec, composer, format and subset validator
+/// the kind's owner declares is live in that process. Measured before (LB2 native probe, 2026-09-29): `stdio-image`'s
+/// `plugin()` alone registered none of png/jpg/bmp/svg's schemas, and the bmp, wav, epw, binary, ifc, gif and semio roots
+/// declared no runtime at all — 28 shipped editors refused every snapshot edit `snapshot-edit.schema-unregistered`.
+#[test]
+fn every_package_hosts_the_runtime_of_every_kind_it_opens_in_its_own_process() {
+    let binary = std::env::current_exe().expect("the test binary");
+    let failures = PACKAGE_IDS
+        .into_iter()
+        .filter_map(|id| {
+            let run = std::process::Command::new(&binary).args(["package_runtime_probe", "--exact", "--ignored", "--nocapture", "--test-threads", "1"]).env(PROBE_PACKAGE, id).output().expect("the package probe runs");
+            (!run.status.success()).then(|| format!("{id} alone does not host every kind it opens:\n{}\n{}", String::from_utf8_lossy(&run.stdout), String::from_utf8_lossy(&run.stderr)))
+        })
+        .collect::<Vec<_>>();
+    assert!(failures.is_empty(), "{} of {} packages fail:\n{}", failures.len(), PACKAGE_IDS.len(), failures.join("\n"));
+}
+
+/// 🔬️ The child half of LAW (d): assembles only the package [`PROBE_PACKAGE`] names and checks every runtime requirement of
+/// every kind it activates on, exactly as the kind's owner declares them, against this process's live registries.
+#[test]
+#[ignore = "the child process of every_package_hosts_the_runtime_of_every_kind_it_opens_in_its_own_process"]
+fn package_runtime_probe() {
+    let id = std::env::var(PROBE_PACKAGE).expect("the parent law names one package");
+    let package = shipped(PACKAGE_IDS.into_iter().find(|candidate| *candidate == id).expect("a stdio package id"));
+    assert_eq!(package.descriptor.package_id, format!("semio:{id}"), "{id} assembles alone");
+    let assemblies = semio_s_plugin_stdio::registry::artifact_assemblies().expect("the stdio artifact assemblies");
+    let mut unmet = Vec::new();
+    for kind in activated_kinds(&package.descriptor) {
+        let declaration = assemblies.iter().find_map(|assembly| match assembly {
+            ArtifactAssembly::Runtime(declaration) if declaration.definition().identity().as_str() == kind => Some(declaration),
+            _ => None,
+        });
+        let Some(declaration) = declaration else {
+            unmet.push(format!("{kind}: its owner declares no runtime"));
+            continue;
+        };
+        for requirement in declaration.runtime_capability_requirements().expect("the declaration's runtime requirements") {
+            if !requirement_is_live(&requirement) {
+                unmet.push(format!("{kind}: {requirement:?}"));
+            }
+        }
+    }
+    assert!(unmet.is_empty(), "{id} alone leaves {} runtime requirements unmet: {unmet:#?}", unmet.len());
+}
+
+/// 🔎️ Whether one runtime requirement is live in this process: schemas and inference descriptors in the kernel catalogs,
+/// shared schema documents (`schema-export` claims) in the schema export registry,
+/// document codecs in the store, composers, formats and subset validators in the io registries. Grammar rows are captured by
+/// the plugin runtime and never published (`PluginRuntimeRegistry::languages`), so no process state answers them.
+fn requirement_is_live(requirement: &ArtifactRuntimeCapabilityRequirement) -> bool {
+    use semio_framework_plugin::resolve_ready;
+    let claims = resolve_ready(requirement.claims());
+    let values = |namespace: &str| claims.iter().filter(|claim| claim.namespace().as_str() == namespace).map(|claim| claim.value().to_string()).collect::<BTreeSet<_>>();
+    let value = |namespace: &str| values(namespace).into_iter().next().unwrap_or_default();
+    match resolve_ready(requirement.kind()).as_str() {
+        "schema" => match value("schema-export").split_once('#') {
+            Some((scope, export)) => semio_framework_schema::resolve_schema_export(scope, export, semio_framework_schema::SchemaFormat::JsonSchema).is_ok(),
+            None => semio_framework_os_kernel::kernel_artifact_schema_descriptor_registered(&value("schema")),
+        },
+        "inference" => semio_framework_os_kernel::kernel_artifact_inference_descriptor_registered(&value("schema")),
+        "codec" => resolve_ready(semio_framework_os_kernel::document_codec(&value("codec"))).expect("the document codec registry").is_some(),
+        "composer" => resolve_ready(semio_framework::io::list_composer_entries()).expect("the composer registry").iter().any(|(writes, _)| writes.to_coordinate() == value("dialect")),
+        "subset-validator" => resolve_ready(semio_framework::io::list_registered_subset_validator_dialects()).expect("the subset validator registry").into_iter().any(|dialect| semio_framework::ArtifactDialect::from(dialect).to_coordinate() == value("validated-dialect")),
+        "representation" => values("extension").iter().filter_map(|extension| semio_framework::io::format_descriptor(extension.trim_start_matches('.')).expect("the format catalog")).any(|format| format.mimes.iter().cloned().collect::<BTreeSet<_>>() == values("mime") && format.extensions.iter().cloned().collect::<BTreeSet<_>>() == values("extension")),
+        "grammar" => true,
+        other => panic!("unknown runtime capability category {other}"),
+    }
+}
+
+/// 🧪️ The environment variable naming the one package [`package_contract_probe`] assembles in its child process.
+const CONTRACT_PROBE_PACKAGE: &str = "SEMIO_STDIO_CONTRACT_PROBE_PACKAGE";
+
+/// 🔗️ LAW (e): in every stdio package's own process — assembled alone, as its wasm guest is — every registered artifact's
+/// snapshot contract compiles: each `$ref` it makes resolves against a schema document registered in that process. Measured
+/// before (LB2 scratch, 2026-09-29): las/dwg/ifc refs named absent `$defs`, and semio brep/object/kit `$ref` shared documents
+/// (`base/geometry.json`, `base/child.json` → `os/store/child.json`, `brep/inference.json`) that no guest registered — every
+/// snapshot edit on those kinds was refused `snapshot-edit.invalid-schema-contract`.
+#[test]
+fn every_registered_snapshot_contract_resolves_in_each_package_process() {
+    let binary = std::env::current_exe().expect("the test binary");
+    let failures = PACKAGE_IDS
+        .into_iter()
+        .filter_map(|id| {
+            let run = std::process::Command::new(&binary).args(["package_contract_probe", "--exact", "--ignored", "--nocapture", "--test-threads", "1"]).env(CONTRACT_PROBE_PACKAGE, id).output().expect("the contract probe runs");
+            (!run.status.success()).then(|| format!("{id} alone registers an unresolvable snapshot contract:\n{}\n{}", String::from_utf8_lossy(&run.stdout), String::from_utf8_lossy(&run.stderr)))
+        })
+        .collect::<Vec<_>>();
+    assert!(failures.is_empty(), "{} of {} packages fail:\n{}", failures.len(), PACKAGE_IDS.len(), failures.join("\n"));
+}
+
+/// 🔬️ The child half of LAW (e): assembles only the package [`CONTRACT_PROBE_PACKAGE`] names and compiles the snapshot
+/// contract of every artifact schema registered in this process — owned and hosted alike.
+#[test]
+#[ignore = "the child process of every_registered_snapshot_contract_resolves_in_each_package_process"]
+fn package_contract_probe() {
+    let id = std::env::var(CONTRACT_PROBE_PACKAGE).expect("the parent law names one package");
+    let package = shipped(PACKAGE_IDS.into_iter().find(|candidate| *candidate == id).expect("a stdio package id"));
+    assert_eq!(package.descriptor.package_id, format!("semio:{id}"), "{id} assembles alone");
+    let contracts = semio_framework_os_kernel::with_kernel_artifact_schema_catalog(|entries| entries.iter().map(|entry| entry.id).collect::<Vec<_>>());
+    assert!(!contracts.is_empty(), "{id} registers the snapshot contracts of the kinds it opens");
+    let unresolved = contracts.iter().filter_map(|contract| semio_framework_schema::structural_validator_for(contract, "snapshot").err().map(|error| format!("{contract}: {error}"))).collect::<Vec<_>>();
+    assert!(unresolved.is_empty(), "{id} alone registers {} unresolvable snapshot contracts: {unresolved:#?}", unresolved.len());
+}
+
+/// 🏠️ LAW (describe side of hosting, p15): every stdio FAMILY package owns no artifact kind and its descriptor hosts every
+/// kind it opens, each hosted row a document codec its owner's runtime declaration declares (kind × codec schema), so a trusted
+/// catalog routes the owner's documents to the family's editors and binds the owner's codec; every row names its owner `stdio`
+/// explicitly; the owner `stdio` hosts nothing.
+#[test]
+fn every_family_descriptor_hosts_exactly_its_owners_codecs_for_the_kinds_it_opens() {
+    let assemblies = semio_s_plugin_stdio::registry::artifact_assemblies().expect("the stdio artifact assemblies");
+    let owner_codecs = assemblies
+        .iter()
+        .filter_map(|assembly| match assembly {
+            ArtifactAssembly::Runtime(declaration) => Some(declaration),
+            _ => None,
+        })
+        .flat_map(|declaration| declaration.hosted_kinds().expect("a runtime declaration names its canonical owner"))
+        .map(|kind| (kind.id, kind.schema, kind.owner))
+        .collect::<BTreeSet<_>>();
+    for package in packages() {
+        let hosted = package.descriptor.manifest.hosted_artifact_kinds.iter().map(|kind| (kind.id.clone(), kind.schema.clone(), kind.owner.clone())).collect::<BTreeSet<_>>();
+        if package.id == "stdio" {
+            assert!(hosted.is_empty(), "stdio owns its kinds and hosts none: {hosted:?}");
+            continue;
+        }
+        assert!(package.descriptor.manifest.artifact_kinds.is_empty(), "{} owns no artifact kind", package.id);
+        assert!(hosted.is_subset(&owner_codecs), "{} hosts rows its owner declares no codec for: {:?}", package.id, hosted.difference(&owner_codecs).collect::<Vec<_>>());
+        assert!(hosted.iter().all(|(_, _, owner)| owner == "stdio"), "{} hosts rows of an owner other than stdio: {hosted:?}", package.id);
+        let hosted_ids = hosted.iter().map(|(id, _, _)| id.as_str()).collect::<BTreeSet<_>>();
+        for kind in activated_kinds(&package.descriptor) {
+            assert!(hosted_ids.contains(kind.as_str()), "{} opens {kind} without hosting it", package.id);
+        }
+    }
 }

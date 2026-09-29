@@ -383,7 +383,7 @@ async fn the_site_row_opens_the_site_form_by_clearing_the_selection() {
     let json = english(&demo());
     let tree = tree_of(&json);
     let row = node_at(&tree, &section_key("site.row")).unwrap_or_else(|| panic!("{json}"));
-    let bindings = row["bindings"].to_string();
+    let bindings = row["component"]["target"].to_string();
     assert!(bindings.contains(INTERACTION_SELECT_ACTION_ID), "the site row picks through the framework domain: {bindings}");
     assert!(bindings.contains(ENERGY_MODEL_INTERACTION_DOMAIN), "on the energy domain: {bindings}");
     assert!(bindings.contains("replace"), "replacing the selection: {bindings}");

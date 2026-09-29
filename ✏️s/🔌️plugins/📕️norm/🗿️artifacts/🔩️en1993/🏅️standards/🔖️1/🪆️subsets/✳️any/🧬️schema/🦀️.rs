@@ -1829,15 +1829,27 @@ pub fn check_full_steel_structure(document: &En1993Snapshot) -> CheckReport {
                     let w_req = a.my.abs() * params.gamma_m0 / material.fy;
                     let options = next_section_options(section, section.area, w_req);
                     if !options.is_empty() {
-                    builder = builder.remedy(Remedy::one_of(
-                        subject_member(member, &format!("members[id={}].sectionId", member.id)),
-                        options.clone(),
-                        loc(
-                            &format!("Upsize section: {}.", options.join(", ")),
-                            &format!("Querschnitt vergrößern: {}.", options.join(", ")),
-                        ),
-                    ));
-                }
+                        builder = builder.remedy(Remedy::one_of(
+                            subject_member(member, &format!("members[id={}].sectionId", member.id)),
+                            options.clone(),
+                            loc(
+                                &format!("Upsize section: {}.", options.join(", ")),
+                                &format!("Querschnitt vergrößern: {}.", options.join(", ")),
+                            ),
+                        ));
+                    } else {
+                        let (leaf, current_w) = if class <= 2 { ("wPlY", section.w_pl_y) } else { ("wElY", section.w_el_y) };
+                        let w_clear = w_req.max(current_w) * 1.01;
+                        builder = builder.remedy(Remedy::at_least(
+                            subject_member(member, &format!("sections[id={}].{leaf}", section.id)),
+                            moment_nm(current_w),
+                            moment_nm(w_clear),
+                            loc(
+                                &format!("Increase {leaf} so M_c,Rd covers M_y,Ed."),
+                                &format!("{leaf} erhöhen, damit M_c,Rd die M_y,Ed deckt."),
+                            ),
+                        ));
+                    }
                 }
                 report.push(builder.build());
             }
@@ -2156,6 +2168,17 @@ pub fn check_full_steel_structure(document: &En1993Snapshot) -> CheckReport {
                         loc(
                             &format!("Upsize section: {}.", options.join(", ")),
                             &format!("Querschnitt vergrößern: {}.", options.join(", ")),
+                        ),
+                    ));
+                } else {
+                    let i_req = section.iy * (delta / limit.max(1e-12)) * 1.01;
+                    builder = builder.remedy(Remedy::at_least(
+                        subject_member(member, &format!("sections[id={}].iy", section.id)),
+                        moment_nm(section.iy),
+                        moment_nm(i_req),
+                        loc(
+                            "Increase I_y so the characteristic deflection is within L/limit.",
+                            "I_y erhöhen, damit die charakteristische Durchbiegung innerhalb L/Grenzwert liegt.",
                         ),
                     ));
                 }
@@ -2861,21 +2884,46 @@ pub fn check_full_steel_structure(document: &En1993Snapshot) -> CheckReport {
                     loc("HSS elastic bending", "HSS elastische Biegung"),
                 )
                 .annex(annex)
-                .utilization(moment_nm(gov.action.my.abs()), moment_nm(m_rd.max(1.0)))
+                .utilization(
+                    if m_rd > 0.0 {
+                        moment_nm(gov.action.my.abs())
+                    } else if gov.action.my.abs() > 0.0 {
+                        dimensionless(class as f64)
+                    } else {
+                        moment_nm(0.0)
+                    },
+                    if m_rd > 0.0 {
+                        moment_nm(m_rd)
+                    } else if gov.action.my.abs() > 0.0 {
+                        dimensionless(3.0)
+                    } else {
+                        moment_nm(1.0)
+                    },
+                )
                 .explanation(loc(
                     &format!("M_Ed={:.1} kNm (gov. {}), M_el,Rd={:.1} kNm (class {}).", gov.action.my.abs() / 1000.0, gov.combination_id, m_rd / 1000.0, class),
                     &format!("HSS Biegung M_Ed={:.1} kNm (maßgebend {}), M_el,Rd={:.1} kNm (Klasse {}).", gov.action.my.abs() / 1000.0, gov.combination_id, m_rd / 1000.0, class),
                 ));
                 if gov.action.my.abs() > m_rd {
                     let options = next_section_options(section, section.area, section.w_pl_y);
-                    b = b.remedy(Remedy::one_of(
-                        subject_member(member, &format!("members[id={}].sectionId", member.id)),
-                        options.clone(),
-                        loc(
-                            &format!("Select stockier section: {}.", options.join(", ")),
-                            &format!("Gedrungeneren Querschnitt wählen: {}.", options.join(", ")),
-                        ),
-                    ));
+                    if !options.is_empty() {
+                        b = b.remedy(Remedy::one_of(
+                            subject_member(member, &format!("members[id={}].sectionId", member.id)),
+                            options.clone(),
+                            loc(
+                                &format!("Select stockier section: {}.", options.join(", ")),
+                                &format!("Gedrungeneren Querschnitt wählen: {}.", options.join(", ")),
+                            ),
+                        ));
+                    } else if m_rd > 0.0 {
+                        let w_req = gov.action.my.abs() * params.gamma_m0 / material.fy * 1.01;
+                        b = b.remedy(Remedy::at_least(
+                            subject_member(member, &format!("sections[id={}].wElY", section.id)),
+                            moment_nm(section.w_el_y),
+                            moment_nm(w_req.max(section.w_el_y)),
+                            loc("Increase W_el,y so M_el,Rd covers M_Ed.", "W_el,y erhöhen, damit M_el,Rd die M_Ed deckt."),
+                        ));
+                    }
                 }
                 report.push(b.build());
             }

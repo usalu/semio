@@ -55,20 +55,17 @@
           {
             "icon": "trash-2",
             "label": "Remove row",
-            "action": {
-              "trigger": "activate",
-              "action": {
-                "scope": "s.stdio.csv@rfc4180/*#editor",
-                "name": "remove-row",
-                "version": 1
-              },
-              "args": {
-                "row": 12,
-                "revision": "0123456789abcdef"
-              }
-            }
+            "verb": "remove-row"
           }
-        ]
+        ],
+        "target": {
+          "scope": "s.stdio.csv@rfc4180/*#editor",
+          "version": 1,
+          "args": {
+            "row": 12,
+            "revision": "0123456789abcdef"
+          }
+        }
       },
       "layout": {
         "kind": "stack",
@@ -103,19 +100,17 @@
           {
             "icon": "folder-open",
             "label": "Open",
-            "action": {
-              "trigger": "activate",
-              "action": {
-                "scope": "s.space.home@1/*#editor",
-                "name": "openSpace",
-                "version": 1
-              },
-              "args": {
-                "spaceId": "sp-2"
-              }
-            }
+            "verb": "openSpace"
           }
-        ]
+        ],
+        "target": {
+          "scope": "s.space.home@1/*#editor",
+          "version": 1,
+          "args": {
+            "spaceId": "sp-2"
+          },
+          "activation": "openSpace"
+        }
       },
       "layout": {
         "kind": "stack",
@@ -131,20 +126,7 @@
       },
       "style": {},
       "activity": "idle",
-      "accessibility": {},
-      "bindings": [
-        {
-          "trigger": "activate",
-          "action": {
-            "scope": "s.space.home@1/*#editor",
-            "name": "openSpace",
-            "version": 1
-          },
-          "args": {
-            "spaceId": "sp-2"
-          }
-        }
-      ]
+      "accessibility": {}
     },
     {
       "id": 3,

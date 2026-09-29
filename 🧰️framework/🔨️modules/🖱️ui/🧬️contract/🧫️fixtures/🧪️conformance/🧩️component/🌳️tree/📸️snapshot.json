@@ -67,17 +67,14 @@
           {
             "icon": "trash",
             "label": "Delete",
-            "action": {
-              "trigger": "activate",
-              "action": {
-                "scope": "cad-play",
-                "name": "deleteItem",
-                "version": 1
-              }
-            },
+            "verb": "deleteItem",
             "placement": "menu"
           }
-        ]
+        ],
+        "target": {
+          "scope": "cad-play",
+          "version": 1
+        }
       },
       "layout": {
         "kind": "leaf",

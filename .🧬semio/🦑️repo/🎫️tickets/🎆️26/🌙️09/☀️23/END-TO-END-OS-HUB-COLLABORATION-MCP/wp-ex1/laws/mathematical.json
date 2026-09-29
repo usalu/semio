@@ -1,0 +1,22 @@
+{
+ "plugin": "mathematical",
+ "dir": "➗️mathematical",
+ "apps": [
+  {
+   "app": "s.mathematical.equation@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "crate::editor::equation::EquationPlayApp",
+   "create": "crate::editor::equation::create_equation_app",
+   "app": "s.mathematical.equation@1/*#editor"
+  }
+ ]
+}

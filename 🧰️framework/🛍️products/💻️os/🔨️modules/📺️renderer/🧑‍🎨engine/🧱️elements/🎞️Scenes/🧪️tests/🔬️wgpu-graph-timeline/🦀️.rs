@@ -102,16 +102,19 @@ fn author_scene(authors: serde_json::Value) -> UiComponentSceneNode {
 }
 
 fn paint_author_scene(scene: &UiComponentSceneNode) -> ui_wgpu::wgpu::DrawList {
+    paint_timeline_scene(scene, Rect::new(0.0, 0.0, 400.0, 100.0), &mut ui_wgpu::wgpu::FontAtlas::builtin())
+}
+
+fn paint_timeline_scene(scene: &UiComponentSceneNode, bounds: Rect, atlas: &mut ui_wgpu::wgpu::FontAtlas) -> ui_wgpu::wgpu::DrawList {
     let mut draw = ui_wgpu::wgpu::DrawList::default();
-    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
     {
-        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
-        render_graph_timeline(scene, Rect::new(0.0, 0.0, 400.0, 100.0), &mut ctx);
+        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
+        render_graph_timeline(scene, bounds, &mut ctx);
     }
     draw
 }
@@ -227,7 +230,15 @@ fn shared_layout_contract_drives_paint_hit_accessibility_and_mutation_badge_geom
     let viewport = &fixture["viewport"];
     let bounds = Rect::new(0.0, 0.0, viewport["width"].as_f64().unwrap() as f32, viewport["height"].as_f64().unwrap() as f32);
     let theme = Theme::default();
-    let layout = graph_timeline_layout(bounds, &columns, &theme);
+    let mut atlas = ui_wgpu::wgpu::FontAtlas::shaped_default();
+    let mut scene = author_scene(json!([]));
+    scene.host_id = "timeline-layout".into();
+    scene.controller_id = "timeline-layout-controller".into();
+    scene.graph_timeline.as_mut().unwrap().columns_json = fixture["columns"].to_string();
+    let painted = paint_timeline_scene(&scene, bounds, &mut atlas);
+    let label_track = graph_timeline_label_track_width(&columns, &theme, &mut atlas);
+    assert_eq!(graph_timeline_painted_label_track(&scene.host_id), label_track, "the paint keeps the track it measured — the geometry hit test and accessibility read");
+    let layout = graph_timeline_layout(bounds, &columns, &theme, label_track);
     let close = |actual: f32, expected: &serde_json::Value| (actual - expected.as_f64().unwrap() as f32).abs() < 0.001;
     assert!(close(layout.inner.x, &expected["hostPaddingPx"]));
     assert!(close(layout.row_height, &expected["rowHeightPx"]));
@@ -242,18 +253,13 @@ fn shared_layout_contract_drives_paint_hit_accessibility_and_mutation_badge_geom
     assert!(close(author_left, &expected["authorLeftPx"]));
     assert_eq!(checkpoint.mutation_level.as_deref(), expected["mutationLevel"].as_str());
 
-    let mut scene = author_scene(json!([]));
-    scene.host_id = "timeline-layout".into();
-    scene.controller_id = "timeline-layout-controller".into();
-    scene.graph_timeline.as_mut().unwrap().columns_json = fixture["columns"].to_string();
     let y = layout.inner.y + layout.row_height * 0.5;
     let graph_x = layout.inner.x + layout.label_track_width + layout.graph_width * 0.5;
     assert_eq!(graph_timeline_hit(&scene, bounds, graph_x, y, &theme).expect("graph checkpoint hit").control_id, "timeline-layout.history.c4");
     assert!(graph_timeline_hit(&scene, bounds, layout.inner.x + layout.selectable_width + 0.1, y, &theme).is_none(), "description stays inert");
-    let control = graph_timeline_accessibility_controls(&scene, bounds, &theme).into_iter().next().expect("checkpoint accessibility");
+    let control = graph_timeline_accessibility_controls(&scene, bounds, &theme, label_track).into_iter().next().expect("checkpoint accessibility");
     assert_eq!(control.rect, Rect::new(layout.inner.x, layout.inner.y, layout.selectable_width, layout.row_height));
 
-    let painted = paint_author_scene(&scene);
     let warning = theme.warning.with_alpha(0.2);
     assert!(
         painted.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| instance.color == [warning.r, warning.g, warning.b, warning.a]),
@@ -316,7 +322,7 @@ fn checkpoint_regions_match_react_without_activating_descriptions() {
     let values = fixture["bounds"].as_array().unwrap();
     let bounds = Rect::new(values[0].as_f64().unwrap() as f32, values[1].as_f64().unwrap() as f32, values[2].as_f64().unwrap() as f32, values[3].as_f64().unwrap() as f32);
     let mut draw = ui_wgpu::wgpu::DrawList::default();
-    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    let mut atlas = ui_wgpu::wgpu::FontAtlas::shaped_default();
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let mut scroll = HashMap::new();
@@ -352,7 +358,7 @@ fn accepted_checkpoint_accessibility_uses_selectable_geometry_and_exact_action()
     let values = fixture["bounds"].as_array().unwrap();
     let bounds = Rect::new(values[0].as_f64().unwrap() as f32, values[1].as_f64().unwrap() as f32, values[2].as_f64().unwrap() as f32, values[3].as_f64().unwrap() as f32);
     let theme = Theme::default();
-    let controls = graph_timeline_accessibility_controls(&scene, bounds, &theme);
+    let controls = graph_timeline_accessibility_controls(&scene, bounds, &theme, graph_timeline_scene_label_track(&scene, &theme, &mut ui_wgpu::wgpu::FontAtlas::shaped_default()));
     let control = controls.iter().find(|control| control.checkpoint_id == expected["checkpointId"].as_str().unwrap()).expect("checkpoint accessibility control").clone();
     assert_eq!(control.key, expected["key"].as_str().unwrap());
     assert_eq!(control.label, expected["accessibleName"].as_str().unwrap());

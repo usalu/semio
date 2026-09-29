@@ -10,13 +10,13 @@ import { useCallback, useContext, useEffect, useMemo, useRef, useState, type Rea
 import { GraphWasmCanvas, type GraphWasmSession } from "@semio-tech/infinite-canvas-react-renderer";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import { cn, ContextMenuController, glassClass, Textarea, useCanvasAppearanceSync, useLabel, useShellScopeOptional, type ContextMenuItem, type UiTranslationKey } from "@semio-tech/ui-react";
-import { receiveTextEditorSceneV1, refuseTextEditorSpliceV1, scalarOfUtf8OffsetV1, sendTextEditorSpliceV1, TEXT_EDITOR_SCENE_LANES, textEditorActions, textEditorAppliedSpliceV1, textEditorSpliceHostV1, textEditorTypingV1, utf8OffsetOfScalarV1, type ActionDescriptor, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuRequest, type TextEditorScene, type TextEditorSpliceHostV1, type TextEditorSpliceViewV1 } from "@semio-tech/framework";
+import { receiveTextEditorSceneV1, refuseTextEditorSpliceV1, scalarOfUtf8OffsetV1, sendTextEditorSpliceV1, settleTextEditorSpliceV1, TEXT_EDITOR_SCENE_LANES, textEditorActions, textEditorAppliedSpliceV1, textEditorSpliceHostV1, textEditorTypingV1, utf8OffsetOfScalarV1, type ActionDescriptor, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuRequest, type TextEditorScene, type TextEditorSpliceHostV1, type TextEditorSpliceViewV1 } from "@semio-tech/framework";
 import { encodePackValue } from "@semio-tech/framework-os";
 import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
 import { mapContextMenuSpecs } from "../🌐️World3dHost/🟦️.tsx";
 import { useClient } from "../🕸️NodeGraph/🟦️.tsx";
 import { createEditorSession, type EditorWasmSession } from "../🪪️WasmSessionLoader/🟦️.tsx";
-import { createCoalescingActionDispatcher, shellLabel } from "../🛠️ShellHelpers/🟦️.tsx";
+import { shellLabel } from "../🛠️ShellHelpers/🟦️.tsx";
 import { useAppKeybindingsByActionId } from "../🏛️ShellHost/🟦️.tsx";
 import { TextPeerCaretsOverlayV1 } from "../👕️canvas-presence/🟦️.tsx";
 import { publishLocalPresenceWindowViewV1, clearLocalPresenceWindowViewV1, publishLocalActiveToolV1 } from "../👕️canvas-presence/🟦️.ts";
@@ -228,6 +228,11 @@ export function refuseTextEditorEditV1(state: TextEditorEchoStateV1, text: strin
 
 /** 🧾️ The refusal reason of a dispatch outcome (the input ledger's `applied | refused | superseded`), or `null` when the
  * input was not refused. */
+/** ✅️ Whether a dispatched action's typed outcome says the guest APPLIED it — its typed operation completed. */
+function outcomeApplied(outcome: unknown): boolean {
+  return typeof outcome === "object" && outcome !== null && (outcome as { readonly kind?: unknown }).kind === "applied";
+}
+
 function refusalReason(outcome: unknown): string | null {
   if (typeof outcome !== "object" || outcome === null) return null;
   const answer = outcome as { readonly kind?: unknown; readonly reason?: unknown };
@@ -259,6 +264,35 @@ export function documentHistoryChord(event: { readonly key: string; readonly met
 
 /** 📮️ What the editor owes the guest: its latest text and selection (byte offsets of the session). */
 type TextEditorOutboxV1 = { readonly text: string; readonly start: number; readonly end: number };
+
+/** 📮️ The editor's outbox: at most ONE round trip in flight, and each delivery carries the editor's state AS IT IS WHEN THE
+ * DELIVERY GOES OUT (`read`), never a snapshot taken when it was owed — a scene that folded a collaborator's run into the editor
+ * in between is part of what goes out (ticket 26/09/23 C12, live wave p33: a splice computed from a snapshot older than that fold
+ * deleted the collaborator's run and re-inserted everything around it, so both editors duplicated and lost runs). `notify` after
+ * every change; a state equal to the last one delivered is not sent again; a refused round trip frees the lane like a settled one.
+ * @see ../🧫️fixtures/📮️delivery/🔣️.json */
+export function createTextEditorOutboxV1<T>(read: () => T | null, deliver: (value: T) => unknown, isEqual: (a: T, b: T) => boolean): () => void {
+  let inFlight = false;
+  let owed = false;
+  let lastSent: T | undefined;
+  const flush = () => {
+    if (inFlight || !owed) return;
+    owed = false;
+    const next = read();
+    if (next === null || (lastSent !== undefined && isEqual(lastSent, next))) return;
+    lastSent = next;
+    inFlight = true;
+    const release = () => {
+      inFlight = false;
+      flush();
+    };
+    void Promise.resolve(deliver(next)).then(release, release);
+  };
+  return () => {
+    owed = true;
+    flush();
+  };
+}
 
 /** 🧮️ Most edits one editor keeps in flight before an echo acknowledges them. */
 const TEXT_EDITOR_PENDING_EDIT_LIMIT = 256;
@@ -440,8 +474,8 @@ function WasmEditorSurface({
   const spliceTyping = useMemo(() => textEditorTypingV1(scene.settingsJson) !== null, [scene.settingsJson]);
   const spliceTypingRef = useRef(false);
   spliceTypingRef.current = spliceTyping && !explicitDraft;
-  /** 📮️ ONE round trip in flight per editor, latest state wins: a typed run is delivered as the newest full text (plus the
-   * selection that goes with it) whenever the previous delivery settled, never one `textEdit` + one `textSelect` per key —
+  /** 📮️ ONE round trip in flight per editor, latest state wins: a typed run is delivered as the editor's text and selection AT
+   * DELIVERY (`createTextEditorOutboxV1`) whenever the previous delivery settled, never one `textEdit` + one `textSelect` per key —
    * sustained typing at 40 keys/s filled the per-actor command queue (`queue-full`, > 256 pending turns) and dropped keys
    * (ticket 26/09/23 F1). The texts that do go out are the ones the echo reconciliation waits for. The dispatcher lives as long
    * as the surface and reads its owner through `deliveryOwnerRef`: a dispatcher rebuilt on every new `onAction` identity left
@@ -451,7 +485,11 @@ function WasmEditorSurface({
   deliveryOwnerRef.current = { controllerId, explicitDraft, onAction, onDraftChange, surfaceId };
   const deliver = useMemo(
     () =>
-      createCoalescingActionDispatcher<TextEditorOutboxV1>(
+      createTextEditorOutboxV1<TextEditorOutboxV1>(
+        () => {
+          const session = sessionRef.current;
+          return session === null ? null : { text: session.text(), start: session.anchor(), end: session.caret() };
+        },
         async (next) => {
           const { controllerId, explicitDraft, onAction, onDraftChange, surfaceId } = deliveryOwnerRef.current;
           if (explicitDraft) {
@@ -466,8 +504,12 @@ function WasmEditorSurface({
             const sent = readOnlyRef.current ? null : sendTextEditorSpliceV1(spliceHost, next.text);
             if (sent !== null) {
               spliceHostRef.current = sent.host;
-              const reason = refusalReason(await onAction({ controllerId, action: textEditorActions.splice, args: { surfaceId, ...sent.splice, seq: sent.seq, anchor: next.start, caret: next.end } }));
-              if (reason === null) return;
+              const outcome = await onAction({ controllerId, action: textEditorActions.splice, args: { surfaceId, ...sent.splice, seq: sent.seq, anchor: next.start, caret: next.end } });
+              const reason = refusalReason(outcome);
+              if (reason === null) {
+                if (outcomeApplied(outcome)) spliceHostRef.current = settleTextEditorSpliceV1(spliceHostRef.current ?? sent.host, sent.seq);
+                return;
+              }
               if (TEXT_EDITOR_READ_ONLY_REFUSALS.has(reason)) {
                 readOnlyRef.current = true;
                 setReadOnly(true);
@@ -508,14 +550,6 @@ function WasmEditorSurface({
       ),
     [],
   );
-  const sendEdit = useCallback(
-    (text: string) => {
-      const session = sessionRef.current;
-      deliver({ text, start: session?.anchor() ?? text.length, end: session?.caret() ?? text.length });
-    },
-    [deliver],
-  );
-
   const moveExplicitHistory = useCallback((direction: "undo" | "redo") => {
     if (!explicitDraft) return false;
     const history = explicitHistoryRef.current;
@@ -638,9 +672,7 @@ function WasmEditorSurface({
   }, []);
 
   const emitSelection = useCallback(() => {
-    const session = sessionRef.current;
-    if (!session) return;
-    deliver({ text: session.text(), start: session.anchor(), end: session.caret() });
+    deliver();
     publishCaretPresence();
   }, [deliver, publishCaretPresence]);
 
@@ -670,12 +702,11 @@ function WasmEditorSurface({
       const session = sessionRef.current;
       if (!session || readOnlyRef.current || data.length === 0) return;
       session.insertText(data);
-      sendEdit(session.text());
       emitSelection();
     };
     sink.addEventListener("beforeinput", onBeforeInput);
     return () => sink.removeEventListener("beforeinput", onBeforeInput);
-  }, [emitSelection, sendEdit]);
+  }, [emitSelection]);
 
   const [wasmSession, setWasmSession] = useState<FrameworkEditorSession | null>(null);
   const [renameDraft, setRenameDraft] = useState<RenameDraft | null>(null);
@@ -782,11 +813,10 @@ function WasmEditorSurface({
       const prefixStart = identifierPrefixStart(text, caret);
       session.setSelectionRange(prefixStart, caret);
       session.replaceSelection(item.insertText ?? item.label);
-      sendEdit(session.text());
       emitSelection();
       setCompletionsOpen(false);
     },
-    [emitSelection, sendEdit],
+    [emitSelection],
   );
 
   const startRename = useCallback(() => {
@@ -1057,7 +1087,6 @@ function WasmEditorSurface({
           const session = sessionRef.current;
           if (!session || readOnlyRef.current || event.data.length === 0) return;
           session.insertText(event.data);
-          sendEdit(session.text());
           emitSelection();
         }}
         onPaste={(event) => {
@@ -1066,7 +1095,6 @@ function WasmEditorSurface({
           event.preventDefault();
           if (!session || readOnlyRef.current || pasted.length === 0) return;
           session.replaceSelection(pasted);
-          sendEdit(session.text());
           emitSelection();
         }}
         onCopy={(event) => {
@@ -1083,7 +1111,6 @@ function WasmEditorSurface({
           event.clipboardData.setData("text/plain", selected);
           if (readOnlyRef.current) return;
           session.replaceSelection("");
-          sendEdit(session.text());
           emitSelection();
         }}
         onKeyDown={(event) => {
@@ -1191,7 +1218,6 @@ function WasmEditorSurface({
           if (event.key === "Tab") {
             event.preventDefault();
             session.insertText(session.tabInsertText());
-            sendEdit(session.text());
             emitSelection();
             return;
           }
@@ -1200,7 +1226,6 @@ function WasmEditorSurface({
             const allowed = newlineGates == null || newlineGates.has(session.caret());
             if (allowed) {
               session.insertText("\n");
-              sendEdit(session.text());
               emitSelection();
             }
             return;
@@ -1208,21 +1233,18 @@ function WasmEditorSurface({
           if (event.key.length === 1 && !event.metaKey && !event.ctrlKey && !event.altKey) {
             event.preventDefault();
             session.insertText(event.key);
-            sendEdit(session.text());
             emitSelection();
             return;
           }
           if (event.key === "Backspace") {
             event.preventDefault();
             session.backspace();
-            sendEdit(session.text());
             emitSelection();
             return;
           }
           if (event.key === "Delete") {
             event.preventDefault();
             session.deleteForward();
-            sendEdit(session.text());
             emitSelection();
           }
         }}

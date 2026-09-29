@@ -98,6 +98,32 @@ struct EngineSurface {
 pub(crate) const ENGINE_SURFACE_CAPACITY: usize = 256;
 const ENGINE_SURFACE_ID_BYTE_CAPACITY: usize = 256;
 
+/// ♻️ The bytes one close grant releases from a retained buffer — a page, as the prepared raster owners and the store's paged
+/// retirement do: a large document costs its size over the page in grants, never a grant per scalar.
+const ENGINE_CLOSE_PAGE_BYTES: usize = 64 * 1024;
+
+/// ♻️ Releases up to one page of `text` from its end, cutting on a char boundary; `false` once it is empty.
+fn retire_string_page(text: &mut String) -> bool {
+    if text.is_empty() {
+        return false;
+    }
+    let mut cut = text.len().saturating_sub(ENGINE_CLOSE_PAGE_BYTES);
+    while !text.is_char_boundary(cut) {
+        cut += 1;
+    }
+    text.truncate(cut);
+    true
+}
+
+/// ♻️ Releases up to one page of `bytes` from its end; `false` once it is empty.
+fn retire_bytes_page(bytes: &mut Vec<u8>) -> bool {
+    if bytes.is_empty() {
+        return false;
+    }
+    bytes.truncate(bytes.len().saturating_sub(ENGINE_CLOSE_PAGE_BYTES));
+    true
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct EngineSurfaceId {
     bytes: [u8; ENGINE_SURFACE_ID_BYTE_CAPACITY],
@@ -463,7 +489,7 @@ impl EngineSurfaceRetirement {
         let Some(text) = value.as_mut() else {
             return false;
         };
-        if text.pop().is_none() {
+        if !retire_string_page(text) {
             *value = None;
         }
         true
@@ -473,7 +499,7 @@ impl EngineSurfaceRetirement {
         let Some(bytes) = value.as_mut() else {
             return false;
         };
-        if bytes.pop().is_none() {
+        if !retire_bytes_page(bytes) {
             *value = None;
         }
         true
@@ -482,7 +508,7 @@ impl EngineSurfaceRetirement {
     fn close_node_graph_interaction_domain(value: &mut Option<Arc<ui_wgpu::wgpu::NodeGraphInteractionDomain>>) -> bool {
         let Some(shared) = value.as_mut() else { return false };
         let Some(domain) = Arc::get_mut(shared) else { return true };
-        if domain.id.pop().is_some() || domain.node_target_prefix.pop().is_some() || domain.edge_target_prefix.pop().is_some() || domain.handle_target_prefix.pop().is_some() {
+        if retire_string_page(&mut domain.id) || retire_string_page(&mut domain.node_target_prefix) || retire_string_page(&mut domain.edge_target_prefix) || retire_string_page(&mut domain.handle_target_prefix) {
             return true;
         }
         *value = None;
@@ -491,7 +517,7 @@ impl EngineSurfaceRetirement {
 
     fn close_node_graph_sync(cache: &mut NodeGraphSyncCache) -> bool {
         if Self::close_string(&mut cache.fixture_json)
-            || cache.selection.as_mut().is_some_and(|ids| ids.last_mut().is_some_and(|id| id.pop().is_some()))
+            || cache.selection.as_mut().is_some_and(|ids| ids.last_mut().is_some_and(retire_string_page))
             || cache.selection.as_mut().is_some_and(|ids| ids.pop().is_some())
             || Self::close_string(&mut cache.preview_off_json)
             || Self::close_string(&mut cache.computing_json)
@@ -501,7 +527,7 @@ impl EngineSurfaceRetirement {
             || cache.viewport.take().is_some()
             || cache.viewport_pixels.take().is_some()
             || cache.hover.take().is_some()
-            || cache.operator_ids.as_mut().is_some_and(|ids| ids.last_mut().is_some_and(|id| id.pop().is_some()))
+            || cache.operator_ids.as_mut().is_some_and(|ids| ids.last_mut().is_some_and(retire_string_page))
             || cache.operator_ids.as_mut().is_some_and(|ids| ids.pop().is_some())
             || Self::close_bytes(&mut cache.scene_pack)
             || Self::close_node_graph_interaction_domain(&mut cache.interaction_domain)
@@ -734,7 +760,7 @@ impl EngineSurfaceRetirement {
                 }
             }
             EngineSurfaceClosePhase::Scalars => {
-                if self.last_note_click.as_mut().is_some_and(|(id, _)| id.pop().is_some()) {
+                if self.last_note_click.as_mut().is_some_and(|(id, _)| retire_string_page(id)) {
                 } else if self.last_note_click.take().is_none() {
                     self.phase = EngineSurfaceClosePhase::Witness;
                 }
@@ -1755,7 +1781,7 @@ impl TextEditorDeliveryState {
     }
 
     fn close_string(value: &mut String) -> bool {
-        value.pop().is_some()
+        retire_string_page(value)
     }
 
     fn close_snapshot(snapshot: &mut TextEditorDeliverySnapshot) -> bool {
@@ -3440,16 +3466,17 @@ pub fn component_scene_apply_note_edit_key(scene: &UiComponentSceneNode, action:
     })
 }
 
-/// ✍️ Applies one accepted component scene's caret phase to its exact mounted engine surface.
-pub fn component_scene_set_caret_visible(scene: &UiComponentSceneNode, visible: bool) -> bool {
+/// ✍️ Applies one accepted component scene's caret phase to its exact mounted engine surface — addressed by the scene's
+/// identity alone (`host_id`, `surface_id`, `kind`), so a caret phase never copies the scene's payload.
+pub fn component_scene_set_caret_visible(host_id: &str, surface_id: &str, kind: SurfaceKind, visible: bool) -> bool {
     ENGINE_SURFACES.with(|cell| {
         let mut surfaces = cell.borrow_mut();
         let changed = {
-            let Some(entry) = surfaces.get_mut(&scene.host_id) else { return false };
-            if entry.surface_id.as_ref().is_none_or(|surface| surface.as_str() != scene.surface_id) {
+            let Some(entry) = surfaces.get_mut(host_id) else { return false };
+            if entry.surface_id.as_ref().is_none_or(|surface| surface.as_str() != surface_id) {
                 return false;
             }
-            match scene.component_kind {
+            match kind {
                 SurfaceKind::TextEditor => {
                     let Some(host) = entry.editor.as_mut() else { return false };
                     host.set_caret_visible(visible);
@@ -3467,7 +3494,7 @@ pub fn component_scene_set_caret_visible(scene: &UiComponentSceneNode, visible: 
             }
         };
         if changed {
-            mark_engine_scene_repaint(&mut surfaces, &scene.host_id);
+            mark_engine_scene_repaint(&mut surfaces, host_id);
         }
         changed
     })
@@ -5642,9 +5669,10 @@ pub fn puzzle_board_pointer_leave_into(surface_id: &str, controller_id: &str, al
     Ok(true)
 }
 
-/// 🖐️ True while a node drag or area-select gesture is in flight, so pointer-up outside the surface bounds still reaches the host (mirrors `tiled_map_drag_active`).
+/// 🖐️ True from the press that opens a board pointer lane (a pending area select included) until its release, so pointer-up
+/// outside the surface bounds still reaches the host (mirrors `tiled_map_drag_active`, which is live from the map's press).
 pub fn board_drag_active(surface_id: &str) -> bool {
-    with_board_host(surface_id, |host| host.defers_descriptor_sync_from_js() || host.is_dragging_area_select()).unwrap_or(false)
+    with_board_host(surface_id, infinite_canvas::BoardHost::pointer_lane_in_flight).unwrap_or(false)
 }
 
 pub fn puzzle_board_wheel_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {

@@ -112,3 +112,10 @@ path = "../../🧪️tests/🎒️mesh-pack-wire/🦀️.rs"
 [[test]]
 name = "flow_port_types"
 path = "../../🧪️tests/🔌️port-types/🦀️.rs"
+
+# 🌉️ `brep_invoke` bridge laws — the verb catalog is the dispatcher arm for arm, every verb dispatches, and the
+# affine-transform vectors answer over the wire (ticket 26/09/23, slice CD1). Its own `[[test]]` so the wire contract stays
+# runnable from this crate's PUBLIC surface alone.
+[[test]]
+name = "flow_brep_invoke"
+path = "../../🧪️tests/📐️brep-invoke/🦀️.rs"

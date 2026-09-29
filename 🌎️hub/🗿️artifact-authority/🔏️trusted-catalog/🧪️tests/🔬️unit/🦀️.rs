@@ -624,7 +624,7 @@ impl FixtureDirectory {
     }
 
     fn rewrite_descriptor(&mut self, index: usize, schema: Option<&str>, dependency: Option<(&str, &str)>) {
-        let record = &mut self.bundle["packages"][index];
+        let record = &self.bundle["packages"][index];
         let bytes = descriptor_bytes(
             record["pluginId"].as_str().expect("plugin"),
             record["packageId"].as_str().expect("package"),
@@ -633,6 +633,11 @@ impl FixtureDirectory {
             schema,
             dependency,
         );
+        self.replace_descriptor(index, bytes);
+    }
+
+    fn replace_descriptor(&mut self, index: usize, bytes: Vec<u8>) {
+        let record = &mut self.bundle["packages"][index];
         record["descriptor"]["byteLength"] = bytes.len().into();
         record["descriptor"]["sha256"] = hex_lower(&Sha256::digest(&bytes)).into();
         if record["browserActor"]["kind"] == "closed-browser-actor" {
@@ -753,10 +758,37 @@ fn local_stdio_gis_profile_bundle() -> TrustedBundleV1 {
 }
 
 fn descriptor_bytes(plugin_id: &str, package_id: &str, version: &str, component_sha256: &str, schema: Option<&str>, dependency: Option<(&str, &str)>) -> Vec<u8> {
+    encode_descriptor_json(descriptor_json(plugin_id, package_id, version, component_sha256, schema, dependency))
+}
+
+/// 🧾️ Encodes one handcrafted descriptor JSON exactly as the publisher's descriptor bytes are encoded.
+fn encode_descriptor_json(json: serde_json::Value) -> Vec<u8> {
+    let descriptor: PackageDescriptor = serde_json::from_value(json).expect("package descriptor");
+    os_store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).expect("project descriptor"))
+}
+
+/// 🏠️ The fixture editor as a HOST of the base package's kind: it declares no kind, hosts `s.fixture.document` from
+/// `fixture.base`, and adds a `strict` subset editor beside its whole-standard `*` editor, both opening the one document schema.
+fn hosting_descriptor_bytes(component_sha256: &str, schema: &str) -> Vec<u8> {
+    let mut json = descriptor_json("fixture.editor", "semio:fixture-editor", "1.2.3", component_sha256, Some(schema), Some(("fixture.base", "1.0.0")));
+    let manifest = &mut json["manifest"];
+    manifest["artifactKinds"] = serde_json::json!([]);
+    manifest["hostedArtifactKinds"] = serde_json::json!([{ "id": "s.fixture.document", "schema": schema, "owner": "fixture.base" }]);
+    let mut strict = manifest["apps"][0].clone();
+    strict["id"] = "s.fixture.document@1/strict#editor".into();
+    strict["controllerId"] = "fixture-editor-strict".into();
+    strict["dialect"]["subset"] = "strict".into();
+    manifest["apps"].as_array_mut().expect("fixture apps").push(strict);
+    encode_descriptor_json(json)
+}
+
+/// 🧾️ One handcrafted fixture descriptor as JSON: a plugin declaring `s.fixture.document` with `schema` (editor and viewer of
+/// `@1/*`) or nothing, depending on `dependency`.
+fn descriptor_json(plugin_id: &str, package_id: &str, version: &str, component_sha256: &str, schema: Option<&str>, dependency: Option<(&str, &str)>) -> serde_json::Value {
     let artifact_kinds = schema.map_or_else(Vec::new, |schema| {
         vec![serde_json::json!({
             "id": "s.fixture.document",
-            "name": "Fixture Document",
+            "label": { "native": { "en": "Fixture Document", "de": "Fixture-Dokument" }, "reuse": { "en": "Fixture Document", "de": "Fixture-Dokument" } },
             "sourceFormat": "fixture",
             "componentKind": "document",
             "dimension": "data",
@@ -839,7 +871,7 @@ fn descriptor_bytes(plugin_id: &str, package_id: &str, version: &str, component_
             .collect()
     });
     let dependencies = dependency.map_or_else(Vec::new, |(plugin_id, version)| vec![serde_json::json!({ "pluginId": plugin_id, "version": format!("={version}") })]);
-    let json = serde_json::json!({
+    serde_json::json!({
         "descriptorVersion": 1,
         "packageId": package_id,
         "role": "plugin",
@@ -859,9 +891,7 @@ fn descriptor_bytes(plugin_id: &str, package_id: &str, version: &str, component_
             "coreWasmSha256": "22".repeat(32),
             "descriptorSha256": "33".repeat(32)
         }
-    });
-    let descriptor: PackageDescriptor = serde_json::from_value(json).expect("package descriptor");
-    os_store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).expect("project descriptor"))
+    })
 }
 
 fn prepared_fixture() -> FixtureDirectory {
@@ -1979,6 +2009,17 @@ fn descriptor_open_targets_follow_the_one_pairing_rule_and_validate_as_published
             let kind = descriptor.manifest.artifact_kinds.remove(0);
             descriptor.manifest.apps.iter_mut().find(|app| app.role == semio_framework::AppRole::Editor).expect("editor app").artifact_kinds.push(kind);
         }
+        if case["declaredOn"] == "hosted" {
+            let kind = descriptor.manifest.artifact_kinds.remove(0);
+            descriptor.manifest.hosted_artifact_kinds.push(semio_framework::HostedArtifactKind { id: kind.id, schema: kind.schema, owner: "fixture-owner".into() });
+        }
+        if case["declaredOn"] == "hosted-presented" {
+            let kind = descriptor.manifest.artifact_kinds.remove(0);
+            let editor = descriptor.manifest.apps.iter_mut().find(|app| app.role == semio_framework::AppRole::Editor).expect("editor app");
+            editor.io.artifact.id = kind.id.clone();
+            editor.io.artifact_schema = kind.schema.clone();
+            descriptor.manifest.hosted_artifact_kinds.push(semio_framework::HostedArtifactKind { id: kind.id, schema: kind.schema, owner: "fixture-owner".into() });
+        }
         if case["declaredOn"] == "plugin-and-editor" {
             let kind = descriptor.manifest.artifact_kinds[0].clone();
             descriptor.manifest.apps.iter_mut().find(|app| app.role == semio_framework::AppRole::Editor).expect("editor app").artifact_kinds.push(kind);
@@ -2381,4 +2422,151 @@ async fn a_verified_file_streams_its_exact_bytes_without_a_deadline_and_withhold
 
     let (released, error) = drain_stream(&TrustedCatalogAsset::resident(Arc::from(bytes.clone()))).await;
     assert!(error.is_none() && released == bytes, "a resident asset streams the bytes the catalog verified");
+}
+
+/// 🏠️ A hosted kind's document-open target binds the ONE declared dependency in the catalog that declares its exact native
+/// codec — never a copied row, never an owner read off the kind id (demonstrator's `3d.cad` names no plugin): accepted for a
+/// present declared dependency declaring the exact codec; refused by name when none does, when it is absent or undeclared, and
+/// when two declared dependencies declare the same exact codec.
+#[test]
+fn hosted_open_targets_bind_the_owner_codec_or_are_refused_by_name() {
+    let fixture = fixture_json();
+    let bundle: TrustedBundleV1 = serde_json::from_value(fixture["bundle"].clone()).expect("bundle");
+    let mut host = bundle.packages[0].clone();
+    let mut owner = bundle.packages[1].clone();
+    let target = host.open_targets[0].clone();
+    owner.native_codecs = std::mem::take(&mut host.native_codecs);
+    host.dependencies[0].plugin_id = owner.plugin_id.clone();
+    let packages = vec![host.clone(), owner.clone()];
+    assert_eq!(open_target_codec_package(&packages, &packages[0], &target).expect("hosted target binds the owner codec").plugin_id, owner.plugin_id);
+    let refusal = |packages: Vec<TrustedBundlePackageV1>| open_target_codec_package(&packages, &packages[0], &target).expect_err("refused").to_string();
+    assert!(refusal(vec![host.clone()]).contains("binds no exact native codec"));
+    let mut stranger = host.clone();
+    stranger.dependencies.clear();
+    assert!(refusal(vec![stranger, owner.clone()]).contains("binds no exact native codec"));
+    let mut bare = owner.clone();
+    bare.native_codecs.clear();
+    assert!(refusal(vec![host.clone(), bare]).contains("binds no exact native codec"));
+    let mut twin = owner.clone();
+    twin.plugin_id = format!("{}-twin", owner.plugin_id);
+    let mut both = host.clone();
+    let mut twin_dependency = both.dependencies[0].clone();
+    twin_dependency.plugin_id = twin.plugin_id.clone();
+    both.dependencies.push(twin_dependency);
+    assert!(refusal(vec![both, owner.clone(), twin]).contains("more than one declared dependency"));
+    let mut own = host.clone();
+    own.native_codecs = owner.native_codecs.clone();
+    assert_eq!(open_target_codec_package(&[own.clone()], &own, &target).expect("own codec").plugin_id, own.plugin_id);
+}
+
+/// 🌱️ LAW: creation is owner-preferred — the owners' editors decide and a host's editor of the same kind never makes it
+/// ambiguous (cad + demonstrator's embedded cad editor → cad, even against a host's more general editor); a kind only hosts
+/// create falls to its hosts (a stdio family); within the deciding tier the most general dialect creates (stdio's json
+/// `rfc8259/*` over `i-json`, the image family's jpg `jfif-1.01/*` over `baseline`); two owners, two hosts or two standards
+/// alone stay ambiguous; nothing creates nothing.
+#[test]
+fn creation_prefers_the_owners_editor_over_a_hosts() {
+    let pick = |owned: &[(&'static str, &str)], hosted: &[(&'static str, &str)]| {
+        let tier = |entries: &[(&'static str, &str)]| entries.iter().map(|(name, coordinate)| (*name, semio_framework::ArtifactDialect::parse_coordinate(coordinate).expect("canonical coordinate"))).collect::<Vec<_>>();
+        owner_preferred_creation(tier(owned), tier(hosted), |(_, dialect)| dialect).one().map(|(name, _)| name)
+    };
+    assert_eq!(pick(&[("cad", "s.cad.cad@1/*")], &[("demonstrator", "s.cad.cad@1/*")]), Some("cad"));
+    assert_eq!(pick(&[("cad", "s.cad.cad@1/strict")], &[("demonstrator", "s.cad.cad@1/*")]), Some("cad"));
+    assert_eq!(pick(&[], &[("stdio-pdf", "s.stdio.pdf@1.7/*")]), Some("stdio-pdf"));
+    assert_eq!(pick(&[("stdio i-json", "s.stdio.json@rfc8259/i-json"), ("stdio json", "s.stdio.json@rfc8259/*")], &[]), Some("stdio json"));
+    assert_eq!(pick(&[], &[("stdio-image baseline", "s.stdio.jpg@jfif-1.01/baseline"), ("stdio-image jfif", "s.stdio.jpg@jfif-1.01/*")]), Some("stdio-image jfif"));
+    assert_eq!(pick(&[("cad", "s.cad.cad@1/*"), ("cad-twin", "s.cad.cad@1/*")], &[("demonstrator", "s.cad.cad@1/*")]), None);
+    assert_eq!(pick(&[], &[("demonstrator", "s.cad.cad@1/*"), ("bundle", "s.cad.cad@1/*")]), None);
+    assert_eq!(pick(&[], &[("stdio-cad ac1018", "s.stdio.dwg@ac1018/*"), ("stdio-cad ac1024", "s.stdio.dwg@ac1024/*")]), None);
+    assert_eq!(pick(&[], &[]), None);
+}
+
+/// 🌳️ LAW: the hub's most-general-dialect rule answers every case of the ONE shared fixture — the rule the guest's
+/// `artifact_codec_owner` answers `codec.*` by — for the candidates as listed and reversed (order never decides).
+#[test]
+fn the_most_general_dialect_rule_answers_the_shared_fixture() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🔨️modules/🚪️io/🧫️fixtures/🌳️most-general-dialect/🔣️.json")).expect("shared most-general-dialect fixture");
+    let cases = fixture["cases"].as_array().expect("fixture cases");
+    assert!(cases.len() >= 10, "the shared fixture keeps its cases");
+    for case in cases {
+        let name = case["name"].as_str().expect("case name");
+        let candidates = case["candidates"].as_array().expect("candidates").iter().enumerate().map(|(index, coordinate)| (index, semio_framework::ArtifactDialect::parse_coordinate(coordinate.as_str().expect("coordinate")).expect("canonical coordinate"))).collect::<Vec<_>>();
+        let expected = match &case["mostGeneral"] {
+            serde_json::Value::Number(index) => MostGeneralDialect::One(usize::try_from(index.as_u64().expect("index")).expect("index")),
+            serde_json::Value::String(answer) if answer == "ambiguous" => MostGeneralDialect::Ambiguous,
+            serde_json::Value::String(answer) if answer == "none" => MostGeneralDialect::Empty,
+            other => panic!("{name}: unknown answer {other}"),
+        };
+        let answer = |candidates: Vec<(usize, semio_framework::ArtifactDialect)>| match most_general_dialect(candidates, |(_, dialect)| dialect) {
+            MostGeneralDialect::One((index, _)) => MostGeneralDialect::One(index),
+            MostGeneralDialect::Ambiguous => MostGeneralDialect::Ambiguous,
+            MostGeneralDialect::Empty => MostGeneralDialect::Empty,
+        };
+        assert_eq!(answer(candidates.clone()), expected, "{name}");
+        assert_eq!(answer(candidates.into_iter().rev().collect()), expected, "{name} (reversed)");
+    }
+}
+
+/// 🏠️ LAW: a kind a package only HOSTS (a stdio family hosting `stdio`'s kinds) is created by the host's MOST GENERAL editor
+/// and executed under the HOST's own identity — the owner's linked native codec when the hub links one, the HOST's component
+/// for genesis and every guest call (the family ships the app; the owner's component need not) — and its document opens
+/// without a requested surface in that same whole-standard editor, while a requested subset surface still opens exactly.
+/// Unlinked, the hosted row is a verification row of the HOST's component. Live defect (ticket 26/09/23 H14, 2026-09-29):
+/// every multi-subset kind stayed uncreatable, and a hosted creation resolved no codec for the host's identity.
+#[tokio::test]
+async fn a_hosted_multi_subset_kind_is_created_and_executed_by_its_hosts_most_general_editor() {
+    let mut fixture = prepared_fixture();
+    let (schema, component_sha256) = (fixture.schema.clone(), fixture_json()["componentSha256"].as_str().expect("component sha256").to_owned());
+    let codecs = fixture.bundle["packages"][0]["nativeCodecs"].take();
+    fixture.bundle["packages"][0]["nativeCodecs"] = serde_json::json!([]);
+    fixture.bundle["packages"][1]["nativeCodecs"] = codecs;
+    let mut strict = fixture.bundle["packages"][0]["openTargets"][0].clone();
+    strict["surfaceId"] = "s.fixture.document@1/strict#editor".into();
+    strict["appId"] = "s.fixture.document@1/strict#editor".into();
+    strict["parentDialect"]["subset"] = "strict".into();
+    fixture.bundle["packages"][0]["openTargets"].as_array_mut().expect("host targets").insert(0, strict.clone());
+    let mut selected = fixture.bundle["profiles"][0]["openTargets"][0].clone();
+    selected["target"] = strict;
+    fixture.bundle["profiles"][0]["openTargets"].as_array_mut().expect("profile targets").insert(0, selected);
+    fixture.rewrite_descriptor(1, Some(&schema), None);
+    fixture.replace_descriptor(0, hosting_descriptor_bytes(&component_sha256, &schema));
+    let host = |plugin_id: &str| plugin_id == "fixture.editor";
+    let descriptor = DocumentDescriptor {
+        space_id: "space".into(),
+        document_id: "document".into(),
+        artifact_kind: "s.fixture.document".into(),
+        artifact_schema: schema.clone(),
+        owner: directory::os_directory::DocumentOwner { plugin_id: "fixture.editor".into(), package_id: "semio:fixture-editor".into(), version: "1.2.3".into(), package_hash: component_sha256.clone() },
+        pack_schema_hash: "11".repeat(32),
+        bootstrap_version: 1,
+        bootstrap_frontier: directory::os_directory::DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 },
+        bootstrap_snapshot_hash: "33".repeat(32),
+    };
+    for linked in [true, false] {
+        let bindings = if linked { vec![NativeCodecBinding::new("fixture.base", "semio:fixture-base", "s.fixture.document", fixture_codec(&schema, [0x11; 32]))] } else { Vec::new() };
+        let catalog = load_fixture(&fixture, &bindings, &TestControl::new().context()).await.expect("hosting catalog loads");
+        let selection = catalog.artifact_creation_selection("s.fixture.document").expect("the hosted multi-subset kind is creatable");
+        assert!(host(&selection.package.plugin_id), "the host creates: {:?}", selection.package);
+        assert_eq!(selection.surface.surface_id, "s.fixture.document@1/*#editor", "the most general editor creates");
+        let identity = TrustedArtifactIdentity {
+            plugin_id: selection.package.plugin_id.clone(),
+            package_id: selection.package.package_id.clone(),
+            version: selection.package.version.clone(),
+            package_hash: selection.package.component_sha256.clone(),
+            artifact_kind: selection.artifact.kind.clone(),
+            artifact_schema: selection.artifact.schema.clone(),
+            pack_schema_hash: selection.artifact.pack_schema_hash.clone(),
+        };
+        assert_eq!(identity, TrustedArtifactIdentity::from_descriptor(&descriptor), "a created document names its host as owner");
+        let codec = catalog.resolve(&identity).await.expect("the host's identity resolves a codec");
+        assert_eq!(codec.guest.component.package.package.0, "semio:fixture-editor", "genesis and guest calls go to the host's component");
+        assert_eq!(codec.codec.is_some(), linked, "the owner's linked native codec executes the hosted identity");
+        let owner = TrustedArtifactIdentity { plugin_id: "fixture.base".into(), package_id: "semio:fixture-base".into(), version: "1.0.0".into(), ..identity.clone() };
+        assert_eq!(catalog.resolve(&owner).await.expect("the owner's row stays its own").guest.component.package.package.0, "semio:fixture-base");
+        assert_eq!(catalog.resolve_document_open(&descriptor, None, true).expect("default editor").surface.surface_id, "s.fixture.document@1/*#editor");
+        assert_eq!(catalog.resolve_document_open(&descriptor, Some("s.fixture.document@1/strict#editor"), true).expect("requested subset editor").surface.surface_id, "s.fixture.document@1/strict#editor");
+        let progress = catalog.load_progress();
+        let hosting = progress.packages.iter().find(|package| host(&package.plugin_id)).expect("host progress");
+        assert_eq!((hosting.rows, hosting.rows_pinned), (1, u64::from(linked)), "the hosted identity is a row of the host, pinned only when linked");
+    }
 }

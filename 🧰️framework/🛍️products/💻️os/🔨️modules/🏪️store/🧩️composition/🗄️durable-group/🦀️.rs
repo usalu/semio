@@ -544,6 +544,7 @@ where
             Ok(values) => values,
             Err(error) => return reject(error, outcome),
         },
+        applied_tail_chains: None,
     };
     let previous = revision_accumulator.applied.last().map_or(revision_accumulator.identity_digest, |record| record.prefix_digest);
     revision_accumulator.applied.push(super::CursorRevisionRecord {

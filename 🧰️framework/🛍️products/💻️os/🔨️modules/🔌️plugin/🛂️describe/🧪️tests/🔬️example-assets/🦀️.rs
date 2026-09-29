@@ -25,6 +25,7 @@ fn manifest_with_example(body: String) -> PluginManifest {
         topic_contributions: Vec::new(),
         commands: Vec::new(),
         artifact_kinds: Vec::new(),
+        hosted_artifact_kinds: Vec::new(),
         dependencies: Vec::new(),
         contributions: Vec::new(),
     }

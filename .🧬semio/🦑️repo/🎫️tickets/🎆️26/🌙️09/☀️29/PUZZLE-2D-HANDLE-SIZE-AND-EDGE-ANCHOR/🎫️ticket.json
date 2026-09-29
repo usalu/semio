@@ -1,0 +1,11 @@
+{
+  "title": "Puzzle 2d Handle Size And Edge Anchor",
+  "emoji": "🧩",
+  "status": "closed",
+  "description": "Puzzle 2d handles paint too large because fixture handle radius is dropped and the board falls back to the default glyph radius. Edges start on the node circle instead of at the handle cap. Keep the authored handle radius and start each edge at the handle.",
+  "summary": "Puzzle 2d handles keep the authored cap radius instead of the default of 8, and each edge now starts at the handle cap rather than on the node circle.",
+  "goal": "🎯runningpuzzle2d",
+  "sessions": [
+    "⚪25b34e8ebd974ec993cb68a350a63299"
+  ]
+}

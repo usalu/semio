@@ -1,6 +1,6 @@
 {
   "provenance": {
-    "what": "React Section and Field compact-density text bands shared with the retained WGPU renderer.",
+    "what": "React Section and Field compact-density text bands shared with the retained WGPU renderer — every line count is Chromium's own wrap of the Anta text at its box width.",
     "implementations": {
       "rust": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🦀️.rs",
       "typescript": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⚙️puzzle3d-settings-document/🟦️.tsx"
@@ -26,7 +26,7 @@
     "trailingMargin": 32.0
   },
   "field": {
-    "width": 112.0,
+    "width": 80.0,
     "label": "Threshold value",
     "description": "Shown before control",
     "error": "Fix this value now",

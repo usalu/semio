@@ -1962,7 +1962,10 @@ export type HistoryEntry = {
   readonly label: LocalizedLabel;
   readonly kind: string;
   readonly timestamp: string;
+  /** 📜️ The newest forward operations of this row's edit, newest last — a bounded preview. */
   readonly opLines?: readonly string[];
+  /** 🔢️ Forward operations of this row's edit; more than `opLines` holds means the preview omits the older ones. */
+  readonly opCount?: number;
   readonly applied?: boolean;
   readonly revertible?: boolean;
   readonly count?: number;

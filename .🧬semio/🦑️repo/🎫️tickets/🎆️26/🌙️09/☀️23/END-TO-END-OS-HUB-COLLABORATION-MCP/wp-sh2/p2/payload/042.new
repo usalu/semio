@@ -1,0 +1,39 @@
+//! 👁️ SpaceIndexViewer — the `main` window: the same read-only table of the space's artifacts. Uses
+//! the shared `TableWindowKit`'s read-only `window_kind()` (no `set-cell` action) — never imports
+//! anything from the sibling `✏️editor` (`policyViewerPurityBreaches`).
+
+use crate::standards::v1::subsets::any::schema::snapshot::{SSpaceSnapshot, SpaceIndexTableLabels};
+use crate::viewer::space_index::transient::SpaceIndexTransient;
+use semio_framework_plugin::app::{table_window_row, TableWindowKit, TreeWindows, WindowKit};
+use semio_framework_plugin::WindowKindDefinition;
+
+//#region 🔖️Constants
+pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
+pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
+//#endregion 🔖️Constants
+
+//#region 🔖️Definition
+pub fn definition() -> WindowKindDefinition {
+    TableWindowKit::window_kind()
+}
+//#endregion 🔖️Definition
+
+//#region 🔖️Render
+/// 👁️ The directory-owned rows of the space the index document names, folded into this surface's own transient from the
+/// host's directory batches — "Updated" and "Updated By" move with every check-in — with each artifact's live presence.
+/// One `TableRow` record per artifact, no row actions: the viewer has no mutating affordance.
+pub fn render(document: &SSpaceSnapshot, transient: &SpaceIndexTransient, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let labels = semio_framework_plugin::resolve_labels::<SpaceIndexTableLabels>(view_state);
+    let rows = transient.directory().rows(&document.space_id);
+    TableWindowKit::render_rows(&TreeWindows::for_body(view_state, BODY_KEY), labels.table_name.as_str(), &labels.columns(), None, &rows, |row| {
+        let cells = labels.row(row, &transient.presence_for(&row.id).join(", "));
+        table_window_row(&format!("artifact:{}", row.id), &cells.each_ref().map(String::as_str), std::iter::empty(), None)
+    })
+}
+//#endregion 🔖️Render
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests

@@ -48,7 +48,7 @@ impl ArtifactViewer for TiffBaselineViewer {
     const DOCUMENT_SCHEMA: &'static str = STDIO_TIFF_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> Self::Snapshot {
-        TiffSnapshot::default()
+        crate::standards::v6_0::subsets::document::schema::blank_tiff_snapshot()
     }
 
     fn handle(

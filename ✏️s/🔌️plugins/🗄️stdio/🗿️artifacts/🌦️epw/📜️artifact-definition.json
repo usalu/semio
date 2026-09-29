@@ -81,7 +81,67 @@
       "fixtures": []
     }
   ],
-  "runtime_capabilities": [],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.epw.composer.dialect-s-stdio-epw-energyplus.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.epw@energyplus/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.epw@energyplus/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.epw.inference.schema-s-stdio-epw-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.epw.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.epw.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.epw.schema.schema-s-stdio-epw.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.epw",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.epw"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.epw.standard.energyplus.codec.codec-stdio-epw-extension-epw.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:9:stdio.epw:epw|codec:stdio.epw",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.epw"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "9:stdio.epw:epw"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.epw.standard.energyplus.representation.extension-epw",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:extension:.epw",
+      "claims": [
+        {
+          "namespace": "extension",
+          "value": ".epw"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

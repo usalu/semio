@@ -36,6 +36,13 @@ impl SemioArtifact {
     }
 }
 
+/// 📚️ semio's shared schema documents — named exports of the `s.stdio.semio` scope that the subsets' facets `$ref`
+/// (`base/geometry.json`, `base/child.json`), declared with the artifact (`ArtifactDeclarationBuilder::schema_documents`).
+pub const SEMIO_SHARED_SCHEMA_DOCUMENTS: framework_schema::ScopeSchemaExports = framework_schema::ScopeSchemaExports {
+    scope: "s.stdio.semio",
+    exports: &[framework_schema::SchemaExport { id: "geometry", leaves: framework_schema::FacetLeaves { rust: include_str!("🧮️geometry/🦀️.rs"), typescript: include_str!("🧮️geometry/🟦️.ts"), graphql: include_str!("🧮️geometry/🔗️.graphql"), json_schema: include_str!("🧮️geometry/🔣️.json"), proto: include_str!("🧮️geometry/🛰️.proto") } }, framework_schema::SchemaExport { id: "child", leaves: framework_schema::FacetLeaves { rust: include_str!("🪆️child/🦀️.rs"), typescript: include_str!("🪆️child/🟦️.ts"), graphql: "", json_schema: include_str!("🪆️child/🔣️.json"), proto: "" } }],
+};
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn semio_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
     framework_schema::ArtifactSchemaDescriptor {

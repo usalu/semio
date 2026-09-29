@@ -48,7 +48,7 @@ impl BinaryArtifact {
 
 //#region 🔖️DocumentHelpers
 /// 🦑 Dissolved out of the former `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-
-/// MACHINES) — mirrors `png`'s own `empty_png_snapshot`/`demo_png_snapshot` placement beside the
+/// MACHINES) — mirrors `png`'s own `blank_png_snapshot`/`demo_png_snapshot` placement beside the
 /// artifact struct (binary has no format codec of its own to sit beside — the hex `ArtifactDsl`/
 /// `ArtifactPack` impls already live in `📸️snapshot/🦀️.rs`, untouched by this move).
 /// 🌱 Empty persisted snapshot.

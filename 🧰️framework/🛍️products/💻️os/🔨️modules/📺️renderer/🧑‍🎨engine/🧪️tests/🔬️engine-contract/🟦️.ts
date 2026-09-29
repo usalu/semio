@@ -64,6 +64,8 @@ import {
   EMPTY_APP_LABELS_OVERLAY,
   SET_ACTIVE_EXAMPLE_ACTION_ID,
   appSwitchesExamples,
+  appOffersRegisteredExamples,
+  frameworkOwnsExampleSwitch,
   buildActiveExampleAction,
   navbarExampleIdFromHistoryUpserts,
   rememberedExampleIdFromDispatchV1,
@@ -7698,6 +7700,81 @@ describe("framework renderer hosts", () => {
       }
     });
 
+  for (const law of editorDeliveryFixture.spliceCases)
+    it(`delivers splice typing against what the actual React editor shows at delivery: ${law.id}`, async () => {
+      const { decodePackValue } = await import("@semio-tech/framework-os");
+      let text = law.initial;
+      let caret = text.length;
+      const session = {
+        attachCanvas: vi.fn(async () => {}),
+        setCaretVisible: vi.fn(),
+        setSize: () => {},
+        renderFrame: () => {},
+        syncFromSceneJson: () => {},
+        setText: (value: string) => {
+          text = value;
+        },
+        setSelectionRange: (_anchor: number, next: number) => {
+          caret = next;
+        },
+        syncFromScenePack: (pack: Uint8Array) => {
+          const scene = decodePackValue(pack) as { buffer?: string };
+          if (scene.buffer !== undefined) text = scene.buffer;
+        },
+        text: () => text,
+        caret: () => caret,
+        anchor: () => caret,
+        setCanvasThemeJson: () => {},
+        free: () => {},
+        insertText: (value: string) => {
+          text = text.slice(0, caret) + value + text.slice(caret);
+          caret += value.length;
+        },
+      };
+      const factory = vi.spyOn(flowSessionLoader, "createEditorSession").mockResolvedValue(session as unknown as flowSessionLoader.EditorWasmSession);
+      const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
+      const completions: Array<(outcome: unknown) => void> = [];
+      const dispatched: string[] = [];
+      const onAction = vi.fn((action: ActionDescriptor) => {
+        if (action.action !== "textSplice") return Promise.resolve(undefined);
+        const args = action.args as { readonly seq: number; readonly start: number; readonly deleted: string; readonly insert: string; readonly before: string; readonly after: string };
+        dispatched.push(`textSplice:${args.seq}:${args.start}:${args.deleted}:${args.insert}:${args.before}:${args.after}`);
+        return new Promise((resolve) => completions.push(resolve));
+      });
+      const node = (buffer: string, applied: number) => ({
+        type: "componentScene",
+        surfaceId: "writer.splice",
+        controllerId: "writer",
+        componentKind: "text-editor",
+        textEditor: { buffer, selectionJson: JSON.stringify({ start: buffer.length, end: buffer.length, splice: applied }), settingsJson: JSON.stringify({ typing: { mode: "splice" } }) },
+      });
+      const view = render(createElement(TextEditorHost, { node: node(law.initial, 0), onAction } as never));
+      try {
+        await waitFor(() => expect(session.attachCanvas).toHaveBeenCalledOnce());
+        await reactAct(async () => {
+          await Promise.resolve();
+        });
+        const area = view.container.querySelector("textarea")!;
+        for (const key of law.typedFirst) fireEvent.keyDown(area, { key });
+        for (const key of law.typedWhileInFlight) fireEvent.keyDown(area, { key });
+        await reactAct(async () => {
+          view.rerender(createElement(TextEditorHost, { node: node(law.published.buffer, law.published.applied), onAction } as never));
+          await Promise.resolve();
+        });
+        for (let turn = 0; turn < 16 && (completions.length > 0 || dispatched.length < law.expected.length); turn += 1)
+          await reactAct(async () => {
+            completions.shift()?.({ kind: "applied", inputSeq: 0 });
+            await Promise.resolve();
+          });
+        await waitFor(() => expect(dispatched).toEqual(law.expected));
+        expect(text).toBe(law.finalText);
+      } finally {
+        view.unmount();
+        factory.mockRestore();
+        bounds.mockRestore();
+      }
+    });
+
   for (const law of textInputFixture.rendererKeys)
     it(`routes the actual React text editor key: ${law.id}`, async () => {
       const attachCanvas = vi.fn(async () => {});
@@ -9595,7 +9672,7 @@ describe("s workflow flow routing", () => {
                   granularity: null,
                   inlineToolbar: null,
                   detail: null,
-                  rowActions: [],
+                  rowActions: [], target: null,
                 },
               },
             ],
@@ -9615,7 +9692,7 @@ describe("s workflow flow routing", () => {
   // `catalogue-add-object-kind before=1 after=1` while `catalogue-drag-drop` (a different route into the
   // same command) passed, so the question this pins is whether a click on an EXPANDABLE authored row
   // reaches the action channel at all, or is swallowed as a fold toggle.
-  it("fires an expandable catalogue row's own activate binding, args and all, instead of only folding it", () => {
+  it("fires an expandable catalogue row's own target activation, args and all, instead of only folding it", () => {
     const dispatched: ActionDescriptor[] = [];
     const config = uiNodeToTreePanelConfig(
       buildContractNode({
@@ -9641,13 +9718,12 @@ describe("s workflow flow routing", () => {
                   granularity: null,
                   inlineToolbar: null,
                   detail: null,
-                  rowActions: [],
+                  rowActions: [], target: { scope: "puzzle3d-play", version: 1, args: { objectKind: "Hexagonal Cut Concrete Forest Left" }, activation: "addObjectKind" },
                 },
-                bindings: [{ trigger: "activate", action: { scope: "puzzle3d-play", name: "addObjectKind", version: 1 }, args: { objectKind: "Hexagonal Cut Concrete Forest Left" }, capability: null }],
                 children: [
                   {
                     key: "puzzle3d-kind-vortex.0.b-l",
-                    component: { type: "treeItem", label: "b-l", description: "[4,4,3]", icon: "circle-dot", defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, inlineToolbar: null, detail: null, rowActions: [] },
+                    component: { type: "treeItem", label: "b-l", description: "[4,4,3]", icon: "circle-dot", defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, inlineToolbar: null, detail: null, rowActions: [], target: null },
                   },
                 ],
               },
@@ -9723,18 +9799,19 @@ describe("s workflow flow routing", () => {
   });
 
   it("carries an outliner row action's explicit ids to the action channel whatever else is selected", () => {
-    // 🙈️ `with_hide_lock_actions` (`📌️panels/🗿️artifact/🦀️.rs:131-150`) authors each inline toggle with its
-    // OWN `{entity, flag, ids, value}` — the row names the entity it flags, so the guest's explicit branch
-    // never consults the live selection. Battery #59 measured `outliner-hide-applies` FAIL with the row's
+    // 🙈️ `with_hide_lock_actions` (`📌️panels/🗿️artifact/🦀️.rs`) authors each inline toggle as a set-verb
+    // (`setSelectionHidden`/`setSelectionLocked`) over the row's ONE target `{entity, hidden, ids, locked}` — the explicit
+    // next state and the entity it flags — so the guest's explicit branch never consults the live selection. Battery #59 measured `outliner-hide-applies` FAIL with the row's
     // object selected (`historyUpserts: 0, effects: 0`) and PASS with nothing selected, which made "the
     // host dropped the args under a selection" a live candidate (26/09/02/PUZZLE-3D-END-TO-END B47 §6).
     // This pins the host half: the same authored map reaches `ActionDescriptor` with and without a
     // selection overlay, so a future red here means the HOST lost them and a red only in the browser
     // means the guest did.
-    const flagArgs = { entity: "object", flag: "hidden", ids: ["seed-left-001"], value: true };
+    const targetArgs = { entity: "object", hidden: true, ids: ["seed-left-001"], locked: true };
     const documentNode = buildContractNode({
       key: "puzzle3d-play-document",
       component: { type: "tree", interactionDomain: "puzzle3d" },
+      bindings: [{ trigger: "activate", action: { scope: "puzzle3d-play", name: "interactionSelect", version: 1 }, args: { domainId: "puzzle3d" }, capability: null }],
       children: [
         {
           key: "puzzle3d-play-document.objects",
@@ -9752,18 +9829,18 @@ describe("s workflow flow routing", () => {
                 dragData: null,
                 dimmed: null,
                 window: null,
-                granularity: null,
+                granularity: "object",
                 inlineToolbar: null,
                 detail: null,
-                rowActions: [{ icon: "eye", label: "Hide", action: { trigger: "activate", action: { scope: "puzzle3d-play", name: "setSelectionFlag", version: 1 }, args: flagArgs, capability: null }, placement: "row" }],
+                rowActions: [{ icon: "eye", label: "Hide", verb: "setSelectionHidden", placement: "row", disabled: false }],
+                target: { scope: "puzzle3d-play", version: 1, args: targetArgs, activation: null },
               },
-              bindings: [{ trigger: "activate", action: { scope: "puzzle3d-play", name: "interactionSelect", version: 1 }, args: { domainId: "puzzle3d" }, capability: null }],
             },
           ],
         },
       ],
     });
-    const expected = { controllerId: "puzzle3d-play", action: "setSelectionFlag", args: flagArgs };
+    const expected = { controllerId: "puzzle3d-play", action: "setSelectionHidden", args: targetArgs };
     for (const presence of [undefined, { "seed-left-001": { selected: true }, "object-1": { selected: true } }]) {
       const dispatched: ActionDescriptor[] = [];
       const config = uiNodeToTreePanelConfig(documentNode, (action) => dispatched.push(action), "framework.panel.document");
@@ -10639,7 +10716,7 @@ describe("registry-derived utilities and activation (P5)", () => {
           key: "framework.history.commands",
           component: { type: "treeSection", label: null, defaultOpen: true, headerToolbar: null, window: null },
           children: [
-            { key: "framework.history.entry.1", component: { type: "treeItem", label: "Increment", description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, inlineToolbar: null, detail: null, rowActions: [] } },
+            { key: "framework.history.entry.1", component: { type: "treeItem", label: "Increment", description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, inlineToolbar: null, detail: null, rowActions: [], target: null } },
           ],
         },
       ],
@@ -11076,6 +11153,19 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     ).toBe(true);
     expect(appSwitchesExamples("s.vcs.vcs@1/*#editor", [{ id: "vcs-editor", actions: [{ id: "commit" }] }, { id: "vcs-history" }])).toBe(false);
     expect(appSwitchesExamples("s.note.note@1/*#editor", [])).toBe(false);
+  });
+
+  it("lists registered examples on every editor and admits the switch without a declared action", () => {
+    const editor = { id: "s.lowpoly.lowpoly@1/*#editor", role: "editor", windowKinds: [{ id: "model", actions: [{ id: "select" }] }] };
+    expect(appOffersRegisteredExamples(editor, 1)).toBe(true);
+    expect(appOffersRegisteredExamples(editor, 0)).toBe(false);
+    expect(appSwitchesExamples(editor.id, editor.windowKinds)).toBe(false);
+    expect(frameworkOwnsExampleSwitch("editor", SET_ACTIVE_EXAMPLE_ACTION_ID)).toBe(true);
+    expect(frameworkOwnsExampleSwitch("viewer", SET_ACTIVE_EXAMPLE_ACTION_ID)).toBe(false);
+    expect(frameworkOwnsExampleSwitch("editor", "select")).toBe(false);
+    const viewer = { id: "s.lowpoly.lowpoly@1/*#viewer", role: "viewer", windowKinds: [{ id: "model", actions: [{ id: "select" }] }] };
+    expect(appOffersRegisteredExamples(viewer, 1)).toBe(false);
+    expect(appOffersRegisteredExamples({ ...viewer, windowKinds: [{ id: "model", actions: [{ id: SET_ACTIVE_EXAMPLE_ACTION_ID }] }] }, 1)).toBe(true);
   });
 
   it("remembers the example id of every setActiveExample dispatch, so a redone row can relabel the picker", () => {
@@ -12236,7 +12326,7 @@ describe("Display Windows tab — projection drag templates", () => {
     expect(sections).toHaveLength(1);
     const items = sections[0]!.items as LabeledTreeItem[];
     expect(items).toHaveLength(3);
-    expect(items.some((row) => row.id === "framework.display.windows.puzzle3d-main.kind")).toBe(true);
+    expect(items.some((row) => row.id === "framework.display.windows.puzzle3dMain.kind")).toBe(true);
     const parallel = byLabel(items, "Parallel")!;
     const perspective = byLabel(items, "Perspective")!;
     expect(perspective).toBeDefined();

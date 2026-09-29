@@ -119,7 +119,185 @@
       "fixtures": []
     }
   ],
-  "runtime_capabilities": [],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.ifc.composer.dialect-s-stdio-ifc-2x3-cobie.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.ifc@2x3/cobie",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.ifc@2x3/cobie"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ifc.composer.dialect-s-stdio-ifc-2x3-cv20.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.ifc@2x3/cv20",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.ifc@2x3/cv20"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ifc.composer.dialect-s-stdio-ifc-2x3-sav.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.ifc@2x3/sav",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.ifc@2x3/sav"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ifc.composer.dialect-s-stdio-ifc-2x3.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.ifc@2x3/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.ifc@2x3/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ifc.composer.dialect-s-stdio-ifc-4.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.ifc@4/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.ifc@4/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ifc.inference.schema-s-stdio-ifc-2x3-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.ifc.2x3.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.ifc.2x3.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ifc.inference.schema-s-stdio-ifc-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.ifc.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.ifc.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ifc.schema.schema-s-stdio-ifc-2x3.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.ifc.2x3",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.ifc.2x3"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ifc.schema.schema-s-stdio-ifc.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.ifc",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.ifc"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ifc.standard.2x3.codec.codec-stdio-ifc-2x3-extension-ifc.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:13:stdio.ifc.2x3:ifc|codec:stdio.ifc.2x3",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.ifc.2x3"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "13:stdio.ifc.2x3:ifc"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ifc.standard.2x3.codec.codec-stdio-ifc-extension-ifc.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:9:stdio.ifc:ifc|codec:stdio.ifc",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.ifc"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "9:stdio.ifc:ifc"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ifc.standard.2x3.representation.mime-application-x-ifc-extension-ifc",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:application/x-ifc|extension:.ifc",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "application/x-ifc"
+        },
+        {
+          "namespace": "extension",
+          "value": ".ifc"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ifc.subset-validator.validated-dialect-s-stdio-ifc-2x3-cobie.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.ifc@2x3/cobie",
+      "claims": [
+        {
+          "namespace": "validated-dialect",
+          "value": "s.stdio.ifc@2x3/cobie"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ifc.subset-validator.validated-dialect-s-stdio-ifc-2x3-cv20.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.ifc@2x3/cv20",
+      "claims": [
+        {
+          "namespace": "validated-dialect",
+          "value": "s.stdio.ifc@2x3/cv20"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.ifc.subset-validator.validated-dialect-s-stdio-ifc-2x3-sav.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.ifc@2x3/sav",
+      "claims": [
+        {
+          "namespace": "validated-dialect",
+          "value": "s.stdio.ifc@2x3/sav"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

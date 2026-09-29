@@ -7,6 +7,7 @@ import type { DeleteNode } from "./🗑️delete-node/🟦️.ts";
 import type { MoveNode } from "./📍️move-node/🟦️.ts";
 import type { RemoveDataProperty } from "./🧹️remove-data-property/🟦️.ts";
 import type { RenameNode } from "./✏️rename-node/🟦️.ts";
+import type { SetQuery } from "./🔎️set-query/🟦️.ts";
 
 export type JackMutation =
   | ({ mutation: "changeDataProperty" } & ChangeDataProperty)
@@ -16,4 +17,5 @@ export type JackMutation =
   | ({ mutation: "deleteNode" } & DeleteNode)
   | ({ mutation: "moveNode" } & MoveNode)
   | ({ mutation: "removeDataProperty" } & RemoveDataProperty)
-  | ({ mutation: "renameNode" } & RenameNode);
+  | ({ mutation: "renameNode" } & RenameNode)
+  | ({ mutation: "setQuery" } & SetQuery);

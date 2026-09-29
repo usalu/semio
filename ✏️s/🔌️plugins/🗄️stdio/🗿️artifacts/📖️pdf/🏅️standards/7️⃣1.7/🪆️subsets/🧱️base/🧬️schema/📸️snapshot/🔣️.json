@@ -5108,18 +5108,21 @@
           ]
         },
         {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "real"
-            },
-            "value": {
+          "allOf": [
+            {
               "$ref": "#/$defs/PdfDecimal"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "real"
+                }
+              },
+              "required": [
+                "kind"
+              ]
             }
-          },
-          "required": [
-            "kind",
-            "value"
           ]
         },
         {
@@ -5193,18 +5196,21 @@
           ]
         },
         {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "ref"
-            },
-            "value": {
+          "allOf": [
+            {
               "$ref": "#/$defs/ObjRef"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "ref"
+                }
+              },
+              "required": [
+                "kind"
+              ]
             }
-          },
-          "required": [
-            "kind",
-            "value"
           ]
         },
         {

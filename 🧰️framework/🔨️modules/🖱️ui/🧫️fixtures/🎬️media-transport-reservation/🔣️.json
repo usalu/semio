@@ -204,6 +204,522 @@
         },
         "hostContentHeight": 96
       }
+    },
+    {
+      "name": "resource-missing-appInstanceId",
+      "extensionId": "framework.media.transport@1",
+      "schemaValid": false,
+      "expectedHostStatus": "Invalid media transport contract",
+      "props": {
+        "schemaVersion": 1,
+        "kind": "video",
+        "mediaType": "video/mp4",
+        "revision": "7",
+        "durationMs": 12500,
+        "positionMs": 2500,
+        "selectionStartMs": 1000,
+        "selectionEndMs": 3000,
+        "locale": "en",
+        "labels": {
+          "play": "Play",
+          "pause": "Pause",
+          "seek": "Seek",
+          "position": "Position",
+          "duration": "Duration",
+          "selectionStart": "Selection start",
+          "selectionEnd": "Selection end",
+          "loading": "Loading",
+          "progress": "Progress",
+          "cancel": "Cancel",
+          "unsupported": "This media cannot be played on this device.",
+          "unknownDuration": "Unknown duration",
+          "audio": "Audio",
+          "video": "Video"
+        },
+        "resource": {
+          "kind": "artifact-media-export",
+          "controllerId": "video.viewer",
+          "parentDocumentId": "document-7",
+          "outputPort": "playback:out",
+          "revision": "7",
+          "generation": "3"
+        },
+        "capability": {
+          "status": "ready",
+          "reason": null
+        },
+        "hostContentHeight": 240
+      }
+    },
+    {
+      "name": "resource-missing-parentDocumentId",
+      "extensionId": "framework.media.transport@1",
+      "schemaValid": false,
+      "expectedHostStatus": "Invalid media transport contract",
+      "props": {
+        "schemaVersion": 1,
+        "kind": "video",
+        "mediaType": "video/mp4",
+        "revision": "7",
+        "durationMs": 12500,
+        "positionMs": 2500,
+        "selectionStartMs": 1000,
+        "selectionEndMs": 3000,
+        "locale": "en",
+        "labels": {
+          "play": "Play",
+          "pause": "Pause",
+          "seek": "Seek",
+          "position": "Position",
+          "duration": "Duration",
+          "selectionStart": "Selection start",
+          "selectionEnd": "Selection end",
+          "loading": "Loading",
+          "progress": "Progress",
+          "cancel": "Cancel",
+          "unsupported": "This media cannot be played on this device.",
+          "unknownDuration": "Unknown duration",
+          "audio": "Audio",
+          "video": "Video"
+        },
+        "resource": {
+          "kind": "artifact-media-export",
+          "controllerId": "video.viewer",
+          "appInstanceId": 17,
+          "outputPort": "playback:out",
+          "revision": "7",
+          "generation": "3"
+        },
+        "capability": {
+          "status": "ready",
+          "reason": null
+        },
+        "hostContentHeight": 240
+      }
+    },
+    {
+      "name": "resource-missing-generation",
+      "extensionId": "framework.media.transport@1",
+      "schemaValid": false,
+      "expectedHostStatus": "Invalid media transport contract",
+      "props": {
+        "schemaVersion": 1,
+        "kind": "video",
+        "mediaType": "video/mp4",
+        "revision": "7",
+        "durationMs": 12500,
+        "positionMs": 2500,
+        "selectionStartMs": 1000,
+        "selectionEndMs": 3000,
+        "locale": "en",
+        "labels": {
+          "play": "Play",
+          "pause": "Pause",
+          "seek": "Seek",
+          "position": "Position",
+          "duration": "Duration",
+          "selectionStart": "Selection start",
+          "selectionEnd": "Selection end",
+          "loading": "Loading",
+          "progress": "Progress",
+          "cancel": "Cancel",
+          "unsupported": "This media cannot be played on this device.",
+          "unknownDuration": "Unknown duration",
+          "audio": "Audio",
+          "video": "Video"
+        },
+        "resource": {
+          "kind": "artifact-media-export",
+          "controllerId": "video.viewer",
+          "appInstanceId": 17,
+          "parentDocumentId": "document-7",
+          "outputPort": "playback:out",
+          "revision": "7"
+        },
+        "capability": {
+          "status": "ready",
+          "reason": null
+        },
+        "hostContentHeight": 240
+      }
+    },
+    {
+      "name": "extra-owner-field",
+      "extensionId": "framework.media.transport@1",
+      "schemaValid": false,
+      "expectedHostStatus": "Invalid media transport contract",
+      "props": {
+        "schemaVersion": 1,
+        "kind": "video",
+        "mediaType": "video/mp4",
+        "revision": "7",
+        "durationMs": 12500,
+        "positionMs": 2500,
+        "selectionStartMs": 1000,
+        "selectionEndMs": 3000,
+        "locale": "en",
+        "labels": {
+          "play": "Play",
+          "pause": "Pause",
+          "seek": "Seek",
+          "position": "Position",
+          "duration": "Duration",
+          "selectionStart": "Selection start",
+          "selectionEnd": "Selection end",
+          "loading": "Loading",
+          "progress": "Progress",
+          "cancel": "Cancel",
+          "unsupported": "This media cannot be played on this device.",
+          "unknownDuration": "Unknown duration",
+          "audio": "Audio",
+          "video": "Video"
+        },
+        "resource": {
+          "kind": "artifact-media-export",
+          "controllerId": "video.viewer",
+          "appInstanceId": 17,
+          "parentDocumentId": "document-7",
+          "outputPort": "playback:out",
+          "revision": "7",
+          "generation": "3",
+          "owner": "forged"
+        },
+        "capability": {
+          "status": "ready",
+          "reason": null
+        },
+        "hostContentHeight": 240
+      }
+    },
+    {
+      "name": "invalid-negative-instance",
+      "extensionId": "framework.media.transport@1",
+      "schemaValid": false,
+      "expectedHostStatus": "Invalid media transport contract",
+      "props": {
+        "schemaVersion": 1,
+        "kind": "video",
+        "mediaType": "video/mp4",
+        "revision": "7",
+        "durationMs": 12500,
+        "positionMs": 2500,
+        "selectionStartMs": 1000,
+        "selectionEndMs": 3000,
+        "locale": "en",
+        "labels": {
+          "play": "Play",
+          "pause": "Pause",
+          "seek": "Seek",
+          "position": "Position",
+          "duration": "Duration",
+          "selectionStart": "Selection start",
+          "selectionEnd": "Selection end",
+          "loading": "Loading",
+          "progress": "Progress",
+          "cancel": "Cancel",
+          "unsupported": "This media cannot be played on this device.",
+          "unknownDuration": "Unknown duration",
+          "audio": "Audio",
+          "video": "Video"
+        },
+        "resource": {
+          "kind": "artifact-media-export",
+          "controllerId": "video.viewer",
+          "appInstanceId": -1,
+          "parentDocumentId": "document-7",
+          "outputPort": "playback:out",
+          "revision": "7",
+          "generation": "3"
+        },
+        "capability": {
+          "status": "ready",
+          "reason": null
+        },
+        "hostContentHeight": 240
+      }
+    },
+    {
+      "name": "invalid-instance-overflow",
+      "extensionId": "framework.media.transport@1",
+      "schemaValid": false,
+      "expectedHostStatus": "Invalid media transport contract",
+      "props": {
+        "schemaVersion": 1,
+        "kind": "video",
+        "mediaType": "video/mp4",
+        "revision": "7",
+        "durationMs": 12500,
+        "positionMs": 2500,
+        "selectionStartMs": 1000,
+        "selectionEndMs": 3000,
+        "locale": "en",
+        "labels": {
+          "play": "Play",
+          "pause": "Pause",
+          "seek": "Seek",
+          "position": "Position",
+          "duration": "Duration",
+          "selectionStart": "Selection start",
+          "selectionEnd": "Selection end",
+          "loading": "Loading",
+          "progress": "Progress",
+          "cancel": "Cancel",
+          "unsupported": "This media cannot be played on this device.",
+          "unknownDuration": "Unknown duration",
+          "audio": "Audio",
+          "video": "Video"
+        },
+        "resource": {
+          "kind": "artifact-media-export",
+          "controllerId": "video.viewer",
+          "appInstanceId": 4294967296,
+          "parentDocumentId": "document-7",
+          "outputPort": "playback:out",
+          "revision": "7",
+          "generation": "3"
+        },
+        "capability": {
+          "status": "ready",
+          "reason": null
+        },
+        "hostContentHeight": 240
+      }
+    },
+    {
+      "name": "invalid-empty-document",
+      "extensionId": "framework.media.transport@1",
+      "schemaValid": false,
+      "expectedHostStatus": "Invalid media transport contract",
+      "props": {
+        "schemaVersion": 1,
+        "kind": "video",
+        "mediaType": "video/mp4",
+        "revision": "7",
+        "durationMs": 12500,
+        "positionMs": 2500,
+        "selectionStartMs": 1000,
+        "selectionEndMs": 3000,
+        "locale": "en",
+        "labels": {
+          "play": "Play",
+          "pause": "Pause",
+          "seek": "Seek",
+          "position": "Position",
+          "duration": "Duration",
+          "selectionStart": "Selection start",
+          "selectionEnd": "Selection end",
+          "loading": "Loading",
+          "progress": "Progress",
+          "cancel": "Cancel",
+          "unsupported": "This media cannot be played on this device.",
+          "unknownDuration": "Unknown duration",
+          "audio": "Audio",
+          "video": "Video"
+        },
+        "resource": {
+          "kind": "artifact-media-export",
+          "controllerId": "video.viewer",
+          "appInstanceId": 17,
+          "parentDocumentId": "",
+          "outputPort": "playback:out",
+          "revision": "7",
+          "generation": "3"
+        },
+        "capability": {
+          "status": "ready",
+          "reason": null
+        },
+        "hostContentHeight": 240
+      }
+    },
+    {
+      "name": "invalid-generation-leading-zero",
+      "extensionId": "framework.media.transport@1",
+      "schemaValid": false,
+      "expectedHostStatus": "Invalid media transport contract",
+      "props": {
+        "schemaVersion": 1,
+        "kind": "video",
+        "mediaType": "video/mp4",
+        "revision": "7",
+        "durationMs": 12500,
+        "positionMs": 2500,
+        "selectionStartMs": 1000,
+        "selectionEndMs": 3000,
+        "locale": "en",
+        "labels": {
+          "play": "Play",
+          "pause": "Pause",
+          "seek": "Seek",
+          "position": "Position",
+          "duration": "Duration",
+          "selectionStart": "Selection start",
+          "selectionEnd": "Selection end",
+          "loading": "Loading",
+          "progress": "Progress",
+          "cancel": "Cancel",
+          "unsupported": "This media cannot be played on this device.",
+          "unknownDuration": "Unknown duration",
+          "audio": "Audio",
+          "video": "Video"
+        },
+        "resource": {
+          "kind": "artifact-media-export",
+          "controllerId": "video.viewer",
+          "appInstanceId": 17,
+          "parentDocumentId": "document-7",
+          "outputPort": "playback:out",
+          "revision": "7",
+          "generation": "03"
+        },
+        "capability": {
+          "status": "ready",
+          "reason": null
+        },
+        "hostContentHeight": 240
+      }
+    },
+    {
+      "name": "invalid-generation-overflow",
+      "extensionId": "framework.media.transport@1",
+      "schemaValid": false,
+      "expectedHostStatus": "Invalid media transport contract",
+      "props": {
+        "schemaVersion": 1,
+        "kind": "video",
+        "mediaType": "video/mp4",
+        "revision": "7",
+        "durationMs": 12500,
+        "positionMs": 2500,
+        "selectionStartMs": 1000,
+        "selectionEndMs": 3000,
+        "locale": "en",
+        "labels": {
+          "play": "Play",
+          "pause": "Pause",
+          "seek": "Seek",
+          "position": "Position",
+          "duration": "Duration",
+          "selectionStart": "Selection start",
+          "selectionEnd": "Selection end",
+          "loading": "Loading",
+          "progress": "Progress",
+          "cancel": "Cancel",
+          "unsupported": "This media cannot be played on this device.",
+          "unknownDuration": "Unknown duration",
+          "audio": "Audio",
+          "video": "Video"
+        },
+        "resource": {
+          "kind": "artifact-media-export",
+          "controllerId": "video.viewer",
+          "appInstanceId": 17,
+          "parentDocumentId": "document-7",
+          "outputPort": "playback:out",
+          "revision": "7",
+          "generation": "18446744073709551616"
+        },
+        "capability": {
+          "status": "ready",
+          "reason": null
+        },
+        "hostContentHeight": 240
+      }
+    },
+    {
+      "name": "invalid-resource-revision",
+      "extensionId": "framework.media.transport@1",
+      "schemaValid": true,
+      "expectedHostStatus": "Invalid media transport contract",
+      "props": {
+        "schemaVersion": 1,
+        "kind": "video",
+        "mediaType": "video/mp4",
+        "revision": "7",
+        "durationMs": 12500,
+        "positionMs": 2500,
+        "selectionStartMs": 1000,
+        "selectionEndMs": 3000,
+        "locale": "en",
+        "labels": {
+          "play": "Play",
+          "pause": "Pause",
+          "seek": "Seek",
+          "position": "Position",
+          "duration": "Duration",
+          "selectionStart": "Selection start",
+          "selectionEnd": "Selection end",
+          "loading": "Loading",
+          "progress": "Progress",
+          "cancel": "Cancel",
+          "unsupported": "This media cannot be played on this device.",
+          "unknownDuration": "Unknown duration",
+          "audio": "Audio",
+          "video": "Video"
+        },
+        "resource": {
+          "kind": "artifact-media-export",
+          "controllerId": "video.viewer",
+          "appInstanceId": 17,
+          "parentDocumentId": "document-7",
+          "outputPort": "playback:out",
+          "revision": "8",
+          "generation": "3"
+        },
+        "capability": {
+          "status": "ready",
+          "reason": null
+        },
+        "hostContentHeight": 240
+      },
+      "contractValid": false
+    },
+    {
+      "name": "invalid-controller-length-bound",
+      "extensionId": "framework.media.transport@1",
+      "schemaValid": false,
+      "expectedHostStatus": "Invalid media transport contract",
+      "props": {
+        "schemaVersion": 1,
+        "kind": "video",
+        "mediaType": "video/mp4",
+        "revision": "7",
+        "durationMs": 12500,
+        "positionMs": 2500,
+        "selectionStartMs": 1000,
+        "selectionEndMs": 3000,
+        "locale": "en",
+        "labels": {
+          "play": "Play",
+          "pause": "Pause",
+          "seek": "Seek",
+          "position": "Position",
+          "duration": "Duration",
+          "selectionStart": "Selection start",
+          "selectionEnd": "Selection end",
+          "loading": "Loading",
+          "progress": "Progress",
+          "cancel": "Cancel",
+          "unsupported": "This media cannot be played on this device.",
+          "unknownDuration": "Unknown duration",
+          "audio": "Audio",
+          "video": "Video"
+        },
+        "resource": {
+          "kind": "artifact-media-export",
+          "controllerId": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "appInstanceId": 17,
+          "parentDocumentId": "document-7",
+          "outputPort": "playback:out",
+          "revision": "7",
+          "generation": "3"
+        },
+        "capability": {
+          "status": "ready",
+          "reason": null
+        },
+        "hostContentHeight": 240
+      }
     }
   ]
 }

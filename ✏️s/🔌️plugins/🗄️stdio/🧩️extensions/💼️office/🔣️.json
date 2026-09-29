@@ -26230,6 +26230,28 @@
     "topicContributions": [],
     "commands": [],
     "artifactKinds": [],
+    "hostedArtifactKinds": [
+      {
+        "id": "s.stdio.docx",
+        "schema": "stdio.docx",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.pptx",
+        "schema": "stdio.pptx",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.xlsx",
+        "schema": "stdio.xlsx",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.xml",
+        "schema": "stdio.xml",
+        "owner": "stdio"
+      }
+    ],
     "dependencies": [
       {
         "pluginId": "stdio",
@@ -26614,8 +26636,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "372eca1b99103110507b049d3bcf8939a03a59caf318331d0bb25b7b73cb19e0",
-    "coreWasmSha256": "b9b3f12ed7b87f80fca98f5eca794cbe310a3b4d13fcd78412143a4356f83eb3",
-    "descriptorSha256": "7087eb0d9de54c905136d0c42aef1055250aea379d56439c1d608d88051d021f"
+    "wasmSha256": "26d63e3b324119fa52feb3e03f69d4075f9f412342d56813eb5df47aa0fae213",
+    "coreWasmSha256": "c02f3f79ef55b2e505473a90a31a93fdb51042af824de6fb47fce805b680e625",
+    "descriptorSha256": "ccad259116c6adb2cef8299d68c1914a62748c371c913052b5c51c991c42cd39"
   }
 }

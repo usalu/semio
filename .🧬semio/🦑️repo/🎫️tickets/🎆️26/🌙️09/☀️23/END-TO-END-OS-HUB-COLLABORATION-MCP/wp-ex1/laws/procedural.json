@@ -1,0 +1,68 @@
+{
+ "plugin": "procedural",
+ "dir": "🌀️procedural",
+ "apps": [
+  {
+   "app": "s.procedural.generation3d@1/*#editor",
+   "examples": [
+    {
+     "id": "hexagonal-mushroom-column",
+     "document": "distinct"
+    },
+    {
+     "id": "mesh-workbench",
+     "document": "distinct"
+    },
+    {
+     "id": "rectangle-extrude-volume",
+     "document": "distinct"
+    },
+    {
+     "id": "sphere-cut-with-torus",
+     "document": "distinct"
+    },
+    {
+     "id": "box-fillet-preview",
+     "document": "distinct"
+    },
+    {
+     "id": "sphere-box-fuse",
+     "document": "distinct"
+    },
+    {
+     "id": "face-sweep-extrude",
+     "document": "distinct"
+    },
+    {
+     "id": "rectangle-wire-preview",
+     "document": "distinct"
+    },
+    {
+     "id": "box-shell-preview",
+     "document": "distinct"
+    }
+   ]
+  },
+  {
+   "app": "s.procedural.generation2d@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dPlayApp",
+   "create": "semio_s_artifact_procedural_generation3d::editor::generation3d::create_generation3d_app",
+   "app": "s.procedural.generation3d@1/*#editor"
+  },
+  {
+   "editor": "semio_s_artifact_procedural_generation2d::editor::generation2d::Generation2dPlayApp",
+   "create": "semio_s_artifact_procedural_generation2d::editor::generation2d::create_generation2d_app",
+   "app": "s.procedural.generation2d@1/*#editor"
+  }
+ ]
+}

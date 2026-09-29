@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:flow:brep:channel-contract",
+  "title": "Typed Widget Channel",
+  "type": "object",
+  "required": [
+    "code",
+    "abbreviation",
+    "name",
+    "fullName",
+    "valueTypes"
+  ],
+  "properties": {
+    "code": {
+      "type": "string",
+      "minLength": 1
+    },
+    "abbreviation": {
+      "type": "string",
+      "minLength": 1
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "fullName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "valueTypes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

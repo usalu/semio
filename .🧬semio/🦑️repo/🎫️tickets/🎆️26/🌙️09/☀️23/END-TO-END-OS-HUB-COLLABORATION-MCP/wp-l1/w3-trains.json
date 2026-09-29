@@ -1,5 +1,5 @@
 {
- "about": "L1 window-3 train manifests (session 14c). Commands run by l1-train.py through `zsh -c` in the repo root; T = .tmp-ticket, L = .🧬semio/🌐hub. Every write runs inside l1-land.py (byte backup + change record under wp-l1/w3-backup/<set>/). {MAPS} = `--map <tsv>` for every L/s14-t14-logs/s14b-f9-map-*.tsv (as wp-t14/land-w3.py). {NATIVE} = native lane prefix with build-fleet-b + wp-l1/target.",
+ "about": "L1 window-3 train manifests (session 14c). Commands run by l1-train.py through `zsh -c` in the repo root; T = .tmp-ticket, L = .🧬semio/🌐hub. Every write runs inside l1-land.py (byte backup + change record under wp-l1/w3-backup/<set>/). {MAPS} = `--map <tsv>` for every L/s14-t14-logs/s14b-f9-map-*.tsv (as wp-t14/land-w3.py). {NATIVE} = native lane prefix with build-fleet-b + wp-l1/target. Session 15: T6R4 = round 4 (rows 18, LB2 p2/p2b, 21, 20, 19, 22, T7c, T7d in this order), T6R5 = row 12 faults.",
  "sets": [
   {
    "id": "lb2-xml",
@@ -1132,54 +1132,387 @@
    "notes": "pre-chain native: E0432 wrong module path for settle_framework_reserved_admission"
   },
   {
-   "id": "lb2-p9-hosted-artifacts",
-   "train": "T6-HOLD",
-   "owner": "LB2",
-   "dry": "python3 T/wp-lb2/lb2-p9-hosted-artifacts.py --dry-run",
-   "write": "python3 T/wp-lb2/lb2-p9-hosted-artifacts.py --write",
-   "revert": "own --revert (.🧬semio/🌐hub/s14-lb2-backup/p9/) + l1-land",
+   "id": "h14-retire-pages",
+   "train": "T6R1",
+   "owner": "H14",
+   "dry": "python3 T/wp-h14/h14-retire-pages.py --dry-run",
+   "write": "python3 T/wp-h14/h14-retire-pages.py",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework-os-kernel"
+   ],
+   "laws": "H14: retire-pages laws + paged_list close_turns == 1",
+   "notes": "t6-queue row 1"
+  },
+  {
+   "id": "h13-vcs-removal-w4",
+   "train": "T6R1",
+   "owner": "H13",
+   "dry": "patch -p1 --dry-run -E -i '/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-h13-work/vcs-removal/vcs-removal-w4.patch'",
+   "write": "patch -p1 -E -i '/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-h13-work/vcs-removal/vcs-removal-w4.patch'",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework-os-services (comment)"
+   ],
+   "ts": [
+    "taxonomy.json"
+   ],
+   "laws": "taxonomy-load probe",
+   "notes": "t6-queue row 2 (plain `patch`, no git)"
+  },
+  {
+   "id": "u6-stdio-wire-drift",
+   "train": "T6R1",
+   "owner": "U6",
+   "dry": "python3 T/wp-u6/u6-stdio-wire-drift.py --dry-run",
+   "write": "python3 T/wp-u6/u6-stdio-wire-drift.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "semio-s-artifact-stdio-contract",
+    "semio-s-artifact-stdio-pdf",
+    "semio-s-artifact-stdio-zip",
+    "semio-s-artifact-stdio-bmp",
+    "semio-s-artifact-stdio-gltf"
+   ],
+   "laws": "U6 row 6b laws",
+   "notes": "t6-queue row 6b"
+  },
+  {
+   "id": "wg11-json-number",
+   "train": "T6R1",
+   "owner": "WG11",
+   "dry": "python3 T/wp-wg11/wg11-json-number-patch.py",
+   "write": "python3 T/wp-wg11/wg11-json-number-patch.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "replication(value)",
+    "ui-contract",
+    "ui (wgpu-engine)",
+    "plugin SDK",
+    "os-renderer-wgpu",
+    "editor",
+    "os-infinite"
+   ],
+   "laws": "WG11 row 7 / T7 laws",
+   "notes": "t6-queue row 7"
+  },
+  {
+   "id": "wg11-shell-footprint",
+   "train": "T6R1",
+   "owner": "WG11",
+   "dry": "python3 T/wp-wg11/wg11-shell-footprint-patch.py",
+   "write": "python3 T/wp-wg11/wg11-shell-footprint-patch.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "replication(value)",
+    "ui-contract",
+    "ui (wgpu-engine)",
+    "plugin SDK",
+    "os-renderer-wgpu",
+    "editor",
+    "os-infinite"
+   ],
+   "laws": "WG11 row 7 / T7 laws",
+   "notes": "t6-queue row 7"
+  },
+  {
+   "id": "wg11-renderer-test-drift",
+   "train": "T6R1",
+   "owner": "WG11",
+   "dry": "python3 T/wp-wg11/wg11-renderer-test-drift-patch.py",
+   "write": "python3 T/wp-wg11/wg11-renderer-test-drift-patch.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "replication(value)",
+    "ui-contract",
+    "ui (wgpu-engine)",
+    "plugin SDK",
+    "os-renderer-wgpu",
+    "editor",
+    "os-infinite"
+   ],
+   "laws": "WG11 row 7 / T7 laws",
+   "notes": "t6-queue row 7"
+  },
+  {
+   "id": "wg11-renderer-product",
+   "train": "T6R1",
+   "owner": "WG11",
+   "dry": "python3 T/wp-wg11/wg11-renderer-product-patch.py",
+   "write": "python3 T/wp-wg11/wg11-renderer-product-patch.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "replication(value)",
+    "ui-contract",
+    "ui (wgpu-engine)",
+    "plugin SDK",
+    "os-renderer-wgpu",
+    "editor",
+    "os-infinite"
+   ],
+   "laws": "WG11 row 7 / T7 laws",
+   "notes": "t6-queue row 7"
+  },
+  {
+   "id": "wg11-renderer-product-2",
+   "train": "T6R1",
+   "owner": "WG11",
+   "dry": "python3 T/wp-wg11/wg11-renderer-product-2-patch.py",
+   "write": "python3 T/wp-wg11/wg11-renderer-product-2-patch.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "replication(value)",
+    "ui-contract",
+    "ui (wgpu-engine)",
+    "plugin SDK",
+    "os-renderer-wgpu",
+    "editor",
+    "os-infinite"
+   ],
+   "laws": "WG11 row 7 / T7 laws",
+   "notes": "t6-queue row 7"
+  },
+  {
+   "id": "wg11-raster-refusal",
+   "train": "T6R1",
+   "owner": "WG11",
+   "dry": "python3 T/wp-wg11/wg11-raster-refusal-patch.py",
+   "write": "python3 T/wp-wg11/wg11-raster-refusal-patch.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "replication(value)",
+    "ui-contract",
+    "ui (wgpu-engine)",
+    "plugin SDK",
+    "os-renderer-wgpu",
+    "editor",
+    "os-infinite"
+   ],
+   "laws": "WG11 row 7 / T7 laws",
+   "notes": "t6-queue row 7"
+  },
+  {
+   "id": "wg11-display-element-ids",
+   "train": "T6R1",
+   "owner": "WG11",
+   "dry": "python3 T/wp-wg11/wg11-display-element-ids-patch.py",
+   "write": "python3 T/wp-wg11/wg11-display-element-ids-patch.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "replication(value)",
+    "ui-contract",
+    "ui (wgpu-engine)",
+    "plugin SDK",
+    "os-renderer-wgpu",
+    "editor",
+    "os-infinite"
+   ],
+   "laws": "WG11 row 7 / T7 laws",
+   "notes": "t6-queue row 7"
+  },
+  {
+   "id": "wg11-tree-window",
+   "train": "T6R1",
+   "owner": "WG11",
+   "dry": "python3 T/wp-wg11/wg11-tree-window-patch.py",
+   "write": "python3 T/wp-wg11/wg11-tree-window-patch.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "replication(value)",
+    "ui-contract",
+    "ui (wgpu-engine)",
+    "plugin SDK",
+    "os-renderer-wgpu",
+    "editor",
+    "os-infinite"
+   ],
+   "laws": "WG11 row 7 / T7 laws",
+   "notes": "t6-queue row 7"
+  },
+  {
+   "id": "wg11-tree-window-shell",
+   "train": "T6R1",
+   "owner": "WG11",
+   "dry": "python3 T/wp-wg11/wg11-tree-window-shell-patch.py",
+   "write": "python3 T/wp-wg11/wg11-tree-window-shell-patch.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "replication(value)",
+    "ui-contract",
+    "ui (wgpu-engine)",
+    "plugin SDK",
+    "os-renderer-wgpu",
+    "editor",
+    "os-infinite"
+   ],
+   "laws": "WG11 row 7 / T7 laws",
+   "notes": "t6-queue row 7"
+  },
+  {
+   "id": "wg11-own-work-budget",
+   "train": "T6R1",
+   "owner": "WG11",
+   "dry": "python3 T/wp-wg11/wg11-own-work-budget-patch.py",
+   "write": "python3 T/wp-wg11/wg11-own-work-budget-patch.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "replication(value)",
+    "ui-contract",
+    "ui (wgpu-engine)",
+    "plugin SDK",
+    "os-renderer-wgpu",
+    "editor",
+    "os-infinite"
+   ],
+   "laws": "WG11 row 7 / T7 laws",
+   "notes": "t6-queue row 7"
+  },
+  {
+   "id": "wg11-engine-close-pages",
+   "train": "T6R1",
+   "owner": "WG11",
+   "dry": "python3 T/wp-wg11/wg11-engine-close-pages-patch.py",
+   "write": "python3 T/wp-wg11/wg11-engine-close-pages-patch.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "replication(value)",
+    "ui-contract",
+    "ui (wgpu-engine)",
+    "plugin SDK",
+    "os-renderer-wgpu",
+    "editor",
+    "os-infinite"
+   ],
+   "laws": "WG11 row 7 / T7 laws",
+   "notes": "t6-queue row 7"
+  },
+  {
+   "id": "wg11-board-lane",
+   "train": "T6R1",
+   "owner": "WG11",
+   "dry": "python3 T/wp-wg11/wg11-board-lane-patch.py",
+   "write": "python3 T/wp-wg11/wg11-board-lane-patch.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "replication(value)",
+    "ui-contract",
+    "ui (wgpu-engine)",
+    "plugin SDK",
+    "os-renderer-wgpu",
+    "editor",
+    "os-infinite"
+   ],
+   "laws": "WG11 row 7 / T7 laws",
+   "notes": "t6-queue row 7"
+  },
+  {
+   "id": "wg11-text-advances",
+   "train": "T6R1",
+   "owner": "WG11",
+   "dry": "python3 T/wp-wg11/wg11-text-advances-patch.py",
+   "write": "python3 T/wp-wg11/wg11-text-advances-patch.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "replication(value)",
+    "ui-contract",
+    "ui (wgpu-engine)",
+    "plugin SDK",
+    "os-renderer-wgpu",
+    "editor",
+    "os-infinite"
+   ],
+   "laws": "WG11 row 7 / T7 laws",
+   "notes": "T7"
+  },
+  {
+   "id": "wg11-text-kerning",
+   "train": "T6R1",
+   "owner": "WG11",
+   "dry": "python3 T/wp-wg11/wg11-text-kerning-patch.py",
+   "write": "python3 T/wp-wg11/wg11-text-kerning-patch.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "replication(value)",
+    "ui-contract",
+    "ui (wgpu-engine)",
+    "plugin SDK",
+    "os-renderer-wgpu",
+    "editor",
+    "os-infinite"
+   ],
+   "laws": "WG11 row 7 / T7 laws",
+   "notes": "T7"
+  },
+  {
+   "id": "c12-sdk-composition",
+   "train": "T6R1",
+   "owner": "C12",
+   "dry": "python3 T/wp-c12/sdk-t6/c12-sdk-composition-patch.py",
+   "write": "python3 T/wp-c12/sdk-t6/c12-sdk-composition-patch.py --apply",
+   "revert": "l1-land",
    "crates": [
     "semio-framework-plugin",
-    "semio-framework-schema",
-    "semio-framework-schema-registry",
-    "semio-framework-os-kernel (store/io schema docs; Cargo.toml gains schema-registry)",
-    "semio-s-plugin-stdio",
-    "semio-s-plugin-stdio-* ×9",
-    "semio-s-artifact-stdio-{bmp,wav,epw,binary,ifc,gif,semio}"
+    "semio-framework",
+    "semio-framework-os-kernel",
+    "semio-s-artifact-writer-writer",
+    "semio-s-artifact-procedural-generation3d"
    ],
-   "laws": "LB2: shipped_fleet laws d + e (every_registered_snapshot_contract_resolves_in_each_package_process), SDK builder:: tests; T6 describe: stdio + stdio-image + stdio-pdf descriptors change (p12), 7 families unchanged",
-   "notes": "LB2 07:5x: grown to 55 files (schema-document half: framework schema inference export, SDK schema_documents channel, kernel store/io schema docs); dry run 55/0 on live; kernel-wide → full guest proof in T6 | LB2 08:0x: 56 files incl. root Cargo.lock (2 dependency edges) so `--locked` stays valid; re-dry-run right before T6 (Cargo.lock anchors drift easily) | LB2 08:3x: HOLD — scratch s9 red (shipped_fleet 4/6: law e office→xml refs, law d schema-export claim namespace; editor_catalog 59/90); p9 grows again; wait for LB2's next RELAY"
+   "ts": [
+    "kernel HistoryEntry twin",
+    "ShellHost"
+   ],
+   "laws": "C12 row 11",
+   "notes": "t6-queue row 11"
   },
   {
-   "id": "lb2-p11-editor-documents",
-   "train": "T6-HOLD",
-   "owner": "LB2",
-   "dry": "python3 T/wp-lb2/lb2-p11-editor-documents.py --dry-run",
-   "write": "python3 T/wp-lb2/lb2-p11-editor-documents.py --write",
-   "revert": "own --revert + l1-land (revert in reverse order: p12 → p11 → p9)",
+   "id": "c12-jack-query-document",
+   "train": "T6R1",
+   "owner": "C12",
+   "dry": "python3 T/wp-c12/jack-query-t6/c12-jack-query-document-patch.py",
+   "write": "python3 T/wp-c12/jack-query-t6/c12-jack-query-document-patch.py --apply",
+   "revert": "l1-land",
    "crates": [
-    "stdio artifacts las/dwg/ifc/dxf/png/xml/binary/avi/wav/pptx/jpg/tiff/gif/epw"
+    "semio-s-artifact-trinity-jack",
+    "semio-s-artifact-trinity-rewriting",
+    "semio-s-plugin-trinity"
    ],
-   "laws": "LB2: editor documents valid (real-codec fixed points)",
-   "notes": "LB2 07:3x: after p9 (shared files); 32 files; dry run 0 problems on live | LB2 08:3x: HOLD — scratch s9 red (shipped_fleet 4/6: law e office→xml refs, law d schema-export claim namespace; editor_catalog 59/90); p9 grows again; wait for LB2's next RELAY"
+   "laws": "C12 row 13; REGEN trinity describe",
+   "notes": "t6-queue row 13"
   },
   {
-   "id": "lb2-p12-document-schema-identity",
-   "train": "T6-HOLD",
-   "owner": "LB2",
-   "dry": "python3 T/wp-lb2/lb2-p12-document-schema-identity.py --dry-run",
-   "write": "python3 T/wp-lb2/lb2-p12-document-schema-identity.py --write",
-   "revert": "own --revert + l1-land (reverse order)",
+   "id": "cd1-brep-invoke",
+   "train": "T6R1",
+   "owner": "CD1",
+   "dry": "python3 T/wp-cd1/t6-brep-invoke/cd1-brep-invoke-transforms.py --dry-run",
+   "write": "python3 T/wp-cd1/t6-brep-invoke/cd1-brep-invoke-transforms.py --write",
+   "revert": "own --revert + l1-land",
    "crates": [
-    "semio-s-artifact-stdio-pdf",
-    "semio-s-artifact-stdio-gif"
+    "semio-s-artifact-stdio-semio",
+    "semio-framework-os-flow"
    ],
-   "laws": "LB2: pdf ×20 + gif 89a ×2 snapshot-model schema identity",
-   "notes": "LB2 07:3x: after p11; 24 files; coordinator-approved rule | LB2 08:3x: HOLD — scratch s9 red (shipped_fleet 4/6: law e office→xml refs, law d schema-export claim namespace; editor_catalog 59/90); p9 grows again; wait for LB2's next RELAY"
+   "laws": "CD1 row 14 (+ flow-core wasm rebuild for TS laws)",
+   "notes": "t6-queue row 14"
+  },
+  {
+   "id": "cd1-typology",
+   "train": "T6R1",
+   "owner": "CD1",
+   "dry": "python3 T/wp-cd1/t6-typology/cd1-typology-fixed-filename.py --dry-run",
+   "write": "python3 T/wp-cd1/t6-typology/cd1-typology-fixed-filename.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "semio-s-artifact-cad-cad"
+   ],
+   "ts": [
+    "repo-lib fixtures",
+    "taxonomy.json"
+   ],
+   "laws": "CD1 row 15 + taxonomy-load probe",
+   "notes": "t6-queue row 15"
   },
   {
    "id": "p9-fail-closed",
-   "train": "T6",
+   "train": "T6R1",
    "owner": "P9",
    "dry": "cd T/wp-p9/patches && python3 p9-fail-closed.py --dry-run",
    "write": "cd T/wp-p9/patches && python3 p9-fail-closed.py --write",
@@ -1194,7 +1527,438 @@
     "plugin TS twins, 🔌️plugin 📜️script.ts"
    ],
    "laws": "P9: verdict 31 + carriage 8 twins; overlay law proof of SDK + 8 plugins with declared-verb/agent-lane laws (pending); S19 flips flow's evaluate pin after",
-   "notes": "P9 08:1x: 20 hunks / 8 files, dry run clean on live | P9 08:4x: grew to 30 hunks / 14 files (no-effect refusal + app.notice causes; os-mcp dispatch arm; test pins puzzle ×3 + flow [evaluate, focusSelection] — S19 does NOT flip evaluate separately); overlay run 4 pending"
+   "notes": "P9 08:1x: 20 hunks / 8 files, dry run clean on live | P9 08:4x: grew to 30 hunks / 14 files (no-effect refusal + app.notice causes; os-mcp dispatch arm; test pins puzzle ×3 + flow [evaluate, focusSelection] — S19 does NOT flip evaluate separately); overlay run 4 pending | overlay-t6-4 EXIT 0 13:30 (all green) → proven; round 1 (last)"
+  },
+  {
+   "id": "lb2-p9-hosted-artifacts",
+   "train": "T6R2",
+   "owner": "LB2",
+   "dry": "python3 T/wp-lb2/lb2-p9-hosted-artifacts.py --dry-run",
+   "write": "python3 T/wp-lb2/lb2-p9-hosted-artifacts.py --write",
+   "revert": "own --revert (.🧬semio/🌐hub/s14-lb2-backup/p9/) + l1-land",
+   "crates": [
+    "semio-framework-plugin",
+    "semio-framework-schema",
+    "semio-framework-schema-registry",
+    "semio-framework-os-kernel (store/io schema docs; Cargo.toml gains schema-registry)",
+    "semio-s-plugin-stdio",
+    "semio-s-plugin-stdio-* ×9",
+    "semio-s-artifact-stdio-{bmp,wav,epw,binary,ifc,gif,semio}"
+   ],
+   "laws": "LB2: shipped_fleet laws d + e (every_registered_snapshot_contract_resolves_in_each_package_process), SDK builder:: tests; T6 describe: stdio + stdio-image + stdio-pdf descriptors change (p12), 7 families unchanged",
+   "notes": "LB2 07:5x: grown to 55 files (schema-document half: framework schema inference export, SDK schema_documents channel, kernel store/io schema docs); dry run 55/0 on live; kernel-wide → full guest proof in T6 | LB2 08:0x: 56 files incl. root Cargo.lock (2 dependency edges) so `--locked` stays valid; re-dry-run right before T6 (Cargo.lock anchors drift easily) | LB2 08:3x: HOLD — scratch s9 red (shipped_fleet 4/6: law e office→xml refs, law d schema-export claim namespace; editor_catalog 59/90); p9 grows again; wait for LB2's next RELAY | LB2 16:1x PROVEN (s17)"
+  },
+  {
+   "id": "lb2-p15-hosted-kinds-hub",
+   "train": "T6R2",
+   "owner": "LB2",
+   "dry": "python3 T/wp-lb2/lb2-p15-hosted-kinds-hub.py --dry-run",
+   "write": "python3 T/wp-lb2/lb2-p15-hosted-kinds-hub.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "semio-framework (manifest + TS projection)",
+    "semio-hub (Rust + 📜️script.ts)"
+   ],
+   "laws": "hub trusted_catalog, fleet",
+   "notes": "row 3 second half; dry-run only after p9 written; 26 files"
+  },
+  {
+   "id": "lb2-p11-editor-documents",
+   "train": "T6R2",
+   "owner": "LB2",
+   "dry": "python3 T/wp-lb2/lb2-p11-editor-documents.py --dry-run",
+   "write": "python3 T/wp-lb2/lb2-p11-editor-documents.py --write",
+   "revert": "own --revert + l1-land (revert in reverse order: p12 → p11 → p9)",
+   "crates": [
+    "stdio artifacts las/dwg/ifc/dxf/png/xml/binary/avi/wav/pptx/jpg/tiff/gif/epw"
+   ],
+   "laws": "LB2: editor documents valid (real-codec fixed points)",
+   "notes": "LB2 07:3x: after p9 (shared files); 32 files; dry run 0 problems on live | LB2 08:3x: HOLD — scratch s9 red (shipped_fleet 4/6: law e office→xml refs, law d schema-export claim namespace; editor_catalog 59/90); p9 grows again; wait for LB2's next RELAY | LB2 16:1x PROVEN (s17)"
+  },
+  {
+   "id": "lb2-p12-document-schema-identity",
+   "train": "T6R2",
+   "owner": "LB2",
+   "dry": "python3 T/wp-lb2/lb2-p12-document-schema-identity.py --dry-run",
+   "write": "python3 T/wp-lb2/lb2-p12-document-schema-identity.py --write",
+   "revert": "own --revert + l1-land (reverse order)",
+   "crates": [
+    "semio-s-artifact-stdio-pdf",
+    "semio-s-artifact-stdio-gif"
+   ],
+   "laws": "LB2: pdf ×20 + gif 89a ×2 snapshot-model schema identity",
+   "notes": "LB2 07:3x: after p11; 24 files; coordinator-approved rule | LB2 08:3x: HOLD — scratch s9 red (shipped_fleet 4/6: law e office→xml refs, law d schema-export claim namespace; editor_catalog 59/90); p9 grows again; wait for LB2's next RELAY | LB2 16:1x PROVEN (s17)"
+  },
+  {
+   "id": "lb2-p13-value-paths-and-opc-order",
+   "train": "T6R2",
+   "owner": "LB2",
+   "dry": "python3 T/wp-lb2/lb2-p13-value-paths-and-opc-order.py --dry-run",
+   "write": "python3 T/wp-lb2/lb2-p13-value-paths-and-opc-order.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "semio-framework-replication (value)",
+    "os-dsl schema",
+    "semio-framework-os-kernel",
+    "stdio pdf/semio/zip/docx/xlsx/pptx"
+   ],
+   "laws": "value unit law, pptx fixture honesty after the writer",
+   "notes": "row 5a; RUNBOOK: pptx zzz_write_demo_fixtures after"
+  },
+  {
+   "id": "lb2-p14-xml-set-snapshot-wire",
+   "train": "T6R2",
+   "owner": "LB2",
+   "dry": "python3 T/wp-lb2/lb2-p14-xml-set-snapshot-wire.py --dry-run",
+   "write": "python3 T/wp-lb2/lb2-p14-xml-set-snapshot-wire.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "semio-s-artifact-stdio-xml"
+   ],
+   "laws": "editor_catalog xml",
+   "notes": "row 5b"
+  },
+  {
+   "id": "lb2-p16-part21-canonical",
+   "train": "T6R2",
+   "owner": "LB2",
+   "dry": "python3 T/wp-lb2/lb2-p16-part21-canonical.py --dry-run",
+   "write": "python3 T/wp-lb2/lb2-p16-part21-canonical.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "semio-s-artifact-stdio-contract",
+    "step",
+    "ifc",
+    "semio",
+    "semio-s-artifact-cad-cad (+ lock edge)"
+   ],
+   "laws": "contract part21, ifc 43 fixtures, IfcOpenShell oracle",
+   "notes": "row 5b2; 101 files + 2 moved"
+  },
+  {
+   "id": "lb2-p10-editor-catalog",
+   "train": "T6R2",
+   "owner": "LB2",
+   "dry": "python3 T/wp-lb2/lb2-p10-editor-catalog.py --dry-run",
+   "write": "python3 T/wp-lb2/lb2-p10-editor-catalog.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "stdio tests"
+   ],
+   "laws": "editor_catalog",
+   "notes": "row 5c test-only"
+  },
+  {
+   "id": "t6r2-typegen",
+   "train": "T6R2",
+   "owner": "L1 (LB2 runbook)",
+   "dry": "",
+   "write": "{NATIVE} env NX_DAEMON=false bun nx run @semio-tech/framework-rs:generate",
+   "scope": [
+    "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/"
+   ],
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework (typegen feature)"
+   ],
+   "laws": "exports_typescript_bindings render equality",
+   "notes": "LB2 runbook step 1 after p15"
+  },
+  {
+   "id": "t6r2-pptx-fixtures",
+   "train": "T6R2",
+   "owner": "L1 (LB2 runbook)",
+   "dry": "",
+   "write": "{NATIVE} cargo test -p semio-s-artifact-stdio-pptx --features semio-s-artifact-stdio-pptx/component-app-assembly --lib -- --ignored zzz_write_demo_fixtures",
+   "scope": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/"
+   ],
+   "revert": "l1-land",
+   "crates": [
+    "semio-s-artifact-stdio-pptx"
+   ],
+   "laws": "pptx fixture_honesty_law",
+   "notes": "LB2 runbook after p13 (OPC order changes the demo bytes)"
+  },
+  {
+   "id": "s19-hosted-surfaces",
+   "train": "T6R2",
+   "owner": "S19",
+   "dry": "python3 T/wp-s19/s19-hosted-surfaces.py --dry-run",
+   "write": "python3 T/wp-s19/s19-hosted-surfaces.py --write",
+   "revert": "own --revert (.🧬semio/🌐hub/s14-s19-backup/hosted-surfaces/) + l1-land",
+   "crates": [
+    "semio-framework (manifest + TS)",
+    "semio-framework-plugin",
+    "semio-framework-plugin-describe",
+    "semio-hub",
+    "semio-s-plugin-demonstrator",
+    "stdio shipped_fleet"
+   ],
+   "ts": [
+    "os directory schema twin, store worker",
+    "hub 📜️script.ts"
+   ],
+   "laws": "S19 t6-proof-2: hub trusted_catalog, demonstrator hosting law, shipped_fleet owner rows; REGEN describe 9 stdio families + demonstrator",
+   "notes": "t6-queue row 3b (after p15, same round); S19 17:0x PROVEN"
+  },
+  {
+   "id": "c13-p3-a",
+   "train": "T6R3a",
+   "owner": "C13",
+   "dry": "python3 T/wp-c13/p3-puzzle3d-document-schema.py --parts A --dry-run",
+   "write": "python3 T/wp-c13/p3-puzzle3d-document-schema.py --parts A --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "semio-s-artifact-puzzle-3d",
+    "semio-s-plugin-puzzle"
+   ],
+   "laws": "puzzle 3d --lib --tests (retained_command catalog law)",
+   "notes": "t6-queue row 16 part A"
+  },
+  {
+   "id": "c13-p3-b",
+   "train": "T6R3a",
+   "owner": "C13",
+   "dry": "python3 T/wp-c13/p3-puzzle3d-document-schema.py --parts B --dry-run",
+   "write": "python3 T/wp-c13/p3-puzzle3d-document-schema.py --parts B --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "semio-framework-plugin (SDK preflight guard)"
+   ],
+   "laws": "describe of every plugin (native plugin() census via descriptor_is_fresh tests)",
+   "notes": "t6-queue row 16 part B; if another drift → revert B, relay C13"
+  },
+  {
+   "id": "h14-rust-link-live-socket",
+   "train": "T6R3a",
+   "owner": "H14",
+   "dry": "python3 T/wp-h14/h14-rust-link-live-socket.py --dry-run",
+   "write": "python3 T/wp-h14/h14-rust-link-live-socket.py",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework-os-kernel (store sync native + wasm actors)"
+   ],
+   "laws": "H14: a_live_socket_outlives_its_admission_plan_window …; wasm32-unknown-unknown of the os crate",
+   "notes": "t6-queue row 17 (H14)"
+  },
+  {
+   "id": "u6-row-target",
+   "train": "T6R3a",
+   "owner": "U6",
+   "dry": "python3 T/wp-u6/u6-row-target.py --dry-run",
+   "write": "python3 T/wp-u6/u6-row-target.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "ui-contract",
+    "ui-runtime",
+    "ui (wgpu)",
+    "framework",
+    "plugin SDK",
+    "os-renderer-wgpu",
+    "playbook",
+    "space home/space",
+    "stdio contract/csv/tsv/wav/bcf/xlsx",
+    "procedural",
+    "forms",
+    "lowpoly",
+    "energy",
+    "raster",
+    "flow",
+    "sourcing",
+    "puzzle 2d/3d/5d",
+    "cad",
+    "process3d"
+   ],
+   "ts": [
+    "ui-contract TS",
+    "React Interpreter/UiDocumentStore/Tree tests"
+   ],
+   "laws": "U6 row 6 laws (Home 48 rows, row-target fixture, set-verbs, arena recovery)",
+   "notes": "t6-queue row 6; rebased 17:3x (no generated-file hunks); RUNBOOK after: ui-contract-rs:generate then framework-rs:generate"
+  },
+  {
+   "id": "t6r3-typegen",
+   "train": "T6R3a",
+   "owner": "L1 (U6 runbook)",
+   "dry": "",
+   "write": "{NATIVE} env NX_DAEMON=false zsh -c 'bun nx run @semio-tech/ui-contract-rs:generate && bun nx run @semio-tech/framework-rs:generate'",
+   "scope": [
+    "🧰️framework/"
+   ],
+   "revert": "l1-land",
+   "crates": [
+    "ui-contract (typegen)",
+    "framework (typegen)"
+   ],
+   "laws": "typegen render-equality laws",
+   "notes": "after u6-row-target"
+  },
+  {
+   "id": "wg11-marketplace-window",
+   "train": "T6R3a",
+   "owner": "WG11",
+   "dry": "python3 T/wp-wg11/wg11-marketplace-window-patch.py",
+   "write": "python3 T/wp-wg11/wg11-marketplace-window-patch.py --write",
+   "revert": "own --revert + l1-land",
+   "crates": [
+    "semio-framework-os-renderer-wgpu"
+   ],
+   "laws": "WG11 marketplace laws",
+   "notes": "t6-queue row 8 (after U6 row 6 + tree-window-shell)"
+  },
+  {
+   "id": "c13-p4-ephemeral",
+   "train": "T6R4",
+   "owner": "C13",
+   "dry": "python3 T/wp-c13/p4-ephemeral-on-continuation.py --dry-run",
+   "write": "python3 T/wp-c13/p4-ephemeral-on-continuation.py --write",
+   "revert": "own --revert (.🧬semio/🌐hub/s14-c13-w3-backup/c13-p4/) + l1-land",
+   "crates": [
+    "semio-framework-plugin (SDK `🔌️plugin/🦀️.rs` = module component + builder-contract tests)"
+   ],
+   "laws": "C13: cargo test -p semio-framework-plugin --lib -- plugin_builder_contract_tests ephemeral local_interaction; wasm32 -p semio-framework-plugin; live after publish: probe-c13-presence.mjs",
+   "notes": "t6-queue row 18; FIRST in R4 (lb2-p2 + lb2-p17 edit the same SDK file after it; composed clean on the L1 mini tree 19:35)"
+  },
+  {
+   "id": "lb2-p2-declared-arguments",
+   "train": "T6R4",
+   "owner": "LB2",
+   "dry": "python3 T/wp-lb2/lb2-p2-declared-arguments.py --dry-run",
+   "write": "python3 T/wp-lb2/lb2-p2-declared-arguments.py --write",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework-plugin (artifact_app_laws + ArtifactCodecTableV1.command_bridge)"
+   ],
+   "laws": "LB2: SDK bridge law + census (note, block, puzzle, space, wfc)",
+   "notes": "LB2 item 2/3 (coordinator 19:3x candidate; t6-queue row pending) — 1 file / 3 hunks, live dry run 0 problems 19:3x; after c13-p4 (same SDK file)"
+  },
+  {
+   "id": "lb2-p2b-plugin-calls",
+   "train": "T6R4",
+   "owner": "LB2",
+   "dry": "python3 T/wp-lb2/lb2-p2-plugin-calls.py --dry-run",
+   "write": "python3 T/wp-lb2/lb2-p2-plugin-calls.py --write",
+   "revert": "l1-land",
+   "crates": [
+    "38 plugin surface-test files (test-only) + process/forms mounts + dev feature, stdio [[test]] declared_arguments"
+   ],
+   "laws": "LB2: every_registered_app_reads_only_its_declared_arguments per plugin",
+   "notes": "after lb2-p2; live dry run files=38 problems=0 19:3x; before sh2-p2 (space surface test: SH2 3-way merges over it clean)"
+  },
+  {
+   "id": "c12-hub-order",
+   "train": "T6R4",
+   "owner": "C12",
+   "dry": "python3 T/wp-c12/hub-order/c12-hub-order-patch.py",
+   "write": "python3 T/wp-c12/hub-order/c12-hub-order-patch.py --apply",
+   "revert": "l1-land",
+   "crates": [
+    "semio-framework-os-kernel (store + sync native + wasm_actor)",
+    "semio-framework-plugin (binding tests)",
+    "semio-framework-os-mcp",
+    "semio-framework-os-renderer-wgpu"
+   ],
+   "ts": [
+    "os root codec + worker + ShellHost + binding TS (framework-os)"
+   ],
+   "laws": "C12: store os_store:: + hub-order fixture/property, sync parity rs+ts, os vitest; wasm32-unknown-unknown kernel",
+   "notes": "t6-queue row 21; live dry run 85–86 ops / 0 problems 19:2x; BEFORE sh2-p2 and u6-e1 (shared store/ShellHost/wgpu Shell/os 🟦️.ts); no regen"
+  },
+  {
+   "id": "sh2-p2-space-activity",
+   "train": "T6R4",
+   "owner": "SH2",
+   "dry": "python3 T/wp-sh2/p2/p2-set.py apply",
+   "write": "python3 T/wp-sh2/p2/p2-set.py apply --write",
+   "revert": "own revert (.🧬semio/🌐hub/s14-sh2-p2-backup/<stamp>/) + l1-land",
+   "crates": [
+    "semio-framework-os-kernel (📇️directory)",
+    "semio-s-artifact-space-space",
+    "semio-s-artifact-space-home",
+    "semio-s-plugin-space",
+    "semio-framework-os-renderer-wgpu (Shell)"
+   ],
+   "ts": [
+    "ShellHost + 📇️space-directory, os 🟦️.ts, directory twin, renderer quick + backbone-envelope-io tests, space 📜️script.ts oracles"
+   ],
+   "laws": "SH2: p2f overlay laws; space describe regen (wasm lane, descriptor_is_fresh); R10 taxonomy for new dirs",
+   "notes": "t6-queue row 20; ONE landing (host part unsafe alone); AFTER c12-hub-order: its own apply 3-way merges 5 files over c12/p2b (0 conflicts on the L1 mini tree 19:35) — no mid-round rebase needed"
+  },
+  {
+   "id": "u6-e1-paged-docx",
+   "train": "T6R4",
+   "owner": "U6",
+   "dry": "python3 T/wp-u6/u6-e1-paged-docx.py --dry-run",
+   "write": "python3 T/wp-u6/u6-e1-paged-docx.py --write",
+   "revert": "own --revert (.🧬semio/🌐hub/s14-u6-backup/e1-paged-docx/) + l1-land",
+   "crates": [
+    "semio-framework-os-kernel (🏪️store)",
+    "semio-s-artifact-stdio-contract",
+    "semio-s-artifact-stdio-docx",
+    "semio-s-artifact-stdio-semio"
+   ],
+   "laws": "U6: docx a_five_megabyte_set_page_… (component-app-assembly), store apply_undo_redo_transfers_each_snapshot_root_to_one_exact_retirement_owner",
+   "notes": "t6-queue row 19; live dry run 12 anchored + 1 new + 1 removed, faults 0 (19:3x); AFTER c12-hub-order (store 🦀️.rs + store unit tests shared); not idempotent after write (removal target gone → FAULT) — never re-run"
+  },
+  {
+   "id": "s18-draw-layer-status",
+   "train": "T6R4",
+   "owner": "S18",
+   "dry": "python3 T/wp-s18/s18-15-draw-layer-status.py --dry-run",
+   "write": "python3 T/wp-s18/s18-15-draw-layer-status.py",
+   "revert": "own --revert (.🧬semio/🌐hub/s14-s18-backup/draw-layer-status/) + l1-land",
+   "crates": [
+    "semio-s-plugin-draw / drawing editor (terminology + laws)"
+   ],
+   "ts": [
+    "draw 📜️script.ts oracle"
+   ],
+   "laws": "S18: draw layer_status Rust laws (written, not run) + TS oracle 2/2; REGEN draw descriptor",
+   "notes": "t6-queue row 22; live dry run 8 changes / 0 problems 19:4x; disjoint from every other R4 set"
+  },
+  {
+   "id": "p9-jack-headless-query",
+   "train": "T6R4",
+   "owner": "P9",
+   "dry": "python3 T/wp-p9/patches/p9-jack-headless-query.py --dry-run",
+   "write": "python3 T/wp-p9/patches/p9-jack-headless-query.py --write",
+   "revert": "l1-land",
+   "crates": [
+    "semio-s-artifact-trinity-jack"
+   ],
+   "laws": "P9: an_agent_runs_jack_queries_whose_document_effect_needs_no_window + headless-restore job law + jack query/patch_nodes/agent-lane laws; REGEN trinity describe",
+   "notes": "t6-queue T7c (coordinator 19:3x: rides R4); 22 hunks / 4 files after P9's 19:4x fix, live dry run clean; disjoint"
+  },
+  {
+   "id": "lb2-p17-pack-schema-identity",
+   "train": "T6R4",
+   "owner": "LB2",
+   "dry": "python3 T/wp-lb2/lb2-p17-pack-schema-identity.py --dry-run",
+   "write": "python3 T/wp-lb2/lb2-p17-pack-schema-identity.py --write",
+   "revert": "own --revert (.🧬semio/🌐hub/s14-lb2-backup/p17/<root>) + l1-land",
+   "crates": [
+    "semio-framework-os-kernel (store)",
+    "semio-framework-plugin (codec table)",
+    "36 stdio artifact roots",
+    "semio-s-plugin-stdio (shipped_fleet law f)",
+    "Cargo.lock −26 semio-framework-hash edges"
+   ],
+   "laws": "LB2: shipped_fleet law (f) per-package child process + lb2-p17-pack-schema-oracle.py; REGEN stdio describe + publish",
+   "notes": "t6-queue T7d (PRIORITY: stdio kinds open on t6 only after it lands + republish); LAST in R4 (SDK file after c13-p4/lb2-p2, store after c12/u6-e1: composed clean on the L1 mini tree 19:35); not idempotent after write — never re-run"
+  },
+  {
+   "id": "s20-faults",
+   "train": "T6R5",
+   "owner": "S20",
+   "dry": "python3 T/wp-s20/s20-overlay-land.py plan",
+   "write": "python3 T/wp-s20/s20-overlay-land.py apply",
+   "revert": "l1-land",
+   "crates": [
+    "framework + all 34 plugins"
+   ],
+   "laws": "S20: verify faults + source-census self-test + record law/twins + family crates check --tests",
+   "notes": "t6-queue row 12 (ex-row 10 merged); LAST: S20 rebases its overlay onto the post-R4 tree first, L1 runs plan → apply only on S20's go"
   }
  ]
 }

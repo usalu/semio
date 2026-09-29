@@ -152,9 +152,9 @@ fn credited_alias_keeps_pages_live_after_original_handle_is_lost() {
     assert!(with_ui_value_arena(|arena| arena.collection(handle).is_none()));
 }
 
-/// ☣️ A poisoned arena lock still admits a fixed value. The arena is process-global, so the law hands the lock back unpoisoned
-/// once it has measured the recovery: every later law's retirement `try_lock` would otherwise refuse the poisoned arena, and the
-/// refusing owner's exact-closure `Drop` aborted the whole lib run (`s14-lw1-logs/wg11-laws-2.txt`).
+/// ☣️ A poisoned arena lock still admits a fixed value, and the recovery CLEARS the poison: the arena is process-global, so a
+/// lock left poisoned made every later retirement `try_lock` refuse it and the refusing owner's exact-closure `Drop` abort the
+/// whole lib run (`s14-lw1-logs/wg11-laws-2.txt`).
 #[test]
 fn poisoned_arena_lock_recovers_without_losing_fixed_authority() {
     let _ = std::panic::catch_unwind(|| {
@@ -163,8 +163,7 @@ fn poisoned_arena_lock_recovers_without_losing_fixed_authority() {
     });
     let list = ui_list([UiValue::Bool(true)]);
     assert_eq!(list.cursor().next(), Some(UiValue::Bool(true)));
-    UI_VALUE_ARENA.clear_poison();
-    assert!(!UI_VALUE_ARENA.is_poisoned());
+    assert!(!UI_VALUE_ARENA.is_poisoned(), "the recovering lock hands the arena back unpoisoned");
 }
 
 #[test]
@@ -194,4 +193,22 @@ fn ui_text_clipped_keeps_short_values_and_marks_long_ones_on_a_char_boundary() {
     assert!(clipped.as_str().ends_with(UI_TEXT_CLIP_MARK));
     assert_eq!(clipped.len(), UI_TEXT_MAX_BYTES - UI_TEXT_CLIP_MARK.len() - 1 + UI_TEXT_CLIP_MARK.len());
     assert!(clipped.as_str().trim_end_matches(UI_TEXT_CLIP_MARK).chars().all(|c| c == 'é'));
+}
+
+/// 🔢️ A `UiValue::Number` serializes as its JSON text reads back — the shared `numbers` vectors of
+/// `🌱️value/🧫️fixtures/🔣️json-projection/🔣️.json` (TypeScript pins their `json` column to `JSON.stringify`): an integer, a
+/// non-finite and an in-range number write exactly that text; a float past it reads back as the same `f64`.
+#[test]
+fn a_ui_number_serializes_as_its_json_text() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🌱️value/🧫️fixtures/🔣️json-projection/🔣️.json")).expect("the shared json-projection vectors");
+    for case in fixture["numbers"].as_array().expect("numbers") {
+        let literal = case["literal"].as_str().expect("literal");
+        let value: f64 = literal.parse().expect("an f64 literal");
+        let text = serde_json::to_string(&UiValue::Number(value)).expect("a number serializes");
+        match case["kind"].as_str().expect("kind") {
+            "float" => assert_eq!(serde_json::from_str::<f64>(&text).expect("float text"), value, "{literal}: {text}"),
+            _ => assert_eq!(text, case["json"].as_str().expect("json"), "{literal}"),
+        }
+        value_round_trips(UiValue::Number(if value.is_finite() { value } else { 0.0 }));
+    }
 }

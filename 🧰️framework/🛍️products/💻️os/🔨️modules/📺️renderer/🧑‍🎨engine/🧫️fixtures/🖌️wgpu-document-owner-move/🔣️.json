@@ -8,6 +8,7 @@
   "documentReaders": ["take_window_document", "restore_window_document", "panel_documents.remove"],
   "forbiddenDocumentReader": "try_alias",
   "terminalCursorRelease": "terminal_is_fault",
+  "terminalCursorReleaseHelper": "document_opportunity_remains",
   "terminalCursorWalks": ["paint_window_measures_step", "paint_window_projection_step", "paint_window_pane_body_step", "render_main_window_step", "render_panel_step", "render_mobile_panel_step", "render_hub_workspace_step"],
   "supersededVariant": "Superseded",
   "supersededFaultRecorder": "record_frame_fault",

@@ -168,26 +168,22 @@ fn a_tree_window_request_materialises_exactly_its_slice_of_the_catalog() {
 /// 🛍️ Wave B26: the catalogue row's OWN add gesture. Battery #48 measured
 /// `catalogue-add-object-kind before=1 after=1` while `catalogue-drag-drop` — a different route into the
 /// same command — passed, so this pins the half the drop never exercises: every object-kind row must
-/// declare an `activate` binding addressed at `addObjectKind` and carrying that kind's own id as args.
+/// carry ONE target whose activation is `addObjectKind` and whose args carry that kind's own id.
 /// The row is also EXPANDABLE (its rim-vortex templates are its children), which is exactly the shape a
-/// tree renderer is most tempted to treat as a fold toggle and nothing else, so the binding has to be on
+/// tree renderer is most tempted to treat as a fold toggle and nothing else, so the activation has to be on
 /// the row itself rather than on a leaf underneath it.
 #[test]
-fn every_object_kind_row_binds_activate_to_add_object_kind_with_its_own_kind_id() {
+fn every_object_kind_row_activates_add_object_kind_with_its_own_kind_id() {
     let envelope = scene(nakagin_fixture());
     let node = built(&envelope, &objects_open());
     let objects = node.children.iter().find(|section| section.key.as_str() == "puzzle3d-play-kinds.objects").expect("objects section");
     let rows: Vec<_> = objects.children.iter().collect();
     assert!(!rows.is_empty(), "the nakagin catalogue declares object kinds");
     for row in rows {
-        let binding = row
-            .bindings
-            .iter()
-            .find(|binding| matches!(binding.trigger, Trigger::Activate))
-            .unwrap_or_else(|| panic!("object kind row {} declares no activate binding: {:?}", row.key.as_str(), row.bindings));
-        assert_eq!(binding.action.name.as_str(), "addObjectKind", "the row's activate binding must address addObjectKind");
-        let args = binding.args.as_ref().unwrap_or_else(|| panic!("object kind row {} binds addObjectKind with no args", row.key.as_str()));
-        let ui::UiValue::Map(entries) = args else { panic!("object kind row {} args are not a map: {args:?}", row.key.as_str()) };
+        let ui::Component::TreeItem(props) = &row.component else { panic!("object kind row {} is not a tree item", row.key.as_str()) };
+        let target = props.target.as_ref().unwrap_or_else(|| panic!("object kind row {} declares no target", row.key.as_str()));
+        assert_eq!(target.activation.as_ref().map(|activation| activation.as_str()), Some("addObjectKind"), "the row's activation must address addObjectKind");
+        let entries = target.args.as_ref().unwrap_or_else(|| panic!("object kind row {} activates addObjectKind with no args", row.key.as_str()));
         let kind = entries
             .iter()
             .find(|(key, _)| key.as_str() == "objectKind")

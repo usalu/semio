@@ -1,0 +1,9 @@
+{
+  "status": "rejected",
+  "messages": [
+    {
+      "level": "error",
+      "code": "s.space.directory-events-frontier-race"
+    }
+  ]
+}

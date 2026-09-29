@@ -1,0 +1,10 @@
+{
+  "title": "First Class Artifact Examples",
+  "emoji": "📋",
+  "status": "open",
+  "description": "Examples must be first-class citizens. Every artifact (on subset level) registers examples. There should automatically be a dropdown for every editor such as in semio-tech play or the mit-bestand demonstrator. The dropdown must not be missing (for example https://play.semio-tech.com/#lowpoly must show it) and must not be inert: clicking it opens the list of all registered examples for that artifact subset, and clicking an example switches the editor to that example.",
+  "goal": "🎯updatedexamples",
+  "sessions": [
+    "⚪dfdff2348dde4c95bc2dc4a453c9bcbe"
+  ]
+}

@@ -229,6 +229,27 @@ pub mod derived_analysis {
 pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
+//#region 🆕️NewDocument
+/// 🆕️ A new epw document: the eight EnergyPlus header records (empty location, no design conditions / periods / ground
+/// temperatures / holidays / comments, no data period) and one data record, as the real codec round-trips it — `decode_epw`
+/// requires all eight header records and at least one record, and a new document must save and reopen as itself.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn blank_epw_snapshot() -> EpwSnapshot {
+    use crate::standards::energyplus::subsets::any::io::{decode_epw, encode_epw};
+    let seed = EpwSnapshot {
+        design_conditions: "DESIGN CONDITIONS,0".into(),
+        typical_extreme_periods: "TYPICAL/EXTREME PERIODS,0".into(),
+        ground_temperatures: "GROUND TEMPERATURES,0".into(),
+        holidays_dst: "HOLIDAYS/DAYLIGHT SAVINGS,No,0,0,0".into(),
+        comments_1: "COMMENTS 1,".into(),
+        comments_2: "COMMENTS 2,".into(),
+        records: vec![EpwRecord::default()],
+        ..EpwSnapshot::default()
+    };
+    decode_epw(&encode_epw(&seed)).expect("blank_epw_snapshot: the seed round-trips through the real codec")
+}
+//#endregion 🆕️NewDocument
+
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec EpwBuilderFacets {

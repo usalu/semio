@@ -47,6 +47,13 @@ function* validTreeDetail(record: Record, nodes: RetainedUiGraphNodes): Program<
   return detail?.component.type === "surface";
 }
 
+/** 🎯️ A TreeItem/TableRow carries `target` exactly when it carries row actions or a target `activation`, and never a record `activate` binding. */
+function validRowTarget(record: Record): boolean {
+  const component = record.component;
+  if (component.type !== "treeItem" && component.type !== "tableRow") return true;
+  return (component.target != null) === ((component.rowActions ?? []).length > 0 || component.target?.activation != null) && !(record.bindings ?? []).some((binding) => binding.trigger === "activate");
+}
+
 export function closeRetainedUiGraphFrame(frontier: RetainedUiGraphFrontier): boolean {
   const cell = frontier.stack;
   if (!cell) return false;
@@ -76,6 +83,7 @@ export function* retainedUiGraphValidation(nodes: RetainedUiGraphNodes, root: nu
     if (record.component.type === "treeItem" && record.component.inlineToolbar !== null && !(yield* validTreeToolbar(record, record.component.inlineToolbar, nodes))) yield* violation({ type: "invalidTreeInlineToolbar", node: frame.id, toolbar: record.component.inlineToolbar }, frontier, violations);
     if (record.component.type === "treeSection" && record.component.headerToolbar !== null && !(yield* validTreeToolbar(record, record.component.headerToolbar, nodes))) yield* violation({ type: "invalidTreeSectionHeaderToolbar", node: frame.id, toolbar: record.component.headerToolbar }, frontier, violations);
     if (record.component.type === "treeItem" && record.component.detail !== null && !(yield* validTreeDetail(record, nodes))) yield* violation({ type: "invalidTreeDetail", node: frame.id, detail: record.component.detail }, frontier, violations);
+    if (!validRowTarget(record)) yield* violation({ type: "invalidRowTarget", node: frame.id }, frontier, violations);
     if (frame.depth > limits.maxDepth) { yield* violation({ type: "depthQuota", node: frame.id, depth: frame.depth, max: limits.maxDepth }, frontier, violations); continue; }
     yield* marks.set(frame.id, 3);
     frontier.stack = { value: { ...frame, kind: "exit" }, next: frontier.stack }; yield 48;
@@ -103,8 +111,8 @@ export function* retainedUiGraphValidation(nodes: RetainedUiGraphNodes, root: nu
  * its `children` edges and its section role — what the operation cursor certifies as
  * `shapePreserving` — the candidate's node set, edge set and root are IDENTICAL to the base's. Then
  * `danglingRoot`, `cycle`, `depthQuota`, `orphanChild`, `duplicateSiblingKey` and `sectionNested` are
- * all decided by structure the base already proved, and the single invariant a payload can still break
- * is `nonFiniteNumber` on a replaced record. So this costs one index lookup per touched node instead of
+ * all decided by structure the base already proved, and the invariants a payload can still break are
+ * `nonFiniteNumber` and `invalidRowTarget` on a replaced record. So this costs one index lookup per touched node instead of
  * the base walk's three persistent-index writes per document node: measured 163 284 → 159 steps on the
  * Nakagin-scale 145-node scene surface (`📃️UiDocumentStore/🧪️tests/🧪️typedwire`'s re-publish law).
  *
@@ -116,6 +124,7 @@ export function* retainedUiGraphTouchedValidation(nodes: RetainedUiGraphNodes, t
     if (typeof entry === "number") { yield entry; continue; }
     const record = yield* nodes.lookup(entry[0]);
     if (record && !finite(record.component)) yield* violation({ type: "nonFiniteNumber", node: entry[0] }, frontier, violations);
+    if (record && !validRowTarget(record)) yield* violation({ type: "invalidRowTarget", node: entry[0] }, frontier, violations);
   }
 }
 //#endregion 🚶️GraphTraversal

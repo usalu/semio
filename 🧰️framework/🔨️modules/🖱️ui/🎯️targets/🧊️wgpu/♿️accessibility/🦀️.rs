@@ -83,9 +83,11 @@ fn row_action_accessibility_nodes(record: &ui_contract::UiNodeRecord, depth: usi
         button.label = Some(action.label.as_ref().map_or_else(|| name.to_string(), |label| format!("{}: {name}", label.0.as_str())));
         button.description = None;
         button.shortcut = None;
-        button.focusable = !record.disabled;
-        button.tabbable = !record.disabled;
-        button.actionable = !record.disabled;
+        let disabled = record.disabled || action.disabled;
+        button.disabled = disabled;
+        button.focusable = !disabled;
+        button.tabbable = !disabled;
+        button.actionable = !disabled;
         button.focused = false;
         button.checked = None;
         button.pressed = None;
@@ -185,6 +187,15 @@ pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNod
                     node.selected = Some(arena_node.spec.0.presence().selected);
                 }
                 match &arena_node.spec.0 {
+                    crate::wgpu::UiNode::ExternalSlot(slot) if slot.body_key == crate::wgpu::reconcile::MEDIA_TRANSPORT_EXTENSION_ID => {
+                        node.role = "status".to_string();
+                        node.label = slot.host_status.clone();
+                        node.focusable = false;
+                        node.tabbable = false;
+                        node.actionable = false;
+                        node.editable = false;
+                        node.focused = false;
+                    }
                     crate::wgpu::UiNode::Input(input) => node.value_text = Some(arena_node.state.edit.as_ref().map(|edit| edit.text.clone()).unwrap_or_else(|| input.value.clone())),
                     crate::wgpu::UiNode::Slider(slider) => {
                         let value = arena_node.state.slider_draft_value.unwrap_or(slider.value);

@@ -13764,6 +13764,42 @@ struct CursorRevisionAccumulator {
     identity_digest: [u8; 32],
     applied: Vec<CursorRevisionRecord>,
     redo: Vec<CursorRevisionRecord>,
+    applied_tail_chains: Option<([u8; 32], EditDigestChains)>,
+}
+
+/// 🔗️ Running per-list digests of a coalesced edit's operations: what lets an amend extend its edit's revision identity by
+/// the operations it appended instead of re-encoding the whole run (a typing run amends one edit per key).
+#[derive(Clone, Copy, Default)]
+struct EditDigestChains {
+    forwards: usize,
+    inverse: usize,
+    meta: usize,
+    forwards_digest: [u8; 32],
+    inverse_digest: [u8; 32],
+    meta_digest: [u8; 32],
+}
+
+impl EditDigestChains {
+    /// 🔗️ The chains over every operation of `edit`, continued from these; `None` when `edit` is not an extension of the lists
+    /// these were taken over (a list shrank).
+    fn extended<Mutation: ToValue>(mut self, edit: &Edit<Mutation>) -> Option<Self> {
+        if self.forwards > edit.forwards.len() || self.inverse > edit.inverse.len() || self.meta > edit.mutation_meta.len() {
+            return None;
+        }
+        for operation in &edit.forwards[self.forwards..] {
+            self.forwards_digest = CursorRevisionAccumulator::hash_record(b"edit-forward", &[&self.forwards_digest, crate::os_pack::json::to_json_string(operation).as_bytes()]);
+        }
+        for operation in &edit.inverse[self.inverse..] {
+            self.inverse_digest = CursorRevisionAccumulator::hash_record(b"edit-inverse", &[&self.inverse_digest, crate::os_pack::json::to_json_string(operation).as_bytes()]);
+        }
+        for meta in &edit.mutation_meta[self.meta..] {
+            self.meta_digest = CursorRevisionAccumulator::hash_record(b"edit-meta", &[&self.meta_digest, crate::os_pack::json::to_json_string(meta).as_bytes()]);
+        }
+        self.forwards = edit.forwards.len();
+        self.inverse = edit.inverse.len();
+        self.meta = edit.mutation_meta.len();
+        Some(self)
+    }
 }
 
 /// 🧮️ Domain-neutral incremental digest for retained store initialization. A
@@ -13815,15 +13851,59 @@ impl CursorRevisionAccumulator {
     fn new<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, initial_digest: [u8; 32]) -> Self {
         let identity_digest = Self::hash_record(b"initial", &[envelope.id.as_bytes(), envelope.schema.as_bytes(), &initial_digest]);
         let capacity = crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY;
-        Self { identity_digest, applied: Vec::with_capacity(capacity), redo: Vec::with_capacity(capacity) }
+        Self { identity_digest, applied: Vec::with_capacity(capacity), redo: Vec::with_capacity(capacity), applied_tail_chains: None }
     }
 
+    /// 🔏️ Revision identity of one edit — a pure function of the edit. A single-operation edit hashes its canonical JSON
+    /// (exactly what the one-item byte sealer streams); a coalesced edit that grew past one operation hashes its header
+    /// fields and one running chain per operation list ([`EditDigestChains`]), which an amend extends in O(appended).
     fn edit_digest<Mutation: ToValue>(edit: &Edit<Mutation>) -> [u8; 32] {
-        let encoded = crate::os_pack::json::to_json_string(edit).into_bytes();
-        Self::hash_record(b"edit", &[edit.id.as_bytes(), &encoded])
+        Self::edit_digest_extending(edit, None).0
     }
 
-    fn reconcile_stack<Mutation: ToValue>(records: &mut Vec<CursorRevisionRecord>, ids: &[String], edits: &ArtifactHistoryLedger<Edit<Mutation>>, domain: &[u8], identity_digest: [u8; 32]) -> Vec<String> {
+    /// 🔏️ [`Self::edit_digest`], continuing `known` chains when the edit only grew since they were taken (an amend).
+    fn edit_digest_extending<Mutation: ToValue>(edit: &Edit<Mutation>, known: Option<EditDigestChains>) -> ([u8; 32], Option<EditDigestChains>) {
+        if edit.forwards.len() <= 1 {
+            let encoded = crate::os_pack::json::to_json_string(edit).into_bytes();
+            return (Self::hash_record(b"edit", &[edit.id.as_bytes(), &encoded]), None);
+        }
+        let chains = known.and_then(|chains| chains.extended(edit)).unwrap_or_else(|| EditDigestChains::default().extended(edit).expect("empty chains extend every edit"));
+        let tag = |value: Option<&String>| [u8::from(value.is_some())];
+        let digest = Self::hash_record(
+            b"edit-chained",
+            &[
+                edit.id.as_bytes(),
+                &tag(edit.actor.as_ref()),
+                edit.actor.as_deref().unwrap_or_default().as_bytes(),
+                &tag(edit.description.as_ref()),
+                edit.description.as_deref().unwrap_or_default().as_bytes(),
+                &tag(edit.coalesce_key.as_ref()),
+                edit.coalesce_key.as_deref().unwrap_or_default().as_bytes(),
+                &edit.sequence_number.to_be_bytes(),
+                edit.started_at.as_bytes(),
+                &tag(edit.finished_at.as_ref()),
+                edit.finished_at.as_deref().unwrap_or_default().as_bytes(),
+                &(chains.forwards as u64).to_be_bytes(),
+                &chains.forwards_digest,
+                &(chains.inverse as u64).to_be_bytes(),
+                &chains.inverse_digest,
+                &(chains.meta as u64).to_be_bytes(),
+                &chains.meta_digest,
+            ],
+        );
+        (digest, Some(chains))
+    }
+
+    /// 🧮️ Re-derives one cursor stack's records for `ids`, keeping the common prefix. `tail_chains` carries the running
+    /// chains of the stack's tail edit between calls, so the amend case (same ids, tail grew) costs O(appended operations).
+    fn reconcile_stack<Mutation: ToValue>(
+        records: &mut Vec<CursorRevisionRecord>,
+        ids: &[String],
+        edits: &ArtifactHistoryLedger<Edit<Mutation>>,
+        domain: &[u8],
+        identity_digest: [u8; 32],
+        tail_chains: &mut Option<([u8; 32], EditDigestChains)>,
+    ) -> Vec<String> {
         let mut common = 0;
         while common < records.len().min(ids.len()) && records[common].id_digest == Self::hash_record(b"edit-id", &[ids[common].as_bytes()]) {
             common += 1;
@@ -13831,28 +13911,40 @@ impl CursorRevisionAccumulator {
         while records.len() > common {
             records.pop().expect("revision suffix record remains present");
         }
+        let mut regrown = None;
         if common == ids.len() && common != 0 {
             let id = &ids[common - 1];
             let edit = edits.iter().find(|edit| edit.id == *id).expect("validated cursor edit exists");
-            let edit_digest = Self::edit_digest(edit);
+            let known = tail_chains.filter(|(id_digest, _)| *id_digest == records[common - 1].id_digest).map(|(_, chains)| chains);
+            let (edit_digest, chains) = Self::edit_digest_extending(edit, known);
+            *tail_chains = chains.map(|chains| (records[common - 1].id_digest, chains));
             if records[common - 1].edit_digest != edit_digest {
                 records.pop().expect("validated revision record remains present");
                 common -= 1;
+                regrown = Some(edit_digest);
             }
         }
         for id in &ids[common..] {
-            let edit = edits.iter().find(|edit| edit.id == *id).expect("validated cursor edit exists");
-            let edit_digest = Self::edit_digest(edit);
+            let id_digest = Self::hash_record(b"edit-id", &[id.as_bytes()]);
+            let edit_digest = match regrown.take() {
+                Some(edit_digest) => edit_digest,
+                None => {
+                    let edit = edits.iter().find(|edit| edit.id == *id).expect("validated cursor edit exists");
+                    let (edit_digest, chains) = Self::edit_digest_extending(edit, None);
+                    *tail_chains = chains.map(|chains| (id_digest, chains));
+                    edit_digest
+                }
+            };
             let previous = records.last().map_or(identity_digest, |record| record.prefix_digest);
             let prefix_digest = Self::hash_record(domain, &[&previous, &edit_digest]);
-            records.push(CursorRevisionRecord { id_digest: Self::hash_record(b"edit-id", &[id.as_bytes()]), edit_digest, prefix_digest });
+            records.push(CursorRevisionRecord { id_digest, edit_digest, prefix_digest });
         }
         Vec::new()
     }
 
     fn reconcile<Mutation: ToValue>(&mut self, applied_ids: &[String], redo_ids: &[String], edits: &ArtifactHistoryLedger<Edit<Mutation>>) -> (Vec<String>, Vec<String>) {
-        let applied = Self::reconcile_stack(&mut self.applied, applied_ids, edits, b"applied", self.identity_digest);
-        let redo = Self::reconcile_stack(&mut self.redo, redo_ids, edits, b"redo", self.identity_digest);
+        let applied = Self::reconcile_stack(&mut self.applied, applied_ids, edits, b"applied", self.identity_digest, &mut self.applied_tail_chains);
+        let redo = Self::reconcile_stack(&mut self.redo, redo_ids, edits, b"redo", self.identity_digest, &mut None);
         (applied, redo)
     }
 
@@ -13955,7 +14047,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
             edit_sequence: 0,
             clock: fresh_replica_clock(),
             initial_digest,
-            revision: std::mem::ManuallyDrop::new(CursorRevisionAccumulator { identity_digest, applied: applied_revision, redo: redo_revision }),
+            revision: std::mem::ManuallyDrop::new(CursorRevisionAccumulator { identity_digest, applied: applied_revision, redo: redo_revision, applied_tail_chains: None }),
             close_active: std::mem::ManuallyDrop::new(None),
             close_phase: 0,
             taken: false,
@@ -15852,7 +15944,7 @@ where
         redo_edit_ids.extend(loaded_redo_edit_ids);
         envelope.cursor = Some(ArtifactCursor::new(cursor_applied_edit_ids, cursor_redo_edit_ids, current_checkpoint_id.clone()));
         let identity_digest = CursorRevisionAccumulator::hash_record(b"initial", &[envelope.id.as_bytes(), envelope.schema.as_bytes(), &initial_digest]);
-        let mut revision_accumulator = CursorRevisionAccumulator { identity_digest, applied: applied_revision, redo: redo_revision };
+        let mut revision_accumulator = CursorRevisionAccumulator { identity_digest, applied: applied_revision, redo: redo_revision, applied_tail_chains: None };
         let (retired_applied, retired_redo) = revision_accumulator.reconcile(&applied_edit_ids, &redo_edit_ids, &envelope.vcs.edits);
         assert!(retired_applied.is_empty() && retired_redo.is_empty(), "new revision accumulator unexpectedly displaced an owner during construction");
         let content_revision = revision_accumulator.revision(current_checkpoint_id.as_deref());
@@ -17595,6 +17687,7 @@ where
                         identity_digest: self.revision_accumulator.identity_digest,
                         applied: Vec::new(),
                         redo: retired_redo,
+                        applied_tail_chains: None,
                     })));
                 }
                 self.generation += 1;
@@ -23470,3 +23563,18 @@ mod owned_field_rejected_page_tests;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️InteractionStatePack
+
+//#region 🔖️SchemaExports
+const STORE_SCHEMA_EXPORTS: [semio_framework_schema_registry::SchemaExport; 3] = [
+    semio_framework_schema_registry::SchemaExport { id: "child", leaves: semio_framework_schema_registry::FacetLeaves { rust: "", typescript: include_str!("🪆️child/🧬️schema/🟦️.ts"), graphql: include_str!("🪆️child/🧬️schema/🔗️.graphql"), json_schema: include_str!("🪆️child/🧬️schema/🔣️.json"), proto: include_str!("🪆️child/🧬️schema/🛰️.proto") } },
+    semio_framework_schema_registry::SchemaExport { id: "link", leaves: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🔗️link/🧬️schema/🦀️.rs"), typescript: include_str!("🔗️link/🧬️schema/🟦️.ts"), graphql: include_str!("🔗️link/🧬️schema/🔗️.graphql"), json_schema: include_str!("🔗️link/🧬️schema/🔣️.json"), proto: include_str!("🔗️link/🧬️schema/🛰️.proto") } },
+    semio_framework_schema_registry::SchemaExport { id: "blob", leaves: semio_framework_schema_registry::FacetLeaves { rust: include_str!("📦️blob/🧬️schema/🦀️.rs"), typescript: include_str!("📦️blob/🧬️schema/🟦️.ts"), graphql: include_str!("📦️blob/🧬️schema/🔗️.graphql"), json_schema: include_str!("📦️blob/🧬️schema/🔣️.json"), proto: include_str!("📦️blob/🧬️schema/🛰️.proto") } },
+];
+
+/// 📌️ Registers the store's own document-model schema documents (`os/store/child.json`, `link.json`, `blob.json`) as
+/// exports of the `os.store` scope, so every artifact contract that `$ref`s a composed child, a link or a blob resolves them.
+// 🚫️async: E1 pure registration helper (no I/O) — see R9
+pub fn register_store_schema_exports() -> Result<(), semio_framework_schema_registry::SchemaExportRegistryError> {
+    semio_framework_schema_registry::register_scope_schema_exports(semio_framework_schema_registry::ScopeSchemaExports { scope: "os.store", exports: &STORE_SCHEMA_EXPORTS })
+}
+//#endregion 🔖️SchemaExports

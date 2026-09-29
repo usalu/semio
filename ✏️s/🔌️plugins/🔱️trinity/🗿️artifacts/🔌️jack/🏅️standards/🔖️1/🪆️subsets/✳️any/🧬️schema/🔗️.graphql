@@ -8,6 +8,7 @@ type JackArtifact {
   camera: Camera! @state(class: ARTIFACT)
   content: ArtifactChild! @state(class: ARTIFACT)
   rootNodeId: String @state(class: ARTIFACT)
+  query: String! @state(class: ARTIFACT)
 }
 type Camera { x: Float! y: Float! zoom: Float! }
 type Manifest { nodeKinds: [ManifestKind!]! edgeKinds: [ManifestKind!]! portKinds: [ManifestPortKind!]! }

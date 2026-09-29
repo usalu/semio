@@ -69,6 +69,7 @@ pub const BINARY_TAG_REGISTRY: &[(&str, &str, u8)] = &[
     ("SetEncryption", "setEncryption", super::set_encryption::binary::BINARY_TAG),
     ("SetCatalogEntry", "setCatalogEntry", super::set_catalog_entry::binary::BINARY_TAG),
     ("RemoveCatalogEntry", "removeCatalogEntry", super::remove_catalog_entry::binary::BINARY_TAG),
+    ("SetSnapshot", "setSnapshot", super::set_snapshot::binary::BINARY_TAG),
 ];
 //#endregion 🧾️DerivedRegistry
 

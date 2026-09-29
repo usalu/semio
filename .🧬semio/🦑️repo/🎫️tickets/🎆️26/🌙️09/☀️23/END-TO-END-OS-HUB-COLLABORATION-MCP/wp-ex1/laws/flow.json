@@ -1,0 +1,22 @@
+{
+ "plugin": "flow",
+ "dir": "🌊️flow",
+ "apps": [
+  {
+   "app": "s.flow.flow@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "crate::editor::flow::FlowPlayApp",
+   "create": "crate::editor::flow::create_flow_app",
+   "app": "s.flow.flow@1/*#editor"
+  }
+ ]
+}

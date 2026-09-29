@@ -45,7 +45,7 @@ pub enum XmlNode {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
 #[value(rename_all = "camelCase")]
 pub struct XmlDocument {
-    #[value(default)]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub root: Option<XmlNode>,
     /// 📜️ Parsed document type declaration.
     #[value(default, skip_serializing_if = "Option::is_none")]

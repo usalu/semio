@@ -2,7 +2,25 @@
   "note": "🗣️ The language-neutral roster of every user-visible generation3d label, one row per `app_labels!` field. The `app_labels!` macro already makes a MISSING locale a compile error; this fixture is what catches a locale that is PRESENT but wrong — English pasted into the German slot, or an empty string — and it pins the exact text both the Rust law (against `Generation3dLabels`' own consts) and the TypeScript twin (structural: every row bilingual, German distinct unless declared identical) answer. A label added without German fails both halves. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.",
   "identicalByDesignNote": "🟰️ Fields whose German is legitimately the SAME word as the English — a proper noun or an international term. Every other field must differ, or the German slot was never translated.",
   "identicalByDesign": [
-    "schema_prefix"
+    "schema_prefix",
+    "catalogue_variable",
+    "catalogue_output_export",
+    "catalogue_brep_curve_ellipse",
+    "catalogue_brep_prim3d_torus",
+    "catalogue_brep_text",
+    "input_name_a",
+    "input_name_b",
+    "input_name_brep",
+    "input_name_index",
+    "input_name_mesh",
+    "input_name_parameter",
+    "input_name_radius",
+    "input_name_text",
+    "input_name_u",
+    "input_name_v",
+    "input_name_x",
+    "input_name_y",
+    "input_name_z"
   ],
   "labels": {
     "widgets": {
@@ -190,6 +208,1560 @@
       "nativeDe": "Interaktive 3D-Vorschau des ausgewerteten Workflows. Ziehen zum Umkreisen, Klicken zum Auswählen; der Auswertungsstatus wird bei Änderung angesagt.",
       "reuseEn": "Interactive 3D preview of the evaluated flow. Drag to orbit, click to select; the evaluation status is announced as it changes.",
       "reuseDe": "Interaktive 3D-Vorschau des ausgewerteten Workflows. Ziehen zum Umkreisen, Klicken zum Auswählen; der Auswertungsstatus wird bei Änderung angesagt."
+    },
+    "catalogue_inputs": {
+      "nativeEn": "Inputs",
+      "nativeDe": "Eingaben",
+      "reuseEn": "Inputs",
+      "reuseDe": "Eingaben"
+    },
+    "catalogue_outputs": {
+      "nativeEn": "Outputs",
+      "nativeDe": "Ausgaben",
+      "reuseEn": "Outputs",
+      "reuseDe": "Ausgaben"
+    },
+    "catalogue_input_slider": {
+      "nativeEn": "Slider",
+      "nativeDe": "Schieberegler",
+      "reuseEn": "Slider",
+      "reuseDe": "Schieberegler"
+    },
+    "catalogue_input_note": {
+      "nativeEn": "Note",
+      "nativeDe": "Notiz",
+      "reuseEn": "Note",
+      "reuseDe": "Notiz"
+    },
+    "catalogue_input_image": {
+      "nativeEn": "Image",
+      "nativeDe": "Bild",
+      "reuseEn": "Image",
+      "reuseDe": "Bild"
+    },
+    "catalogue_variable": {
+      "nativeEn": "Variable",
+      "nativeDe": "Variable",
+      "reuseEn": "Variable",
+      "reuseDe": "Variable"
+    },
+    "catalogue_output_preview": {
+      "nativeEn": "Preview",
+      "nativeDe": "Vorschau",
+      "reuseEn": "Preview",
+      "reuseDe": "Vorschau"
+    },
+    "catalogue_output_action": {
+      "nativeEn": "Action",
+      "nativeDe": "Aktion",
+      "reuseEn": "Action",
+      "reuseDe": "Aktion"
+    },
+    "catalogue_output_export": {
+      "nativeEn": "Export",
+      "nativeDe": "Export",
+      "reuseEn": "Export",
+      "reuseDe": "Export"
+    },
+    "catalogue_brep_mesh_inspect_vertex": {
+      "nativeEn": "Inspect Mesh Vertex",
+      "nativeDe": "Mesh-Punkt prüfen",
+      "reuseEn": "Inspect Mesh Vertex",
+      "reuseDe": "Mesh-Punkt prüfen"
+    },
+    "catalogue_brep_mesh_inspect_edge": {
+      "nativeEn": "Inspect Mesh Edge",
+      "nativeDe": "Mesh-Kante prüfen",
+      "reuseEn": "Inspect Mesh Edge",
+      "reuseDe": "Mesh-Kante prüfen"
+    },
+    "catalogue_brep_mesh_inspect_face": {
+      "nativeEn": "Inspect Mesh Face",
+      "nativeDe": "Mesh-Fläche prüfen",
+      "reuseEn": "Inspect Mesh Face",
+      "reuseDe": "Mesh-Fläche prüfen"
+    },
+    "catalogue_brep_mesh_bevel": {
+      "nativeEn": "Bevel Mesh Edges",
+      "nativeDe": "Mesh-Kanten abschrägen",
+      "reuseEn": "Bevel Mesh Edges",
+      "reuseDe": "Mesh-Kanten abschrägen"
+    },
+    "catalogue_brep_mesh_dissolve_edges": {
+      "nativeEn": "Dissolve Mesh Edges",
+      "nativeDe": "Mesh-Kanten auflösen",
+      "reuseEn": "Dissolve Mesh Edges",
+      "reuseDe": "Mesh-Kanten auflösen"
+    },
+    "catalogue_brep_mesh_dissolve_vertices": {
+      "nativeEn": "Dissolve Mesh Vertices",
+      "nativeDe": "Mesh-Punkte auflösen",
+      "reuseEn": "Dissolve Mesh Vertices",
+      "reuseDe": "Mesh-Punkte auflösen"
+    },
+    "catalogue_brep_mesh_merge_vertices": {
+      "nativeEn": "Merge Mesh Vertices",
+      "nativeDe": "Mesh-Punkte zusammenführen",
+      "reuseEn": "Merge Mesh Vertices",
+      "reuseDe": "Mesh-Punkte zusammenführen"
+    },
+    "catalogue_brep_mesh_move_proportional": {
+      "nativeEn": "Move Mesh Proportionally",
+      "nativeDe": "Mesh proportional verschieben",
+      "reuseEn": "Move Mesh Proportionally",
+      "reuseDe": "Mesh proportional verschieben"
+    },
+    "catalogue_brep_mesh_snap_vertices": {
+      "nativeEn": "Snap Mesh Vertices to Grid",
+      "nativeDe": "Mesh-Punkte am Raster ausrichten",
+      "reuseEn": "Snap Mesh Vertices to Grid",
+      "reuseDe": "Mesh-Punkte am Raster ausrichten"
+    },
+    "catalogue_brep_mesh_mirror": {
+      "nativeEn": "Mirror Mesh Half",
+      "nativeDe": "Mesh-Hälfte spiegeln",
+      "reuseEn": "Mirror Mesh Half",
+      "reuseDe": "Mesh-Hälfte spiegeln"
+    },
+    "catalogue_brep_mesh_decimate": {
+      "nativeEn": "Simplify Mesh",
+      "nativeDe": "Mesh vereinfachen",
+      "reuseEn": "Simplify Mesh",
+      "reuseDe": "Mesh vereinfachen"
+    },
+    "catalogue_brep_mesh_merge_coplanar": {
+      "nativeEn": "Merge Coplanar Mesh Faces",
+      "nativeDe": "Koplanare Mesh-Flächen zusammenführen",
+      "reuseEn": "Merge Coplanar Mesh Faces",
+      "reuseDe": "Koplanare Mesh-Flächen zusammenführen"
+    },
+    "catalogue_brep_bool_compound_cut": {
+      "nativeEn": "Compound Cut",
+      "nativeDe": "Zusammengesetzter Schnitt",
+      "reuseEn": "Compound Cut",
+      "reuseDe": "Zusammengesetzter Schnitt"
+    },
+    "catalogue_brep_bool_cut": {
+      "nativeEn": "Cut",
+      "nativeDe": "Differenz",
+      "reuseEn": "Cut",
+      "reuseDe": "Differenz"
+    },
+    "catalogue_brep_bool_fuse": {
+      "nativeEn": "Fuse",
+      "nativeDe": "Vereinigung",
+      "reuseEn": "Fuse",
+      "reuseDe": "Vereinigung"
+    },
+    "catalogue_brep_bool_intersect": {
+      "nativeEn": "Intersect",
+      "nativeDe": "Schnittmenge",
+      "reuseEn": "Intersect",
+      "reuseDe": "Schnittmenge"
+    },
+    "catalogue_brep_brep": {
+      "nativeEn": "Brep",
+      "nativeDe": "BRep",
+      "reuseEn": "Brep",
+      "reuseDe": "BRep"
+    },
+    "catalogue_brep_curve_approximate": {
+      "nativeEn": "Approximate",
+      "nativeDe": "Annähern",
+      "reuseEn": "Approximate",
+      "reuseDe": "Annähern"
+    },
+    "catalogue_brep_curve_arc": {
+      "nativeEn": "Arc",
+      "nativeDe": "Kreisbogen",
+      "reuseEn": "Arc",
+      "reuseDe": "Kreisbogen"
+    },
+    "catalogue_brep_curve_circle": {
+      "nativeEn": "Circle",
+      "nativeDe": "Kreis",
+      "reuseEn": "Circle",
+      "reuseDe": "Kreis"
+    },
+    "catalogue_brep_curve_ellipse": {
+      "nativeEn": "Ellipse",
+      "nativeDe": "Ellipse",
+      "reuseEn": "Ellipse",
+      "reuseDe": "Ellipse"
+    },
+    "catalogue_brep_curve_helix": {
+      "nativeEn": "Helix",
+      "nativeDe": "Schraubenlinie",
+      "reuseEn": "Helix",
+      "reuseDe": "Schraubenlinie"
+    },
+    "catalogue_brep_curve_interpolate": {
+      "nativeEn": "Interpolate",
+      "nativeDe": "Interpolieren",
+      "reuseEn": "Interpolate",
+      "reuseDe": "Interpolieren"
+    },
+    "catalogue_brep_curve_line": {
+      "nativeEn": "Line",
+      "nativeDe": "Linie",
+      "reuseEn": "Line",
+      "reuseDe": "Linie"
+    },
+    "catalogue_brep_curve_polygon": {
+      "nativeEn": "Polygon",
+      "nativeDe": "Vieleck",
+      "reuseEn": "Polygon",
+      "reuseDe": "Vieleck"
+    },
+    "catalogue_brep_curve_polyline": {
+      "nativeEn": "Polyline",
+      "nativeDe": "Linienzug",
+      "reuseEn": "Polyline",
+      "reuseDe": "Linienzug"
+    },
+    "catalogue_brep_curve_rectangle": {
+      "nativeEn": "Rectangle",
+      "nativeDe": "Rechteck",
+      "reuseEn": "Rectangle",
+      "reuseDe": "Rechteck"
+    },
+    "catalogue_brep_edge": {
+      "nativeEn": "Edge",
+      "nativeDe": "Kante",
+      "reuseEn": "Edge",
+      "reuseDe": "Kante"
+    },
+    "catalogue_brep_eval_curve_closest_parameter": {
+      "nativeEn": "Curve Closest Parameter",
+      "nativeDe": "Nächster Kurvenparameter",
+      "reuseEn": "Curve Closest Parameter",
+      "reuseDe": "Nächster Kurvenparameter"
+    },
+    "catalogue_brep_eval_curve_curvature": {
+      "nativeEn": "Curve Curvature",
+      "nativeDe": "Kurvenkrümmung",
+      "reuseEn": "Curve Curvature",
+      "reuseDe": "Kurvenkrümmung"
+    },
+    "catalogue_brep_eval_curve_domain": {
+      "nativeEn": "Curve Domain",
+      "nativeDe": "Kurvenbereich",
+      "reuseEn": "Curve Domain",
+      "reuseDe": "Kurvenbereich"
+    },
+    "catalogue_brep_eval_curve_point": {
+      "nativeEn": "Curve Point",
+      "nativeDe": "Kurvenpunkt",
+      "reuseEn": "Curve Point",
+      "reuseDe": "Kurvenpunkt"
+    },
+    "catalogue_brep_eval_curve_tangent": {
+      "nativeEn": "Curve Tangent",
+      "nativeDe": "Kurventangente",
+      "reuseEn": "Curve Tangent",
+      "reuseDe": "Kurventangente"
+    },
+    "catalogue_brep_eval_surf_normal": {
+      "nativeEn": "Surface Normal",
+      "nativeDe": "Flächennormale",
+      "reuseEn": "Surface Normal",
+      "reuseDe": "Flächennormale"
+    },
+    "catalogue_brep_eval_surf_point": {
+      "nativeEn": "Surface Point",
+      "nativeDe": "Flächenpunkt",
+      "reuseEn": "Surface Point",
+      "reuseDe": "Flächenpunkt"
+    },
+    "catalogue_brep_eval_surface_closest_uv": {
+      "nativeEn": "Surface Closest Uv",
+      "nativeDe": "Nächste UV-Koordinaten",
+      "reuseEn": "Surface Closest Uv",
+      "reuseDe": "Nächste UV-Koordinaten"
+    },
+    "catalogue_brep_face": {
+      "nativeEn": "Face",
+      "nativeDe": "Fläche",
+      "reuseEn": "Face",
+      "reuseDe": "Fläche"
+    },
+    "catalogue_brep_geometry": {
+      "nativeEn": "Geometry",
+      "nativeDe": "Geometrie",
+      "reuseEn": "Geometry",
+      "reuseDe": "Geometrie"
+    },
+    "catalogue_brep_intersect_curve_curve": {
+      "nativeEn": "Curve Curve",
+      "nativeDe": "Kurve mit Kurve schneiden",
+      "reuseEn": "Curve Curve",
+      "reuseDe": "Kurve mit Kurve schneiden"
+    },
+    "catalogue_brep_intersect_curve_surface": {
+      "nativeEn": "Curve Surface",
+      "nativeDe": "Kurve mit Fläche schneiden",
+      "reuseEn": "Curve Surface",
+      "reuseDe": "Kurve mit Fläche schneiden"
+    },
+    "catalogue_brep_intersect_section": {
+      "nativeEn": "Section",
+      "nativeDe": "Querschnitt",
+      "reuseEn": "Section",
+      "reuseDe": "Querschnitt"
+    },
+    "catalogue_brep_intersect_split": {
+      "nativeEn": "Split",
+      "nativeDe": "Teilen",
+      "reuseEn": "Split",
+      "reuseDe": "Teilen"
+    },
+    "catalogue_brep_intersect_surface_surface": {
+      "nativeEn": "Surface Surface",
+      "nativeDe": "Flächen miteinander schneiden",
+      "reuseEn": "Surface Surface",
+      "reuseDe": "Flächen miteinander schneiden"
+    },
+    "catalogue_brep_io_export_dwg": {
+      "nativeEn": "Export Dwg",
+      "nativeDe": "DWG exportieren",
+      "reuseEn": "Export Dwg",
+      "reuseDe": "DWG exportieren"
+    },
+    "catalogue_brep_io_export_obj": {
+      "nativeEn": "Export Obj",
+      "nativeDe": "OBJ exportieren",
+      "reuseEn": "Export Obj",
+      "reuseDe": "OBJ exportieren"
+    },
+    "catalogue_brep_io_export_step": {
+      "nativeEn": "Export Step",
+      "nativeDe": "STEP exportieren",
+      "reuseEn": "Export Step",
+      "reuseDe": "STEP exportieren"
+    },
+    "catalogue_brep_io_export_stl": {
+      "nativeEn": "Export Stl",
+      "nativeDe": "STL exportieren",
+      "reuseEn": "Export Stl",
+      "reuseDe": "STL exportieren"
+    },
+    "catalogue_brep_io_import_dwg": {
+      "nativeEn": "Import Dwg",
+      "nativeDe": "DWG importieren",
+      "reuseEn": "Import Dwg",
+      "reuseDe": "DWG importieren"
+    },
+    "catalogue_brep_io_import_obj": {
+      "nativeEn": "Import Obj",
+      "nativeDe": "OBJ importieren",
+      "reuseEn": "Import Obj",
+      "reuseDe": "OBJ importieren"
+    },
+    "catalogue_brep_io_import_step": {
+      "nativeEn": "Import Step",
+      "nativeDe": "STEP importieren",
+      "reuseEn": "Import Step",
+      "reuseDe": "STEP importieren"
+    },
+    "catalogue_brep_io_import_stl": {
+      "nativeEn": "Import Stl",
+      "nativeDe": "STL importieren",
+      "reuseEn": "Import Stl",
+      "reuseDe": "STL importieren"
+    },
+    "catalogue_brep_measure_area": {
+      "nativeEn": "Area",
+      "nativeDe": "Flächeninhalt",
+      "reuseEn": "Area",
+      "reuseDe": "Flächeninhalt"
+    },
+    "catalogue_brep_measure_bounding_box": {
+      "nativeEn": "Bounding Box",
+      "nativeDe": "Begrenzungsquader",
+      "reuseEn": "Bounding Box",
+      "reuseDe": "Begrenzungsquader"
+    },
+    "catalogue_brep_measure_center_of_mass": {
+      "nativeEn": "Center Of Mass",
+      "nativeDe": "Schwerpunkt",
+      "reuseEn": "Center Of Mass",
+      "reuseDe": "Schwerpunkt"
+    },
+    "catalogue_brep_measure_classify": {
+      "nativeEn": "Classify",
+      "nativeDe": "Klassifizieren",
+      "reuseEn": "Classify",
+      "reuseDe": "Klassifizieren"
+    },
+    "catalogue_brep_measure_closest_point": {
+      "nativeEn": "Closest Point",
+      "nativeDe": "Nächster Punkt",
+      "reuseEn": "Closest Point",
+      "reuseDe": "Nächster Punkt"
+    },
+    "catalogue_brep_measure_distance": {
+      "nativeEn": "Distance",
+      "nativeDe": "Abstand",
+      "reuseEn": "Distance",
+      "reuseDe": "Abstand"
+    },
+    "catalogue_brep_measure_length": {
+      "nativeEn": "Length",
+      "nativeDe": "Länge",
+      "reuseEn": "Length",
+      "reuseDe": "Länge"
+    },
+    "catalogue_brep_measure_validate": {
+      "nativeEn": "Validate",
+      "nativeDe": "Validieren",
+      "reuseEn": "Validate",
+      "reuseDe": "Validieren"
+    },
+    "catalogue_brep_measure_volume": {
+      "nativeEn": "Volume",
+      "nativeDe": "Volumen",
+      "reuseEn": "Volume",
+      "reuseDe": "Volumen"
+    },
+    "catalogue_brep_mesh": {
+      "nativeEn": "Polygon Mesh",
+      "nativeDe": "Polygonnetz",
+      "reuseEn": "Polygon Mesh",
+      "reuseDe": "Polygonnetz"
+    },
+    "catalogue_brep_mesh_analyze": {
+      "nativeEn": "Analyze Mesh",
+      "nativeDe": "Mesh analysieren",
+      "reuseEn": "Analyze Mesh",
+      "reuseDe": "Mesh analysieren"
+    },
+    "catalogue_brep_mesh_box": {
+      "nativeEn": "Mesh Box",
+      "nativeDe": "Mesh-Quader",
+      "reuseEn": "Mesh Box",
+      "reuseDe": "Mesh-Quader"
+    },
+    "catalogue_brep_mesh_cone": {
+      "nativeEn": "Mesh Cone",
+      "nativeDe": "Mesh-Kegel",
+      "reuseEn": "Mesh Cone",
+      "reuseDe": "Mesh-Kegel"
+    },
+    "catalogue_brep_mesh_construct": {
+      "nativeEn": "Construct Mesh",
+      "nativeDe": "Mesh konstruieren",
+      "reuseEn": "Construct Mesh",
+      "reuseDe": "Mesh konstruieren"
+    },
+    "catalogue_brep_mesh_cylinder": {
+      "nativeEn": "Mesh Cylinder",
+      "nativeDe": "Mesh-Zylinder",
+      "reuseEn": "Mesh Cylinder",
+      "reuseDe": "Mesh-Zylinder"
+    },
+    "catalogue_brep_mesh_delete_faces": {
+      "nativeEn": "Delete Mesh Faces",
+      "nativeDe": "Mesh-Flächen löschen",
+      "reuseEn": "Delete Mesh Faces",
+      "reuseDe": "Mesh-Flächen löschen"
+    },
+    "catalogue_brep_mesh_export_json": {
+      "nativeEn": "Mesh to JSON",
+      "nativeDe": "Mesh als JSON",
+      "reuseEn": "Mesh to JSON",
+      "reuseDe": "Mesh als JSON"
+    },
+    "catalogue_brep_mesh_export_obj": {
+      "nativeEn": "Mesh to OBJ",
+      "nativeDe": "Mesh als OBJ",
+      "reuseEn": "Mesh to OBJ",
+      "reuseDe": "Mesh als OBJ"
+    },
+    "catalogue_brep_mesh_extrude": {
+      "nativeEn": "Extrude Mesh Faces",
+      "nativeDe": "Mesh-Flächen extrudieren",
+      "reuseEn": "Extrude Mesh Faces",
+      "reuseDe": "Mesh-Flächen extrudieren"
+    },
+    "catalogue_brep_mesh_fill_holes": {
+      "nativeEn": "Fill Mesh Holes",
+      "nativeDe": "Mesh-Löcher schließen",
+      "reuseEn": "Fill Mesh Holes",
+      "reuseDe": "Mesh-Löcher schließen"
+    },
+    "catalogue_brep_mesh_flip": {
+      "nativeEn": "Flip Mesh Faces",
+      "nativeDe": "Mesh-Flächen umdrehen",
+      "reuseEn": "Flip Mesh Faces",
+      "reuseDe": "Mesh-Flächen umdrehen"
+    },
+    "catalogue_brep_mesh_from_brep": {
+      "nativeEn": "Mesh from B-Rep",
+      "nativeDe": "Mesh aus BRep",
+      "reuseEn": "Mesh from B-Rep",
+      "reuseDe": "Mesh aus BRep"
+    },
+    "catalogue_brep_mesh_inset": {
+      "nativeEn": "Inset Mesh Faces",
+      "nativeDe": "Mesh-Flächen einrücken",
+      "reuseEn": "Inset Mesh Faces",
+      "reuseDe": "Mesh-Flächen einrücken"
+    },
+    "catalogue_brep_mesh_knife_cut": {
+      "nativeEn": "Knife Cut Mesh Face",
+      "nativeDe": "Mesh-Fläche schneiden",
+      "reuseEn": "Knife Cut Mesh Face",
+      "reuseDe": "Mesh-Fläche schneiden"
+    },
+    "catalogue_brep_mesh_loop_cut": {
+      "nativeEn": "Cut Mesh Loops",
+      "nativeDe": "Mesh-Kantenschleifen schneiden",
+      "reuseEn": "Cut Mesh Loops",
+      "reuseDe": "Mesh-Kantenschleifen schneiden"
+    },
+    "catalogue_brep_mesh_move_vertices": {
+      "nativeEn": "Move Mesh Vertices",
+      "nativeDe": "Mesh-Punkte verschieben",
+      "reuseEn": "Move Mesh Vertices",
+      "reuseDe": "Mesh-Punkte verschieben"
+    },
+    "catalogue_brep_mesh_orient": {
+      "nativeEn": "Orient Mesh Faces",
+      "nativeDe": "Mesh-Flächen ausrichten",
+      "reuseEn": "Orient Mesh Faces",
+      "reuseDe": "Mesh-Flächen ausrichten"
+    },
+    "catalogue_brep_mesh_plane": {
+      "nativeEn": "Mesh Plane",
+      "nativeDe": "Mesh-Ebene",
+      "reuseEn": "Mesh Plane",
+      "reuseDe": "Mesh-Ebene"
+    },
+    "catalogue_brep_mesh_rotate": {
+      "nativeEn": "Rotate Mesh",
+      "nativeDe": "Mesh drehen",
+      "reuseEn": "Rotate Mesh",
+      "reuseDe": "Mesh drehen"
+    },
+    "catalogue_brep_mesh_rotate_components": {
+      "nativeEn": "Rotate Mesh Components",
+      "nativeDe": "Mesh-Komponenten drehen",
+      "reuseEn": "Rotate Mesh Components",
+      "reuseDe": "Mesh-Komponenten drehen"
+    },
+    "catalogue_brep_mesh_scale": {
+      "nativeEn": "Scale Mesh",
+      "nativeDe": "Mesh skalieren",
+      "reuseEn": "Scale Mesh",
+      "reuseDe": "Mesh skalieren"
+    },
+    "catalogue_brep_mesh_scale_components": {
+      "nativeEn": "Scale Mesh Components",
+      "nativeDe": "Mesh-Komponenten skalieren",
+      "reuseEn": "Scale Mesh Components",
+      "reuseDe": "Mesh-Komponenten skalieren"
+    },
+    "catalogue_brep_mesh_sphere": {
+      "nativeEn": "Mesh Sphere",
+      "nativeDe": "Mesh-Kugel",
+      "reuseEn": "Mesh Sphere",
+      "reuseDe": "Mesh-Kugel"
+    },
+    "catalogue_brep_mesh_subdivide": {
+      "nativeEn": "Subdivide Mesh Faces",
+      "nativeDe": "Mesh-Flächen unterteilen",
+      "reuseEn": "Subdivide Mesh Faces",
+      "reuseDe": "Mesh-Flächen unterteilen"
+    },
+    "catalogue_brep_mesh_to_brep": {
+      "nativeEn": "Faceted B-Rep from Mesh",
+      "nativeDe": "Facettierter BRep aus Mesh",
+      "reuseEn": "Faceted B-Rep from Mesh",
+      "reuseDe": "Facettierter BRep aus Mesh"
+    },
+    "catalogue_brep_mesh_translate": {
+      "nativeEn": "Translate Mesh",
+      "nativeDe": "Mesh verschieben",
+      "reuseEn": "Translate Mesh",
+      "reuseDe": "Mesh verschieben"
+    },
+    "catalogue_brep_mesh_translate_components": {
+      "nativeEn": "Move Mesh Components",
+      "nativeDe": "Mesh-Komponenten verschieben",
+      "reuseEn": "Move Mesh Components",
+      "reuseDe": "Mesh-Komponenten verschieben"
+    },
+    "catalogue_brep_mesh_triangulate": {
+      "nativeEn": "Triangulate Mesh",
+      "nativeDe": "Mesh triangulieren",
+      "reuseEn": "Triangulate Mesh",
+      "reuseDe": "Mesh triangulieren"
+    },
+    "catalogue_brep_mesh_weld": {
+      "nativeEn": "Weld Mesh Vertices",
+      "nativeDe": "Mesh-Punkte verschweißen",
+      "reuseEn": "Weld Mesh Vertices",
+      "reuseDe": "Mesh-Punkte verschweißen"
+    },
+    "catalogue_brep_prim3d_box": {
+      "nativeEn": "Box",
+      "nativeDe": "Quader",
+      "reuseEn": "Box",
+      "reuseDe": "Quader"
+    },
+    "catalogue_brep_prim3d_cone": {
+      "nativeEn": "Cone",
+      "nativeDe": "Kegel",
+      "reuseEn": "Cone",
+      "reuseDe": "Kegel"
+    },
+    "catalogue_brep_prim3d_convex_hull": {
+      "nativeEn": "Convex Hull",
+      "nativeDe": "Konvexe Hülle",
+      "reuseEn": "Convex Hull",
+      "reuseDe": "Konvexe Hülle"
+    },
+    "catalogue_brep_prim3d_cylinder": {
+      "nativeEn": "Cylinder",
+      "nativeDe": "Zylinder",
+      "reuseEn": "Cylinder",
+      "reuseDe": "Zylinder"
+    },
+    "catalogue_brep_prim3d_sphere": {
+      "nativeEn": "Sphere",
+      "nativeDe": "Kugel",
+      "reuseEn": "Sphere",
+      "reuseDe": "Kugel"
+    },
+    "catalogue_brep_prim3d_torus": {
+      "nativeEn": "Torus",
+      "nativeDe": "Torus",
+      "reuseEn": "Torus",
+      "reuseDe": "Torus"
+    },
+    "catalogue_brep_solid_chamfer": {
+      "nativeEn": "Chamfer",
+      "nativeDe": "Abschrägen",
+      "reuseEn": "Chamfer",
+      "reuseDe": "Abschrägen"
+    },
+    "catalogue_brep_solid_chamfer_asymmetric": {
+      "nativeEn": "Asymmetric Chamfer",
+      "nativeDe": "Asymmetrisch abschrägen",
+      "reuseEn": "Asymmetric Chamfer",
+      "reuseDe": "Asymmetrisch abschrägen"
+    },
+    "catalogue_brep_solid_chamfer_edges": {
+      "nativeEn": "Chamfer Edges",
+      "nativeDe": "Kanten abschrägen",
+      "reuseEn": "Chamfer Edges",
+      "reuseDe": "Kanten abschrägen"
+    },
+    "catalogue_brep_solid_defeature": {
+      "nativeEn": "Defeature",
+      "nativeDe": "Formelemente entfernen",
+      "reuseEn": "Defeature",
+      "reuseDe": "Formelemente entfernen"
+    },
+    "catalogue_brep_solid_draft": {
+      "nativeEn": "Draft",
+      "nativeDe": "Formschräge",
+      "reuseEn": "Draft",
+      "reuseDe": "Formschräge"
+    },
+    "catalogue_brep_solid_extrude": {
+      "nativeEn": "Extrude Curve",
+      "nativeDe": "Kurve extrudieren",
+      "reuseEn": "Extrude Curve",
+      "reuseDe": "Kurve extrudieren"
+    },
+    "catalogue_brep_solid_fillet": {
+      "nativeEn": "Fillet",
+      "nativeDe": "Abrunden",
+      "reuseEn": "Fillet",
+      "reuseDe": "Abrunden"
+    },
+    "catalogue_brep_solid_fillet_edges": {
+      "nativeEn": "Fillet Edges",
+      "nativeDe": "Kanten abrunden",
+      "reuseEn": "Fillet Edges",
+      "reuseDe": "Kanten abrunden"
+    },
+    "catalogue_brep_solid_fillet_variable": {
+      "nativeEn": "Variable Fillet",
+      "nativeDe": "Variabel abrunden",
+      "reuseEn": "Variable Fillet",
+      "reuseDe": "Variabel abrunden"
+    },
+    "catalogue_brep_solid_offset_solid": {
+      "nativeEn": "Offset Solid",
+      "nativeDe": "Körper versetzen",
+      "reuseEn": "Offset Solid",
+      "reuseDe": "Körper versetzen"
+    },
+    "catalogue_brep_solid_shell": {
+      "nativeEn": "Shell",
+      "nativeDe": "Aushöhlen",
+      "reuseEn": "Shell",
+      "reuseDe": "Aushöhlen"
+    },
+    "catalogue_brep_surf_coons": {
+      "nativeEn": "Coons Patch",
+      "nativeDe": "Coons-Fläche",
+      "reuseEn": "Coons Patch",
+      "reuseDe": "Coons-Fläche"
+    },
+    "catalogue_brep_surf_nurbs_grid": {
+      "nativeEn": "Nurbs Grid",
+      "nativeDe": "NURBS-Gitter",
+      "reuseEn": "Nurbs Grid",
+      "reuseDe": "NURBS-Gitter"
+    },
+    "catalogue_brep_surf_offset": {
+      "nativeEn": "Offset Face",
+      "nativeDe": "Fläche versetzen",
+      "reuseEn": "Offset Face",
+      "reuseDe": "Fläche versetzen"
+    },
+    "catalogue_brep_surf_planar_face": {
+      "nativeEn": "Planar Face",
+      "nativeDe": "Ebene Fläche",
+      "reuseEn": "Planar Face",
+      "reuseDe": "Ebene Fläche"
+    },
+    "catalogue_brep_surf_planar_face_wire": {
+      "nativeEn": "Planar Face Wire",
+      "nativeDe": "Ebene Fläche aus Linienzug",
+      "reuseEn": "Planar Face Wire",
+      "reuseDe": "Ebene Fläche aus Linienzug"
+    },
+    "catalogue_brep_surf_plane": {
+      "nativeEn": "Plane",
+      "nativeDe": "Ebene",
+      "reuseEn": "Plane",
+      "reuseDe": "Ebene"
+    },
+    "catalogue_brep_surf_thicken": {
+      "nativeEn": "Thicken",
+      "nativeDe": "Verdicken",
+      "reuseEn": "Thicken",
+      "reuseDe": "Verdicken"
+    },
+    "catalogue_brep_sweep_extrude": {
+      "nativeEn": "Extrude",
+      "nativeDe": "Extrudieren",
+      "reuseEn": "Extrude",
+      "reuseDe": "Extrudieren"
+    },
+    "catalogue_brep_sweep_helical": {
+      "nativeEn": "Helical Sweep",
+      "nativeDe": "Schraubenprofil ziehen",
+      "reuseEn": "Helical Sweep",
+      "reuseDe": "Schraubenprofil ziehen"
+    },
+    "catalogue_brep_sweep_loft": {
+      "nativeEn": "Loft",
+      "nativeDe": "Profile verbinden",
+      "reuseEn": "Loft",
+      "reuseDe": "Profile verbinden"
+    },
+    "catalogue_brep_sweep_pipe": {
+      "nativeEn": "Pipe",
+      "nativeDe": "Rohr entlang Pfad",
+      "reuseEn": "Pipe",
+      "reuseDe": "Rohr entlang Pfad"
+    },
+    "catalogue_brep_sweep_revolve": {
+      "nativeEn": "Revolve",
+      "nativeDe": "Rotationskörper",
+      "reuseEn": "Revolve",
+      "reuseDe": "Rotationskörper"
+    },
+    "catalogue_brep_sweep_sweep": {
+      "nativeEn": "Sweep",
+      "nativeDe": "Profil entlang Pfad ziehen",
+      "reuseEn": "Sweep",
+      "reuseDe": "Profil entlang Pfad ziehen"
+    },
+    "catalogue_brep_text": {
+      "nativeEn": "Text",
+      "nativeDe": "Text",
+      "reuseEn": "Text",
+      "reuseDe": "Text"
+    },
+    "catalogue_brep_topology_compound": {
+      "nativeEn": "Compound",
+      "nativeDe": "Zusammensetzen",
+      "reuseEn": "Compound",
+      "reuseDe": "Zusammensetzen"
+    },
+    "catalogue_brep_topology_explode": {
+      "nativeEn": "Explode",
+      "nativeDe": "Zerlegen",
+      "reuseEn": "Explode",
+      "reuseDe": "Zerlegen"
+    },
+    "catalogue_brep_topology_label": {
+      "nativeEn": "Label",
+      "nativeDe": "Beschriften",
+      "reuseEn": "Label",
+      "reuseDe": "Beschriften"
+    },
+    "catalogue_brep_topology_shells": {
+      "nativeEn": "Shells",
+      "nativeDe": "Schalen",
+      "reuseEn": "Shells",
+      "reuseDe": "Schalen"
+    },
+    "catalogue_brep_util_convert_to_nurbs": {
+      "nativeEn": "Convert To Nurbs",
+      "nativeDe": "In NURBS umwandeln",
+      "reuseEn": "Convert To Nurbs",
+      "reuseDe": "In NURBS umwandeln"
+    },
+    "catalogue_brep_util_face_from_wire": {
+      "nativeEn": "Face From Wire",
+      "nativeDe": "Fläche aus Linienzug",
+      "reuseEn": "Face From Wire",
+      "reuseDe": "Fläche aus Linienzug"
+    },
+    "catalogue_brep_util_heal": {
+      "nativeEn": "Heal",
+      "nativeDe": "Reparieren",
+      "reuseEn": "Heal",
+      "reuseDe": "Reparieren"
+    },
+    "catalogue_brep_util_sew": {
+      "nativeEn": "Sew",
+      "nativeDe": "Vernähen",
+      "reuseEn": "Sew",
+      "reuseDe": "Vernähen"
+    },
+    "catalogue_brep_util_vertex": {
+      "nativeEn": "Vertex",
+      "nativeDe": "Punkt",
+      "reuseEn": "Vertex",
+      "reuseDe": "Punkt"
+    },
+    "catalogue_brep_vertex": {
+      "nativeEn": "Vertex",
+      "nativeDe": "Punkt",
+      "reuseEn": "Vertex",
+      "reuseDe": "Punkt"
+    },
+    "catalogue_brep_xform_circular_pattern": {
+      "nativeEn": "Circular Pattern",
+      "nativeDe": "Kreisförmiges Muster",
+      "reuseEn": "Circular Pattern",
+      "reuseDe": "Kreisförmiges Muster"
+    },
+    "catalogue_brep_xform_copy": {
+      "nativeEn": "Copy",
+      "nativeDe": "Kopieren",
+      "reuseEn": "Copy",
+      "reuseDe": "Kopieren"
+    },
+    "catalogue_brep_xform_grid_pattern": {
+      "nativeEn": "Grid Pattern",
+      "nativeDe": "Rastermuster",
+      "reuseEn": "Grid Pattern",
+      "reuseDe": "Rastermuster"
+    },
+    "catalogue_brep_xform_linear_pattern": {
+      "nativeEn": "Linear Pattern",
+      "nativeDe": "Lineares Muster",
+      "reuseEn": "Linear Pattern",
+      "reuseDe": "Lineares Muster"
+    },
+    "catalogue_brep_xform_mirror": {
+      "nativeEn": "Mirror",
+      "nativeDe": "Spiegeln",
+      "reuseEn": "Mirror",
+      "reuseDe": "Spiegeln"
+    },
+    "catalogue_brep_xform_rotate": {
+      "nativeEn": "Rotate",
+      "nativeDe": "Drehen",
+      "reuseEn": "Rotate",
+      "reuseDe": "Drehen"
+    },
+    "catalogue_brep_xform_rotate_about": {
+      "nativeEn": "Rotate About",
+      "nativeDe": "Um Punkt drehen",
+      "reuseEn": "Rotate About",
+      "reuseDe": "Um Punkt drehen"
+    },
+    "catalogue_brep_xform_scale": {
+      "nativeEn": "Scale",
+      "nativeDe": "Skalieren",
+      "reuseEn": "Scale",
+      "reuseDe": "Skalieren"
+    },
+    "catalogue_brep_xform_translate": {
+      "nativeEn": "Translate",
+      "nativeDe": "Verschieben",
+      "reuseEn": "Translate",
+      "reuseDe": "Verschieben"
+    },
+    "catalogue_input": {
+      "nativeEn": "Input",
+      "nativeDe": "Eingang",
+      "reuseEn": "Input",
+      "reuseDe": "Eingang"
+    },
+    "catalogue_output": {
+      "nativeEn": "Output",
+      "nativeDe": "Ausgang",
+      "reuseEn": "Output",
+      "reuseDe": "Ausgang"
+    },
+    "catalogue_contract": {
+      "nativeEn": "Contract",
+      "nativeDe": "Schnittstelle",
+      "reuseEn": "Contract",
+      "reuseDe": "Schnittstelle"
+    },
+    "catalogue_brep": {
+      "nativeEn": "Brep",
+      "nativeDe": "BRep",
+      "reuseEn": "Brep",
+      "reuseDe": "BRep"
+    },
+    "input_name_a": {
+      "nativeEn": "A",
+      "nativeDe": "A",
+      "reuseEn": "A",
+      "reuseDe": "A"
+    },
+    "input_name_b": {
+      "nativeEn": "B",
+      "nativeDe": "B",
+      "reuseEn": "B",
+      "reuseDe": "B"
+    },
+    "input_name_amount": {
+      "nativeEn": "Amount",
+      "nativeDe": "Betrag",
+      "reuseEn": "Amount",
+      "reuseDe": "Betrag"
+    },
+    "input_name_angle": {
+      "nativeEn": "Angle",
+      "nativeDe": "Winkel",
+      "reuseEn": "Angle",
+      "reuseDe": "Winkel"
+    },
+    "input_name_axis": {
+      "nativeEn": "Axis",
+      "nativeDe": "Achse",
+      "reuseEn": "Axis",
+      "reuseDe": "Achse"
+    },
+    "input_name_axis_direction": {
+      "nativeEn": "Axis Direction",
+      "nativeDe": "Achsenrichtung",
+      "reuseEn": "Axis Direction",
+      "reuseDe": "Achsenrichtung"
+    },
+    "input_name_axis_origin": {
+      "nativeEn": "Axis Origin",
+      "nativeDe": "Achsenursprung",
+      "reuseEn": "Axis Origin",
+      "reuseDe": "Achsenursprung"
+    },
+    "input_name_brep": {
+      "nativeEn": "BRep",
+      "nativeDe": "BRep",
+      "reuseEn": "BRep",
+      "reuseDe": "BRep"
+    },
+    "input_name_center": {
+      "nativeEn": "Center",
+      "nativeDe": "Mittelpunkt",
+      "reuseEn": "Center",
+      "reuseDe": "Mittelpunkt"
+    },
+    "input_name_compound": {
+      "nativeEn": "Compound",
+      "nativeDe": "Verbund",
+      "reuseEn": "Compound",
+      "reuseDe": "Verbund"
+    },
+    "input_name_control_points": {
+      "nativeEn": "Control Points",
+      "nativeDe": "Kontrollpunkte",
+      "reuseEn": "Control Points",
+      "reuseDe": "Kontrollpunkte"
+    },
+    "input_name_count": {
+      "nativeEn": "Count",
+      "nativeDe": "Anzahl",
+      "reuseEn": "Count",
+      "reuseDe": "Anzahl"
+    },
+    "input_name_count_x": {
+      "nativeEn": "X Count",
+      "nativeDe": "Anzahl in X",
+      "reuseEn": "X Count",
+      "reuseDe": "Anzahl in X"
+    },
+    "input_name_count_y": {
+      "nativeEn": "Y Count",
+      "nativeDe": "Anzahl in Y",
+      "reuseEn": "Y Count",
+      "reuseDe": "Anzahl in Y"
+    },
+    "input_name_curve": {
+      "nativeEn": "Curve",
+      "nativeDe": "Kurve",
+      "reuseEn": "Curve",
+      "reuseDe": "Kurve"
+    },
+    "input_name_curves": {
+      "nativeEn": "Curves",
+      "nativeDe": "Kurven",
+      "reuseEn": "Curves",
+      "reuseDe": "Kurven"
+    },
+    "input_name_cuts": {
+      "nativeEn": "Cuts",
+      "nativeDe": "Schnitte",
+      "reuseEn": "Cuts",
+      "reuseDe": "Schnitte"
+    },
+    "input_name_d1": {
+      "nativeEn": "First Distance",
+      "nativeDe": "Erster Abstand",
+      "reuseEn": "First Distance",
+      "reuseDe": "Erster Abstand"
+    },
+    "input_name_d2": {
+      "nativeEn": "Second Distance",
+      "nativeDe": "Zweiter Abstand",
+      "reuseEn": "Second Distance",
+      "reuseDe": "Zweiter Abstand"
+    },
+    "input_name_data": {
+      "nativeEn": "Data",
+      "nativeDe": "Daten",
+      "reuseEn": "Data",
+      "reuseDe": "Daten"
+    },
+    "input_name_deflection": {
+      "nativeEn": "Deflection",
+      "nativeDe": "Abweichung",
+      "reuseEn": "Deflection",
+      "reuseDe": "Abweichung"
+    },
+    "input_name_degree": {
+      "nativeEn": "Degree",
+      "nativeDe": "Grad",
+      "reuseEn": "Degree",
+      "reuseDe": "Grad"
+    },
+    "input_name_degree_u": {
+      "nativeEn": "U Degree",
+      "nativeDe": "Grad in U",
+      "reuseEn": "U Degree",
+      "reuseDe": "Grad in U"
+    },
+    "input_name_degree_v": {
+      "nativeEn": "V Degree",
+      "nativeDe": "Grad in V",
+      "reuseEn": "V Degree",
+      "reuseDe": "Grad in V"
+    },
+    "input_name_depth": {
+      "nativeEn": "Depth",
+      "nativeDe": "Tiefe",
+      "reuseEn": "Depth",
+      "reuseDe": "Tiefe"
+    },
+    "input_name_dir_x": {
+      "nativeEn": "X Direction",
+      "nativeDe": "X-Richtung",
+      "reuseEn": "X Direction",
+      "reuseDe": "X-Richtung"
+    },
+    "input_name_dir_y": {
+      "nativeEn": "Y Direction",
+      "nativeDe": "Y-Richtung",
+      "reuseEn": "Y Direction",
+      "reuseDe": "Y-Richtung"
+    },
+    "input_name_direction": {
+      "nativeEn": "Direction",
+      "nativeDe": "Richtung",
+      "reuseEn": "Direction",
+      "reuseDe": "Richtung"
+    },
+    "input_name_distance": {
+      "nativeEn": "Distance",
+      "nativeDe": "Abstand",
+      "reuseEn": "Distance",
+      "reuseDe": "Abstand"
+    },
+    "input_name_edge": {
+      "nativeEn": "Edge",
+      "nativeDe": "Kante",
+      "reuseEn": "Edge",
+      "reuseDe": "Kante"
+    },
+    "input_name_edges": {
+      "nativeEn": "Edges",
+      "nativeDe": "Kanten",
+      "reuseEn": "Edges",
+      "reuseDe": "Kanten"
+    },
+    "input_name_end": {
+      "nativeEn": "End",
+      "nativeDe": "Ende",
+      "reuseEn": "End",
+      "reuseDe": "Ende"
+    },
+    "input_name_end_angle": {
+      "nativeEn": "End Angle",
+      "nativeDe": "Endwinkel",
+      "reuseEn": "End Angle",
+      "reuseDe": "Endwinkel"
+    },
+    "input_name_face": {
+      "nativeEn": "Face",
+      "nativeDe": "Fläche",
+      "reuseEn": "Face",
+      "reuseDe": "Fläche"
+    },
+    "input_name_faces": {
+      "nativeEn": "Faces",
+      "nativeDe": "Flächen",
+      "reuseEn": "Faces",
+      "reuseDe": "Flächen"
+    },
+    "input_name_factor": {
+      "nativeEn": "Factor",
+      "nativeDe": "Faktor",
+      "reuseEn": "Factor",
+      "reuseDe": "Faktor"
+    },
+    "input_name_geometry": {
+      "nativeEn": "Geometry",
+      "nativeDe": "Geometrie",
+      "reuseEn": "Geometry",
+      "reuseDe": "Geometrie"
+    },
+    "input_name_guide": {
+      "nativeEn": "Guide",
+      "nativeDe": "Führung",
+      "reuseEn": "Guide",
+      "reuseDe": "Führung"
+    },
+    "input_name_handle": {
+      "nativeEn": "Handle",
+      "nativeDe": "Referenz",
+      "reuseEn": "Handle",
+      "reuseDe": "Referenz"
+    },
+    "input_name_height": {
+      "nativeEn": "Height",
+      "nativeDe": "Höhe",
+      "reuseEn": "Height",
+      "reuseDe": "Höhe"
+    },
+    "input_name_index": {
+      "nativeEn": "Index",
+      "nativeDe": "Index",
+      "reuseEn": "Index",
+      "reuseDe": "Index"
+    },
+    "input_name_kind": {
+      "nativeEn": "Kind",
+      "nativeDe": "Art",
+      "reuseEn": "Kind",
+      "reuseDe": "Art"
+    },
+    "input_name_major": {
+      "nativeEn": "Major Radius",
+      "nativeDe": "Großer Radius",
+      "reuseEn": "Major Radius",
+      "reuseDe": "Großer Radius"
+    },
+    "input_name_mesh": {
+      "nativeEn": "Mesh",
+      "nativeDe": "Mesh",
+      "reuseEn": "Mesh",
+      "reuseDe": "Mesh"
+    },
+    "input_name_minor": {
+      "nativeEn": "Minor Radius",
+      "nativeDe": "Kleiner Radius",
+      "reuseEn": "Minor Radius",
+      "reuseDe": "Kleiner Radius"
+    },
+    "input_name_mode": {
+      "nativeEn": "Mode",
+      "nativeDe": "Modus",
+      "reuseEn": "Mode",
+      "reuseDe": "Modus"
+    },
+    "input_name_neutral_point": {
+      "nativeEn": "Neutral Point",
+      "nativeDe": "Neutralpunkt",
+      "reuseEn": "Neutral Point",
+      "reuseDe": "Neutralpunkt"
+    },
+    "input_name_normal": {
+      "nativeEn": "Normal",
+      "nativeDe": "Normale",
+      "reuseEn": "Normal",
+      "reuseDe": "Normale"
+    },
+    "input_name_offset": {
+      "nativeEn": "Offset",
+      "nativeDe": "Versatz",
+      "reuseEn": "Offset",
+      "reuseDe": "Versatz"
+    },
+    "input_name_open_faces": {
+      "nativeEn": "Open Faces",
+      "nativeDe": "Offene Flächen",
+      "reuseEn": "Open Faces",
+      "reuseDe": "Offene Flächen"
+    },
+    "input_name_origin": {
+      "nativeEn": "Origin",
+      "nativeDe": "Ursprung",
+      "reuseEn": "Origin",
+      "reuseDe": "Ursprung"
+    },
+    "input_name_parameter": {
+      "nativeEn": "Parameter",
+      "nativeDe": "Parameter",
+      "reuseEn": "Parameter",
+      "reuseDe": "Parameter"
+    },
+    "input_name_path": {
+      "nativeEn": "Path",
+      "nativeDe": "Pfad",
+      "reuseEn": "Path",
+      "reuseDe": "Pfad"
+    },
+    "input_name_pitch": {
+      "nativeEn": "Pitch",
+      "nativeDe": "Steigung",
+      "reuseEn": "Pitch",
+      "reuseDe": "Steigung"
+    },
+    "input_name_pivot": {
+      "nativeEn": "Pivot",
+      "nativeDe": "Drehpunkt",
+      "reuseEn": "Pivot",
+      "reuseDe": "Drehpunkt"
+    },
+    "input_name_plane_normal": {
+      "nativeEn": "Plane Normal",
+      "nativeDe": "Ebenennormale",
+      "reuseEn": "Plane Normal",
+      "reuseDe": "Ebenennormale"
+    },
+    "input_name_plane_origin": {
+      "nativeEn": "Plane Origin",
+      "nativeDe": "Ebenenursprung",
+      "reuseEn": "Plane Origin",
+      "reuseDe": "Ebenenursprung"
+    },
+    "input_name_point": {
+      "nativeEn": "Point",
+      "nativeDe": "Punkt",
+      "reuseEn": "Point",
+      "reuseDe": "Punkt"
+    },
+    "input_name_points": {
+      "nativeEn": "Points",
+      "nativeDe": "Punkte",
+      "reuseEn": "Points",
+      "reuseDe": "Punkte"
+    },
+    "input_name_preview": {
+      "nativeEn": "Preview",
+      "nativeDe": "Vorschau",
+      "reuseEn": "Preview",
+      "reuseDe": "Vorschau"
+    },
+    "input_name_profile": {
+      "nativeEn": "Profile",
+      "nativeDe": "Profil",
+      "reuseEn": "Profile",
+      "reuseDe": "Profil"
+    },
+    "input_name_profiles": {
+      "nativeEn": "Profiles",
+      "nativeDe": "Profile",
+      "reuseEn": "Profiles",
+      "reuseDe": "Profile"
+    },
+    "input_name_pull_direction": {
+      "nativeEn": "Pull Direction",
+      "nativeDe": "Zugrichtung",
+      "reuseEn": "Pull Direction",
+      "reuseDe": "Zugrichtung"
+    },
+    "input_name_radius": {
+      "nativeEn": "Radius",
+      "nativeDe": "Radius",
+      "reuseEn": "Radius",
+      "reuseDe": "Radius"
+    },
+    "input_name_radius_end": {
+      "nativeEn": "End Radius",
+      "nativeDe": "Endradius",
+      "reuseEn": "End Radius",
+      "reuseDe": "Endradius"
+    },
+    "input_name_radius_start": {
+      "nativeEn": "Start Radius",
+      "nativeDe": "Anfangsradius",
+      "reuseEn": "Start Radius",
+      "reuseDe": "Anfangsradius"
+    },
+    "input_name_rows": {
+      "nativeEn": "Rows",
+      "nativeDe": "Zeilen",
+      "reuseEn": "Rows",
+      "reuseDe": "Zeilen"
+    },
+    "input_name_segments": {
+      "nativeEn": "Segments",
+      "nativeDe": "Segmente",
+      "reuseEn": "Segments",
+      "reuseDe": "Segmente"
+    },
+    "input_name_selection": {
+      "nativeEn": "Selection",
+      "nativeDe": "Auswahl",
+      "reuseEn": "Selection",
+      "reuseDe": "Auswahl"
+    },
+    "input_name_semi_major": {
+      "nativeEn": "Major Semiaxis",
+      "nativeDe": "Große Halbachse",
+      "reuseEn": "Major Semiaxis",
+      "reuseDe": "Große Halbachse"
+    },
+    "input_name_semi_minor": {
+      "nativeEn": "Minor Semiaxis",
+      "nativeDe": "Kleine Halbachse",
+      "reuseEn": "Minor Semiaxis",
+      "reuseDe": "Kleine Halbachse"
+    },
+    "input_name_sides": {
+      "nativeEn": "Sides",
+      "nativeDe": "Seiten",
+      "reuseEn": "Sides",
+      "reuseDe": "Seiten"
+    },
+    "input_name_smooth": {
+      "nativeEn": "Smooth",
+      "nativeDe": "Glätten",
+      "reuseEn": "Smooth",
+      "reuseDe": "Glätten"
+    },
+    "input_name_solid": {
+      "nativeEn": "Solid",
+      "nativeDe": "Körper",
+      "reuseEn": "Solid",
+      "reuseDe": "Körper"
+    },
+    "input_name_solids": {
+      "nativeEn": "Solids",
+      "nativeDe": "Körper",
+      "reuseEn": "Solids",
+      "reuseDe": "Körper"
+    },
+    "input_name_spacing": {
+      "nativeEn": "Spacing",
+      "nativeDe": "Teilung",
+      "reuseEn": "Spacing",
+      "reuseDe": "Teilung"
+    },
+    "input_name_spacing_x": {
+      "nativeEn": "X Spacing",
+      "nativeDe": "Teilung in X",
+      "reuseEn": "X Spacing",
+      "reuseDe": "Teilung in X"
+    },
+    "input_name_spacing_y": {
+      "nativeEn": "Y Spacing",
+      "nativeDe": "Teilung in Y",
+      "reuseEn": "Y Spacing",
+      "reuseDe": "Teilung in Y"
+    },
+    "input_name_start": {
+      "nativeEn": "Start",
+      "nativeDe": "Anfang",
+      "reuseEn": "Start",
+      "reuseDe": "Anfang"
+    },
+    "input_name_start_angle": {
+      "nativeEn": "Start Angle",
+      "nativeDe": "Anfangswinkel",
+      "reuseEn": "Start Angle",
+      "reuseDe": "Anfangswinkel"
+    },
+    "input_name_subdivisions": {
+      "nativeEn": "Subdivisions",
+      "nativeDe": "Unterteilungen",
+      "reuseEn": "Subdivisions",
+      "reuseDe": "Unterteilungen"
+    },
+    "input_name_surface": {
+      "nativeEn": "Surface",
+      "nativeDe": "Oberfläche",
+      "reuseEn": "Surface",
+      "reuseDe": "Oberfläche"
+    },
+    "input_name_target": {
+      "nativeEn": "Target",
+      "nativeDe": "Ziel",
+      "reuseEn": "Target",
+      "reuseDe": "Ziel"
+    },
+    "input_name_text": {
+      "nativeEn": "Text",
+      "nativeDe": "Text",
+      "reuseEn": "Text",
+      "reuseDe": "Text"
+    },
+    "input_name_thickness": {
+      "nativeEn": "Thickness",
+      "nativeDe": "Dicke",
+      "reuseEn": "Thickness",
+      "reuseDe": "Dicke"
+    },
+    "input_name_tolerance": {
+      "nativeEn": "Tolerance",
+      "nativeDe": "Toleranz",
+      "reuseEn": "Tolerance",
+      "reuseDe": "Toleranz"
+    },
+    "input_name_tools": {
+      "nativeEn": "Tools",
+      "nativeDe": "Werkzeuge",
+      "reuseEn": "Tools",
+      "reuseDe": "Werkzeuge"
+    },
+    "input_name_turns": {
+      "nativeEn": "Turns",
+      "nativeDe": "Windungen",
+      "reuseEn": "Turns",
+      "reuseDe": "Windungen"
+    },
+    "input_name_u": {
+      "nativeEn": "U",
+      "nativeDe": "U",
+      "reuseEn": "U",
+      "reuseDe": "U"
+    },
+    "input_name_v": {
+      "nativeEn": "V",
+      "nativeDe": "V",
+      "reuseEn": "V",
+      "reuseDe": "V"
+    },
+    "input_name_value": {
+      "nativeEn": "Value",
+      "nativeDe": "Wert",
+      "reuseEn": "Value",
+      "reuseDe": "Wert"
+    },
+    "input_name_vector": {
+      "nativeEn": "Vector",
+      "nativeDe": "Vektor",
+      "reuseEn": "Vector",
+      "reuseDe": "Vektor"
+    },
+    "input_name_vertex": {
+      "nativeEn": "Vertex",
+      "nativeDe": "Punkt",
+      "reuseEn": "Vertex",
+      "reuseDe": "Punkt"
+    },
+    "input_name_vertices": {
+      "nativeEn": "Vertices",
+      "nativeDe": "Punkte",
+      "reuseEn": "Vertices",
+      "reuseDe": "Punkte"
+    },
+    "input_name_width": {
+      "nativeEn": "Width",
+      "nativeDe": "Breite",
+      "reuseEn": "Width",
+      "reuseDe": "Breite"
+    },
+    "input_name_wire": {
+      "nativeEn": "Wire",
+      "nativeDe": "Linienzug",
+      "reuseEn": "Wire",
+      "reuseDe": "Linienzug"
+    },
+    "input_name_grid": {
+      "nativeEn": "Grid",
+      "nativeDe": "Raster",
+      "reuseEn": "Grid",
+      "reuseDe": "Raster"
+    },
+    "input_name_ratio": {
+      "nativeEn": "Ratio",
+      "nativeDe": "Verhältnis",
+      "reuseEn": "Ratio",
+      "reuseDe": "Verhältnis"
+    },
+    "input_name_components": {
+      "nativeEn": "Components",
+      "nativeDe": "Komponenten",
+      "reuseEn": "Components",
+      "reuseDe": "Komponenten"
+    },
+    "input_name_granularity": {
+      "nativeEn": "Element Type",
+      "nativeDe": "Elementart",
+      "reuseEn": "Element Type",
+      "reuseDe": "Elementart"
+    },
+    "input_name_x": {
+      "nativeEn": "X",
+      "nativeDe": "X",
+      "reuseEn": "X",
+      "reuseDe": "X"
+    },
+    "input_name_y": {
+      "nativeEn": "Y",
+      "nativeDe": "Y",
+      "reuseEn": "Y",
+      "reuseDe": "Y"
+    },
+    "input_name_z": {
+      "nativeEn": "Z",
+      "nativeDe": "Z",
+      "reuseEn": "Z",
+      "reuseDe": "Z"
+    },
+    "input_name_number": {
+      "nativeEn": "Number",
+      "nativeDe": "Zahl",
+      "reuseEn": "Number",
+      "reuseDe": "Zahl"
+    },
+    "input_name_numbers": {
+      "nativeEn": "Numbers",
+      "nativeDe": "Zahlen",
+      "reuseEn": "Numbers",
+      "reuseDe": "Zahlen"
+    },
+    "input_name_axis_name": {
+      "nativeEn": "Axis",
+      "nativeDe": "Achse",
+      "reuseEn": "Axis",
+      "reuseDe": "Achse"
     }
   }
 }

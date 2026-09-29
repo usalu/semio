@@ -253,6 +253,20 @@
       },
       "outputs": []
     },
+    "test-browser": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "default",
+        "browserBootSources",
+        "frameWorkerSources",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🎬️.mp4"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts test-browser",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
+      }
+    },
     "test-browser-worker": {
       "executor": "nx:run-commands",
       "options": {
@@ -380,6 +394,18 @@
       "options": {
         "command": "bun ./📜️script.ts test exhaustive",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
+      }
+    },
+    "check-wasm": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["nativeSources", "^nativeSources"],
+      "outputs": [],
+      "dependsOn": ["workspace:deps-cargo", "@semio-tech/ui-rs:generate", "@semio-tech/framework-schema:generate", "@semio-tech/ui-styling-tokens:generate", "@semio-tech/framework-graph:generate"],
+      "options": {
+        "command": "bun ./📜️script.ts check-wasm",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "forwardAllArgs": true
       }
     },
     "wasm": {

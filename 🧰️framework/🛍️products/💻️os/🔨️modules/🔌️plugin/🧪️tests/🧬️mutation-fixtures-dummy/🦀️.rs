@@ -256,6 +256,15 @@ impl ArtifactApp for DummyApp {
     const DIALECT: crate::Dialect = crate::Dialect { artifact_kind: "s.test.dummy", standard: crate::StandardId("1"), subset: crate::SubsetId::ANY };
     const APP_ID: &'static str = "s.test.dummy@1/*#editor";
     const DOCUMENT_SCHEMA: &'static str = "semio.testkit/v1";
+    fn catalogue_example_document(example_id: &str) -> Option<Result<String, semio_framework::Fault>> {
+        if example_id.is_empty() {
+            return Some(Ok(<DummySnapshot as store::ArtifactDsl>::print_dsl(&DummySnapshot::default())));
+        }
+        if example_id == "four" {
+            return Some(Ok(<DummySnapshot as store::ArtifactDsl>::print_dsl(&DummySnapshot { count: 4 })));
+        }
+        Some(Err(semio_framework::Fault::new(semio_framework::FaultOrigin::App, semio_framework::FaultCode::new("app.example.unknown"), format!("no registered example '{example_id}'"))))
+    }
     type Snapshot = DummySnapshot;
     type Mutation = DummyMutation;
     type Config = NoConfig;
@@ -351,6 +360,22 @@ impl ArtifactApp for DummyApp {
     async fn render(_body_key: &str, doc: &ArtifactView<'_, DummySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewModel) -> UiAssemblyResult<semio_framework_ui_runtime::ComponentTree> {
         built_text_to_component_tree(ui_wgpu::wgpu::Label::data(format!("count={}", doc.snapshot.count)))
     }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn set_active_example_loads_the_registered_catalogue_without_a_declared_action() {
+    let mut app = new_app::<DummyApp>().await;
+    let args = dsl::DslValue::object([("exampleId".to_string(), dsl::DslValue::String("four".to_string()))]);
+    let result = app.dispatch_action("setActiveExample", Some(&args), &meta("actor")).await.expect("catalogue load");
+    let semio_framework::kernel::Effect::LoadDocument { pack, .. } = result.requested_effects.first().expect("load effect") else {
+        panic!("expected LoadDocument");
+    };
+    let loaded = <DummySnapshot as store::ArtifactPack>::decode_pack(pack).expect("pack");
+    assert_eq!(loaded, DummySnapshot { count: 4 });
+    let missing = dsl::DslValue::object([("exampleId".to_string(), dsl::DslValue::String("missing".to_string()))]);
+    let refused = app.dispatch_action("setActiveExample", Some(&missing), &meta("actor")).await.expect_err("unknown example");
+    assert_eq!(refused.code.0, "app.example.unknown");
+    close_registered_fixture_app(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]

@@ -21,8 +21,21 @@
 /// `AppFrame::Welcome` handshake entirely — lifecycle now arrives through the reactor ABI's
 /// `Event::InstanceOpen`/`InstanceClose`, so this constant is no longer carried on the wire by any
 /// frame; it exists purely as the drift guard the tests below assert against.
-pub const CHANNEL_VERSION: u32 = 19;
+pub const CHANNEL_VERSION: u32 = 20;
 //#endregion 🔖️Version
+
+/// 🪪️ A bounded document root identity read independently from authored renderer props.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AppDocumentIdentity {
+    pub app_instance_id: u32,
+    #[serde(deserialize_with = "deserialize_identity_document_id")]
+    pub parent_document_id: Option<String>,
+}
+
+fn deserialize_identity_document_id<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<Option<String>, D::Error> {
+    serde::Deserialize::deserialize(deserializer)
+}
 
 //#region 🔖️MediaExportWire
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -1889,6 +1902,7 @@ enum PagedAppCommandDecodeState {
     PureCommandFields { seq: u64, fields: Vec<Vec<u8>> },
     RouteFields { seq: u64, decode: PagedRouteFieldsDecode },
     ReadDocumentArchive { seq: u64 },
+    ReadDocumentIdentity { seq: u64 },
     LoadDocumentArchive { seq: u64, decode: PagedDocumentArchiveDecode },
     DocumentArchiveOperation { seq: u64, kind: u8 },
     MediaExportSubmitPort { seq: u64 },
@@ -2073,6 +2087,7 @@ impl PagedAppCommandDecodeCursor {
                     31 => PagedAppCommandDecodeState::ReadWindowConfigs { seq },
                     32 => PagedAppCommandDecodeState::LoadDocumentArchive { seq, decode: PagedDocumentArchiveDecode::new() },
                     33 => PagedAppCommandDecodeState::ReadDocumentArchive { seq },
+                    41 => PagedAppCommandDecodeState::ReadDocumentIdentity { seq },
                     34..=36 => PagedAppCommandDecodeState::DocumentArchiveOperation { seq, kind: tag },
                     37 => PagedAppCommandDecodeState::MediaExportSubmitPort { seq },
                     38..=40 => PagedAppCommandDecodeState::MediaExportHandle { seq, kind: tag, decode: PagedMediaExportHandleDecode::default() },
@@ -2158,6 +2173,7 @@ impl PagedAppCommandDecodeCursor {
             PagedAppCommandDecodeState::ReadChildren { seq } => Some(AppCommand::ReadChildren { seq }),
             PagedAppCommandDecodeState::ReadHistory { seq } => Some(AppCommand::ReadHistory { seq }),
             PagedAppCommandDecodeState::ReadConflicts { seq } => Some(AppCommand::ReadConflicts { seq }),
+            PagedAppCommandDecodeState::ReadDocumentIdentity { seq } => Some(AppCommand::ReadDocumentIdentity { seq }),
             PagedAppCommandDecodeState::LocalInteractionQuery { seq } => {
                 let bytes = self.reader.read_bounded_bytes(142)?;
                 let command = protocol::decode_local_interaction_query_command(&bytes).map_err(|reason| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("local-interaction.command-wire"), reason))?;
@@ -2336,6 +2352,7 @@ impl PagedAppCommandDecodeCursor {
                     | AppCommand::ReadHistory { .. }
                     | AppCommand::ReadConflicts { .. }
                     | AppCommand::LocalInteractionQuery { .. }
+                    | AppCommand::ReadDocumentIdentity { .. }
                     | AppCommand::ReadWindowConfigs { .. }
                     | AppCommand::PollDocumentArchiveLoad { .. }
                     | AppCommand::CancelDocumentArchiveLoad { .. }
@@ -2723,6 +2740,7 @@ pub enum AppCommand {
         seq: u64,
         handle: MediaExportHandleWire,
     },
+    ReadDocumentIdentity { seq: u64 },
 }
 //#endregion 🔖️AppCommand
 
@@ -2954,6 +2972,7 @@ pub enum AppFrame {
         data: Vec<u8>,
         terminal: bool,
     },
+    DocumentIdentity { in_reply_to: u64, identity: AppDocumentIdentity },
 }
 //#endregion 🔖️AppFrame
 
@@ -3458,6 +3477,10 @@ pub async fn encode_app_command(command: &AppCommand) -> Result<PagedCommand, cr
             out.varint(*seq)?;
             write_media_export_handle_paged(&mut out, handle)?;
         }
+        AppCommand::ReadDocumentIdentity { seq } => {
+            out.byte(41)?;
+            out.varint(*seq)?;
+        }
         AppCommand::Presence { .. } => unreachable!(),
     }
     out.finish()
@@ -3733,6 +3756,7 @@ pub(super) async fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate
                 _ => unreachable!(),
             }
         }
+        41 => AppCommand::ReadDocumentIdentity { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
         other => return Err(malformed("channel app-command tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(command)
@@ -3955,6 +3979,15 @@ pub async fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             crate::os_spr::write_bytes(&mut out, data);
             crate::os_spr::write_bool(&mut out, *terminal);
         }
+        AppFrame::DocumentIdentity { in_reply_to, identity } => {
+            out.push(31);
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            crate::os_spr::write_varint_u64(&mut out, u64::from(identity.app_instance_id));
+            crate::os_spr::write_bool(&mut out, identity.parent_document_id.is_some());
+            if let Some(id) = &identity.parent_document_id {
+                crate::os_spr::write_str(&mut out, id);
+            }
+        }
     }
     out
 }
@@ -4079,6 +4112,26 @@ pub async fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::P
             data: crate::os_spr::read_bytes(bytes, &mut pos)?,
             terminal: crate::os_spr::read_bool(bytes, &mut pos)?,
         },
+        31 => {
+            if bytes.len() > 2_070 {
+                return Err(malformed("channel document identity", pos as u64, "identity frame byte budget exceeded"));
+            }
+            let in_reply_to = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let app_instance_id = u32::try_from(crate::os_spr::read_varint_u64(bytes, &mut pos)?).map_err(|_| malformed("channel document identity", pos as u64, "app instance exceeds u32"))?;
+            let presence = *bytes.get(pos).ok_or_else(|| malformed("channel document identity", pos as u64, "truncated document presence"))?;
+            pos += 1;
+            if presence > 1 {
+                return Err(malformed("channel document identity", pos as u64, "document presence must be zero or one"));
+            }
+            let parent_document_id = if presence == 1 {
+                let id = crate::os_spr::read_str(bytes, &mut pos)?;
+                if !(1..=512).contains(&id.chars().count()) {
+                    return Err(malformed("channel document identity", pos as u64, "document id length refused"));
+                }
+                Some(id)
+            } else { None };
+            AppFrame::DocumentIdentity { in_reply_to, identity: AppDocumentIdentity { app_instance_id, parent_document_id } }
+        }
         other => return Err(malformed("channel app-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     if pos != bytes.len() {

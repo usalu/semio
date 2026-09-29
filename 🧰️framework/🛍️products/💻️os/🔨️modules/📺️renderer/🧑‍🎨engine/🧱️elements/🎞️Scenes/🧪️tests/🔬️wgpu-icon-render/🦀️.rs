@@ -187,7 +187,11 @@ fn icon_render_maps_the_shared_lighting_fixture_to_the_world_environment() {
         assert_eq!(environment["sun"][field].as_f64(), fixture["worldEnvironment"]["sun"][field].as_f64(), "sun.{field} carries the fixture's numeric value");
     }
     assert_eq!(environment["shadow"], serde_json::json!({ "enabled": true }));
-    assert_eq!(environment["material"], fixture["worldEnvironment"]["material"]);
+    for (field, value) in fixture["worldEnvironment"]["material"].as_object().expect("the lit material") {
+        assert_eq!(&environment["material"][field], value, "material.{field} carries the fixture's lighting value");
+    }
+    let outline: serde_json::Value = serde_json::from_str(include_str!("../../../🖼️IconRenderHost/🧫️fixtures/📤️svg-export/🔣️.json")).unwrap();
+    assert_eq!(environment["material"]["stroke"], outline["material"]["stroke"], "an icon outline defaults to React's own stroke");
 }
 
 #[test]

@@ -1,0 +1,11 @@
+
+use super::*;
+use crate::editor::space_index::{SpaceIndexCommand, unit_tests::context};
+
+#[semio_framework_async_macros::async_test]
+async fn rename_artifact_updates_the_name() {
+    let (mut app, id) = context::new_app_with_artifact().await;
+    context::settle_typed(&mut app, SpaceIndexCommand::RenameArtifact(RenameArtifact { id: id.clone(), new_name: "Renamed".into() })).await.expect("rename artifact");
+    let snapshot = app.snapshot().expect("projection");
+    assert_eq!(snapshot.artifacts.iter().find(|row| row.id == id).map(|row| row.name.clone()), Some("Renamed".into()));
+}

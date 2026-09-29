@@ -214,11 +214,11 @@
   },
   "properties": {
     "schema": {
-      "$ref": "#/$defs/Part21Document",
+      "type": "string",
       "x-semio-state": "artifact"
     },
     "document": {
-      "type": "string",
+      "$ref": "#/$defs/Part21Document",
       "x-semio-state": "artifact"
     },
     "edmPreamble": {

@@ -1,7 +1,5 @@
 {
   "bitDepth": 8,
-  "bkgd": null,
-  "chrm": null,
   "chunkOrder": [
     {
       "chunk": "ihdr"
@@ -27,7 +25,6 @@
   "gama": 100000,
   "height": 1,
   "interlace": false,
-  "phys": null,
   "pixels": [
     255,
     0,
@@ -46,7 +43,6 @@
     }
   ],
   "schema": "stdio.png",
-  "srgb": null,
   "textChunks": [
     {
       "compressed": false,
@@ -57,8 +53,6 @@
       "value": "Two Pixel Swatch"
     }
   ],
-  "time": null,
-  "trns": null,
   "unknownChunks": [],
   "width": 2
 }

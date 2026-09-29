@@ -43,7 +43,7 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for PatchSnapshot {
 #[cfg(test)]
 pub(crate) fn test_case() -> PngMutation {
     let base = PngSnapshot::default();
-    let event = editing::SnapshotEditEvent::SetValue { path: "/gama".into(), value: dsl::DslValue::Number(dsl::Number::UInt(45_455)) };
+    let event = editing::SnapshotEditEvent::InsertValue { path: "/gama".into(), value: dsl::DslValue::Number(dsl::Number::UInt(45_455)) };
     PngMutation::PatchSnapshot(PatchSnapshot { patch: editing::prepare_snapshot_patch(&base, &event).expect("prepare PNG patch fixture") })
 }
 
@@ -57,7 +57,7 @@ mod tests {
         assert!(PngMutation::parse_op("patch-snapshot patch=€0").is_err());
         let mut base = PngSnapshot::default();
         base.pixels = vec![7; 2 * 1_024 * 1_024];
-        let event = editing::SnapshotEditEvent::SetValue { path: "/gama".into(), value: dsl::DslValue::Number(dsl::Number::UInt(45_455)) };
+        let event = editing::SnapshotEditEvent::InsertValue { path: "/gama".into(), value: dsl::DslValue::Number(dsl::Number::UInt(45_455)) };
         let patch = editing::prepare_snapshot_patch(&base, &event).expect("prepare gamma patch");
         let mutation = PngMutation::PatchSnapshot(PatchSnapshot { patch });
         let next = MutationDiff::apply(mutation.diff(&base).diff(), &base).expect("apply gamma patch");

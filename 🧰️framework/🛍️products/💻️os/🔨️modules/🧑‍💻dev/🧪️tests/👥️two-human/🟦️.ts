@@ -391,7 +391,7 @@ export function personalArgs(pinned: Readonly<Record<string, string>>, label: st
   return Object.fromEntries(Object.entries(pinned).map(([key, value]) => [key, personal(value)]));
 }
 
-async function edit(session: Session, plugin: string, pins: ReturnType<typeof readMatrixPins>, overrides: Readonly<Record<string, string>> = {}) {
+async function edit(session: Session, plugin: string, pins: ReturnType<typeof readMatrixPins>, overrides: Readonly<Record<string, string>> = EDIT_ARGS[plugin] ?? {}) {
   const verb = pins.pluginVerbs[plugin];
   if (verb === undefined) throw new Error(`no pinned document verb for plugin ${plugin}`);
   const before = await docText(session);
@@ -614,6 +614,18 @@ async function viewerJourney({ A, B, check, plugin, pins, options, spaceId, arti
   check("hub refuses a write crafted with the viewer's credential", crafted.role === "viewer" && !crafted.write && !crafted.accepted && head3 === head2 && aAfterCraft === settled[0], { crafted, hubHead: [head2, head3], a: short(aAfterCraft) });
 }
 
+/** 🪪️ The code the hub's event log refuses a `Revert`/`Reinstate` with when it names another actor's operation (kernel-db
+ * `FOREIGN_HISTORY_TRANSITION_CODE`). */
+const FOREIGN_HISTORY_TRANSITION_CODE = "history.foreign-transition";
+
+/** 🧾️ A refused Ack's reason and its encoded `messages`, as text — the refusal's code is a plain string inside them. */
+function rejectionText(ack: any): string {
+  const rejected = (ack?.stages ?? []).map((stage: any) => stage?.Applied?.outcome?.Rejected).find((outcome: any) => outcome !== undefined);
+  if (!rejected) return "";
+  const messages = Array.isArray(rejected.messages) || rejected.messages instanceof Uint8Array ? new TextDecoder().decode(Uint8Array.from(rejected.messages)) : "";
+  return `${String(rejected.reason ?? "")} ${messages}`;
+}
+
 /** ⏪️ A `Revert` history transition naming `mutationIds`, shaped the way a replica sends one (`semio.history.transition`:
  * tag 0, varint count, varint-length UTF-8 ids) — what another actor would have to send to undo someone else's operations.
  * @see ../../../../../../🔨️modules/📡️replication/🔗️causal/🔀️transition/🦀️.rs */
@@ -638,14 +650,20 @@ function revertTransitionEnvelope(documentId: string, mutationIds: readonly stri
 
 /** 🪞️ B's edit arguments where the pinned verb would otherwise make B's element indistinguishable from A's (a default text
  * block next to a default text block renders the same text), so the views can tell WHOSE edit an undo withdrew. */
-const CROSS_UNDO_DISTINCT_ARGS: Readonly<Record<string, Readonly<Record<string, string>>>> = { note: { kind: "table" } };
+const CROSS_UNDO_DISTINCT_ARGS: Readonly<Record<string, Readonly<Record<string, string>>>> = { note: { kind: "table" }, draw: { kind: "shape:ellipse" } };
+
+/** 🖍️ Arguments a journey's edit pins beyond the program matrix's (never personalized): draw's `addLayer` defaults to an empty
+ * `path` node the pen draws into — no geometry, nothing on the canvas, nothing to select — so a journey adds a filled shape. */
+const EDIT_ARGS: Readonly<Record<string, Readonly<Record<string, string>>>> = { draw: { kind: "shape:rect" } };
 
 /** ⏪️ Undo and redo across two authors (row 3.11): each human's undo withdraws only their own newest edit and redo restores
  * only their own — B's undo takes B's edit back and a second one leaves A's edit in both views (it may still withdraw an
  * invisible edit of B's own, so the hub head is recorded, not judged); A's undo under B's later edit
  * keeps B's edit (the later edits replay on the state without A's, a later value of the same field stands) — both views
  * converge after every step and the hub head advances with every committed transition; and a `Revert` crafted by another
- * actor that names A's operations changes nothing on either view (an undo belongs to its author). */
+ * actor that names A's operations is refused by the hub's event log (`history.foreign-transition`), never relayed, and changes
+ * nothing on either view (an undo belongs to its author) — B watches A's operation ids on one probe socket from the start and
+ * sends the crafted `Revert` on a socket opened for it. */
 async function crossUndoJourney({ A, B, check, plugin, pins, options, spaceId, artifactId }: JourneyContext): Promise<void> {
   const crafted = await hubProbeSignIn(options.hub, B.human.email, B.human.password, "twohumanundo").then((token) => hubProbeOpenDocument(options.hub, token, spaceId, artifactId, `two-human-undo-${Date.now()}`));
   const head = (): Promise<number | string | null> => hubHead(options.hub, options.adminCapabilityFile, artifactId);
@@ -693,13 +711,24 @@ async function crossUndoJourney({ A, B, check, plugin, pins, options, spaceId, a
     const aRedone = await agreeOn(afterBoth);
     check("A's redo restores A's edit under B's", aRedone !== null, { a: short(await docText(A)), b: short(await docText(B)), expected: afterBoth.map(short) });
     const head5 = await head();
+    const craftedRevert = revertTransitionEnvelope(artifactId, aOperations);
     const answered: { readonly accepted: boolean; readonly ack: any; readonly unanswered?: string; readonly socketClosed?: { readonly code: number; readonly clean: boolean; readonly reason: string } | null } | null =
       aOperations.length === 0
         ? null
-        : await crafted.submitEnvelopes(1, [revertTransitionEnvelope(artifactId, aOperations)]).catch(async (error: unknown) => ({ accepted: false, ack: null, unanswered: String(error instanceof Error ? error.message : error).slice(0, 80), socketClosed: await crafted.ended(5_000) }));
+        : await hubProbeSignIn(options.hub, B.human.email, B.human.password, "twohumanundo")
+            .then((token) => hubProbeOpenDocument(options.hub, token, spaceId, artifactId, `two-human-undo-submit-${Date.now()}`))
+            .then(async (submitter) => {
+              try {
+                return await submitter.submitEnvelopes(1, [craftedRevert]).catch(async (error: unknown) => ({ accepted: false, ack: null, unanswered: String(error instanceof Error ? error.message : error).slice(0, 80), socketClosed: await submitter.ended(5_000) }));
+              } finally {
+                submitter.close();
+              }
+            });
     await pause(A, 6_000);
     const afterCraft = await both();
-    check("another actor's crafted undo of A's edit changes nothing", aOperations.length > 0 && answered !== null && answered.ack !== null && afterCraft[0] === afterBoth[0] && afterCraft[1] === afterBoth[1], { aOperations, hubAccepted: answered?.accepted ?? null, stages: answered?.ack ? JSON.stringify(answered.ack.stages).slice(0, 240) : null, unanswered: answered?.unanswered === undefined ? null : { error: answered.unanswered, socketClosed: answered.socketClosed ?? null }, a: short(afterCraft[0]), b: short(afterCraft[1]), expected: afterBoth.map(short), hubHead: [head5, await head()] });
+    const persisted = crafted.relayedEnvelopes().some((envelope) => String(envelope?.mutation_id) === craftedRevert.mutation_id);
+    const refusal = rejectionText(answered?.ack);
+    check("the hub refuses another actor's crafted undo of A's edit, and nothing changes", aOperations.length > 0 && answered !== null && answered.ack !== null && !answered.accepted && refusal.includes(FOREIGN_HISTORY_TRANSITION_CODE) && !persisted && afterCraft[0] === afterBoth[0] && afterCraft[1] === afterBoth[1], { aOperations, hubAccepted: answered?.accepted ?? null, refusal: refusal.slice(0, 240), persisted, unanswered: answered?.unanswered === undefined ? null : { error: answered.unanswered, socketClosed: answered.socketClosed ?? null }, a: short(afterCraft[0]), b: short(afterCraft[1]), expected: afterBoth.map(short), hubHead: [head5, await head()] });
   } finally {
     crafted.close();
   }

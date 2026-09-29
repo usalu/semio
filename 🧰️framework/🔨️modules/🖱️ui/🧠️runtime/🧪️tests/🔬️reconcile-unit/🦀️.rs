@@ -872,7 +872,7 @@ const TREE_WINDOW_LAW_SECTION_TOTAL: usize = ui_contract::UI_BUILT_CHILDREN_MAX;
 /// law below starts here and walks DOWN until admission actually accepts the page.
 const TREE_WINDOW_LAW_PAGE_ROWS: usize = (ui_contract::UI_DOCUMENT_NODES - 1 - TREE_WINDOW_LAW_SECTIONS) / TREE_WINDOW_LAW_SECTIONS;
 
-/// 🕹️ Rows per section that carry their own `Activate` binding with a four-entry argument map,
+/// 🕹️ Rows per section that carry their own target — a four-entry argument map and an activation verb —
 /// mirroring an app row that still owns an action (catalogue `addWidget`, workshop install …) rather
 /// than picking through the tree-level interaction domain. Pick rows cost no arena at all.
 const TREE_WINDOW_LAW_BOUND_ROWS: usize = 31;
@@ -892,26 +892,22 @@ fn tree_window_law_row(section: usize, index: usize) -> crate::TreeNode {
         inline_toolbar: None,
         detail: None,
         row_actions: ui_contract::UiFixedList::default(),
+        target: (index < TREE_WINDOW_LAW_BOUND_ROWS)
+            .then(|| tree_window_law_args(&key))
+            .flatten()
+            .map(|args| ui_contract::RowTarget { scope: ui_text("puzzle"), version: 1, args: Some(args), activation: Some(ui_text("addWidget")) }),
     };
-    let mut node = crate::TreeNode::try_new(&key, ui_contract::Component::TreeItem(props)).expect("bounded fixture row");
-    if index < TREE_WINDOW_LAW_BOUND_ROWS {
-        if let Some(args) = tree_window_law_args(&key) {
-            node.bindings
-                .try_push(ui_contract::ActionBinding { trigger: ui_contract::Trigger::Activate, action: ui_contract::ActionId::try_v1("puzzle", "addWidget").expect("bounded fixture action"), args: Some(args), capability: None })
-                .expect("bounded fixture bindings");
-        }
-    }
-    node
+    crate::TreeNode::try_new(&key, ui_contract::Component::TreeItem(props)).expect("bounded fixture row")
 }
 
 /// 🌱️ A four-entry argument map, or `None` when the shared `UiValue` arena refuses one — a refused
 /// row shortens the window, it never faults, so this law measures whatever admission actually allowed.
-fn tree_window_law_args(key: &str) -> Option<ui_contract::UiValue> {
+fn tree_window_law_args(key: &str) -> Option<ui_contract::UiMap> {
     let mut builder = ui_contract::UiMapBuilder::try_new()?;
     for (name, value) in [("id", key), ("kind", "assembly"), ("mode", "insert"), ("origin", "panel")] {
         builder.push(name.to_string(), ui_contract::UiValue::Text(ui_contract::UiText::try_from_str(value)?)).ok()?;
     }
-    Some(ui_contract::UiValue::Map(builder.finish()))
+    Some(builder.finish())
 }
 
 /// 🪟️ One presented document of the paged tree: every section stamps its FULL `total`, materialises
@@ -1059,18 +1055,18 @@ fn census_law_table_row(index: usize) -> crate::TreeNode {
     census_law_table_row_shaped(index, true)
 }
 
-/// 📊️ A light table row: two cells and one argument-free row action, no row activation.
+/// 📊️ A light table row: two cells and one row action on an argument-free target, no row activation.
 fn census_law_light_table_row(index: usize) -> crate::TreeNode {
     census_law_table_row_shaped(index, false)
 }
 
 fn census_law_table_row_shaped(index: usize, heavy: bool) -> crate::TreeNode {
     let key = format!("space:{index:04}");
-    let binding = |name: &str| {
+    let args = heavy.then(|| {
         let mut args = ui_contract::UiMapBuilder::try_new().expect("bounded fixture args");
         args.push("spaceId".to_string(), ui_contract::UiValue::Text(ui_text(&key))).expect("bounded fixture arg");
-        ui_contract::ActionBinding { trigger: ui_contract::Trigger::Activate, action: ui_contract::ActionId::try_v1("s.space.home", name).expect("bounded fixture action"), args: Some(ui_contract::UiValue::Map(args.finish())), capability: None }
-    };
+        args.finish()
+    });
     let name = format!("Studio {index}");
     let all_cells = [name.as_str(), "Atelier", "Private", "1", "2026-09-25 23:05", "Hub"];
     let mut cells = ui_contract::UiFixedList::default();
@@ -1080,14 +1076,10 @@ fn census_law_table_row_shaped(index: usize, heavy: bool) -> crate::TreeNode {
     let all_actions = [("folder-open", "openSpace"), ("pencil", "renameSpace"), ("link", "shareSpace"), ("trash-2", "deleteSpace"), ("users", "manageSpace")];
     let mut row_actions = ui_contract::UiFixedList::default();
     for (icon, name) in if heavy { &all_actions[..] } else { &all_actions[..1] } {
-        let action = if heavy { binding(name) } else { ui_contract::ActionBinding { trigger: ui_contract::Trigger::Activate, action: ui_contract::ActionId::try_v1("s.space.home", name).expect("bounded fixture action"), args: None, capability: None } };
-        row_actions.try_push(ui_contract::RowAction { icon: ui_text(icon), label: Some(ui_contract::Label::try_from(*name).expect("bounded fixture label")), action, placement: Default::default() }).expect("bounded fixture row action");
+        row_actions.try_push(ui_contract::RowAction { icon: ui_text(icon), label: Some(ui_contract::Label::try_from(*name).expect("bounded fixture label")), verb: ui_text(name), placement: Default::default(), disabled: false }).expect("bounded fixture row action");
     }
-    let mut node = crate::TreeNode::try_new(&key, ui_contract::Component::TableRow(ui_contract::TableRowProps { cells, row_actions })).expect("bounded fixture row");
-    if heavy {
-        node.bindings.try_push(binding("openSpace")).expect("bounded fixture activation");
-    }
-    node
+    let target = ui_contract::RowTarget { scope: ui_text("s.space.home"), version: 1, args, activation: heavy.then(|| ui_text("openSpace")) };
+    crate::TreeNode::try_new(&key, ui_contract::Component::TableRow(ui_contract::TableRowProps { cells, row_actions, target: Some(target) })).expect("bounded fixture row")
 }
 
 fn census_law_table_document(rows: usize, row: fn(usize) -> crate::TreeNode) -> crate::ComponentTree {

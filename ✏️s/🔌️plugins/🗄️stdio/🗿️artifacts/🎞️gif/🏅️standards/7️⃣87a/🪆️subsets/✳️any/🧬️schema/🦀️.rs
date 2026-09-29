@@ -204,16 +204,22 @@ semio_framework_plugin::derive_artifact_facets!(
 
 //#region 🔖️DocumentHelpers
 // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
-// `empty_gif_snapshot`/`demo_gif_snapshot` relocated here verbatim (pure helpers over the
+// `blank_gif_snapshot`/`demo_gif_snapshot` relocated here verbatim (pure helpers over the
 // document type, destination rule 5); `GifEngine` (zero construction sites) deleted outright;
 // the real byte-level LZW/sub-block/color-table/quantize/interlace codec (`pub`, reused verbatim
 // by 89a's own engine) + `encode_gif`/`decode_gif` + `sniff_magic` + the protected `register()`
 // cluster (`crate::engine::register()` is one of stdio's 10 deliberate imperative
 // plugin-root calls — untouched, reached via this standard's own inline `engine` barrel) +
 // `io_registry` all moved to `../🚪️io`; tests moved beside what they now test.
+/// 🆕️ A new gif (87a) document: a 1×1 logical screen with one image of one white pixel as the real codec round-trips it —
+/// GIF87a has no empty screen nor an image-less stream, and a new document must save and reopen as itself.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn empty_gif_snapshot() -> GifSnapshot {
-    GifSnapshot::default()
+pub fn blank_gif_snapshot() -> GifSnapshot {
+    use crate::standards::v87a::subsets::any::io::{decode_gif, encode_gif};
+    use crate::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifRgb};
+    let white = GifRgb { r: 255, g: 255, b: 255 };
+    let seed = GifSnapshot { width: 1, height: 1, gct: Some(GifColorTable { sorted: false, colors: vec![white, white] }), images: vec![GifImage { width: 1, height: 1, indices: vec![0], ..GifImage::default() }], ..GifSnapshot::default() };
+    encode_gif(&seed).and_then(|bytes| decode_gif(&bytes)).expect("blank_gif_snapshot: the 1×1 seed round-trips through the real codec")
 }
 
 /// 🧪️ P2-FG2: real, deterministic demo `GifSnapshot` — a real GCT plus two real images (one

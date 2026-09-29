@@ -856,33 +856,33 @@ pub fn draw_text_on(draw: &mut DrawList, atlas: &mut FontAtlas, text: &str, x: f
 
 /// 🔤️ Paints one run with a selected authored face into an explicit draw list.
 pub fn draw_text_face_on(draw: &mut DrawList, atlas: &mut FontAtlas, face: TextFace, text: &str, x: f32, y: f32, size: f32, color: Rgba) {
-    let atlas_w = atlas.width as f32;
-    let atlas_h = atlas.height as f32;
-    let mut cursor_x = x;
-    for ch in text.chars() {
-        let glyph = atlas.ensure_glyph_for(face, ch, size);
-        let gw = glyph.logical_width();
-        let gh = glyph.logical_height();
-        let gx = cursor_x + glyph.bearing_x;
-        let gy = y - gh - glyph.bearing_y;
-        let uv_rect = [glyph.atlas_x as f32 / atlas_w, glyph.atlas_y as f32 / atlas_h, (glyph.atlas_x + glyph.width) as f32 / atlas_w, (glyph.atlas_y + glyph.height) as f32 / atlas_h];
-        draw.push_glyph([gx, gy, gw.max(1.0), gh.max(1.0)], color, uv_rect);
-        cursor_x += glyph.advance;
-    }
+    pen_glyph_run(draw, atlas, face, text, (x, y), size, color, false);
 }
 
 pub fn draw_text_overlay_on(draw: &mut DrawList, atlas: &mut FontAtlas, text: &str, x: f32, y: f32, size: f32, color: Rgba) {
+    pen_glyph_run(draw, atlas, TextFace::Sans, text, (x, y), size, color, true);
+}
+
+/// ✒️ Pens one single-line run from its baseline `origin`, glyph by glyph — each glyph's advance plus its pair kerning with the
+/// glyph before it ([`FontAtlas::pen_kerning`], the rule [`FontAtlas::measure_text_face`] sums by) — onto the draw list's
+/// regular or overlay instances.
+fn pen_glyph_run(draw: &mut DrawList, atlas: &mut FontAtlas, face: TextFace, text: &str, origin: (f32, f32), size: f32, color: Rgba, overlay: bool) {
     let atlas_w = atlas.width as f32;
     let atlas_h = atlas.height as f32;
-    let mut cursor_x = x;
+    let (mut cursor_x, mut previous) = (origin.0, None);
     for ch in text.chars() {
-        let glyph = atlas.ensure_glyph(ch, size);
+        cursor_x += atlas.pen_kerning(face, previous, cursor_x - origin.0, ch, size);
+        previous = Some(ch);
+        let glyph = *atlas.ensure_glyph_for(face, ch, size);
         let gw = glyph.logical_width();
         let gh = glyph.logical_height();
-        let gx = cursor_x + glyph.bearing_x;
-        let gy = y - gh - glyph.bearing_y;
+        let rect = [cursor_x + glyph.bearing_x, origin.1 - gh - glyph.bearing_y, gw.max(1.0), gh.max(1.0)];
         let uv_rect = [glyph.atlas_x as f32 / atlas_w, glyph.atlas_y as f32 / atlas_h, (glyph.atlas_x + glyph.width) as f32 / atlas_w, (glyph.atlas_y + glyph.height) as f32 / atlas_h];
-        draw.push_glyph_overlay([gx, gy, gw.max(1.0), gh.max(1.0)], color, uv_rect);
+        if overlay {
+            draw.push_glyph_overlay(rect, color, uv_rect);
+        } else {
+            draw.push_glyph(rect, color, uv_rect);
+        }
         cursor_x += glyph.advance;
     }
 }
@@ -893,19 +893,7 @@ pub fn draw_text<E>(ctx: &mut WidgetContext<'_, E>, text: &str, x: f32, y: f32, 
 
 /// 🔤️ Paints one run with a selected authored face through a widget context.
 pub fn draw_text_face<E>(ctx: &mut WidgetContext<'_, E>, face: TextFace, text: &str, x: f32, y: f32, size: f32, color: Rgba) {
-    let atlas_w = ctx.atlas.width as f32;
-    let atlas_h = ctx.atlas.height as f32;
-    let mut cursor_x = x;
-    for ch in text.chars() {
-        let glyph = ctx.atlas.ensure_glyph_for(face, ch, size);
-        let gw = glyph.logical_width();
-        let gh = glyph.logical_height();
-        let gx = cursor_x + glyph.bearing_x;
-        let gy = y - gh - glyph.bearing_y;
-        let uv_rect = [glyph.atlas_x as f32 / atlas_w, glyph.atlas_y as f32 / atlas_h, (glyph.atlas_x + glyph.width) as f32 / atlas_w, (glyph.atlas_y + glyph.height) as f32 / atlas_h];
-        ctx.draw.push_glyph([gx, gy, gw.max(1.0), gh.max(1.0)], color, uv_rect);
-        cursor_x += glyph.advance;
-    }
+    pen_glyph_run(ctx.draw, ctx.atlas, face, text, (x, y), size, color, false);
 }
 
 pub fn draw_text_overlay<E>(ctx: &mut WidgetContext<'_, E>, text: &str, x: f32, y: f32, size: f32, color: Rgba) {

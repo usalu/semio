@@ -408,7 +408,7 @@ fn fixed_tree_bands_keep_their_intrinsic_pitch_inside_a_short_scroll_viewport() 
     let section = fixture.push(LayoutNodeKind::TreeSection { header: row, height: intrinsic, expanded: true, reversed: false }, Some(tree), None);
     let mut rows = Vec::new();
     for _ in 0..action_count {
-        rows.push(fixture.push(LayoutNodeKind::TreeRow { row, height: row, expanded: false, reversed: false }, Some(section), None));
+        rows.push(fixture.push(LayoutNodeKind::TreeRow { row, height: row, expanded: false, reversed: false, lead: 0.0 }, Some(section), None));
     }
     fixture.solve(300.0, 480.0);
 
@@ -429,11 +429,40 @@ fn a_closed_tree_section_keeps_its_header_toolbar_live_and_collapses_only_its_ro
     let section = fixture.push(LayoutNodeKind::TreeSection { header, height: header, expanded: false, reversed: false }, Some(tree), None);
     let toolbar = fixture.push(LayoutNodeKind::TreeHeaderToolbar { header, reversed: false }, Some(section), Some(&toolbar_layout));
     let execute = fixture.push(LayoutNodeKind::Control { height: metrics.control_height, label_padding: Some(metrics.gap) }, Some(toolbar), None);
-    let row = fixture.push(LayoutNodeKind::TreeRow { row: 0.0, height: 0.0, expanded: false, reversed: false }, Some(section), None);
+    let row = fixture.push(LayoutNodeKind::TreeRow { row: 0.0, height: 0.0, expanded: false, reversed: false, lead: 0.0 }, Some(section), None);
     fixture.solve(320.0, header);
     assert!(close(fixture.rect(toolbar).height, header));
     assert!(fixture.rect(execute).width > 0.0 && fixture.rect(execute).height > 0.0, "the real header Button remains measurable and hittable");
     assert!(close(fixture.rect(row).height, 0.0), "closed form rows stay collapsed");
+}
+
+/// 🪟️ LAW (ticket 26/09/23 session 14d, WG11 P5): a windowed section's FIRST materialised row carries the leading spacer — it
+/// starts `lead` past the header, its successors keep the row pitch, and the section band spans header + lead + rows + trail, so
+/// the scroll extent covers every unmaterialised row. In an up-flow (reversed) section the spacer sits between the header and
+/// the first row on the bottom side, exactly mirrored.
+#[test]
+fn a_windowed_rows_lead_pitches_the_unmaterialised_rows_before_it_in_both_flows() {
+    let metrics = TreeRowMetrics::from_theme(&crate::wgpu::theme::Theme::default());
+    let row = metrics.row_height;
+    let (lead, trail) = (row * 40.0, row * 10.0);
+    let height = row + lead + row * 3.0 + trail;
+    for reversed in [false, true] {
+        let mut fixture = Fixture::new();
+        let tree = fixture.push(LayoutNodeKind::Tree { height, header: 0.0, reversed }, None, None);
+        let section = fixture.push(LayoutNodeKind::TreeSection { header: row, height, expanded: true, reversed }, Some(tree), None);
+        let rows: Vec<usize> = (0..3).map(|index| fixture.push(LayoutNodeKind::TreeRow { row, height: row, expanded: false, reversed, lead: if index == 0 { lead } else { 0.0 } }, Some(section), None)).collect();
+        fixture.solve(320.0, height);
+        let band = fixture.rect(section);
+        assert!(close(band.height, height), "the band spans header + lead + rows + trail: {band:?}");
+        let (first, second) = (fixture.rect(rows[0]), fixture.rect(rows[1]));
+        if reversed {
+            assert!(close(band.y + band.height - (first.y + first.height), row + lead), "up-flow: the spacer sits between the bottom header and the first row: {first:?} in {band:?}");
+            assert!(close(first.y - second.y, row), "up-flow successors keep the row pitch upwards");
+        } else {
+            assert!(close(first.y - band.y, row + lead), "down-flow: the first row starts header + lead into the band: {first:?} in {band:?}");
+            assert!(close(second.y - first.y, row), "successors keep the row pitch");
+        }
+    }
 }
 
 //#endregion 🧱️LegacyDialect

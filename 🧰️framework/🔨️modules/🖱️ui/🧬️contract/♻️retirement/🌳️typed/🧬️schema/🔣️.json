@@ -312,22 +312,19 @@
                         {
                           "icon": "R",
                           "label": "B",
-                          "action": {
-                            "trigger": "activate",
-                            "action": {
-                              "scope": "s",
-                              "name": "n",
-                              "version": 1
-                            },
-                            "args": {
-                              "x": [
-                                "🌊"
-                              ]
-                            },
-                            "capability": "c"
-                          }
+                          "verb": "n"
                         }
-                      ]
+                      ],
+                      "target": {
+                        "scope": "s",
+                        "version": 1,
+                        "args": {
+                          "x": [
+                            "🌊"
+                          ]
+                        },
+                        "activation": "a"
+                      }
                     }
                   },
                   {

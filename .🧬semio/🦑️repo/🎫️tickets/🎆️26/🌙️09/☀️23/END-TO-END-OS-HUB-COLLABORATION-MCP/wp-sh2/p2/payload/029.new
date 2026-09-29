@@ -1,0 +1,503 @@
+//! 🫧️ S Space index — app-local transient state both Space surfaces render: the folded directory of this ONE space (its
+//! members, visibility, indexed documents and their document activity) and the live presence per artifact.
+//!
+//! The space's directory is DERIVED hub state. The host (`🏛️ShellHost/📇️space-directory`) collects the space's events from
+//! the worker's space lane and replays them from the origin every time a Space surface mounts, so the projection never has
+//! to survive a reload and never belongs in undoable history. It lives in the app's TRANSIENT lane (`store::TransientStore`:
+//! one `Arc` root, never persisted, shared or undone) — never in the config, whose whole-record snapshot with its inverse
+//! copy wrote one ledger row per folded event.
+//!
+//! The host feeds BOUNDED DELTA batches ([`mutations::ApplyDirectoryEvents`]: at most one hub page of events, strictly after
+//! the frontier the projection holds; `afterSeqExclusive = 0` restarts from the origin). Each batch is ONE non-invertible
+//! transient item priced by its own bytes, so a space with any number of check-ins folds in bounded steps, and the
+//! projection grows with the space's documents and members, never with its history. The read-only viewer owns this lane
+//! and the editor reuses it: both surfaces fold through the one [`SpaceIndexTransientWork`] route and render the same rows.
+//! Ticket 26/09/23/END-TO-END-OS-HUB-COLLABORATION-MCP (SH2 P2: a check-in never moved the Space table's "Updated").
+//! @see ../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🦀️.rs `fold`
+
+use crate::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow};
+use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+use semio_framework_plugin::{ArtifactApp, Emit, EphemeralEmit, Fault, FaultOrigin};
+use std::sync::Arc;
+
+//#region 🔖️Bounds
+/// 📏️ The bytes one directory batch carries at most: one hub page, so a batch is priced like the page it came from.
+pub const SPACE_INDEX_DIRECTORY_BATCH_BYTES: usize = store::os_directory::DIRECTORY_EVENT_PAGE_MAX_BYTES;
+/// 📏️ The events one directory batch carries at most: one hub page's rows.
+pub const SPACE_INDEX_DIRECTORY_BATCH_EVENTS: usize = store::os_directory::DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS;
+/// 📏️ The longest identifier (space, artifact) a transient verb admits.
+pub const SPACE_INDEX_IDENTIFIER_BYTES: usize = 256;
+/// 📏️ The largest actor list one artifact's presence row carries.
+pub const SPACE_INDEX_PRESENCE_ACTORS_BYTES: usize = 4 * 1024;
+//#endregion 🔖️Bounds
+
+//#region 🔖️Batch
+/// 📥️ One admissible directory batch: the space it names, the frontier it continues and its events in ascending order.
+#[derive(Clone, Debug, PartialEq)]
+pub struct DirectoryBatch {
+    pub space_id: String,
+    pub after_seq_exclusive: u64,
+    pub events: Vec<store::os_directory::DirectoryEvent>,
+}
+
+impl DirectoryBatch {
+    /// 🧾️ Parses one batch: at most one page of bytes and events, every event of `space_id`, strictly ascending and strictly
+    /// after the frontier it names.
+    pub fn parse(space_id: &str, after_seq_exclusive: u64, events_json: &str) -> Result<Self, Fault> {
+        let invalid = |text: &str| Fault::new(FaultOrigin::App, "s.space.directory-events-invalid", text.to_owned());
+        if space_id.is_empty() || space_id.len() > SPACE_INDEX_IDENTIFIER_BYTES {
+            return Err(invalid("a directory batch names exactly one space"));
+        }
+        if events_json.len() > SPACE_INDEX_DIRECTORY_BATCH_BYTES {
+            return Err(invalid("a directory batch carries at most one hub page of bytes"));
+        }
+        let events: Vec<store::os_directory::DirectoryEvent> = pack::from_json_str(events_json).map_err(|_| invalid("a directory batch is a JSON array of directory events"))?;
+        if events.is_empty() || events.len() > SPACE_INDEX_DIRECTORY_BATCH_EVENTS {
+            return Err(invalid("a directory batch carries between one event and one hub page of events"));
+        }
+        let mut previous = after_seq_exclusive;
+        for event in &events {
+            if event.seq <= previous || event.space_id.as_deref() != Some(space_id) {
+                return Err(invalid("a directory batch carries its space's events strictly after its frontier, in ascending order"));
+            }
+            previous = event.seq;
+        }
+        Ok(Self { space_id: space_id.to_owned(), after_seq_exclusive, events })
+    }
+}
+//#endregion 🔖️Batch
+
+//#region 🔖️Directory
+/// 📇️ The folded directory of this ONE space: the canonical kernel read model over exactly the space's events, whose cursor
+/// is the frontier of the last folded batch. Empty before the first batch.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct SpaceIndexDirectory {
+    space_id: String,
+    model: store::os_directory::DirectoryReadModel,
+}
+
+impl SpaceIndexDirectory {
+    /// 🪪️ The space the folded batches name (empty before the first).
+    pub fn space_id(&self) -> &str {
+        &self.space_id
+    }
+
+    /// 🔢️ The last folded directory sequence.
+    pub fn cursor(&self) -> u64 {
+        self.model.cursor
+    }
+
+    /// 🏠️ The folded space an index document names: its own id when it has one — a browser-opened genesis index whose id is
+    /// still empty reads the one space its batches name.
+    pub fn space(&self, document_space_id: &str) -> Option<&store::os_directory::DirectorySpace> {
+        if !document_space_id.is_empty() && document_space_id != self.space_id {
+            return None;
+        }
+        self.model.spaces.get(&self.space_id)
+    }
+
+    /// 📊️ The table rows of the space an index document names, in indexing order.
+    pub fn rows(&self, document_space_id: &str) -> Vec<SpaceArtifactRow> {
+        self.space(document_space_id).map(|space| space.indexed_documents.iter().filter_map(|indexed| indexed_row(indexed, space.activity_of(&indexed.descriptor.document_id))).collect()).unwrap_or_default()
+    }
+
+    /// 🔎️ The one table row of `artifact_id` in the space an index document names.
+    pub fn row(&self, document_space_id: &str, artifact_id: &str) -> Option<SpaceArtifactRow> {
+        let space = self.space(document_space_id)?;
+        let indexed = space.indexed_documents.iter().find(|indexed| indexed.descriptor.document_id == artifact_id)?;
+        indexed_row(indexed, space.activity_of(artifact_id))
+    }
+
+    /// 🚦️ Admits one batch: from the origin under any space, otherwise only continuing the held frontier of the held space.
+    pub fn admit(&self, batch: &DirectoryBatch) -> Result<(), Fault> {
+        if batch.after_seq_exclusive == 0 || (batch.space_id == self.space_id && batch.after_seq_exclusive == self.model.cursor) {
+            return Ok(());
+        }
+        Err(Fault::new(FaultOrigin::App, "s.space.directory-events-frontier-race", "the batch does not continue the frontier the projection holds"))
+    }
+
+    /// 📥️ The projection after one admitted batch: rebuilt from nothing for an origin batch, otherwise this projection with the
+    /// batch's events folded through the canonical kernel fold.
+    pub fn fold(&self, batch: &DirectoryBatch) -> Self {
+        let base = if batch.after_seq_exclusive == 0 { store::os_directory::DirectoryReadModel::default() } else { self.model.clone() };
+        Self { space_id: batch.space_id.clone(), model: batch.events.iter().fold(base, store::os_directory::fold) }
+    }
+
+    /// 📏️ The heap this projection retains, estimated per row without encoding it — what its retirement pages through.
+    pub fn retained_bytes(&self) -> usize {
+        const ROW_BYTES: usize = 256;
+        const MEMBER_BYTES: usize = 128;
+        const DOCUMENT_BYTES: usize = 512;
+        const ACTIVITY_BYTES: usize = 96;
+        const USER_BYTES: usize = 128;
+        let rows = self
+            .model
+            .spaces
+            .values()
+            .map(|space| ROW_BYTES + space.view.name.len() + space.members.len() * MEMBER_BYTES + (space.documents.len() + space.indexed_documents.len()) * DOCUMENT_BYTES + space.document_activity.len() * ACTIVITY_BYTES)
+            .sum::<usize>();
+        rows + self.model.users.len() * USER_BYTES + self.space_id.len() + 16
+    }
+}
+
+/// 📊️ One table row from a directory-owned indexed document and its activity: "Updated" and "Updated By" read the last
+/// checkpoint a human published, the indexing itself before any.
+pub fn indexed_row(indexed: &store::os_directory::DirectoryIndexedDocumentViewV1, activity: Option<&store::os_directory::DirectoryDocumentActivity>) -> Option<SpaceArtifactRow> {
+    let created_at_ms = u64::try_from(indexed.created_at_ms).ok()?;
+    let (updated_at_ms, updated_by) = activity.and_then(|activity| u64::try_from(activity.updated_at_ms).ok().map(|at| (at, activity.updated_by.clone()))).unwrap_or_else(|| (created_at_ms, indexed.created_by.clone()));
+    Some(SpaceArtifactRow {
+        id: indexed.descriptor.document_id.clone(),
+        name: indexed.entry.name.clone(),
+        kind_id: indexed.descriptor.artifact_kind.clone(),
+        schema: indexed.descriptor.artifact_schema.clone(),
+        dialect: SpaceArtifactDialect { artifact_kind: indexed.entry.dialect.artifact_kind.clone(), standard: indexed.entry.dialect.standard.clone(), subset: indexed.entry.dialect.subset.clone() },
+        created_at_ms,
+        created_by: indexed.created_by.clone(),
+        updated_at_ms,
+        updated_by,
+    })
+}
+//#endregion 🔖️Directory
+
+//#region 🔖️Presence
+/// 👥️ Live peers on one artifact's documents (all surfaces and documents of that artifact folded to one actor list), as the
+/// "Presence" column reads them.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SpaceIndexArtifactPresence {
+    pub artifact_id: String,
+    pub actors_csv: String,
+}
+
+impl SpaceIndexArtifactPresence {
+    /// 🪪️ The live actor ids, empty-string-safe.
+    pub fn actor_ids(&self) -> Vec<&str> {
+        if self.actors_csv.is_empty() {
+            Vec::new()
+        } else {
+            self.actors_csv.split(',').collect()
+        }
+    }
+
+    fn is_admissible(&self) -> bool {
+        !self.artifact_id.is_empty() && self.artifact_id.len() <= SPACE_INDEX_IDENTIFIER_BYTES && self.actors_csv.len() <= SPACE_INDEX_PRESENCE_ACTORS_BYTES
+    }
+}
+//#endregion 🔖️Presence
+
+//#region 🔖️Transient
+/// 🫧️ `SpaceIndexEditor::Transient` / `SpaceIndexViewer::Transient` — the folded space and the presence rows, each behind
+/// one `Arc`, so the store's root copies and a retained job's captured snapshot share them instead of copying them.
+#[derive(Clone, Debug, Default)]
+pub struct SpaceIndexTransient {
+    directory: Arc<SpaceIndexDirectory>,
+    presence: Arc<Vec<SpaceIndexArtifactPresence>>,
+}
+
+impl PartialEq for SpaceIndexTransient {
+    fn eq(&self, other: &Self) -> bool {
+        (Arc::ptr_eq(&self.directory, &other.directory) || self.directory == other.directory) && (Arc::ptr_eq(&self.presence, &other.presence) || self.presence == other.presence)
+    }
+}
+
+impl SpaceIndexTransient {
+    /// 📇️ The folded directory of this space.
+    pub fn directory(&self) -> &SpaceIndexDirectory {
+        &self.directory
+    }
+
+    /// 👥️ Every presence row, in the order they first arrived.
+    pub fn presence(&self) -> &[SpaceIndexArtifactPresence] {
+        &self.presence
+    }
+
+    /// 👥️ The live actor ids on `artifact_id`'s documents, empty when nothing is folded in yet.
+    pub fn presence_for(&self, artifact_id: &str) -> Vec<&str> {
+        self.presence.iter().find(|row| row.artifact_id == artifact_id).map(SpaceIndexArtifactPresence::actor_ids).unwrap_or_default()
+    }
+
+    /// 📥️ This transient with `directory` in place of its own; the presence rows stay shared.
+    pub fn with_directory(&self, directory: SpaceIndexDirectory) -> Self {
+        Self { directory: Arc::new(directory), presence: self.presence.clone() }
+    }
+
+    /// 👥️ This transient with `row` upserted by artifact; the directory stays shared.
+    pub fn with_presence(&self, row: SpaceIndexArtifactPresence) -> Self {
+        let mut presence = self.presence.as_ref().clone();
+        match presence.iter_mut().find(|existing| existing.artifact_id == row.artifact_id) {
+            Some(existing) => *existing = row,
+            None => presence.push(row),
+        }
+        Self { directory: self.directory.clone(), presence: Arc::new(presence) }
+    }
+
+    /// 📏️ The heap this transient retains, estimated without encoding it.
+    pub fn retained_bytes(&self) -> usize {
+        self.directory.retained_bytes() + self.presence.iter().map(|row| 32 + row.artifact_id.len() + row.actors_csv.len()).sum::<usize>()
+    }
+}
+//#endregion 🔖️Transient
+
+//#region 🔖️Judgement
+/// 👥️ The admissible presence row a heartbeat names, or its named refusal.
+fn presence_row(verb: &SetArtifactPresence) -> Result<SpaceIndexArtifactPresence, Fault> {
+    let row = SpaceIndexArtifactPresence { artifact_id: verb.artifact_id.clone(), actors_csv: verb.actors_csv.clone() };
+    if row.is_admissible() {
+        Ok(row)
+    } else {
+        Err(Fault::new(FaultOrigin::App, "s.space.artifact-presence-invalid", "a presence row names one artifact and a bounded actor list"))
+    }
+}
+
+impl SpaceIndexTransientMutation {
+    /// 🚦️ Whether this verb may land on `base` at all — the same named refusals as [`Self::judge`], in O(one batch): the
+    /// retained route answers with it, and the fold itself runs once, when the item publishes.
+    pub fn admit(&self, base: &SpaceIndexTransient) -> Result<(), Fault> {
+        match self {
+            Self::ApplyDirectoryEvents(verb) => base.directory().admit(&DirectoryBatch::parse(&verb.space_id, verb.after_seq_exclusive, &verb.events_json)?),
+            Self::SetArtifactPresence(verb) => presence_row(verb).map(|_| ()),
+        }
+    }
+
+    /// ⚖️ What this verb does to `base`: `Ok(Some(next))` when it changes the transient, `Ok(None)` when it would change
+    /// nothing, and the named refusal when it is inadmissible — the mutation's own diff.
+    pub fn judge(&self, base: &SpaceIndexTransient) -> Result<Option<SpaceIndexTransient>, Fault> {
+        match self {
+            Self::ApplyDirectoryEvents(verb) => {
+                let batch = DirectoryBatch::parse(&verb.space_id, verb.after_seq_exclusive, &verb.events_json)?;
+                base.directory().admit(&batch)?;
+                let next = base.directory().fold(&batch);
+                let changes = next != *base.directory();
+                Ok(changes.then(|| base.with_directory(next)))
+            }
+            Self::SetArtifactPresence(verb) => {
+                let row = presence_row(verb)?;
+                let changes = base.presence().iter().find(|existing| existing.artifact_id == row.artifact_id) != Some(&row);
+                Ok(changes.then(|| base.with_presence(row)))
+            }
+        }
+    }
+
+    /// 📏️ The bytes this verb carries — what its retained route is priced by.
+    pub fn wire_bytes(&self) -> usize {
+        match self {
+            Self::ApplyDirectoryEvents(verb) => verb.space_id.len() + verb.events_json.len() + 8,
+            Self::SetArtifactPresence(verb) => verb.artifact_id.len() + verb.actors_csv.len(),
+        }
+    }
+
+    /// 📏️ Whether this verb fits its retained route at all: one hub page, one bounded presence row.
+    pub fn is_bounded(&self) -> bool {
+        match self {
+            Self::ApplyDirectoryEvents(verb) => verb.space_id.len() <= SPACE_INDEX_IDENTIFIER_BYTES && verb.events_json.len() <= SPACE_INDEX_DIRECTORY_BATCH_BYTES,
+            Self::SetArtifactPresence(verb) => verb.artifact_id.len() <= SPACE_INDEX_IDENTIFIER_BYTES && verb.actors_csv.len() <= SPACE_INDEX_PRESENCE_ACTORS_BYTES,
+        }
+    }
+}
+//#endregion 🔖️Judgement
+
+//#region 🔖️Work
+/// 🧵️ The retained transient route of BOTH Space surfaces (`foldDirectoryEvents` and `presenceHeartbeat` on the editor and
+/// on the read-only viewer): one step that admits the verb against the transient the job captured at dispatch — in
+/// O(one batch), the named refusal when it is inadmissible — and completes with the one transient item, whose publication
+/// folds it. No document, draft or config lane is ever written.
+pub struct SpaceIndexTransientWork<A: ArtifactApp> {
+    tool_id: &'static str,
+    item: fn(&A::Command) -> Option<SpaceIndexTransientMutation>,
+    consumed: bool,
+}
+
+impl<A: ArtifactApp> SpaceIndexTransientWork<A> {
+    /// 🧵️ The route for `tool_id`, reading the transient verb out of the surface's own command with `item`.
+    pub fn new(tool_id: &'static str, item: fn(&A::Command) -> Option<SpaceIndexTransientMutation>) -> Self {
+        Self { tool_id, item, consumed: false }
+    }
+}
+
+impl<A> ArtifactCommandWork<A> for SpaceIndexTransientWork<A>
+where
+    A: ArtifactApp<Transient = SpaceIndexTransient, TransientMutation = SpaceIndexTransientMutation>,
+{
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn extent(&self, command: &A::Command, _snapshot: &A::Snapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<A>>) -> Option<usize> {
+        (self.item)(command).filter(SpaceIndexTransientMutation::is_bounded).map(|_| 1)
+    }
+
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, A>) -> Result<ArtifactCommandWorkStep<A>, Fault> {
+        if self.consumed {
+            return Err(Fault::new(FaultOrigin::App, "s.space.transient.work-repeated", "a Space transient route steps once"));
+        }
+        self.consumed = true;
+        let context = input.context.ok_or_else(|| Fault::new(FaultOrigin::App, "s.space.transient.context-missing", "a Space transient verb needs the job's captured transient"))?;
+        let item = (self.item)(input.command).ok_or_else(|| Fault::new(FaultOrigin::App, "s.space.transient.input-missing", "the command carries no transient verb"))?;
+        item.admit(&context.transient)?;
+        let ephemeral = EphemeralEmit { presence: Vec::new(), transient: vec![item], window_transient: Vec::new() };
+        Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit: Emit::default(), ephemeral })
+    }
+}
+//#endregion 🔖️Work
+
+//#region 🔖️Wire
+/// 🫧️ The transient's JSON projection (`🧬️schema/🔣️.json` `SpaceIndexTransient`): the space the batches name, the kernel
+/// read model of its events and the presence rows.
+#[derive(value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+struct SpaceIndexTransientWire {
+    space_id: String,
+    directory: store::os_directory::DirectoryReadModel,
+    presence: Vec<SpaceIndexArtifactPresence>,
+}
+
+impl SpaceIndexTransient {
+    fn wire(&self) -> SpaceIndexTransientWire {
+        SpaceIndexTransientWire { space_id: self.directory.space_id.clone(), directory: self.directory.model.clone(), presence: self.presence.as_ref().clone() }
+    }
+
+    fn from_wire(wire: SpaceIndexTransientWire) -> Result<Self, protocol::ValueError> {
+        let malformed = |text: &str| protocol::ValueError::new(format!("s.space.transient-malformed: {text}"));
+        if wire.directory.spaces.keys().any(|id| id != &wire.space_id) || wire.directory.spaces.values().any(|space| space.view.id != wire.space_id || !space.activity_is_foldable()) {
+            return Err(malformed("the directory folds exactly the space it names, with foldable activity"));
+        }
+        if wire.space_id.is_empty() != (wire.directory.cursor == 0) {
+            return Err(malformed("a projection names its space exactly when it has folded a batch"));
+        }
+        let mut artifacts = std::collections::BTreeSet::new();
+        if !wire.presence.iter().all(|row| row.is_admissible() && artifacts.insert(row.artifact_id.as_str())) {
+            return Err(malformed("every presence row names one distinct artifact and a bounded actor list"));
+        }
+        Ok(Self { directory: Arc::new(SpaceIndexDirectory { space_id: wire.space_id, model: wire.directory }), presence: Arc::new(wire.presence) })
+    }
+}
+
+impl protocol::ToValue for SpaceIndexTransient {
+    fn to_value(&self) -> protocol::DslValue {
+        protocol::ToValue::to_value(&self.wire())
+    }
+}
+
+impl protocol::FromValue for SpaceIndexTransient {
+    fn from_value(value: protocol::DslValue) -> Result<Self, protocol::ValueError> {
+        Self::from_wire(<SpaceIndexTransientWire as protocol::FromValue>::from_value(value)?)
+    }
+}
+//#endregion 🔖️Wire
+
+//#region 🔖️ArtifactCodec
+/// 📜️ The transient's text/pack record: its JSON projection as one field. Tooling and fixtures only — the transient lane
+/// itself never encodes its root.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+#[dsl(id = "space.index.transient")]
+#[dsl(extension = "spaceindextransient")]
+#[dsl(layout = "lines")]
+struct SpaceIndexTransientRecord {
+    projection_json: String,
+}
+
+impl SpaceIndexTransientRecord {
+    fn of(transient: &SpaceIndexTransient) -> Self {
+        Self { projection_json: pack::to_json_string(&transient.wire()) }
+    }
+
+    fn transient(&self) -> Result<SpaceIndexTransient, store::TextError> {
+        let wire: SpaceIndexTransientWire = pack::from_json_str(&self.projection_json).map_err(|error| dsl::__rt::field_error(format!("s.space.transient-malformed: {error}")))?;
+        SpaceIndexTransient::from_wire(wire).map_err(|error| dsl::__rt::field_error(error.to_string()))
+    }
+}
+
+impl store::ArtifactDsl for SpaceIndexTransient {
+    const EXTENSION: &'static str = SpaceIndexTransientRecord::__DSL_EXTENSION;
+    fn envelope_id() -> &'static str {
+        "space.index.transient"
+    }
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        let body = match store::semio_format::split_text_preamble(text) {
+            Ok((_, rest)) => rest,
+            Err(_) => text,
+        };
+        let record = dsl::parse(body, &SpaceIndexTransientRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        SpaceIndexTransientRecord::__dsl_from_record(&record)?.transient()
+    }
+    fn print_dsl(&self) -> String {
+        let body = dsl::print(&SpaceIndexTransientRecord::of(self).__dsl_to_record(), &SpaceIndexTransientRecord::__dsl_spec(), dsl::JoinMode::Document);
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid Space index transient envelope");
+        store::semio_format::wrap_text(&envelope, &body)
+    }
+}
+
+impl store::ArtifactPack for SpaceIndexTransient {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        let inner = store::pack_rt::encode_document(&SpaceIndexTransientRecord::__dsl_spec(), &SpaceIndexTransientRecord::of(self).__dsl_to_record(), options)?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        Ok(store::semio_format::wrap_binary(&envelope, &inner))
+    }
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+        }
+        let (record, _report) = store::pack_rt::decode_document(&inner, &SpaceIndexTransientRecord::__dsl_spec(), options)?;
+        SpaceIndexTransientRecord::__dsl_from_record(&record).and_then(|record| record.transient()).map_err(store::text_error_to_pack_error)
+    }
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(SpaceIndexTransientRecord::__dsl_spec())
+    }
+}
+//#endregion 🔖️ArtifactCodec
+
+//#region 🔖️Retirement
+/// 🧹️ Retires a displaced or disposed Space index transient root in byte grants measured by
+/// [`SpaceIndexTransient::retained_bytes`] — never by encoding the root.
+pub struct SpaceIndexTransientRetirementFactory;
+
+struct SpaceIndexTransientRootRetirement {
+    root: Option<Arc<SpaceIndexTransient>>,
+    retained_bytes: usize,
+}
+
+impl store::ErasedSnapshotRetirement for SpaceIndexTransientRootRetirement {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+        if maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.retained_bytes > maximum_bytes {
+            self.retained_bytes -= maximum_bytes;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: maximum_bytes });
+        }
+        if self.root.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.root.is_none()
+    }
+}
+
+impl store::SnapshotRetirementFactory<SpaceIndexTransient> for SpaceIndexTransientRetirementFactory {
+    fn retire(&self, snapshot: Arc<SpaceIndexTransient>) -> Box<dyn store::ErasedSnapshotRetirement> {
+        let retained_bytes = snapshot.retained_bytes();
+        Box::new(SpaceIndexTransientRootRetirement { root: Some(snapshot), retained_bytes })
+    }
+}
+
+impl store::ArtifactOwnedValueRetirementFactory<SpaceIndexTransient> for SpaceIndexTransientRetirementFactory {
+    fn retire_owned(&self, value: SpaceIndexTransient) -> Box<dyn store::ErasedSnapshotRetirement> {
+        store::SnapshotRetirementFactory::retire(self, Arc::new(value))
+    }
+}
+//#endregion 🔖️Retirement
+
+#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
+pub mod mutations;
+pub use mutations::*;
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+pub(crate) mod tests;
+//#endregion 🧪️Tests

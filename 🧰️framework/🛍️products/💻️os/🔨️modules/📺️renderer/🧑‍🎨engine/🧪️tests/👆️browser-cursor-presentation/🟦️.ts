@@ -67,7 +67,7 @@ describe("👆️ browser cursor presentation", () => {
       const batch = worker.messages.at(-1);
       expect(batch?.kind).toBe("batch");
       worker.reply({ kind: "batch-accepted", lifecycle: 1, inputSequence: sequence, generation: 0 });
-      worker.reply({ kind: "frame", lifecycle: 1, frameSequence: sequence, generation: 0, cursor: testCase.css, fullscreen: null, requestFrame: false, nextDeadlineDelayMs: null, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
+      worker.reply({ kind: "frame", mediaSlots: [], lifecycle: 1, frameSequence: sequence, generation: 0, cursor: testCase.css, fullscreen: null, requestFrame: false, nextDeadlineDelayMs: null, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
     });
     expect(received).toEqual(cases.map(testCase => testCase.css));
     const root = dirname(fileURLToPath(import.meta.url));

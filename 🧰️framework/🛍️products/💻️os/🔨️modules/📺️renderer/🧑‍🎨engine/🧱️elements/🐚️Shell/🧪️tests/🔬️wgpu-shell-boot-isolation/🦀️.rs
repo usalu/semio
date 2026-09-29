@@ -68,6 +68,7 @@ fn boot_manifest(plugin_id: &str, app_ids: &[&str]) -> PluginManifest {
         topic_contributions: vec![],
         commands: vec![],
         artifact_kinds: vec![],
+        hosted_artifact_kinds: Vec::new(),
         dependencies: vec![],
         contributions: vec![],
     }

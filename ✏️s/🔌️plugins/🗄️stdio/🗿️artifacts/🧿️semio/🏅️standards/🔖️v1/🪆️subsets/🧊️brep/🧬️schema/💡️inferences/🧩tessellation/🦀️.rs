@@ -50,6 +50,7 @@ use crate::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 const DEFAULT_ANGULAR_TOL: f64 = 1.4;
 const ENDPOINT_TOL: f64 = 1e-9;
 const POLE_WELD_TOL: f64 = 1e-7;
+const POLE_BRANCH_TOL: f64 = 1e-9;
 const MAX_REFINE_ITERS: usize = 8;
 const MAX_CURVE_SUBDIV_DEPTH: u32 = 12;
 const MAX_INTERIOR_POINTS: usize = 20_000;
@@ -548,6 +549,7 @@ fn append_face_mesh(transfer: &mut MeshTransfer, report: &mut TessellationReport
     };
     let (mut boundary_pos, mut boundary_uv, mut boundary_pole) = collect_loop_uv(body, outer_id, surface, edge_cache)?;
     remove_closing_duplicate_uv(&mut boundary_pos, &mut boundary_uv, &mut boundary_pole);
+    split_pole_branches(&mut boundary_pos, &mut boundary_uv, &mut boundary_pole);
     if boundary_pos.len() < 3 {
         return Err(KernelError::Operation(format!("face {face_id} outer loop degenerated to {} points", boundary_pos.len())));
     }
@@ -559,6 +561,7 @@ fn append_face_mesh(transfer: &mut MeshTransfer, report: &mut TessellationReport
     for &inner_id in &face.inners {
         let (mut hole_pos, mut hole_uv, mut hole_pole) = collect_loop_uv(body, inner_id, surface, edge_cache)?;
         remove_closing_duplicate_uv(&mut hole_pos, &mut hole_uv, &mut hole_pole);
+        split_pole_branches(&mut hole_pos, &mut hole_uv, &mut hole_pole);
         if hole_pos.len() < 3 {
             continue;
         }
@@ -713,6 +716,39 @@ fn remove_closing_duplicate_uv(positions: &mut Vec<Pnt3>, uvs: &mut Vec<(f64, f6
             }
         }
     }
+}
+
+/// 🧭 Splits every pole vertex whose two ring neighbours sit on different `u` branches into one ring vertex per branch
+/// (the same 3D point twice, both flagged pole — [`weld_and_compact`] fans them back into one vertex). A face whose
+/// boundary passes a pole WITHOUT an explicit degenerate edge — a cone's apex, whose single seam is walked up and back
+/// down, or two meridians meeting at an apex — arrives on one branch and departs on another; left as one UV vertex, the
+/// ring closed through a diagonal across the whole `u` range instead of along the degenerate side `v = v_pole`, and the
+/// triangulation dropped the corner it cut off (every cone lost ~21 % of its volume).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn split_pole_branches(positions: &mut Vec<Pnt3>, uvs: &mut Vec<(f64, f64)>, poles: &mut Vec<bool>) {
+    let n = uvs.len();
+    if n < 3 {
+        return;
+    }
+    let mut split_positions = Vec::with_capacity(n + 2);
+    let mut split_uvs = Vec::with_capacity(n + 2);
+    let mut split_poles = Vec::with_capacity(n + 2);
+    for i in 0..n {
+        let (arriving, departing) = (uvs[(i + n - 1) % n], uvs[(i + 1) % n]);
+        let branches = poles[i] && !poles[(i + n - 1) % n] && !poles[(i + 1) % n] && (arriving.0 - departing.0).abs() > POLE_BRANCH_TOL;
+        if branches {
+            split_positions.extend([positions[i], positions[i]]);
+            split_uvs.extend([(arriving.0, uvs[i].1), (departing.0, uvs[i].1)]);
+            split_poles.extend([true, true]);
+        } else {
+            split_positions.push(positions[i]);
+            split_uvs.push(uvs[i]);
+            split_poles.push(poles[i]);
+        }
+    }
+    *positions = split_positions;
+    *uvs = split_uvs;
+    *poles = split_poles;
 }
 
 /// 📐 Sums the deviation-at-edge-midpoint (chordal) and normal-angle-between-vertices (angular)

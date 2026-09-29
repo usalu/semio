@@ -323,6 +323,36 @@
         "label": { "type": "string" },
         "group_id": { "type": "string" }
       }
+    },
+    "EditDigestChains": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "cases"],
+      "properties": {
+        "schema": { "const": "semio.store.edit-digest-chains.v1" },
+        "cases": { "type": "array", "minItems": 3, "items": { "oneOf": [{ "$ref": "#/$defs/EditDigestChainsEditCase" }, { "$ref": "#/$defs/EditDigestChainsGeneratedCase" }] } }
+      }
+    },
+    "EditDigestChainsEditCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "edit", "expectedDigest"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "edit": { "type": "object" },
+        "expectedDigest": { "$ref": "#/$defs/CanonicalEditDigest" }
+      }
+    },
+    "EditDigestChainsGeneratedCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "header", "generatedOperations", "expectedDigest"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "header": { "type": "object" },
+        "generatedOperations": { "type": "integer", "minimum": 2 },
+        "expectedDigest": { "$ref": "#/$defs/CanonicalEditDigest" }
+      }
     }
   }
 }

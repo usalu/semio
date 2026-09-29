@@ -101,6 +101,7 @@ struct JackPackRecord {
     nodes: dsl::DslValue,
     edges: dsl::DslValue,
     root_node_id: Option<String>,
+    query: String,
 }
 
 impl JackPackRecord {
@@ -114,6 +115,7 @@ impl JackPackRecord {
             nodes: dsl::ToValue::to_value(&scene.nodes),
             edges: dsl::ToValue::to_value(&scene.edges),
             root_node_id: snapshot.root_node_id.clone(),
+            query: snapshot.query.clone(),
         }
     }
 
@@ -122,7 +124,7 @@ impl JackPackRecord {
         let nodes: Vec<Node> = dsl::FromValue::from_value(self.nodes).map_err(|e| e.to_string())?;
         let edges: Vec<Edge> = dsl::FromValue::from_value(self.edges).map_err(|e| e.to_string())?;
         let content = crate::jack_content_child_with_owner(nodes, edges);
-        let mut fixture = JackSnapshot { schema: self.schema, name: self.name, manifest_id: self.manifest_id, manifest: crate::Manifest::default(), camera, content, root_node_id: self.root_node_id };
+        let mut fixture = JackSnapshot { schema: self.schema, name: self.name, manifest_id: self.manifest_id, manifest: crate::Manifest::default(), camera, content, root_node_id: self.root_node_id, query: self.query };
         fixture.resolve_manifest().map_err(|error| error.to_string())?;
         Ok(fixture)
     }

@@ -801,9 +801,19 @@ mod renderer {
         /// see `SceneCommand::transformed`) rather than nesting a sub-scene, so every appended
         /// command stays independently transferable into the retained retirement cursor.
         pub fn append(&mut self, other: &Scene, transform: Option<Affine>) {
+            self.append_range(other, 0, other.0.len(), transform);
+        }
+
+        pub fn command_len(&self) -> usize {
+            self.0.len()
+        }
+
+        /// 🎬️ Copies `other[start..end]` into `self`, composing `transform` the same way [`Scene::append`] does.
+        pub fn append_range(&mut self, other: &Scene, start: usize, end: usize, transform: Option<Affine>) {
+            let commands = &other.0[start..end];
             match transform {
-                Some(outer) => self.0.extend(other.0.iter().cloned().map(|command| command.transformed(outer))),
-                None => self.0.extend(other.0.iter().cloned()),
+                Some(outer) => self.0.extend(commands.iter().cloned().map(|command| command.transformed(outer))),
+                None => self.0.extend(commands.iter().cloned()),
             }
         }
         pub fn push_layer<'a>(&mut self, rule: FillRule, blend: BlendMode, alpha: f32, transform: Affine, clip: impl Into<ShapeRef<'a>>) {

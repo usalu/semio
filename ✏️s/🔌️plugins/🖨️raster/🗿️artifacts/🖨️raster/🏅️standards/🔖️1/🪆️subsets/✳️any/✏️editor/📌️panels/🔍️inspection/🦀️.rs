@@ -5,7 +5,7 @@ use crate::editor::raster::{raster_action, ui_label, ui_value_list, ui_value_map
 use crate::standards::v1::subsets::any::schema::{find_layer, layer_name, layer_node_id, layer_opacity, layer_blend_mode, layer_transform, layer_visible, layer_locked, layer_protection};
 use crate::{RasterLayerNode, RasterSnapshot as RasterDocument};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
-use semio_framework_plugin::{BuiltNode, LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiAssemblyResult, UiText, FRAMEWORK_PANEL_TAB_INSPECTION_ID};
+use semio_framework_plugin::{activation_target, BuiltNode, LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiAssemblyResult, UiText, FRAMEWORK_PANEL_TAB_INSPECTION_ID};
 use semio_framework_ui_contract as ui;
 
 pub const RASTER_PLAY_BODY_PROPERTIES: &str = "raster.play.properties";
@@ -136,12 +136,12 @@ pub fn render(document: &RasterDocument, runtime: &RasterConfig, selected_ids: &
             let (action,args)=raster_action(command,Some(ui_value_map([("layerId",ui_value_text(id)?)])?))?;
             let mut row=ui::tree_item(ui_label(label.as_str())?).try_id(format!("{ROOT}.{key}")).map_err(|_|capacity())?.disabled(!enabled);
             if !enabled {row=row.description(text(labels.locked_hint.as_str())?);}
-            rows.push(row.try_on_with(Trigger::Activate,action,args.ok_or_else(capacity)?).map_err(|_|capacity())?.try_build().map_err(|_|capacity())?);
+            rows.push(row.target(activation_target((action,args))?).try_build().map_err(|_|capacity())?);
         }
         let supported=crate::editor::raster::commands::merge_down::plan(document,id).is_ok();
         let (action,args)=raster_action("mergeDown",Some(ui_value_map([("layerId",ui_value_text(id)?)])?))?;
         rows.push(ui::tree_item(ui_label(labels.merge_down.as_str())?).try_id(format!("{ROOT}.merge-down")).map_err(|_|capacity())?.description(text(labels.merge_down_hint.as_str())?).disabled(!supported)
-            .try_on_with(Trigger::Activate,action,args.ok_or_else(capacity)?).map_err(|_|capacity())?.try_build().map_err(|_|capacity())?);
+            .target(activation_target((action,args))?).try_build().map_err(|_|capacity())?);
     }
     let (action, args) = raster_action("setBrushColor", Some(ui_value_map([])?))?;
     let input = ui::input(InputKind::Color).value(text(&runtime.brush_color)?).try_id(format!("{ROOT}.foreground.input")).map_err(|_| capacity())?.try_label(labels.foreground.as_str()).map_err(|_| capacity())?

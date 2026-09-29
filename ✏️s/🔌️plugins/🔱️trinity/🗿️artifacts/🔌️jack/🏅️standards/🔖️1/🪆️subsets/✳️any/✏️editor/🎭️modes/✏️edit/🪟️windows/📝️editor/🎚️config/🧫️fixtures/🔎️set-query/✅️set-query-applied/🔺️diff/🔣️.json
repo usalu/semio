@@ -1,3 +1,0 @@
-{
-  "jackQuery": "MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name"
-}

@@ -53,7 +53,7 @@ pub use derived_composition::*;
 // are explicit `JpgError::Unsupported`, never decoded as garbage. `JpgEngine` (zero construction
 // sites) and the dead `register`/`register_pilot_languages`/`register_artifact_inferences`/
 // `register_schema_specs` cluster (superseded by `declaration()` in the artifact root, zero real
-// callers) were deleted outright, not relocated. `empty_jpg_snapshot`/`demo_jpg_snapshot` moved to
+// callers) were deleted outright, not relocated. `blank_jpg_snapshot`/`demo_jpg_snapshot` moved to
 // `../🧬️schema` (pure helpers over the document type).
 use crate::schema::snapshot::{JfifDensityUnits, JfifThumbnail, JpgFrameComponent, JpgFrameHeader, JpgHuffmanClass, JpgHuffmanTable, JpgQuantTable, JpgScanComponent, JpgSegment};
 use crate::{JpgSnapshot, STDIO_JPG_DOCUMENT_SCHEMA};

@@ -14,6 +14,7 @@ use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType,
 pub use schema::diff::PdfDiff;
 pub use schema::mutations::PdfMutation;
 pub use schema::snapshot::PdfSnapshot;
+pub use schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA;
 pub use schema::PdfArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.
@@ -177,7 +178,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
     let builder = builder.subset_validators(pdf_1_4_subset_validators());
     let builder = builder.languages(pilot_languages_1_7());
     let builder = builder.languages(pilot_languages_1_4());
-    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(standards::v1_7::subsets::base::schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA);
+    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA);
     let builder = builder.document_codec_bare::<standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot, standards::v1_4::subsets::base::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA);
     builder.try_build()
 }

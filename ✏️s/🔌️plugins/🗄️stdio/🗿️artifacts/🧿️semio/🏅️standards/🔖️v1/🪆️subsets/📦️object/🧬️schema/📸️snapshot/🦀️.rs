@@ -69,6 +69,10 @@ impl dsl::ToValue for SemioObjectSnapshot {
     }
 }
 impl dsl::FromValue for SemioObjectSnapshot {
+    fn edit_value_at_path(&mut self, path: &[&str], edit: dsl::ValueEdit) -> Result<(), dsl::ValueError> {
+        dsl::edit_through_value(self, path, edit)
+    }
+
     fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
         let mut schema = None;
         let mut transform = None;

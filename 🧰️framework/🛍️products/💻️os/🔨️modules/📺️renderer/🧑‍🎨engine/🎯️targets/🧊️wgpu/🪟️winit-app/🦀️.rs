@@ -204,7 +204,7 @@ impl OsHost {
         let _ = self.scheduler.should_render(self.clock.now_seconds());
         let _ = self.redraw_core();
         let snapshot = self.snapshot_sink.acquire();
-        crate::os_host::BrowserRedrawOutcome { cursor_css: ui_wgpu::wgpu::cursor::semio_cursor_css(snapshot.accepted_cursor, snapshot.accepted_theme_dark) }
+        crate::os_host::BrowserRedrawOutcome { cursor_css: ui_wgpu::wgpu::cursor::semio_cursor_css(snapshot.accepted_cursor, snapshot.accepted_theme_dark), media_slots: snapshot.media_slots.clone() }
     }
 
     /// 🔢️ The frame generation names the INPUT STATE a build is answering, so it advances when input
@@ -311,7 +311,7 @@ impl OsHost {
         let present_deadline_us = semio_framework_job::default_now_us().map(|now| now.saturating_add(semio_framework_job::INTERACTIVE_STEP_CEILING_US / 2));
         loop {
             match self.presenter.present_step() {
-                Ok(crate::AppPresentStep::Complete { generation, cursor, theme_dark, fullscreen, cursor_wake, retained_control_deadline, shell_clock_deadline, has_animated_primitives }) => {
+                Ok(crate::AppPresentStep::Complete { generation, cursor, theme_dark, fullscreen, cursor_wake, retained_control_deadline, shell_clock_deadline, has_animated_primitives, media_slots }) => {
                     self.animation_clock.accept(has_animated_primitives);
                     self.animation_clock.sync(&mut self.scheduler, self.clock.now_seconds());
                     self.runtime.publish_retained_control_deadline(retained_control_deadline);
@@ -333,7 +333,7 @@ impl OsHost {
                         return;
                     };
                     let _latency = crate::frame_latency::FrameLatencyTimer::start(crate::frame_latency::FrameLatencyAuthority::renderer_frame(generation.0), crate::frame_latency::FrameLatencyStage::SnapshotPublish, 1);
-                    self.snapshot_sink.publish(crate::render_snapshot::RenderSnapshot::new(revision, semio_cursor_to_request(cursor), cursor, theme_dark, None));
+                    self.snapshot_sink.publish(crate::render_snapshot::RenderSnapshot::new(revision, semio_cursor_to_request(cursor), cursor, theme_dark, None).with_media_slots(media_slots));
                 }
                 Ok(crate::AppPresentStep::Pending) => self.scheduler.invalidate(InvalidationReason::RESOURCE_READY),
                 Ok(crate::AppPresentStep::RetryRuntime) => {

@@ -241,7 +241,7 @@ async fn renders_jack_editor() {
     // 🚚️ The buffer rides an out-of-doc payload lane, never the projected doc spine — read the
     // assembled scene the way a render host does.
     let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::TextEditorScene>(&json).expect("text-editor scene");
-    assert_eq!(scene.buffer, TRINITY_JACK_DEFAULT_QUERY);
+    assert_eq!(scene.buffer, crate::TRINITY_JACK_DEFAULT_QUERY);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -296,20 +296,19 @@ async fn editor_scene_has_tokens_and_diagnostics() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn text_edit_updates_query_without_operations() {
+async fn text_edit_puts_the_query_into_the_document() {
     let mut app = new_app().await;
     let view = query_windows();
     let editor = view.for_window_instance("editor-main").unwrap();
-    let result = app
-        .dispatch_typed(TrinityJackCommand::TextEdit { text: "MATCH (a:Piece) RETURN a.name".into() }, &semio_framework_plugin::ActionMeta { view_state: Some(editor.clone()), ..meta("local") })
+    app.dispatch_typed(TrinityJackCommand::TextEdit { text: "MATCH (a:Piece) RETURN a.name".into() }, &semio_framework_plugin::ActionMeta { view_state: Some(editor.clone()), ..meta("local") })
         .await
         .expect("edit");
-    assert!(result.mutations.is_empty());
     drive_query_ownership_operations(&mut app).await.expect("edit completes");
     let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &editor).await.expect("render");
     let json = artifact_app_laws::project_and_retire_fixture_tree(node).expect("project semantic UI test tree");
     let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::TextEditorScene>(&json).expect("text-editor scene");
     assert_eq!(scene.buffer, "MATCH (a:Piece) RETURN a.name");
+    assert_eq!(app.snapshot().expect("projection").query, "MATCH (a:Piece) RETURN a.name", "the typed query is document content, not a window's config");
 }
 
 /// 🔎️ The query the jack editor window shows (its text-editor scene buffer).
@@ -321,7 +320,7 @@ async fn jack_query(app: &mut JackTestApp, editor: &ViewModel) -> String {
 
 /// ⌨️ A typing run far longer than the store's fixed applied-edit ledger (64) — 1137 typed characters with pauses, caret moves
 /// and corrections, one full-text `text-edit` per changed key — keeps saving (every keystroke amends the run's ONE coalesced
-/// window-config edit), and ONE undo reverts the whole run, ONE redo restores it (ticket 26/09/23 F1: the 65th character was
+/// document edit), and ONE undo reverts the whole run, ONE redo restores it (ticket 26/09/23 F1: the 65th character was
 /// refused with `batched publication requires preinstalled fixed applied and revision capacity`).
 #[semio_framework_async_macros::async_test]
 async fn a_typing_run_longer_than_the_edit_ledger_keeps_saving_and_undoes_as_one_step() {
@@ -394,7 +393,7 @@ async fn document_tree_de_locale_translates_labels() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn set_active_example_swaps_fixture_without_changing_editor_query() {
+async fn set_active_example_loads_the_example_with_its_preset_query() {
     let mut app = new_app().await;
     let result = app.dispatch_typed(TrinityJackCommand::SetActiveExample { example_id: "branch-chain".into() }, &meta("local")).await.expect("set active example");
     let receipt = settle(&mut app).await;
@@ -404,11 +403,13 @@ async fn set_active_example_swaps_fixture_without_changing_editor_query() {
     // banned from the `Mutation` enum outright), never through `artifact_mutations`, so
     // `InvocationResult.mutations` is always empty for this command — `requested_effects` is
     // the field that actually carries the swap.
-    assert!(!result.requested_effects.is_empty() || !receipt.effects.is_empty(), "setActiveExample must request the LoadDocument effect");
-    let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &query_windows().for_window_instance("editor-main").unwrap()).await.expect("render");
-    let json = artifact_app_laws::project_and_retire_fixture_tree(node).expect("project semantic UI test tree");
-    let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::TextEditorScene>(&json).expect("text-editor scene");
-    assert_eq!(scene.buffer, TRINITY_JACK_DEFAULT_QUERY);
+    let loaded = result.requested_effects.iter().chain(receipt.effects.iter()).find_map(|effect| match effect {
+        semio_framework_plugin::Effect::LoadDocument { pack, .. } => Some(<crate::JackSnapshot as store::ArtifactPack>::decode_pack(pack).expect("the loaded example decodes")),
+        _ => None,
+    });
+    let loaded = loaded.expect("setActiveExample must request the LoadDocument effect");
+    assert_eq!(loaded.query, crate::editor::jack::commands::preset_query("branch-chain"), "the example document carries its own preset query");
+    assert!(!loaded.nodes().is_empty(), "the example document carries its graph");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -482,8 +483,8 @@ async fn query_ownership_runtime_publishes_transient_result_without_document_edi
         )
         .await
         .map_err(|error| format!("{error:?}"))?;
-        if drive_query_ownership_operations(&mut app).await? != (0, 1, 1) {
-            return Err("query operation did not produce one editor-config and one results-transient receipt".into());
+        if drive_query_ownership_operations(&mut app).await? != (0, 0, 1) {
+            return Err("query operation did not produce exactly one results-transient receipt".into());
         }
         if app.snapshot().map_err(|error| format!("{error:?}"))? != document {
             return Err("read query modified the document".into());
@@ -545,8 +546,12 @@ async fn drive_query_ownership_operations(app: &mut VcsArtifactApp<EditorApp<Tri
     Ok((transient_receipts, window_config_receipts, window_transient_receipts))
 }
 
+/// 🔎️ The Jack query is DOCUMENT content (ticket 26/09/23 C12, decision (a)): every editor window shows the one query the
+/// document holds, an edit from either editor is one undoable document edit and persists with the document's pack, and running
+/// a query — from either editor, into either results window — reads the document without editing it. Only the results stay
+/// per window, and they are never persisted: a reopened app starts with fresh results windows.
 #[semio_framework_async_macros::async_test]
-async fn jack_graph_window_config_query_ownership_isolates_two_editor_result_pairs_and_reloads_only_authored_sources() {
+async fn jack_query_is_document_content_shared_by_every_editor_while_results_stay_per_window() {
     let mut app = new_app().await;
     let view = ViewModel {
         window_instances: vec![
@@ -563,7 +568,6 @@ async fn jack_graph_window_config_query_ownership_isolates_two_editor_result_pai
     let results_right = view.for_window_instance("results-right").unwrap();
     let left_query = "MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name";
     let right_query = "MATCH (a:Piece) WHERE a.name != 'b' RETURN a.name";
-    let document_before = app.snapshot().expect("document").clone();
     let app_config_before = app.config_pack().await.expect("app config pack");
     let denied = app
         .dispatch_typed(
@@ -573,35 +577,33 @@ async fn jack_graph_window_config_query_ownership_isolates_two_editor_result_pai
         .await;
     assert!(denied.is_err(), "an attached editor cannot be promoted to results mutation authority by command payload");
 
-    for (context, query) in [(&editor_left, left_query), (&editor_right, right_query)] {
-        app.dispatch_typed(
-            TrinityJackCommand::TextEdit { text: query.into() },
-            &semio_framework_plugin::ActionMeta { view_state: Some(context.clone()), ..meta("query-owner") },
-        )
+    app.dispatch_typed(TrinityJackCommand::TextEdit { text: left_query.into() }, &semio_framework_plugin::ActionMeta { view_state: Some(editor_left.clone()), ..meta("query-owner") })
         .await
-        .expect("addressed query edit");
+        .expect("query edit");
+    assert_eq!(drive_query_ownership_operations(&mut app).await.expect("query edit"), (0, 0, 0));
+    let document = app.snapshot().expect("document after the query edit");
+    assert_eq!(document.query, left_query, "the typed query is the document's");
+    for context in [&editor_left, &editor_right] {
+        let tree = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, context).await.expect("editor render");
+        let rendered = artifact_app_laws::project_and_retire_fixture_tree(tree).expect("editor projection");
+        let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::TextEditorScene>(&rendered).expect("editor scene");
+        assert_eq!(scene.buffer, left_query, "every editor window shows the document's one query");
     }
-    assert_eq!(drive_query_ownership_operations(&mut app).await.expect("query edits"), (0, 2, 0));
 
-    for (context, target) in [(&editor_left, "results-left"), (&editor_right, "results-right")] {
-        app.dispatch_typed(
-            TrinityJackCommand::RunQuery { query: None, results_window_id: target.into() },
-            &semio_framework_plugin::ActionMeta { view_state: Some(context.clone()), ..meta("query-owner") },
-        )
-        .await
-        .expect("paired query");
+    for (context, target, query) in [(&editor_left, "results-left", None), (&editor_right, "results-right", Some(right_query.to_string()))] {
+        app.dispatch_typed(TrinityJackCommand::RunQuery { query, results_window_id: target.into() }, &semio_framework_plugin::ActionMeta { view_state: Some(context.clone()), ..meta("query-owner") })
+            .await
+            .expect("paired query");
     }
-    assert_eq!(drive_query_ownership_operations(&mut app).await.expect("paired queries"), (0, 2, 2));
-    assert_eq!(app.snapshot().expect("document after queries"), document_before);
+    assert_eq!(drive_query_ownership_operations(&mut app).await.expect("paired queries"), (0, 0, 2));
+    assert_eq!(app.snapshot().expect("document after queries"), document, "running a read query never edits the document");
     let app_config_after = app.config_pack().await.expect("app config after");
     assert_eq!(app_config_after.pack, app_config_before.pack);
     assert_eq!(app_config_after.spr, app_config_before.spr);
+    assert!(app.window_config_packs().await.expect("persisted window configs").is_empty(), "no editor window persists a query of its own");
     assert_eq!(app.ephemeral_snapshot().await.transient_generation, 0);
-    assert_eq!(app.window_config_generation(&editor_left).await.expect("left query generation"), Some(2));
-    assert_eq!(app.window_config_generation(&editor_right).await.expect("right query generation"), Some(2));
     assert_eq!(app.window_transient_generation(&results_left).expect("left result generation"), Some(1));
     assert_eq!(app.window_transient_generation(&results_right).expect("right result generation"), Some(1));
-
     let left_snapshot = app.window_transient_snapshot(&results_left).expect("left result snapshot").expect("left result owner");
     let right_snapshot = app.window_transient_snapshot(&results_right).expect("right result snapshot").expect("right result owner");
     let left_state = left_snapshot.get::<JackResultsWindowTransientOwner>().expect("left result state");
@@ -610,32 +612,20 @@ async fn jack_graph_window_config_query_ownership_isolates_two_editor_result_pai
     assert_ne!(left_state.result, right_state.result, "concurrent executions must keep distinct result payloads");
     drop(left_snapshot);
     drop(right_snapshot);
-
-    for (context, expected) in [(&editor_left, left_query), (&editor_right, right_query)] {
-        let tree = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, context).await.expect("editor render");
-        let rendered = artifact_app_laws::project_and_retire_fixture_tree(tree).expect("editor projection");
-        let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::TextEditorScene>(&rendered).expect("editor scene");
-        assert_eq!(scene.buffer, expected);
-    }
     for context in [&results_left, &results_right] {
         let tree = app.render(TRINITY_JACK_PLAY_BODY_RESULTS, None, context).await.expect("result render");
         assert!(artifact_app_laws::project_and_retire_fixture_tree(tree).expect("result projection").contains("table"));
     }
 
-    let packs = app.window_config_packs().await.expect("persisted window configs");
-    assert_eq!(packs.len(), 2, "only two authored editor query configs were instantiated");
+    let reloaded = <crate::JackSnapshot as store::ArtifactPack>::decode_pack(&store::ArtifactPack::encode_pack(&document)).expect("the document pack decodes");
+    assert_eq!(reloaded.query, left_query, "the query persists with the document");
+    let admitted = app.handle_action("undo", None, &semio_framework_plugin::ActionMeta { view_state: Some(editor_right.clone()), ..meta("query-owner") }).await.unwrap_or_else(|fault| panic!("undo admission: {fault:?}"));
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.app, admitted).await.unwrap_or_else(|fault| panic!("undo settles: {fault:?}"));
+    drive_query_ownership_operations(&mut app).await.expect("undo publishes");
+    assert_eq!(app.snapshot().expect("document after undo").query, crate::TRINITY_JACK_DEFAULT_QUERY, "one undo from either editor reverts the query edit");
     app.close();
 
     let mut reopened = new_app().await;
-    for pack in packs {
-        reopened.load_window_config_pack(pack).await.expect("reload editor query config");
-    }
-    for (context, expected) in [(&editor_left, left_query), (&editor_right, right_query)] {
-        let tree = reopened.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, context).await.expect("reloaded editor render");
-        let rendered = artifact_app_laws::project_and_retire_fixture_tree(tree).expect("reloaded editor projection");
-        let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::TextEditorScene>(&rendered).expect("reloaded editor scene");
-        assert_eq!(scene.buffer, expected);
-    }
     for context in [&results_left, &results_right] {
         assert_eq!(reopened.window_transient_generation(context).expect("fresh result generation"), Some(0));
         let snapshot = reopened.window_transient_snapshot(context).expect("fresh result snapshot").expect("fresh results owner");
@@ -720,7 +710,7 @@ async fn set_active_example_resolves_every_id_the_shell_can_send() {
 #[semio_framework_async_macros::async_test]
 async fn every_shipped_query_lints_clean_and_runs_on_the_curated_example() {
     let example = <crate::JackSnapshot as store::ArtifactDsl>::parse_dsl(crate::editor::jack::NAKAGIN_FIXTURE_DSL).expect("curated example parses");
-    for query in [crate::editor::jack::TRINITY_JACK_DEFAULT_QUERY, "MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a, r, b"] {
+    for query in [crate::TRINITY_JACK_DEFAULT_QUERY, "MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a, r, b"] {
         let graph = crate::editor::jack::graph_from_snapshot_or_default(&example);
         let diagnostics = crate::core::lint(&graph, query);
         assert!(diagnostics.is_empty(), "{query} must lint clean on the curated example, got {diagnostics:?}");

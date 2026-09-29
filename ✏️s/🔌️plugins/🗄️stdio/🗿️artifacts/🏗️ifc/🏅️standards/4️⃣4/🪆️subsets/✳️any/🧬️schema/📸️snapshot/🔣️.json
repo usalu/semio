@@ -15,19 +15,19 @@
         "fileDescription": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/IfcValue"
+            "$ref": "#/$defs/IfcValue"
           }
         },
         "fileName": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/IfcValue"
+            "$ref": "#/$defs/IfcValue"
           }
         },
         "fileSchema": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/IfcValue"
+            "$ref": "#/$defs/IfcValue"
           }
         }
       }
@@ -45,7 +45,7 @@
     "entities": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/IfcEntity"
+        "$ref": "#/$defs/IfcEntity"
       },
       "x-semio-state": "artifact"
     }
@@ -69,7 +69,7 @@
         "args": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/IfcValue"
+            "$ref": "#/$defs/IfcValue"
           }
         }
       }
@@ -92,13 +92,13 @@
         "args": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/IfcValue"
+            "$ref": "#/$defs/IfcValue"
           }
         },
         "complex": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/IfcComplexType"
+            "$ref": "#/$defs/IfcComplexType"
           }
         }
       }

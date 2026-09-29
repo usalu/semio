@@ -1,0 +1,10 @@
+{
+  "title": "Stable Panel Tree Direction",
+  "emoji": "🌳",
+  "status": "open",
+  "description": "Trees in panels must not flip between left-to-right and right-to-left. Keep a single reading direction so the layout stays predictable.",
+  "goal": "🎯runningframework",
+  "sessions": [
+    "⚪2cef884bf1ce460d86d476efff90759e"
+  ]
+}

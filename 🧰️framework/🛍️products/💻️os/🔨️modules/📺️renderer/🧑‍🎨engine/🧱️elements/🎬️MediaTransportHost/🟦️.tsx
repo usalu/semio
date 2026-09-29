@@ -1,11 +1,11 @@
 /// <reference types="vitest/importMeta" />
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { MEDIA_TRANSPORT_EXTENSION_ID, parseMediaTransportProps, type MediaTransportProps } from "../../../../🔌️plugin/🪟️window-kits/🎬️media/🟦️.ts";
-import { collectMediaTransportBytes, type MediaTransportPort } from "./🚚️lifecycle/🟦️.ts";
+import { collectMediaTransportBytes, type MediaTransportPort } from "../../🎬️media/🚚️lifecycle/🟦️.ts";
 
 export { MEDIA_TRANSPORT_EXTENSION_ID };
 
-export type { MediaTransportPort } from "./🚚️lifecycle/🟦️.ts";
+export type { MediaTransportPort } from "../../🎬️media/🚚️lifecycle/🟦️.ts";
 
 export type MediaTransportOwner = {
   readonly instanceId: number;
@@ -169,6 +169,7 @@ export function MediaTransportHost({ value, nodeId, nodeKey }: { readonly value:
     onPause: () => setPlaying(false),
     onEnded: () => setPlaying(false),
     onTimeUpdate: () => setPositionMs(Math.round((mediaRef.current?.currentTime ?? 0) * 1000)),
+    onLoadedMetadata: () => { if (mediaRef.current) mediaRef.current.currentTime = props.positionMs / 1000; },
     onDurationChange: () => { const duration = mediaRef.current?.duration; if (duration != null && Number.isFinite(duration)) setDurationMs(Math.max(1, Math.round(duration * 1000))); },
     onError: () => failPlayback(props.labels.unsupported),
   };
@@ -176,7 +177,7 @@ export function MediaTransportHost({ value, nodeId, nodeKey }: { readonly value:
     <div data-media-state="ready" data-media-window={owner?.windowId} data-ui-node-id={nodeId} data-ui-node-key={nodeKey} className="flex min-h-0 flex-col gap-single p-single" style={{ height: props.hostContentHeight }}>
       {props.kind === "audio" ? <audio ref={(element) => { mediaRef.current = element; }} {...mediaProps} /> : <video ref={(element) => { mediaRef.current = element; }} {...mediaProps} className="min-h-0 w-full flex-1" />}
       <div className="flex items-center gap-single">
-        <button type="button" aria-label={playing ? props.labels.pause : props.labels.play} onClick={() => { const media = mediaRef.current; if (!media) return; if (media.paused) void media.play().catch(() => failPlayback(props.labels.unsupported)); else media.pause(); }}>{playing ? props.labels.pause : props.labels.play}</button>
+        <button type="button" aria-label={playing ? props.labels.pause : props.labels.play} onClick={() => { const media = mediaRef.current; if (!media) return; if (media.paused) void media.play().catch((error: unknown) => { if (!(error instanceof DOMException && error.name === "AbortError")) failPlayback(props.labels.unsupported); }); else media.pause(); }}>{playing ? props.labels.pause : props.labels.play}</button>
         <label className="min-w-0 flex-1">{props.labels.seek}<input type="range" min={0} max={maximum} value={Math.min(maximum, positionMs)} aria-label={props.labels.seek} onChange={(event) => { const next = Number(event.currentTarget.value); setPositionMs(next); if (mediaRef.current) mediaRef.current.currentTime = next / 1000; }} /></label>
         <output aria-label={props.labels.position}>{positionMs}</output>
         <span aria-label={props.labels.duration}>{knownDuration ?? props.labels.unknownDuration}</span>

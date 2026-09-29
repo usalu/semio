@@ -1,0 +1,783 @@
+{
+  "schema": "semio.ui.stack-drop-destination.v1",
+  "cases": [
+    {
+      "id": "first-to-shifted-tab",
+      "axis": "row",
+      "initialStacks": [
+        {
+          "windows": [
+            "a",
+            "a-copy"
+          ],
+          "active": "a-copy"
+        },
+        {
+          "windows": [
+            "b"
+          ],
+          "active": "b"
+        },
+        {
+          "windows": [
+            "c"
+          ],
+          "active": "c"
+        }
+      ],
+      "sourceIndex": 0,
+      "zone": {
+        "kind": "tab",
+        "path": [
+          0
+        ],
+        "corner": "topLeft",
+        "index": 0
+      },
+      "accepted": true,
+      "expectedStacks": [
+        {
+          "path": [
+            0
+          ],
+          "windows": [
+            "a",
+            "a-copy",
+            "b"
+          ]
+        },
+        {
+          "path": [
+            1
+          ],
+          "windows": [
+            "c"
+          ]
+        }
+      ],
+      "dragKind": "stack"
+    },
+    {
+      "id": "first-to-later-tab",
+      "axis": "row",
+      "initialStacks": [
+        {
+          "windows": [
+            "a",
+            "a-copy"
+          ],
+          "active": "a-copy"
+        },
+        {
+          "windows": [
+            "b"
+          ],
+          "active": "b"
+        },
+        {
+          "windows": [
+            "c"
+          ],
+          "active": "c"
+        }
+      ],
+      "sourceIndex": 0,
+      "zone": {
+        "kind": "tab",
+        "path": [
+          1
+        ],
+        "corner": "topLeft",
+        "index": 0
+      },
+      "accepted": true,
+      "expectedStacks": [
+        {
+          "path": [
+            0
+          ],
+          "windows": [
+            "b"
+          ]
+        },
+        {
+          "path": [
+            1
+          ],
+          "windows": [
+            "a",
+            "a-copy",
+            "c"
+          ]
+        }
+      ],
+      "dragKind": "stack"
+    },
+    {
+      "id": "middle-to-shifted-tab",
+      "axis": "row",
+      "initialStacks": [
+        {
+          "windows": [
+            "a",
+            "a-copy"
+          ],
+          "active": "a-copy"
+        },
+        {
+          "windows": [
+            "b"
+          ],
+          "active": "b"
+        },
+        {
+          "windows": [
+            "c"
+          ],
+          "active": "c"
+        }
+      ],
+      "sourceIndex": 1,
+      "zone": {
+        "kind": "tab",
+        "path": [
+          1
+        ],
+        "corner": "topLeft",
+        "index": 0
+      },
+      "accepted": true,
+      "expectedStacks": [
+        {
+          "path": [
+            0
+          ],
+          "windows": [
+            "a",
+            "a-copy"
+          ]
+        },
+        {
+          "path": [
+            1
+          ],
+          "windows": [
+            "b",
+            "c"
+          ]
+        }
+      ],
+      "dragKind": "stack"
+    },
+    {
+      "id": "last-to-first-tab",
+      "axis": "row",
+      "initialStacks": [
+        {
+          "windows": [
+            "a",
+            "a-copy"
+          ],
+          "active": "a-copy"
+        },
+        {
+          "windows": [
+            "b"
+          ],
+          "active": "b"
+        },
+        {
+          "windows": [
+            "c"
+          ],
+          "active": "c"
+        }
+      ],
+      "sourceIndex": 2,
+      "zone": {
+        "kind": "tab",
+        "path": [
+          0
+        ],
+        "corner": "topLeft",
+        "index": 0
+      },
+      "accepted": true,
+      "expectedStacks": [
+        {
+          "path": [
+            0
+          ],
+          "windows": [
+            "c",
+            "a",
+            "a-copy"
+          ]
+        },
+        {
+          "path": [
+            1
+          ],
+          "windows": [
+            "b"
+          ]
+        }
+      ],
+      "dragKind": "stack"
+    },
+    {
+      "id": "first-to-shifted-top-split",
+      "axis": "row",
+      "initialStacks": [
+        {
+          "windows": [
+            "a",
+            "a-copy"
+          ],
+          "active": "a-copy"
+        },
+        {
+          "windows": [
+            "b"
+          ],
+          "active": "b"
+        },
+        {
+          "windows": [
+            "c"
+          ],
+          "active": "c"
+        }
+      ],
+      "sourceIndex": 0,
+      "zone": {
+        "kind": "split",
+        "path": [
+          0
+        ],
+        "side": "top"
+      },
+      "accepted": true,
+      "expectedStacks": [
+        {
+          "path": [
+            0,
+            0
+          ],
+          "windows": [
+            "a",
+            "a-copy"
+          ]
+        },
+        {
+          "path": [
+            0,
+            1
+          ],
+          "windows": [
+            "b"
+          ]
+        },
+        {
+          "path": [
+            1
+          ],
+          "windows": [
+            "c"
+          ]
+        }
+      ],
+      "dragKind": "stack"
+    },
+    {
+      "id": "first-to-later-right-split",
+      "axis": "row",
+      "initialStacks": [
+        {
+          "windows": [
+            "a",
+            "a-copy"
+          ],
+          "active": "a-copy"
+        },
+        {
+          "windows": [
+            "b"
+          ],
+          "active": "b"
+        },
+        {
+          "windows": [
+            "c"
+          ],
+          "active": "c"
+        }
+      ],
+      "sourceIndex": 0,
+      "zone": {
+        "kind": "split",
+        "path": [
+          1
+        ],
+        "side": "right"
+      },
+      "accepted": true,
+      "expectedStacks": [
+        {
+          "path": [
+            0
+          ],
+          "windows": [
+            "b"
+          ]
+        },
+        {
+          "path": [
+            1,
+            0
+          ],
+          "windows": [
+            "c"
+          ]
+        },
+        {
+          "path": [
+            1,
+            1
+          ],
+          "windows": [
+            "a",
+            "a-copy"
+          ]
+        }
+      ],
+      "dragKind": "stack"
+    },
+    {
+      "id": "middle-to-shifted-bottom-split",
+      "axis": "row",
+      "initialStacks": [
+        {
+          "windows": [
+            "a",
+            "a-copy"
+          ],
+          "active": "a-copy"
+        },
+        {
+          "windows": [
+            "b"
+          ],
+          "active": "b"
+        },
+        {
+          "windows": [
+            "c"
+          ],
+          "active": "c"
+        }
+      ],
+      "sourceIndex": 1,
+      "zone": {
+        "kind": "split",
+        "path": [
+          1
+        ],
+        "side": "bottom"
+      },
+      "accepted": true,
+      "expectedStacks": [
+        {
+          "path": [
+            0
+          ],
+          "windows": [
+            "a",
+            "a-copy"
+          ]
+        },
+        {
+          "path": [
+            1,
+            0
+          ],
+          "windows": [
+            "c"
+          ]
+        },
+        {
+          "path": [
+            1,
+            1
+          ],
+          "windows": [
+            "b"
+          ]
+        }
+      ],
+      "dragKind": "stack"
+    },
+    {
+      "id": "invalid-target-preserves-source",
+      "axis": "row",
+      "initialStacks": [
+        {
+          "windows": [
+            "a",
+            "a-copy"
+          ],
+          "active": "a-copy"
+        },
+        {
+          "windows": [
+            "b"
+          ],
+          "active": "b"
+        },
+        {
+          "windows": [
+            "c"
+          ],
+          "active": "c"
+        }
+      ],
+      "sourceIndex": 0,
+      "zone": {
+        "kind": "tab",
+        "path": [
+          4
+        ],
+        "corner": "topLeft",
+        "index": 0
+      },
+      "accepted": false,
+      "expectedStacks": [
+        {
+          "path": [
+            0
+          ],
+          "windows": [
+            "a",
+            "a-copy"
+          ]
+        },
+        {
+          "path": [
+            1
+          ],
+          "windows": [
+            "b"
+          ]
+        },
+        {
+          "path": [
+            2
+          ],
+          "windows": [
+            "c"
+          ]
+        }
+      ],
+      "dragKind": "stack"
+    },
+    {
+      "id": "column-first-to-shifted-tab",
+      "axis": "column",
+      "initialStacks": [
+        {
+          "windows": [
+            "a",
+            "a-copy"
+          ],
+          "active": "a-copy"
+        },
+        {
+          "windows": [
+            "b"
+          ],
+          "active": "b"
+        },
+        {
+          "windows": [
+            "c"
+          ],
+          "active": "c"
+        }
+      ],
+      "sourceIndex": 0,
+      "zone": {
+        "kind": "tab",
+        "path": [
+          0
+        ],
+        "corner": "topLeft",
+        "index": 0
+      },
+      "accepted": true,
+      "expectedStacks": [
+        {
+          "path": [
+            0
+          ],
+          "windows": [
+            "a",
+            "a-copy",
+            "b"
+          ]
+        },
+        {
+          "path": [
+            1
+          ],
+          "windows": [
+            "c"
+          ]
+        }
+      ],
+      "dragKind": "stack"
+    },
+    {
+      "id": "tab-middle-to-shifted-destination",
+      "axis": "row",
+      "initialStacks": [
+        {
+          "windows": [
+            "a",
+            "a-copy"
+          ],
+          "active": "a-copy"
+        },
+        {
+          "windows": [
+            "b"
+          ],
+          "active": "b"
+        },
+        {
+          "windows": [
+            "c"
+          ],
+          "active": "c"
+        }
+      ],
+      "sourceIndex": 1,
+      "zone": {
+        "kind": "tab",
+        "path": [
+          1
+        ],
+        "corner": "topLeft",
+        "index": 0
+      },
+      "accepted": true,
+      "expectedStacks": [
+        {
+          "path": [
+            0
+          ],
+          "windows": [
+            "a",
+            "a-copy"
+          ]
+        },
+        {
+          "path": [
+            1
+          ],
+          "windows": [
+            "b",
+            "c"
+          ]
+        }
+      ],
+      "dragKind": "tab"
+    },
+    {
+      "id": "invalid-tab-target-preserves-source",
+      "axis": "row",
+      "initialStacks": [
+        {
+          "windows": [
+            "a",
+            "a-copy"
+          ],
+          "active": "a-copy"
+        },
+        {
+          "windows": [
+            "b"
+          ],
+          "active": "b"
+        },
+        {
+          "windows": [
+            "c"
+          ],
+          "active": "c"
+        }
+      ],
+      "sourceIndex": 0,
+      "zone": {
+        "kind": "tab",
+        "path": [
+          4
+        ],
+        "corner": "topLeft",
+        "index": 0
+      },
+      "accepted": false,
+      "expectedStacks": [
+        {
+          "path": [
+            0
+          ],
+          "windows": [
+            "a",
+            "a-copy"
+          ]
+        },
+        {
+          "path": [
+            1
+          ],
+          "windows": [
+            "b"
+          ]
+        },
+        {
+          "path": [
+            2
+          ],
+          "windows": [
+            "c"
+          ]
+        }
+      ],
+      "dragKind": "tab"
+    },
+    {
+      "id": "invalid-tab-split-preserves-source",
+      "axis": "row",
+      "initialStacks": [
+        {
+          "windows": [
+            "a",
+            "a-copy"
+          ],
+          "active": "a-copy"
+        },
+        {
+          "windows": [
+            "b"
+          ],
+          "active": "b"
+        },
+        {
+          "windows": [
+            "c"
+          ],
+          "active": "c"
+        }
+      ],
+      "sourceIndex": 0,
+      "zone": {
+        "kind": "split",
+        "path": [
+          4
+        ],
+        "side": "right"
+      },
+      "accepted": false,
+      "expectedStacks": [
+        {
+          "path": [
+            0
+          ],
+          "windows": [
+            "a",
+            "a-copy"
+          ]
+        },
+        {
+          "path": [
+            1
+          ],
+          "windows": [
+            "b"
+          ]
+        },
+        {
+          "path": [
+            2
+          ],
+          "windows": [
+            "c"
+          ]
+        }
+      ],
+      "dragKind": "tab"
+    },
+    {
+      "id": "invalid-stack-split-preserves-source",
+      "axis": "row",
+      "initialStacks": [
+        {
+          "windows": [
+            "a",
+            "a-copy"
+          ],
+          "active": "a-copy"
+        },
+        {
+          "windows": [
+            "b"
+          ],
+          "active": "b"
+        },
+        {
+          "windows": [
+            "c"
+          ],
+          "active": "c"
+        }
+      ],
+      "sourceIndex": 0,
+      "zone": {
+        "kind": "split",
+        "path": [
+          4
+        ],
+        "side": "right"
+      },
+      "accepted": false,
+      "expectedStacks": [
+        {
+          "path": [
+            0
+          ],
+          "windows": [
+            "a",
+            "a-copy"
+          ]
+        },
+        {
+          "path": [
+            1
+          ],
+          "windows": [
+            "b"
+          ]
+        },
+        {
+          "path": [
+            2
+          ],
+          "windows": [
+            "c"
+          ]
+        }
+      ],
+      "dragKind": "stack"
+    }
+  ]
+}

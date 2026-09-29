@@ -45,7 +45,20 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 /// 🗂️ This artifact's `ArtifactKindSpec`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    semio_s_artifact_stdio_contract::definition_only_assembly("epw", definition()?)
+    semio_s_artifact_stdio_contract::runtime_assembly("epw", definition()?, declaration)
+}
+
+/// 🧾️ The runtime `epw` declares: its schema, format, inference descriptor, composers and document codec.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = formats()?;
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
+        .schema(standards::energyplus::subsets::any::schema::epw_artifact_schema_descriptor())
+        .formats(formats)
+        .inferences([standards::energyplus::subsets::any::schema::inferences::epw_artifact_inference_descriptor()])
+        .composers(standards::energyplus::subsets::any::io::io_registry::entries())
+        .document_codec_bare::<EpwSnapshot, EpwMutation>(STDIO_EPW_DOCUMENT_SCHEMA)
+        .try_build()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -68,11 +81,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 
 //#region 🔖️Register
-/// 🗂️ Registers this artifact's IO composer + the handcrafted grammar/protocol `LanguageSpec` —
-/// dissolved out of the former `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-
-/// MACHINES). `epw` is one of stdio's 10 deliberate imperative-`register()` artifacts (never
-/// converted to the `ArtifactDeclaration` builder pattern; this package's contribution invokes it
-/// directly with the established call order and behavior).
+/// 🗂️ Registers this artifact's IO and its handcrafted grammar/protocol `LanguageSpec` imperatively, outside any plugin
+/// assembly — the twin of [`declaration`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {
     standards::energyplus::subsets::any::io::register();

@@ -2,14 +2,14 @@
 //! 26/08/23/END-TO-END-TESTING-REFACTOR.
 //!
 //! This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` beside this file —
-//! a second implementation of the scene, of its `.dsl.semio` carrier and of all eight typed
+//! a second implementation of the scene, of its `.dsl.semio` carrier and of all nine typed
 //! mutations, written in Python from this subset's committed snapshot schema, mutation grammar and
 //! specification vectors. This adapter registers the SUBJECT half only: keeping oracle registrations
 //! here would put this repository's answer on both sides of the comparison.
 //!
-//! **What the two roles each hold.** The cross-language projection is the six members BOTH committed
-//! serializations of a jack scene carry — `schema`, `name`, `camera`, `nodes`, `edges` and
-//! `rootNodeId`. The composed `content` child is outside it because its `childId` is a digest no
+//! **What the two roles each hold.** The cross-language projection is the seven members BOTH committed
+//! serializations of a jack scene carry — `schema`, `name`, `camera`, `nodes`, `edges`, `rootNodeId`
+//! and the document's `query`. The composed `content` child is outside it because its `childId` is a digest no
 //! second implementation can reproduce, and `manifest`/`manifestId` are outside it because the
 //! carrier writes one and the specification vectors write the other. `content` is still asserted
 //! HERE, in role, and in the sharpest form this artifact allows: an applied mutation must MOVE the
@@ -24,7 +24,7 @@ use semio_repo_test_host::Adapter;
 /// link the subject crate. The contract's mutation-coverage gate keeps this list honest against the
 /// catalog; `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against
 /// the enum.
-const KINDS: &[&str] = &["create-node", "delete-node", "create-edge", "delete-edge", "rename-node", "move-node", "change-data-property", "remove-data-property"];
+const KINDS: &[&str] = &["create-node", "delete-node", "create-edge", "delete-edge", "rename-node", "move-node", "change-data-property", "remove-data-property", "set-query"];
 
 //#endregion 🔖️Kinds
 
@@ -38,10 +38,10 @@ mod subject {
     use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::{decode_jack_snapshot_json, encode_jack_snapshot_json, jack_scene_summary, parse_jack_dsl, print_jack_dsl, JackSnapshot};
 
     //#region 🔖️Plan
-    /// 📤️ What parity compares: the six members both committed serializations of a jack scene carry.
+    /// 📤️ What parity compares: the seven members both committed serializations of a jack scene carry.
     /// `content` is a digest handle and `manifest`/`manifestId` appear in only one of the two forms,
     /// so neither is comparable across languages; both are asserted in role below instead.
-    const MEMBERS: &[&str] = &["schema", "name", "camera", "nodes", "edges", "rootNodeId"];
+    const MEMBERS: &[&str] = &["schema", "name", "camera", "nodes", "edges", "rootNodeId", "query"];
 
     /// 🧫️ The one declared fixture URI of this scenario's steps containing `needle`.
     fn uri_in(ctx: &Context, needle: &str) -> Result<String, String> {
@@ -113,7 +113,7 @@ mod subject {
             if !raised.is_empty() {
                 return Err(format!("mutate-{kind}: the feature's parameters were meant to APPLY to the committed tower, but the implementation raised {raised:?}"));
             }
-            if applied.content.child_id == base.content.child_id {
+            if applied.content.child_id == base.content.child_id && applied.query == base.query {
                 return Err(format!("mutate-{kind}: applying this kind to the tower left the content-addressed child handle at {} — the mutation never reached the scene ({})", base.content.child_id, jack_scene_summary(&applied)));
             }
             let projection = projection(&applied)?;
@@ -124,7 +124,7 @@ mod subject {
     /// ↩️ Applies one kind to the REAL tower and then EVERY step of its OWN computed inverse. The
     /// restoring law is asserted on the WHOLE snapshot, content handle included — because that handle
     /// is a digest of the child, restoring it is the strongest available statement that the scene
-    /// came back, piece order and port ids and all. The projection carries both scenes, so all eight
+    /// came back, piece order and port ids and all. The projection carries both scenes, so all nine
     /// rows do not project the same value.
     pub fn inverse(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
@@ -135,7 +135,7 @@ mod subject {
             if !raised.is_empty() {
                 return Err(format!("inverse-{kind}: the forward mutation was rejected: {raised:?}"));
             }
-            if current.content.child_id == base.content.child_id {
+            if current.content.child_id == base.content.child_id && current.query == base.query {
                 return Err(format!("inverse-{kind}: the forward mutation left the content handle untouched, so restoring it proves nothing ({})", jack_scene_summary(&current)));
             }
             let mutated = projection(&current)?;
@@ -155,7 +155,7 @@ mod subject {
 
     /// 📐️ Replays one committed handcrafted vector, read through the plan's declared fixtures — the
     /// same four files the Python reference reads: the vector's three and the composed scene the feature
-    /// names for it, seeded into the before- and after-snapshot's own content child. All eight are NEGATIVE, so the feature's
+    /// names for it, seeded into the before- and after-snapshot's own content child. Eight of the nine are NEGATIVE and `set-query`'s is `applied`, so the feature's
     /// `verdict` column states which refusal each commits to: `refused` must raise a fault and leave
     /// the document alone, `noop` must be ACCEPTED while leaving it alone. Both additionally require
     /// that the content-addressed child handle was NOT re-minted — without it a refusal that quietly
@@ -180,6 +180,11 @@ mod subject {
                 "noop" => {
                     if !raised.iter().all(|(code, _)| code == "mutation.no-op") {
                         return Err(format!("spec-vector-{kind}: the committed vector declares an accepted no-op, but the implementation raised {raised:?}"));
+                    }
+                }
+                "applied" => {
+                    if !raised.is_empty() {
+                        return Err(format!("spec-vector-{kind}: the committed vector declares an applied change, but the implementation raised {raised:?}"));
                     }
                 }
                 other => return Err(format!("spec-vector-{kind}: the feature declares an unknown verdict {other:?}")),

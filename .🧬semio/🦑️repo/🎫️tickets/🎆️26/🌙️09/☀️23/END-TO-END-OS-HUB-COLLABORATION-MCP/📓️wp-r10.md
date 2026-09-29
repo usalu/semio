@@ -4,6 +4,76 @@ Slice: R10 (session 14; continues R9 + V1). Coordinator: `main`. Ports: hubs 812
 Scripts/codemods/patches: `.tmp-ticket/wp-r10/`. Expendable captures: `.tmp-ticket/wp-r10/generated/`.
 Durable data: `.🧬semio/🌐hub/s14-r10-*/`. Private cargo: `CARGO_TARGET_DIR=.tmp-ticket/wp-r10/target` (native lane, build-fleet-b).
 
+## Session 15
+
+Successor agent (2026-09-29 19:4x, wave B). GUEST FREEZE ON until "WINDOW 5 OPEN" (chain 57946 t6). Focus: taxonomy set, harness
+registration audit, `[TRACE]` default-off, schema-catalog regen, goal-gate verdict per outcome.
+
+| # | Item | State | Evidence |
+|---|---|---|---|
+| Q0 | Reconcile predecessor (rule 30) | DONE — last step T4 laws 07:12 (green), idle since 08:00; no in-flight tree hunk, no orphan lane job, no queued waiter of R10 | fleet-14 08:0x, `s14-r10-logs/t4-laws-1.txt` |
+| Q1 | Taxonomy registration set (window 5, before L1 R4) | **PREPARED, dry-run clean 20:48** — +290 names / 4 new member kinds, validator 0, additive (0 new same-owner conflicts), 0 new violations of any other code in 11 scopes; fixpoint after 7 passes; `window3-apply.ts taxonomy` on the live tree reproduces the candidate exactly; runner `wp-r10/window5-r10.sh pre-r4` | `s14-r10-state/taxonomy.s15-c7.json`, `tax-kinds-s15-*.json`, `viol-s15-{live,c7}.json`, `s14-r10-logs/window5-dry-*.txt` |
+| Q2 | Relayed harness registration (S18, G12, S20, H13, C13, F3, Z4, AV2) | DONE (audit) + LANDED plan part — 71/71 plan checks had target + launch row; gaps: AV2 `video-render-export(-native)` targets missing (PREPARED, window 5), F3 `interaction-latency` + G12 `channel-version-check` not in plan (LANDED 19:58) | `wp-r10/harness-registry-audit.ts`, `s15-harness-audit-2.txt`, landing 19:58 |
+| Q3 | `[TRACE] typed-operation slots` default-off | PREPARED (guest SDK, frozen) — `wp-r10/trace-slots-default-off.py` dry-run clean, scratch write idempotent, revert byte-identical; → L1 T6R4 | §log 20:0x |
+| Q4 | Schema-catalog regen | PREPARED — `wp-r10/schema-catalog-regen.ts` dry run: json 158 scopes changed (~640/455 lines), md +854/−521 → run after R4 in window 5 | §log 20:1x |
+| Q5 | Goal-gate verdict per outcome | WRITTEN — `📓️goal-gate-verdict-s15.md` (73 checks; O1 FAIL, O2 BLOCKED on t6 freshness, O3 FAIL, O4 FAIL, O5 FAIL); compliance re-measured s15 | §log 20:2x |
+| Q6 | `@emoji` residue (27, post-T5 sets) | LANDED 20:1x — at-emoji gate FAIL 27 → PASS | landing 20:1x |
+
+#### Session 15 log
+
+- 19:4x read preambles 15 + 14 (rules 1–28), audit-s15 §7, fleet-15, landing `# Session 15`, this report. Load 28–32, all three lane locks held,
+  11 rustc, disk 60 GiB free; chain still in rebuild-all 4/11.
+- 19:5x coordinator relay: add L1's round-4 new dirs to the prepared registration set (same WINDOW 5 step, before L1's round).
+  `wp-r10/r4-new-files.py` (new files of every T6R4 set from L1's live dry captures + the sets' path constants; nothing run): c13-p4 0,
+  lb2-p2 0, lb2-p2b 3, c12 2, sh2 45, u6-e1 1, s18 4, p9 0, p17 0 → `taxonomy-planned.py` simulation (placeholders, 2:23): **18 new
+  unresolved rows** (`tax-kinds-s15-r4-planned.json`); `🗄️stdio/📇️registry/🧬️contract/✏️editing` is unresolved LIVE (its new
+  `🏗️structural` child waits for it); SH2's case dirs need a 2nd pass (parents are new `👥️set-artifact-presence` / `📥️apply-directory-events`).
+- 20:0x `[TRACE] typed-operation slots` emitter = guest SDK `🔌️plugin/🦀️.rs` `trace_typed_operation_slot_occupancy` (new peak + first drain
+  printed unconditionally → two lines per guest per page). Prepared `wp-r10/trace-slots-default-off.py`: print only under
+  `runtime_diagnostics_enabled()` (peak still tracked), drop the drain flag, drop the dead program-matrix `NOISE` alternative. No R4 set
+  touches those anchors. Other unconditional per-open `[TRACE]` prints (FINDING, owners): space `openSpace` ×2 (every Space open), fem2d/fem3d
+  boot snapshots ×4, trinity rewriting ×2, EngineCanvas wgpu catalogue drop, ui wgpu seal refuse ×2, retained-command raw allocation.
+- 20:0x harness audit (`wp-r10/harness-registry-audit.ts`): 71/71 plan checks declared + launch row. Gaps: AV2 targets absent (verb exists in
+  root `📜️script.ts`) → spec (targets + held plan check); F3 `interaction-latency` and G12 `channel-version-check` → plan (landed 19:58, +
+  criteria 1.2 on the hub sweep, 2.9 on the image build: both were uncovered). `window3-apply.ts` learned `planCriteriaEdits` (format-
+  preserving) and root-manifest targets without `cwd`. `bun test` from the repo root segfaults Bun 1.3.14 for any file → run laws from their
+  own directory.
+- 20:1x schema-catalog regen prepared + dry run (27 s). Fresh compliance measurements: debug-tags PASS, interface-owners PASS, channel-version
+  0 findings, docstrings at-emoji FAIL 27 (post-T5 sets) → stripped (landed) → PASS; emoji-first 4 614 open.
+- 20:2x `📓️goal-gate-verdict-s15.md` written. Whole-repo census (`taxonomy-census.ts`) stopped after 31 min (no output; too slow under
+  load) → per-scope kinds probes instead (framework 3:38).
+- 20:2x–20:4x **whole-repo kinds probe** (per scope, 3–10 min each; `probe-s15-all.json`): **14 299 unresolved directories** (framework 2 908,
+  mit-bestand 1 034, stdio 3 977, norm 1 800, energy 1 404, architect 628, fem 412, remaining 29 plugins 2 499, s modules 42, hub 5,
+  semio-tech 12). 26 are new since the T4 pass (21 created after 13:37 = T6 rounds; `tax-kinds-s15-new-since-t4.json`).
+  **Prepared set** (passes against candidates `taxonomy.s15-c1…c7.json`): (a) the 146-scope set as today (config 62, ShellHost 40, host
+  tests 17, space home 13) + the WHOLE `⚡️caching` subtree (131 incl. `⚡️caching` itself — `🐳️containers/🔁️lifecycle` needs its
+  unresolved ancestors `⚡️caching` → `📦️artifacts` → `🐳️containers`) + forms `✍️fill`; (b) the 26 new-since-T4 dirs; (c) L1's round-4
+  planned dirs (19 rows over 3 passes, incl. SH2's case dirs) + the stdio contract `✏️editing` chain (11 live rows; U6 E1's new
+  `🏗️structural` resolves only through it); (d) H14's `🚪️io/🧫️fixtures/🌳️most-general-dialect` (parent `fixtures`). Result c7: **+290
+  names, 4 new member kinds** (`members-of-os-renderer-artifact-creation`, `-repo-dependency-inventory`, `members-of-members-of-members-of-
+  {elements,fixtures}`), validator 0; planned dirs all resolve in a simulation root with c7; `taxonomy-unresolved` over 11 scopes: only
+  `directory-kind-unresolved` drops (caching 131 → 3, config 62 → 0, ShellHost 40 → 0, host tests 17 → 0, home 13 → 0, contract 14 → 2),
+  NO other violation code appears. Not registrable (owner renames, reported): layout `🧬️mutations/{📎set-page-overrides, 📑create-layer,
+  🧲set-frame-layer, 🪜reorder-frame}` (emoji without VS16, T6-era), caching fixture data dirs `🧫️fixtures/import-edges/{a,a/deep,b}` (no emoji).
+  H14 question: nothing fails without its registration (only the taxonomy inventory reports `directory-kind-unresolved`; the live tree carries
+  14 299 such rows and every T6 round + the chain describe were green) — it rides the W5 step.
+  **Whole-repo option (NOT prepared, decision for main/human):** pass 1 over all 14 299 rows = +7 656 names (+33 member kinds; the taxonomy has
+  6 442 today), 645 names without VS16 (norm 334, stdio 262), 164 unregistrable (norm 107, stdio 36), 3 319 deferred to later passes, and
+  the validator refuses 2 names (`🗟️artifacts` in stdio, ZWJ `🧑‍🏭️service-v1` in hub) → a taxonomy-scale decision, not a registration pass.
+- 20:4x `wp-r10/window5-r10.sh` (`dry` | `pre-r4` | `post-r4`): dry sequence on the live tree 1:00 — taxonomy +290 / validator 0; targets 2
+  (AV2); render 1 420 (identical until targets land); plan valid 73 (+ AV2 on release); trace set 2 files / 0 problems; schema regen stale
+  as measured (`s14-r10-logs/window5-dry-204835.txt`).
+
+#### WINDOW 5 runbook (R10; serialized, T0-style)
+1. Right after "WINDOW 5 OPEN", BEFORE L1's T6R4: `zsh wp-r10/window5-r10.sh pre-r4` = taxonomy (+290, load probe, static diff) → AV2
+   targets → render (launch.json +2 rows) → plan (AV2 check released) → plan-targets + harness audit → `verify` (lanes idle, load < 32:
+   registry check, launch laws 7/7, one serve boot on 6620). Red → `bun wp-r10/window3-apply.ts revert <step> --apply`, stop, tell main.
+2. L1 lands T6R4 incl. **`r10-trace-slots`** (`python3 T/wp-r10/trace-slots-default-off.py --dry-run|--write|--revert`, SDK
+   `🔌️plugin/🦀️.rs` + program-matrix TS; anchors disjoint from c13-p4 / lb2-p2 / lb2-p17; law: `cargo test -p semio-framework-plugin --lib`
+   slot-release laws + wasm32 build; live: no `typed-operation slots` line on a boot console).
+3. After T6R4 GREEN: `zsh wp-r10/window5-r10.sh post-r4` = re-probe the round-4 scopes (unplanned new dirs → one more taxonomy apply)
+   → schema-catalog regen (`--apply`, backup) → `schema verify` + `schema check`.
+
 ## Session 14
 
 ### Session 14c

@@ -6,6 +6,43 @@ Slice WG11 (session 14, 2026-09-27 18:2x), successor of WG9 ([`📓️wp-wg9.md`
 Scripts `wp-wg11/`, captures `wp-wg11/generated/` (expendable), durable logs `.🧬semio/🌐hub/s14-wg11-logs/`. Private cargo
 target `.tmp-ticket/wp-wg11/target`. Landing rows: [`📓️landing.md`](📓️landing.md) `# Session 14`.
 
+## Session 15
+
+Successor started 2026-09-29 19:2x ([`📓️session-15-preamble.md`](📓️session-15-preamble.md)); predecessor died without handover (last log 12:52).
+
+| # | Item | Status |
+|---|------|--------|
+| 0 | Reconcile predecessor (rule 30) | **done 19:2x**: no WG11 process/lane job/hub/serve alive; no half-applied hunk (every WG11 set landed through L1, below); overlay build 9 (12:52 → 13:53) compiled rc 0 (`s14-wg11-captures/overlay-dev-9.txt`), its results superseded by the T6R1 landing. Freed 13 GB overlay build-dir + 1.5 GB superseded test binaries (all sets landed, proofs recorded) |
+| 1 | Row 7 (12 sets), row 8, T7a, T7b landed? | **ALL LANDED GREEN** (`📓️landing.md` `# Session 14`): row 7 ×12 + T7a text-advances + T7b text-kerning = T6 round 1 (written 15:39–15:50, combined native 228 / wasm32 178 / renderer wasm32-unknown / tsc **green 16:12**); row 8 marketplace-window = T6 round 3a (**green 18:15**). Records `.🧬semio/🌐hub/s14-l1-backup/wg11-*`. Nothing left to keep dry-run clean. Owner laws: LW1's orphaned chain (pid 63902) runs them as block `t6-c-wg11-1` (`wp-lw1/lw1-t6-c.sh`: renderer + ui(wgpu-engine) lib nextest per process at 128 MiB, contract/value JSON-number laws, TS display-ids/engine-contract/tree-window/text-corpus/navbar/GraphTimeline) after its stdio block, native lane FIFO behind U6/S19/G12 → capture `.🧬semio/🌐hub/s14-lw1-logs/t6-c-wg11-1.txt` (pending) |
+| 2 | wgpu shell must not drop `os.local-catalog.*` / `os.create-space-artifact` | **refusal DONE (T3, 14c)** — `wg11-replay-routes` landed; live tree verified 19:2x (create routed into the creation door, `os.local-catalog.*` → typed refusal `local-catalog-unavailable`, unknown `os.*` → `unrouted-command`, wasm32 too). **Implementation PREPARED 19:4x**: `wp-wg11/wg11-local-catalog-patch.py` (5 edited + 1 new, payload `wp-wg11/local-catalog/`, t6-queue **row 24**) — native wgpu shell serves admit / retire / landing re-hydration on its folder backbone; live dry run clean (`s14-wg11-captures/lc-dryrun-1.txt`), composes on SH2 P2's payload; Rust parses + fmt-clean in own hunks; TS twin answers the new vectors (19 admissions, 2 archives, 8 notices); overlay compile + laws queued (`s14-wg11-logs/lc-overlay-1.txt`, overlay FIFO 6th) |
+| 3 | Live wgpu collab on 7800 t6 (wasm32 + native, React ↔ wgpu, agent pixels) | waiting for 'T6 HUB READY' (7800 still on p33; chain at rebuild-all 4/11 components 19:20) |
+
+### Session 15 log
+
+- 19:2x reconciled (table rows 0–2). Lanes: native held by U6 (60943), FIFO LW1 63907 → S19 62696 → G12 67185; LW1's WG11 block queues
+  after its stdio block. Disk 50 → 65 GiB free after my deletions.
+- 19:3x–19:4x item 2 implementation (route B native half), measured first on the live tree:
+  - React's lane (`🏛️ShellHost/🗂️local-catalog/🟦️.ts` + ShellHost) writes the catalog facet as `encodePackValue(catalog)` — every
+    `admittedAtMs` a JS number → pack **f64**, while the schema (`LocalDocument.admitted_at_ms: u64`, os-config Rust) is an exact `uint`:
+    Rust `FromValue` refuses the float and React's decoder refuses Rust's `uint` carrier, so neither shell could read the other's catalog.
+    Also an id `..`/`.` resolved the default target to `<dataDir>/os/local-documents/..` = the catalog facet's own folder (both proven by
+    running the OLD TS module against the new vectors: exactly those 3 vectors fail; `lc-archive-hex.ts`).
+  - The native kernel's folder lane (`FolderEventLogStorage`, `.semio/events.semio`) is what the native shell's own folder bindings
+    persist through; the React dev serve persists folders in SQLite (`/semio-backbone`) — so the lanes share the SCHEMA (pinned by vectors),
+    not a disk format.
+  - Set `wg11-local-catalog-patch.py`: schema-first vocabulary `🗂️local-catalog/🔣️.json` (commands, bounds, en + de notices, fault-code
+    prefix, 19 admission vectors with hand-authored expectations + archive bytes from the TS encoders, 2 catalog-archive vectors); TS lane
+    reads it (API unchanged), writes `packUInt` carriers, decodes carrier or envelope number, refuses `.`/`..`; wgpu shell region
+    `🗂️LocalCatalog` (twin admission, archive codec; native lane: facet load at boot, admit = write + identical read-back + record, retire,
+    landing re-hydration via `applyLocalCatalogDocument`, one Io-lane job at a time with the vocabulary's deadlines, cancelled when the asking
+    session is gone; browser = `no-data-folder`/`document-unknown`); `local-catalog-unavailable` removed from the replay vocabulary (2 vectors
+    replaced by view-only-access/router-not-ready). Laws: 4 new Rust (incl. an end-to-end law on a real temp data folder) + the updated
+    unserved-replay law; TS engine-contract describe ×3.
+  - Proof so far: TS twin 19/19 admissions, 2/2 archives (`uint,uint` carriers), 8/8 notices, envelope number still decodes
+    (`bun lc-archive-hex.ts`); patched Rust parses (nightly rustfmt), fmt diff of my hunks 0 (patched file 140 vs base 143 lines);
+    dry run clean on live and the shell edits apply on SH2 P2's payload. Compile + laws + tsc + vitest = overlay run `lc-overlay.sh`
+    (queued 19:48, overlay FIFO behind c12/p9/s20/c13/sh2 with U6 holding). Written, NOT yet compiled.
+
 ## Session 14d
 
 Resumed 2026-09-29 06:4x (after the usage cut, 4 kernel panics and the 01:14 external sweep, which deleted `wp-wg11/generated/` and

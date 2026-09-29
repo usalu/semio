@@ -2636,8 +2636,10 @@ export type DocumentArchiveLoadStatus = { readonly operation: number; readonly s
 export type MediaExportHandle = { readonly app_instance_id: number; readonly parent_document_id: string; readonly operation_id: bigint; readonly base_revision: bigint; readonly generation: bigint };
 export type MediaExportState = "running" | "complete" | "cancelled" | "failed";
 export type MediaExportStatus = { readonly handle: MediaExportHandle; readonly state: MediaExportState; readonly applied_progress: bigint; readonly checkpoint_available: boolean; readonly mime_type: string; readonly total_bytes: bigint; readonly detail: string };
+export type AppDocumentIdentity = { readonly app_instance_id: number; readonly parent_document_id: string | null };
 
 export type AppCommandValue =
+  | { readonly ReadDocumentIdentity: { readonly seq: bigint } }
   | { readonly SubmitMediaExport: { readonly seq: bigint; readonly port: string; readonly expected_parent_document_id: string; readonly expected_base_revision: bigint } }
   | { readonly PollMediaExport: { readonly seq: bigint; readonly handle: MediaExportHandle } }
   | { readonly CancelMediaExport: { readonly seq: bigint; readonly handle: MediaExportHandle } }
@@ -2706,6 +2708,7 @@ export type AppCommandValue =
   | { readonly presence: { readonly seq: number; readonly own_color: number | null; readonly peers: readonly (readonly number[])[] } };
 
 export type AppFrameValue =
+  | { readonly DocumentIdentity: { readonly in_reply_to: bigint; readonly identity: AppDocumentIdentity } }
   | { readonly MediaExportSubmitted: { readonly in_reply_to: bigint; readonly handle: MediaExportHandle } }
   | { readonly MediaExportStatus: MediaExportStatus & { readonly in_reply_to: bigint } }
   | { readonly MediaExportChunk: { readonly in_reply_to: bigint; readonly handle: MediaExportHandle; readonly data: readonly number[]; readonly terminal: boolean } }
@@ -2921,6 +2924,10 @@ function exactMediaExportFrame<T>(bytes: Uint8Array, pos: [number], value: T): T
 
 const MEDIA_EXPORT_STATES = ["running", "complete", "cancelled", "failed"] as const;
 
+function assertAppDocumentIdentity(identity: AppDocumentIdentity): void {
+  if (!Number.isSafeInteger(identity.app_instance_id) || identity.app_instance_id < 0 || identity.app_instance_id > 0xffff_ffff || (identity.parent_document_id !== null && (typeof identity.parent_document_id !== "string" || identity.parent_document_id.length === 0 || [...identity.parent_document_id].length > 512))) throw new Error("document identity: invalid owner");
+}
+
 const APP_COMMAND_TAGS = {
   ConfigCommand: 0, Command: 1, CommandText: 2, ContextMenu: 3, ArtifactCommand: 4, ApplyEnvelopes: 5,
   LoadDocument: 6, ReadDocument: 7, LoadConfig: 8, ReadConfig: 9, MediaIn: 10, MediaOut: 11,
@@ -2930,20 +2937,23 @@ const APP_COMMAND_TAGS = {
   setMergePolicy: 25, resolveConflict: 26, readConflicts: 27,
   presence: 28, LocalInteractionQuery: 29, LoadWindowConfig: 30, ReadWindowConfigs: 31, LoadDocumentArchive: 32, ReadDocumentArchive: 33,
   PollDocumentArchiveLoad: 34, CancelDocumentArchiveLoad: 35, AcknowledgeDocumentArchiveLoad: 36,
-  SubmitMediaExport: 37, PollMediaExport: 38, CancelMediaExport: 39, TakeMediaExportChunk: 40,
+  SubmitMediaExport: 37, PollMediaExport: 38, CancelMediaExport: 39, TakeMediaExportChunk: 40, ReadDocumentIdentity: 41,
 } as const;
 const APP_FRAME_TAGS = {
   Done: 0, Invocation: 1, DocumentChanged: 2, Document: 3,
   Config: 4, ConfigChanged: 5, ContextMenu: 6, Media: 7, MediaFingerprint: 8, Error: 9, Emit: 10, Draft: 11, Children: 12, Ephemeral: 13, HistorySnapshot: 14,
   transactionProposal: 15, transactionPrepared: 16, transactionCommitted: 17, transactionRolledBack: 18,
   MergeReport: 19, Conflicts: 20, UiPatch: 21, UiSnapshotEnd: 22, LocalInteractionQuery: 23, WindowConfigs: 24, OperationCompleted: 25, DocumentArchive: 26, DocumentArchiveLoad: 27,
-  MediaExportSubmitted: 28, MediaExportStatus: 29, MediaExportChunk: 30,
+  MediaExportSubmitted: 28, MediaExportStatus: 29, MediaExportChunk: 30, DocumentIdentity: 31,
 } as const;
 
 /** 📤️ `tag u8 | fields` — the TS twin of `protocol_channel::encode_app_command` (agreed contract). */
 export function encodeAppCommand(cmd: AppCommandValue): Uint8Array {
   const out: number[] = [];
-  if ("SubmitMediaExport" in cmd) {
+  if ("ReadDocumentIdentity" in cmd) {
+    out.push(APP_COMMAND_TAGS.ReadDocumentIdentity);
+    writeVarintU64Exact(out, cmd.ReadDocumentIdentity.seq);
+  } else if ("SubmitMediaExport" in cmd) {
     out.push(APP_COMMAND_TAGS.SubmitMediaExport);
     writeVarintU64Exact(out, cmd.SubmitMediaExport.seq);
     writeStr(out, cmd.SubmitMediaExport.port);
@@ -3141,6 +3151,11 @@ export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
   if (bytes.length === 0) throw new Error("decodeAppCommand: empty frame");
   const pos: [number] = [1];
   switch (bytes[0]) {
+    case APP_COMMAND_TAGS.ReadDocumentIdentity: {
+      const seq = readVarintU64Exact(bytes, pos);
+      if (pos[0] !== bytes.length) throw new Error("document identity: trailing command bytes");
+      return { ReadDocumentIdentity: { seq } };
+    }
     case APP_COMMAND_TAGS.SubmitMediaExport:
       return exactMediaExportFrame(bytes, pos, { SubmitMediaExport: { seq: readVarintU64Exact(bytes, pos), port: readStr(bytes, pos), expected_parent_document_id: readStr(bytes, pos), expected_base_revision: readVarintU64Exact(bytes, pos) } });
     case APP_COMMAND_TAGS.PollMediaExport:
@@ -3305,7 +3320,15 @@ export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
 /** 📤️ `tag u8 | fields` — the TS twin of `protocol_channel::encode_app_frame` (agreed contract). */
 export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
   const out: number[] = [];
-  if ("MediaExportSubmitted" in frame) {
+  if ("DocumentIdentity" in frame) {
+    const { in_reply_to, identity } = frame.DocumentIdentity;
+    assertAppDocumentIdentity(identity);
+    out.push(APP_FRAME_TAGS.DocumentIdentity);
+    writeVarintU64Exact(out, in_reply_to);
+    writeVarintU64(out, identity.app_instance_id);
+    writeBool(out, identity.parent_document_id !== null);
+    if (identity.parent_document_id !== null) writeStr(out, identity.parent_document_id);
+  } else if ("MediaExportSubmitted" in frame) {
     out.push(APP_FRAME_TAGS.MediaExportSubmitted);
     writeVarintU64Exact(out, frame.MediaExportSubmitted.in_reply_to);
     writeMediaExportHandle(out, frame.MediaExportSubmitted.handle);
@@ -3486,6 +3509,18 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
   if (bytes.length === 0) throw new Error("decodeAppFrame: empty frame");
   const pos: [number] = [1];
   switch (bytes[0]) {
+    case APP_FRAME_TAGS.DocumentIdentity: {
+      if (bytes.length > 2071) throw new Error("document identity: frame capacity");
+      const in_reply_to = readVarintU64Exact(bytes, pos);
+      const app_instance_id = readVarintU64(bytes, pos);
+      const presence = readU8(bytes, pos);
+      if (presence !== 0 && presence !== 1) throw new Error("document identity: invalid optional document");
+      const parent_document_id = presence === 1 ? new TextDecoder("utf-8", { fatal: true }).decode(Uint8Array.from(readBytes(bytes, pos))) : null;
+      const identity = { app_instance_id, parent_document_id };
+      assertAppDocumentIdentity(identity);
+      if (pos[0] !== bytes.length) throw new Error("document identity: trailing frame bytes");
+      return { DocumentIdentity: { in_reply_to, identity } };
+    }
     case APP_FRAME_TAGS.MediaExportSubmitted:
       return exactMediaExportFrame(bytes, pos, { MediaExportSubmitted: { in_reply_to: readVarintU64Exact(bytes, pos), handle: readMediaExportHandle(bytes, pos) } });
     case APP_FRAME_TAGS.MediaExportStatus: {
@@ -3716,7 +3751,7 @@ export function decodeConflictsFromWire(conflictsBytes: readonly number[], decod
  * had moved to 10, so the pin exists to make a half-done bump fail a test instead of a session.
  * Channel v12 retired the `Hello`/`Welcome` handshake this constant used to be carried on — it now
  * exists purely for the drift-guard test below. */
-export const APP_CHANNEL_VERSION = 19;
+export const APP_CHANNEL_VERSION = 20;
 
 /** 📡️ The slice of {@link PluginWasmHandle} {@link AppChannelClient} needs — deliberately narrower
  * than the full handle so a caller can hand in any object shaped like it (a real handle, a test
@@ -3763,7 +3798,7 @@ function appChannelReplySequence(frame: AppFrameValue): number | null {
 function appChannelFrameBelongsTo(frame: AppFrameValue, sequence: number, transaction: AppChannelTransactionReply | null): boolean {
   const replySequence = appChannelReplySequence(frame);
   if (replySequence !== null) return replySequence === sequence;
-  if ("MediaExportSubmitted" in frame || "MediaExportStatus" in frame || "MediaExportChunk" in frame) return false;
+  if ("DocumentIdentity" in frame || "MediaExportSubmitted" in frame || "MediaExportStatus" in frame || "MediaExportChunk" in frame) return false;
   if ("transactionPrepared" in frame) return transaction?.kind === "prepared" && transaction.id === frame.transactionPrepared.txn_id;
   if ("transactionCommitted" in frame) return transaction?.kind === "committed" && transaction.id === frame.transactionCommitted.txn_id;
   if ("transactionRolledBack" in frame) return transaction?.kind === "rolledBack" && transaction.id === frame.transactionRolledBack.txn_id;
@@ -4165,6 +4200,20 @@ export class AppChannelClient {
 
   async readDocument(): Promise<AppFrameValue[]> {
     return this.sendCommand({ ReadDocument: { seq: this.nextSeq() } });
+  }
+
+  /** 🪪️ Reads the actor's trusted document envelope identity without exporting its bytes. */
+  async readDocumentIdentity(): Promise<AppDocumentIdentity> {
+    const seq = BigInt(this.nextSeq());
+    const frames = await this.sendCommand({ ReadDocumentIdentity: { seq } });
+    const fault = frames.find((frame) => "Error" in frame);
+    if (fault && "Error" in fault) throw new Error(`document identity: ${faultDisplayMessage(fault.Error.fault, decodePackValue)}`);
+    const replies = frames.filter((frame): frame is Extract<AppFrameValue, { readonly DocumentIdentity: unknown }> => "DocumentIdentity" in frame && frame.DocumentIdentity.in_reply_to === seq);
+    if (replies.length !== 1) throw new Error("document identity: missing or ambiguous reply");
+    const identity = replies[0]!.DocumentIdentity.identity;
+    assertAppDocumentIdentity(identity);
+    if (identity.app_instance_id !== this.instanceId) throw new Error("document identity: foreign instance");
+    return identity;
   }
 
   async loadDocument(pack: Uint8Array, spr: Uint8Array): Promise<AppFrameValue[]> {

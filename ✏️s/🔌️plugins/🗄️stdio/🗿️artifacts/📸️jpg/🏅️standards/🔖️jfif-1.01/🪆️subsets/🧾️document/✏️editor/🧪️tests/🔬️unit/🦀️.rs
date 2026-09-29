@@ -23,6 +23,7 @@ fn large_raster_quality_edit_uses_compact_native_event() {
     register_document_schema();
     let mut snapshot = JpgSnapshot::default();
     snapshot.pixels = vec![7; 2 * 1_024 * 1_024];
+    snapshot.re_encode_quality = Some(80);
     let event = editing::SnapshotEditEvent::SetValue { path: "/reEncodeQuality".into(), value: dsl::DslValue::Number(dsl::Number::UInt(75)) };
     assert!(<JpgAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_is_admitted(&event, &snapshot));
     let emit = <JpgAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).expect("quality edit emits");

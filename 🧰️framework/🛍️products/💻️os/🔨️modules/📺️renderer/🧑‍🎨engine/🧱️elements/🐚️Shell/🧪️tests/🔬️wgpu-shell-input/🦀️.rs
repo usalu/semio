@@ -1293,6 +1293,41 @@ fn finish_dock_drag_persists_layout_and_clears_drag_state_on_successful_drop() {
     assert!(shell.dock_drag.is_none(), "the transient drag state is always taken");
 }
 
+/// 🎯️ Actual normalized tab releases preserve the committed source when destination geometry is stale.
+#[test]
+fn normalized_tab_drop_uses_shifted_destination_and_refuses_invalid_path_atomically() {
+    for invalid in [false, true] {
+        let stack = |id: &str| DockNode::Stack { windows: vec![DockStackTab::new(id)], active: id.into() };
+        let mut shell = ShellState::new(Vec::new(), String::new());
+        shell.dock.root = DockNode::Row(vec![(stack("a"), 1.0), (stack("b"), 1.0), (stack("c"), 1.0)]);
+        let before = shell.dock.root.clone();
+        let rect = Rect::new(20.0, 20.0, 20.0, 24.0);
+        let mut input = InputState::<ActionDescriptor>::default();
+        input.register_hit(HitTarget { rect, event: None, control_id: Some("dock.tab.1.b.drag".into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
+        input.publish_hits();
+        let mut interaction = pointer_interaction(shell, input);
+        let pointer = mouse_pointer(99);
+        let modifiers = ui_render::EventModifiers::default();
+        semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, ui_render::DispatchEvent::PointerDown { pointer, x: 30.0, y: 30.0, button: ui_render::PointerButton::Primary, modifiers }));
+        semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, ui_render::DispatchEvent::PointerMove { pointer, x: 40.0, y: 30.0, modifiers }));
+        assert!(interaction.shell.dock_drag.is_some());
+        assert_eq!(interaction.shell.dock.root, before);
+        interaction.shell.presented_input_geometry.dock_drop_tab_bars = vec![(vec![if invalid { 4 } else { 1 }], WindowStackCorner::TopLeft, Rect::new(100.0, 20.0, 100.0, 24.0), vec![100.0])];
+        semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, ui_render::DispatchEvent::PointerMove { pointer, x: 110.0, y: 30.0, modifiers }));
+        semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, ui_render::DispatchEvent::PointerUp { pointer, x: 110.0, y: 30.0, button: ui_render::PointerButton::Primary, modifiers }));
+        assert!(interaction.shell.dock_drag.is_none());
+        if invalid {
+            assert_eq!(interaction.shell.dock.root, before);
+            assert!(interaction.shell.layout_override.is_none());
+        } else {
+            assert_eq!(interaction.shell.dock.stack_windows_at_path(&vec![1]), Some(vec!["b".into(), "c".into()]));
+            assert_eq!(interaction.shell.active_window_id.as_deref(), Some("b"));
+            assert_eq!(interaction.shell.layout_override, Some(interaction.shell.dock.to_window_layout()));
+        }
+        println!("[DEBUG] WGPU normalized tab drop invalid={invalid}: {:?}", interaction.shell.dock.collect_window_ids());
+    }
+}
+
 /// 🛰️ A browser-normalized press and move preserve Chrome capture and promote the exact dock-tab
 /// grip after the five-pixel threshold, before any release mutates the committed dock.
 #[test]
@@ -1517,13 +1552,17 @@ fn refused_window_publication_does_not_block_a_ready_display_peer() {
     let ready_journal = dsl_value_as_json(fixture.shell.deferred_actions[0].args.as_ref().expect("the ready journal carries its instance"));
     assert_eq!(ready_journal["detail"]["instanceId"], cohort["ready"]);
 
-    assert_eq!(semio_framework_async::block_on(fixture.shell.settle_pump_step_inner()), ShellSettleStep::Drained);
+    let dispatched = |instance: &str| WINDOW_PUBLICATION_FIXTURE_EVENTS.with(|events| events.borrow().iter().any(|event| event.as_str() == format!("journal:{instance}")));
+    for _ in 0..WINDOW_TOPOLOGY_PUBLICATION_ATTEMPTS * 4 {
+        if dispatched("main-2") && dispatched("main-3") {
+            break;
+        }
+        assert_eq!(semio_framework_async::block_on(fixture.shell.settle_pump_step_inner()), ShellSettleStep::Drained, "the settle lane owns the retry and every journal");
+    }
     let events = WINDOW_PUBLICATION_FIXTURE_EVENTS.with(|events| events.borrow().clone());
     let ready_dispatch = events.iter().position(|event| event == "journal:main-3").expect("the ready peer dispatches");
     let refused_retry = events.iter().enumerate().filter(|(_, event)| event.as_str() == "render:main-2").nth(1).map(|(index, _)| index).expect("the refused peer retries");
     assert!(ready_dispatch < refused_retry, "the ready journal dispatches before the unrelated retry");
-    assert_eq!(semio_framework_async::block_on(fixture.shell.settle_pump_step_inner()), ShellSettleStep::Drained);
-    let events = WINDOW_PUBLICATION_FIXTURE_EVENTS.with(|events| events.borrow().clone());
     for instance in ["main-2", "main-3"] {
         assert_eq!(events.iter().filter(|event| event.as_str() == format!("journal:{instance}")).count(), 1, "{instance} dispatches exactly once");
         assert_eq!(contract["publicationOutcomes"]["cohort"]["afterRetryDispatches"][instance], 1);
@@ -1706,6 +1745,7 @@ fn display_window_kind_reaches_shell_as_a_transfer_handle_and_new_window_drag() 
     shell.retire_documents_outside(&[], true).expect("the closed retained body enters document retirement");
     assert!(!shell.window_ui.contains_key("main-2"));
     shell.deferred_actions.clear();
+    shell.window_topology_journal_dispatch_owed = false;
     for _ in 0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20) {
         if shell.retired_world3d_states.is_empty() {
             break;

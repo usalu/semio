@@ -392,12 +392,7 @@ geo_operation!(HelicalSweep, "solid", |k, i| k.helical_sweep(
 // #endregion 🔖️Sweeps
 
 // #region 🔖️Booleans
-/// ⏱️ The three set operations are the ONLY operators in this extension that answer
-/// [`Operator::step_plan`]: measured on `🍩️sphere-cut-with-torus` one `brep.bool.cut` costs 4.5 s
-/// natively and over 16 s in the served wasm — long enough for the host's shard watchdog to read
-/// the worker's silence as death and take every actor on that shard down with it. Other operators
-/// currently evaluate synchronously; curved affine transforms require a separate bounded-work audit
-/// (ticket `26/09/09/PROCEDURAL-3D-END-TO-END`, `📓️extension-evaluate-budget-2026-09-12.md`).
+/// ⏱️ BRep set operations retain kernel plans across evaluator turns; mesh modeling jobs use the same domain-neutral scheduler.
 macro_rules! boolean_operation {
     ($name:ident, $op:expr) => {
         struct $name;
@@ -957,7 +952,7 @@ pub async fn register(registry: &mut Registry) {
             summary: q("deconstruct", "Deconstructs B-Rep geometry into vertices, edges, and faces"),
             inputs: vec![geometry_channel("brep", "brep.brep")],
             outputs: vec![
-                ChannelSpec::named("B", "Brep", neural_engine::produced_channel_id("brep"), "BrepGeometry").with_operators(vec!["brep.brep".into()]),
+                ChannelSpec::named("B", "Brep", neural_engine::produced_channel_id("brep"), "BrepGeometry").with_operators(vec!["brep.brep".into()]).with_value_types(&["geometry"]),
                 topology_output("V", "Vtx", "vertex", "vertex"),
                 topology_output("E", "Edg", "edge", "edge"),
                 topology_output("F", "Fce", "face", "face"),
@@ -1343,7 +1338,7 @@ pub async fn register(registry: &mut Registry) {
         "Trans",
         "emoji:🔁️",
         &q("translate", "Translate geometry"),
-        vec![geometry_channel("geometry", "brep.xform.translate"), ChannelSpec::requires("offset", &["math.move"])],
+        vec![geometry_channel("geometry", "brep.xform.translate"), point_channel("offset", "math.move")],
         out_geometry_result("TranslatedGeometry"),
         &["Transforms"],
         Box::new(Translate),
@@ -1355,7 +1350,7 @@ pub async fn register(registry: &mut Registry) {
         "Rot",
         "emoji:🔁️",
         &q("rotate", "Rotate geometry"),
-        vec![geometry_channel("geometry", "brep.xform.rotate"), number_channel("angle", "brep.xform.rotate", std::f64::consts::FRAC_PI_4), ChannelSpec::requires("axis", &["brep.xform.rotate"])],
+        vec![geometry_channel("geometry", "brep.xform.rotate"), number_channel("angle", "brep.xform.rotate", std::f64::consts::FRAC_PI_4), point_channel("axis", "brep.xform.rotate")],
         out_geometry_result("RotatedGeometry"),
         &["Transforms"],
         Box::new(Rotate),
@@ -1370,7 +1365,7 @@ pub async fn register(registry: &mut Registry) {
         vec![
             geometry_channel("geometry", "brep.xform.rotateAbout"),
             point_channel("origin", "brep.xform.rotateAbout"),
-            ChannelSpec::requires("axis", &["brep.xform.rotateAbout"]),
+            point_channel("axis", "brep.xform.rotateAbout"),
             number_channel("angle", "brep.xform.rotateAbout", std::f64::consts::FRAC_PI_4),
         ],
         out_geometry_result("RotatedGeometry"),
@@ -1396,7 +1391,7 @@ pub async fn register(registry: &mut Registry) {
         "Mir",
         "emoji:🔁️",
         &q("mirror", "Mirror geometry"),
-        vec![geometry_channel("geometry", "brep.xform.mirror"), ChannelSpec::requires("origin", &["brep.xform.mirror"]), ChannelSpec::requires("normal", &["brep.xform.mirror"])],
+        vec![geometry_channel("geometry", "brep.xform.mirror"), point_channel("origin", "brep.xform.mirror"), point_channel("normal", "brep.xform.mirror")],
         out_geometry_result("MirroredGeometry"),
         &["Transforms"],
         Box::new(Mirror),
@@ -1598,7 +1593,7 @@ pub async fn register(registry: &mut Registry) {
             "emoji:✂️",
             &q("split", "Split solid with plane — both halves"),
             vec![geometry_channel("solid", "brep.intersect.split"), point_channel("planeOrigin", "brep.intersect.split"), point_channel("planeNormal", "brep.intersect.split")],
-            vec![ChannelSpec::named("P", "Pos", "positive", "PositiveSolid"), ChannelSpec::named("N", "Neg", "negative", "NegativeSolid")],
+            vec![ChannelSpec::named("P", "Pos", "positive", "PositiveSolid").with_value_types(&["geometry"]), ChannelSpec::named("N", "Neg", "negative", "NegativeSolid").with_value_types(&["geometry"])],
             &["Intersect"],
         ),
         Box::new(Split),
@@ -1668,7 +1663,7 @@ pub async fn register(registry: &mut Registry) {
             "emoji:➡️",
             &q("curve_tangent", "Evaluate curve tangent"),
             vec![geometry_channel("curve", "brep.eval.curveTangent"), number_channel("parameter", "brep.eval.curveTangent", 0.0)],
-            vec![ChannelSpec::named("T", "Tan", "tangent", "CurveTangent")],
+            vec![ChannelSpec::named("T", "Tan", "tangent", "CurveTangent").with_value_types(&["vector"])],
             &["Evaluate"],
         ),
         Box::new(CurveTangent),
@@ -1734,7 +1729,7 @@ pub async fn register(registry: &mut Registry) {
             "emoji:🎯️",
             &q("curve_closest_parameter", "Certified closest parameter, point, and achieved distance on a curve"),
             vec![geometry_channel("curve", "brep.eval.curveClosestParameter"), point_channel("point", "brep.eval.curveClosestParameter")],
-            vec![ChannelSpec::named("T", "Prm", "parameter", "ClosestParameter"), out_point_result("ClosestPoint"), ChannelSpec::named("D", "Dst", "distance", "AchievedDistance")],
+            vec![ChannelSpec::named("T", "Prm", "parameter", "ClosestParameter").with_value_types(&["number"]), out_point_result("ClosestPoint"), ChannelSpec::named("D", "Dst", "distance", "AchievedDistance").with_value_types(&["number"])],
             &["Evaluate"],
         ),
         Box::new(CurveClosestParameter),
@@ -1749,7 +1744,7 @@ pub async fn register(registry: &mut Registry) {
             "emoji:🎯️",
             &q("surface_closest_uv", "Certified closest (u, v), point, and achieved distance on a surface"),
             vec![geometry_channel("surface", "brep.eval.surfaceClosestUv"), point_channel("point", "brep.eval.surfaceClosestUv")],
-            vec![ChannelSpec::named("U", "U", "u", "ClosestU"), ChannelSpec::named("V", "V", "v", "ClosestV"), out_point_result("ClosestPoint"), ChannelSpec::named("D", "Dst", "distance", "AchievedDistance")],
+            vec![ChannelSpec::named("U", "U", "u", "ClosestU").with_value_types(&["number"]), ChannelSpec::named("V", "V", "v", "ClosestV").with_value_types(&["number"]), out_point_result("ClosestPoint"), ChannelSpec::named("D", "Dst", "distance", "AchievedDistance").with_value_types(&["number"])],
             &["Evaluate"],
         ),
         Box::new(SurfaceClosestUv),
@@ -1923,7 +1918,7 @@ pub async fn register(registry: &mut Registry) {
             "emoji:🏷️",
             &q("label", "Handle's persistent label"),
             vec![geometry_channel("geometry", "brep.topology.label")],
-            vec![ChannelSpec::named("L", "Lbl", "label", "PersistentLabel")],
+            vec![ChannelSpec::named("L", "Lbl", "label", "PersistentLabel").with_value_types(&["number"])],
             &["Topology"],
         ),
         Box::new(GeometryLabel),
@@ -1966,7 +1961,7 @@ pub async fn register(registry: &mut Registry) {
         Box::new(ExportObj),
         &["text"],
     );
-    reg_geo(registry, "brep.io.importStep", "Import Step", "IStp", "emoji:📂️", &q("import_step", "Import STEP"), vec![ChannelSpec::requires("data", &["brep.io.importStep"])], out_geometry("ImportedGeometry"), &["IO"], Box::new(ImportStep));
+    reg_geo(registry, "brep.io.importStep", "Import Step", "IStp", "emoji:📂️", &q("import_step", "Import STEP"), vec![ChannelSpec::requires("data", &["brep.io.importStep"]).with_value_types(&["text"])], out_geometry("ImportedGeometry"), &["IO"], Box::new(ImportStep));
     reg_geo(
         registry,
         "brep.io.importStl",
@@ -1974,7 +1969,7 @@ pub async fn register(registry: &mut Registry) {
         "IStl",
         "emoji:📂️",
         &q("import_stl", "Import STL from base64"),
-        vec![ChannelSpec::requires("data", &["brep.io.importStl"]), number_channel("tolerance", "brep.io.importStl", 0.1)],
+        vec![ChannelSpec::requires("data", &["brep.io.importStl"]).with_value_types(&["text"]), number_channel("tolerance", "brep.io.importStl", 0.1)],
         out_geometry("ImportedGeometry"),
         &["IO"],
         Box::new(ImportStl),
@@ -1986,7 +1981,7 @@ pub async fn register(registry: &mut Registry) {
         "IObj",
         "emoji:📂️",
         &q("import_obj", "Import OBJ"),
-        vec![ChannelSpec::requires("data", &["brep.io.importObj"]), number_channel("tolerance", "brep.io.importObj", 0.1)],
+        vec![ChannelSpec::requires("data", &["brep.io.importObj"]).with_value_types(&["text"]), number_channel("tolerance", "brep.io.importObj", 0.1)],
         out_geometry("ImportedGeometry"),
         &["IO"],
         Box::new(ImportObj),
@@ -2000,7 +1995,7 @@ pub async fn register(registry: &mut Registry) {
             "emoji:💾️",
             &q("export_mesh", "Export DWG as base64"),
             vec![geometry_channel("geometry", "brep.io.exportDwg"), number_channel("deflection", "brep.io.exportDwg", 0.1)],
-            vec![ChannelSpec::named("D", "Dwg", "dwg", "DwgExport")],
+            vec![ChannelSpec::named("D", "Dwg", "dwg", "DwgExport").with_value_types(&["text"])],
             &["IO"],
         ),
         Box::new(ExportDwg),
@@ -2013,7 +2008,7 @@ pub async fn register(registry: &mut Registry) {
         "IDwg",
         "emoji:📂️",
         &q("import_mesh", "Import DWG from base64"),
-        vec![ChannelSpec::requires("data", &["brep.io.importDwg"]), number_channel("tolerance", "brep.io.importDwg", 0.1)],
+        vec![ChannelSpec::requires("data", &["brep.io.importDwg"]).with_value_types(&["text"]), number_channel("tolerance", "brep.io.importDwg", 0.1)],
         out_geometry("ImportedGeometry"),
         &["IO"],
         Box::new(ImportDwg),

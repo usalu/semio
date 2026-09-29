@@ -275,6 +275,7 @@ pub async fn describe_extension() -> Vec<u8> {
         topic_contributions: extension.topic_contributions.clone(),
         commands: Vec::new(),
         artifact_kinds: Vec::new(),
+        hosted_artifact_kinds: Vec::new(),
         dependencies: extension.dependencies,
         contributions: extension.contributions.clone(),
     };

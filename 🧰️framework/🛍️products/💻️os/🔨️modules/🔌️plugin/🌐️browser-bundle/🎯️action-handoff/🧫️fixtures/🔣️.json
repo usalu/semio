@@ -6,7 +6,7 @@
       "documentId": "map-a"
     },
     "verifiedSurfaceId": "s.gis.gismap@1/*#editor",
-    "appChannelVersion": 19,
+    "appChannelVersion": 20,
     "activationGeneration": "41",
     "instanceId": 0,
     "surfaceRevision": 3,
@@ -28,7 +28,7 @@
       "documentId": "map-a"
     },
     "verifiedSurfaceId": "s.gis.gismap@1/*#editor",
-    "appChannelVersion": 19,
+    "appChannelVersion": 20,
     "activationGeneration": "41",
     "instanceId": 0,
     "surfaceRevision": 3,
@@ -44,7 +44,7 @@
       "documentId": "map-a"
     },
     "verifiedSurfaceId": "s.gis.gismap@1/*#editor",
-    "appChannelVersion": 19,
+    "appChannelVersion": 20,
     "activationGeneration": "41",
     "instanceId": 0,
     "surfaceRevision": 3,
@@ -62,7 +62,7 @@
         "documentId": "map-a"
       },
       "verifiedSurfaceId": "s.gis.gismap@1/*#editor",
-      "appChannelVersion": 19,
+      "appChannelVersion": 20,
       "activationGeneration": "41",
       "instanceId": 0,
       "surfaceRevision": 3,
@@ -78,7 +78,7 @@
         "documentId": "map-a"
       },
       "verifiedSurfaceId": "s.gis.gismap@1/*#editor",
-      "appChannelVersion": 19,
+      "appChannelVersion": 20,
       "activationGeneration": "42",
       "instanceId": 0,
       "surfaceRevision": 3,
@@ -94,7 +94,7 @@
         "documentId": "map-a"
       },
       "verifiedSurfaceId": "s.gis.gismap@1/*#editor",
-      "appChannelVersion": 19,
+      "appChannelVersion": 20,
       "activationGeneration": "41",
       "instanceId": 0,
       "surfaceRevision": 4,
@@ -110,7 +110,7 @@
         "documentId": "map-a"
       },
       "verifiedSurfaceId": "s.gis.gismap@1/*#editor",
-      "appChannelVersion": 19,
+      "appChannelVersion": 20,
       "activationGeneration": "41",
       "instanceId": 0,
       "surfaceRevision": 3,
@@ -156,7 +156,7 @@
       "documentId": "map-a"
     },
     "verifiedSurfaceId": "s.gis.gismap@1/*#editor",
-    "appChannelVersion": 19,
+    "appChannelVersion": 20,
     "activationGeneration": "41",
     "instanceId": 0,
     "surfaceRevision": 3,
@@ -265,6 +265,24 @@
     {
       "detail": "space.home.directory-projection: Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — ",
       "reason": "action-guest-refused: space.home.directory-projection: Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlänge — Überlän"
+    }
+  ],
+  "admissionRefusals": [
+    {
+      "detail": null,
+      "reason": "action-refused"
+    },
+    {
+      "detail": "document browser actor: command owner mismatch",
+      "reason": "action-refused: document browser actor: command owner mismatch"
+    },
+    {
+      "detail": "document browser actor: noncanonical\tintent\n",
+      "reason": "action-refused: document browser actor: noncanonical intent"
+    },
+    {
+      "detail": "queue full? owner retired — xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "reason": "action-refused: queue full? owner retired — xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
     }
   ]
 }

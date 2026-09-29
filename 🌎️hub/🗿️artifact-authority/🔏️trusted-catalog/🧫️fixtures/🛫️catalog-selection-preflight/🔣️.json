@@ -549,6 +549,847 @@
         }
       ],
       "findings": []
+    },
+    {
+      "id": "hosted-kind-of-a-selected-owner-accepted",
+      "profileId": "local-stdio-stdio-pdf-open-v1",
+      "packages": [
+        {
+          "pluginId": "stdio",
+          "componentPackageId": "semio:stdio",
+          "outputName": "semio_s_plugin_stdio.wasm",
+          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json",
+          "linkedCodecRegistryPresent": true,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "stdio",
+              "apps": [
+                {
+                  "id": "s.stdio.stdio@1/*#editor",
+                  "artifactKinds": []
+                },
+                {
+                  "id": "s.stdio.stdio@1/*#viewer",
+                  "artifactKinds": []
+                }
+              ],
+              "artifactKinds": [
+                {
+                  "id": "s.stdio.pdf",
+                  "schema": "stdio.pdf"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pluginId": "stdio-pdf",
+          "componentPackageId": "semio:stdio-pdf",
+          "outputName": "semio_s_plugin_stdio-pdf.wasm",
+          "linkedCodecRegistry": null,
+          "linkedCodecRegistryPresent": false,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "stdio-pdf",
+              "apps": [
+                {
+                  "id": "s.stdio-pdf.stdio-pdf@1/*#editor",
+                  "artifactKinds": []
+                },
+                {
+                  "id": "s.stdio-pdf.stdio-pdf@1/*#viewer",
+                  "artifactKinds": []
+                }
+              ],
+              "dependencies": [
+                {
+                  "pluginId": "stdio",
+                  "version": "=0.1.0"
+                }
+              ],
+              "hostedArtifactKinds": [
+                {
+                  "id": "s.stdio.pdf",
+                  "schema": "stdio.pdf",
+                  "owner": "stdio"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "findings": []
+    },
+    {
+      "id": "hosted-kind-owner-selected-after-the-host-refused",
+      "profileId": "local-stdio-pdf-stdio-open-v1",
+      "packages": [
+        {
+          "pluginId": "stdio-pdf",
+          "componentPackageId": "semio:stdio-pdf",
+          "outputName": "semio_s_plugin_stdio-pdf.wasm",
+          "linkedCodecRegistry": null,
+          "linkedCodecRegistryPresent": false,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "stdio-pdf",
+              "apps": [
+                {
+                  "id": "s.stdio-pdf.stdio-pdf@1/*#editor",
+                  "artifactKinds": []
+                },
+                {
+                  "id": "s.stdio-pdf.stdio-pdf@1/*#viewer",
+                  "artifactKinds": []
+                }
+              ],
+              "dependencies": [
+                {
+                  "pluginId": "stdio",
+                  "version": "=0.1.0"
+                }
+              ],
+              "hostedArtifactKinds": [
+                {
+                  "id": "s.stdio.pdf",
+                  "schema": "stdio.pdf",
+                  "owner": "stdio"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pluginId": "stdio",
+          "componentPackageId": "semio:stdio",
+          "outputName": "semio_s_plugin_stdio.wasm",
+          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json",
+          "linkedCodecRegistryPresent": true,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "stdio",
+              "apps": [
+                {
+                  "id": "s.stdio.stdio@1/*#editor",
+                  "artifactKinds": []
+                },
+                {
+                  "id": "s.stdio.stdio@1/*#viewer",
+                  "artifactKinds": []
+                }
+              ],
+              "artifactKinds": [
+                {
+                  "id": "s.stdio.pdf",
+                  "schema": "stdio.pdf"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "findings": [
+        "stdio-pdf: hosts s.stdio.pdf"
+      ]
+    },
+    {
+      "id": "hosted-kind-owner-outside-the-selection-refused",
+      "profileId": "local-stdio-pdf-open-v1",
+      "packages": [
+        {
+          "pluginId": "stdio-pdf",
+          "componentPackageId": "semio:stdio-pdf",
+          "outputName": "semio_s_plugin_stdio-pdf.wasm",
+          "linkedCodecRegistry": null,
+          "linkedCodecRegistryPresent": false,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "stdio-pdf",
+              "apps": [
+                {
+                  "id": "s.stdio-pdf.stdio-pdf@1/*#editor",
+                  "artifactKinds": []
+                },
+                {
+                  "id": "s.stdio-pdf.stdio-pdf@1/*#viewer",
+                  "artifactKinds": []
+                }
+              ],
+              "dependencies": [
+                {
+                  "pluginId": "stdio",
+                  "version": "=0.1.0"
+                }
+              ],
+              "hostedArtifactKinds": [
+                {
+                  "id": "s.stdio.pdf",
+                  "schema": "stdio.pdf",
+                  "owner": "stdio"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "findings": [
+        "stdio-pdf: hosts s.stdio.pdf"
+      ]
+    },
+    {
+      "id": "hosted-kind-owner-not-a-dependency-refused",
+      "profileId": "local-stdio-stdio-pdf-open-v1",
+      "packages": [
+        {
+          "pluginId": "stdio",
+          "componentPackageId": "semio:stdio",
+          "outputName": "semio_s_plugin_stdio.wasm",
+          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json",
+          "linkedCodecRegistryPresent": true,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "stdio",
+              "apps": [
+                {
+                  "id": "s.stdio.stdio@1/*#editor",
+                  "artifactKinds": []
+                },
+                {
+                  "id": "s.stdio.stdio@1/*#viewer",
+                  "artifactKinds": []
+                }
+              ],
+              "artifactKinds": [
+                {
+                  "id": "s.stdio.pdf",
+                  "schema": "stdio.pdf"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pluginId": "stdio-pdf",
+          "componentPackageId": "semio:stdio-pdf",
+          "outputName": "semio_s_plugin_stdio-pdf.wasm",
+          "linkedCodecRegistry": null,
+          "linkedCodecRegistryPresent": false,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "stdio-pdf",
+              "apps": [
+                {
+                  "id": "s.stdio-pdf.stdio-pdf@1/*#editor",
+                  "artifactKinds": []
+                },
+                {
+                  "id": "s.stdio-pdf.stdio-pdf@1/*#viewer",
+                  "artifactKinds": []
+                }
+              ],
+              "dependencies": [],
+              "hostedArtifactKinds": [
+                {
+                  "id": "s.stdio.pdf",
+                  "schema": "stdio.pdf",
+                  "owner": "stdio"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "findings": [
+        "stdio-pdf: hosts s.stdio.pdf"
+      ]
+    },
+    {
+      "id": "hosted-definition-only-kind-the-owner-declares-no-spec-for-accepted",
+      "profileId": "local-stdio-stdio-pdf-open-v1",
+      "packages": [
+        {
+          "pluginId": "stdio",
+          "componentPackageId": "semio:stdio",
+          "outputName": "semio_s_plugin_stdio.wasm",
+          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json",
+          "linkedCodecRegistryPresent": true,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "stdio",
+              "apps": [
+                {
+                  "id": "s.stdio.stdio@1/*#editor",
+                  "artifactKinds": []
+                },
+                {
+                  "id": "s.stdio.stdio@1/*#viewer",
+                  "artifactKinds": []
+                }
+              ],
+              "artifactKinds": []
+            }
+          }
+        },
+        {
+          "pluginId": "stdio-pdf",
+          "componentPackageId": "semio:stdio-pdf",
+          "outputName": "semio_s_plugin_stdio-pdf.wasm",
+          "linkedCodecRegistry": null,
+          "linkedCodecRegistryPresent": false,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "stdio-pdf",
+              "apps": [
+                {
+                  "id": "s.stdio-pdf.stdio-pdf@1/*#editor",
+                  "artifactKinds": []
+                },
+                {
+                  "id": "s.stdio-pdf.stdio-pdf@1/*#viewer",
+                  "artifactKinds": []
+                }
+              ],
+              "dependencies": [
+                {
+                  "pluginId": "stdio",
+                  "version": "=0.1.0"
+                }
+              ],
+              "hostedArtifactKinds": [
+                {
+                  "id": "s.stdio.pdf",
+                  "schema": "stdio.pdf",
+                  "owner": "stdio"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "findings": []
+    },
+    {
+      "id": "hosted-kind-row-twice-refused",
+      "profileId": "local-stdio-stdio-pdf-open-v1",
+      "packages": [
+        {
+          "pluginId": "stdio",
+          "componentPackageId": "semio:stdio",
+          "outputName": "semio_s_plugin_stdio.wasm",
+          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json",
+          "linkedCodecRegistryPresent": true,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "stdio",
+              "apps": [
+                {
+                  "id": "s.stdio.stdio@1/*#editor",
+                  "artifactKinds": []
+                },
+                {
+                  "id": "s.stdio.stdio@1/*#viewer",
+                  "artifactKinds": []
+                }
+              ],
+              "artifactKinds": []
+            }
+          }
+        },
+        {
+          "pluginId": "stdio-pdf",
+          "componentPackageId": "semio:stdio-pdf",
+          "outputName": "semio_s_plugin_stdio-pdf.wasm",
+          "linkedCodecRegistry": null,
+          "linkedCodecRegistryPresent": false,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "stdio-pdf",
+              "apps": [
+                {
+                  "id": "s.stdio-pdf.stdio-pdf@1/*#editor",
+                  "artifactKinds": []
+                },
+                {
+                  "id": "s.stdio-pdf.stdio-pdf@1/*#viewer",
+                  "artifactKinds": []
+                }
+              ],
+              "dependencies": [
+                {
+                  "pluginId": "stdio",
+                  "version": "=0.1.0"
+                }
+              ],
+              "hostedArtifactKinds": [
+                {
+                  "id": "s.stdio.pdf",
+                  "schema": "stdio.pdf",
+                  "owner": "stdio"
+                },
+                {
+                  "id": "s.stdio.pdf",
+                  "schema": "stdio.pdf",
+                  "owner": "stdio"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "findings": [
+        "stdio-pdf: hosts s.stdio.pdf (stdio.pdf) twice or also owns it"
+      ]
+    },
+    {
+      "id": "hosted-kind-under-two-schemas-accepted",
+      "profileId": "local-stdio-stdio-pdf-open-v1",
+      "packages": [
+        {
+          "pluginId": "stdio",
+          "componentPackageId": "semio:stdio",
+          "outputName": "semio_s_plugin_stdio.wasm",
+          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json",
+          "linkedCodecRegistryPresent": true,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "stdio",
+              "apps": [
+                {
+                  "id": "s.stdio.stdio@1/*#editor",
+                  "artifactKinds": []
+                },
+                {
+                  "id": "s.stdio.stdio@1/*#viewer",
+                  "artifactKinds": []
+                }
+              ],
+              "artifactKinds": []
+            }
+          }
+        },
+        {
+          "pluginId": "stdio-pdf",
+          "componentPackageId": "semio:stdio-pdf",
+          "outputName": "semio_s_plugin_stdio-pdf.wasm",
+          "linkedCodecRegistry": null,
+          "linkedCodecRegistryPresent": false,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "stdio-pdf",
+              "apps": [
+                {
+                  "id": "s.stdio-pdf.stdio-pdf@1/*#editor",
+                  "artifactKinds": []
+                },
+                {
+                  "id": "s.stdio-pdf.stdio-pdf@1/*#viewer",
+                  "artifactKinds": []
+                }
+              ],
+              "dependencies": [
+                {
+                  "pluginId": "stdio",
+                  "version": "=0.1.0"
+                }
+              ],
+              "hostedArtifactKinds": [
+                {
+                  "id": "s.stdio.semio",
+                  "schema": "stdio.semio",
+                  "owner": "stdio"
+                },
+                {
+                  "id": "s.stdio.semio",
+                  "schema": "semio.document",
+                  "owner": "stdio"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "findings": []
+    },
+    {
+      "id": "hosted-kind-also-owned-refused",
+      "profileId": "local-stdio-stdio-pdf-open-v1",
+      "packages": [
+        {
+          "pluginId": "stdio",
+          "componentPackageId": "semio:stdio",
+          "outputName": "semio_s_plugin_stdio.wasm",
+          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json",
+          "linkedCodecRegistryPresent": true,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "stdio",
+              "apps": [
+                {
+                  "id": "s.stdio.stdio@1/*#editor",
+                  "artifactKinds": []
+                },
+                {
+                  "id": "s.stdio.stdio@1/*#viewer",
+                  "artifactKinds": []
+                }
+              ],
+              "artifactKinds": []
+            }
+          }
+        },
+        {
+          "pluginId": "stdio-pdf",
+          "componentPackageId": "semio:stdio-pdf",
+          "outputName": "semio_s_plugin_stdio-pdf.wasm",
+          "linkedCodecRegistry": null,
+          "linkedCodecRegistryPresent": false,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "stdio-pdf",
+              "apps": [
+                {
+                  "id": "s.stdio-pdf.stdio-pdf@1/*#editor",
+                  "artifactKinds": []
+                },
+                {
+                  "id": "s.stdio-pdf.stdio-pdf@1/*#viewer",
+                  "artifactKinds": []
+                }
+              ],
+              "dependencies": [
+                {
+                  "pluginId": "stdio",
+                  "version": "=0.1.0"
+                }
+              ],
+              "hostedArtifactKinds": [
+                {
+                  "id": "s.stdio.pdf",
+                  "schema": "stdio.pdf",
+                  "owner": "stdio"
+                }
+              ],
+              "artifactKinds": [
+                {
+                  "id": "s.stdio.pdf",
+                  "schema": "stdio.pdf"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "findings": [
+        "stdio-pdf: hosts s.stdio.pdf (stdio.pdf) twice or also owns it"
+      ]
+    },
+    {
+      "id": "hosted-surface-kind-of-a-selected-owner-accepted",
+      "profileId": "local-cad-demonstrator-open-v1",
+      "packages": [
+        {
+          "pluginId": "cad",
+          "componentPackageId": "semio:cad",
+          "outputName": "semio_s_plugin_cad.wasm",
+          "linkedCodecRegistry": null,
+          "linkedCodecRegistryPresent": false,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "cad",
+              "apps": [
+                {
+                  "id": "s.cad.cad@1/*#editor",
+                  "role": "editor",
+                  "dialect": {
+                    "artifactKind": "s.cad.cad"
+                  },
+                  "io": {
+                    "artifactSchema": "cad.scene"
+                  },
+                  "artifactKinds": [
+                    {
+                      "id": "3d.cad",
+                      "schema": "cad.scene"
+                    }
+                  ]
+                },
+                {
+                  "id": "s.cad.cad@1/*#viewer",
+                  "role": "viewer",
+                  "dialect": {
+                    "artifactKind": "s.cad.cad"
+                  },
+                  "io": {
+                    "artifactSchema": "cad.scene"
+                  },
+                  "artifactKinds": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pluginId": "demonstrator",
+          "componentPackageId": "semio:demonstrator",
+          "outputName": "semio_s_plugin_demonstrator.wasm",
+          "linkedCodecRegistry": null,
+          "linkedCodecRegistryPresent": false,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "demonstrator",
+              "apps": [
+                {
+                  "id": "s.demonstrator.playground@1/*#editor",
+                  "role": "editor",
+                  "dialect": {
+                    "artifactKind": "s.demonstrator.playground"
+                  },
+                  "io": {
+                    "artifactSchema": "playground.playground"
+                  },
+                  "artifactKinds": [
+                    {
+                      "id": "playground.document",
+                      "schema": "playground.playground"
+                    }
+                  ]
+                },
+                {
+                  "id": "s.cad.cad@1/*#editor",
+                  "role": "editor",
+                  "dialect": {
+                    "artifactKind": "s.cad.cad"
+                  },
+                  "io": {
+                    "artifactSchema": "cad.scene"
+                  },
+                  "artifactKinds": []
+                }
+              ],
+              "dependencies": [
+                {
+                  "pluginId": "cad",
+                  "version": "=0.1.0"
+                }
+              ],
+              "hostedArtifactKinds": [
+                {
+                  "id": "3d.cad",
+                  "schema": "cad.scene",
+                  "owner": "cad"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "findings": []
+    },
+    {
+      "id": "embedded-surface-re-owning-its-owners-kind-refused",
+      "profileId": "local-cad-demonstrator-open-v1",
+      "packages": [
+        {
+          "pluginId": "cad",
+          "componentPackageId": "semio:cad",
+          "outputName": "semio_s_plugin_cad.wasm",
+          "linkedCodecRegistry": null,
+          "linkedCodecRegistryPresent": false,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "cad",
+              "apps": [
+                {
+                  "id": "s.cad.cad@1/*#editor",
+                  "role": "editor",
+                  "dialect": {
+                    "artifactKind": "s.cad.cad"
+                  },
+                  "io": {
+                    "artifactSchema": "cad.scene"
+                  },
+                  "artifactKinds": [
+                    {
+                      "id": "3d.cad",
+                      "schema": "cad.scene"
+                    }
+                  ]
+                },
+                {
+                  "id": "s.cad.cad@1/*#viewer",
+                  "role": "viewer",
+                  "dialect": {
+                    "artifactKind": "s.cad.cad"
+                  },
+                  "io": {
+                    "artifactSchema": "cad.scene"
+                  },
+                  "artifactKinds": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pluginId": "demonstrator",
+          "componentPackageId": "semio:demonstrator",
+          "outputName": "semio_s_plugin_demonstrator.wasm",
+          "linkedCodecRegistry": null,
+          "linkedCodecRegistryPresent": false,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "demonstrator",
+              "apps": [
+                {
+                  "id": "s.demonstrator.playground@1/*#editor",
+                  "role": "editor",
+                  "dialect": {
+                    "artifactKind": "s.demonstrator.playground"
+                  },
+                  "io": {
+                    "artifactSchema": "playground.playground"
+                  },
+                  "artifactKinds": [
+                    {
+                      "id": "playground.document",
+                      "schema": "playground.playground"
+                    }
+                  ]
+                },
+                {
+                  "id": "s.cad.cad@1/*#editor",
+                  "role": "editor",
+                  "dialect": {
+                    "artifactKind": "s.cad.cad"
+                  },
+                  "io": {
+                    "artifactSchema": "cad.scene"
+                  },
+                  "artifactKinds": [
+                    {
+                      "id": "3d.cad",
+                      "schema": "cad.scene"
+                    }
+                  ]
+                }
+              ],
+              "dependencies": [
+                {
+                  "pluginId": "cad",
+                  "version": "=0.1.0"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "findings": [
+        "artifact kind 3d.cad is owned by editors of cad and demonstrator"
+      ]
+    },
+    {
+      "id": "hosted-surface-kind-naming-itself-owner-refused",
+      "profileId": "local-cad-demonstrator-open-v1",
+      "packages": [
+        {
+          "pluginId": "cad",
+          "componentPackageId": "semio:cad",
+          "outputName": "semio_s_plugin_cad.wasm",
+          "linkedCodecRegistry": null,
+          "linkedCodecRegistryPresent": false,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "cad",
+              "apps": [
+                {
+                  "id": "s.cad.cad@1/*#editor",
+                  "role": "editor",
+                  "dialect": {
+                    "artifactKind": "s.cad.cad"
+                  },
+                  "io": {
+                    "artifactSchema": "cad.scene"
+                  },
+                  "artifactKinds": [
+                    {
+                      "id": "3d.cad",
+                      "schema": "cad.scene"
+                    }
+                  ]
+                },
+                {
+                  "id": "s.cad.cad@1/*#viewer",
+                  "role": "viewer",
+                  "dialect": {
+                    "artifactKind": "s.cad.cad"
+                  },
+                  "io": {
+                    "artifactSchema": "cad.scene"
+                  },
+                  "artifactKinds": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pluginId": "demonstrator",
+          "componentPackageId": "semio:demonstrator",
+          "outputName": "semio_s_plugin_demonstrator.wasm",
+          "linkedCodecRegistry": null,
+          "linkedCodecRegistryPresent": false,
+          "descriptor": {
+            "manifest": {
+              "pluginId": "demonstrator",
+              "apps": [
+                {
+                  "id": "s.demonstrator.playground@1/*#editor",
+                  "role": "editor",
+                  "dialect": {
+                    "artifactKind": "s.demonstrator.playground"
+                  },
+                  "io": {
+                    "artifactSchema": "playground.playground"
+                  },
+                  "artifactKinds": [
+                    {
+                      "id": "playground.document",
+                      "schema": "playground.playground"
+                    }
+                  ]
+                },
+                {
+                  "id": "s.cad.cad@1/*#editor",
+                  "role": "editor",
+                  "dialect": {
+                    "artifactKind": "s.cad.cad"
+                  },
+                  "io": {
+                    "artifactSchema": "cad.scene"
+                  },
+                  "artifactKinds": []
+                }
+              ],
+              "dependencies": [
+                {
+                  "pluginId": "cad",
+                  "version": "=0.1.0"
+                }
+              ],
+              "hostedArtifactKinds": [
+                {
+                  "id": "3d.cad",
+                  "schema": "cad.scene",
+                  "owner": "demonstrator"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "findings": [
+        "demonstrator: hosts 3d.cad"
+      ]
     }
   ]
 }

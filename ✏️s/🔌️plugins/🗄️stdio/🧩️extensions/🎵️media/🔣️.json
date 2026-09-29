@@ -6222,7 +6222,7 @@
                 "iconId": "sparkles",
                 "args": [
                   {
-                    "id": "frame",
+                    "id": "row",
                     "label": {
                       "native": {
                         "en": "Frame",
@@ -6311,7 +6311,7 @@
                 "iconId": "sparkles",
                 "args": [
                   {
-                    "id": "channel",
+                    "id": "column",
                     "label": {
                       "native": {
                         "en": "Channel",
@@ -12196,6 +12196,28 @@
     "topicContributions": [],
     "commands": [],
     "artifactKinds": [],
+    "hostedArtifactKinds": [
+      {
+        "id": "s.stdio.mp4",
+        "schema": "stdio.mp4",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.mp3",
+        "schema": "stdio.mp3",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.wav",
+        "schema": "stdio.wav",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.avi",
+        "schema": "stdio.avi",
+        "owner": "stdio"
+      }
+    ],
     "dependencies": [
       {
         "pluginId": "stdio",
@@ -12395,8 +12417,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "8cebea198799c7ed8fe0dbd524a8436129b97c7a20029b58e8761a5d6654de70",
-    "coreWasmSha256": "971d62c2b0d132c6d891d6e97162ebbfe3ee47d98bb738fa1e66d36f4cc03151",
-    "descriptorSha256": "badf246c52803efc3aeef0d3bdeefe0674aadb404c7a9eca391c9ecbfbff1868"
+    "wasmSha256": "9a9583d780e523d23689065cd39bac74c3e038f527812fc3a779fa953f9233e9",
+    "coreWasmSha256": "bb9da0c6f09e10fbbfdc88cd8d98ae1be91f1fefee38dc52ca99de6470cf4164",
+    "descriptorSha256": "eef0cc698b93a1aa4eb589e059e0106aa5c1e81611217d248625b4c3d646d260"
   }
 }

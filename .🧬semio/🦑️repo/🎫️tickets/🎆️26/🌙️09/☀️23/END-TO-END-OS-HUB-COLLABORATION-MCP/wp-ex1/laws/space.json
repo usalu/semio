@@ -1,0 +1,37 @@
+{
+ "plugin": "space",
+ "dir": "🪐️space",
+ "apps": [
+  {
+   "app": "s.space.home@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    }
+   ]
+  },
+  {
+   "app": "s.space.space@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "semio_s_artifact_space_home::editor::home::HomeApp",
+   "create": "semio_s_artifact_space_home::editor::home::create_home_app",
+   "app": "s.space.home@1/*#editor",
+   "async": true
+  },
+  {
+   "editor": "semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor",
+   "create": "semio_s_artifact_space_space::editor::space_index::create_space_index_editor",
+   "app": "s.space.space@1/*#editor"
+  }
+ ]
+}

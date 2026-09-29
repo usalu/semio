@@ -787,7 +787,7 @@ pub trait BoundedNativeEditingEditor: SnapshotEditingEditor {
     const NATIVE_CHECKPOINT_RESUME: bool = false;
 
     fn native_edit_execution_contract() -> ToolExecutionContract {
-        ToolExecutionContract::bounded_first_step(Self::NATIVE_MAXIMUM_RAW_BYTES, 4_096, 1, Self::NATIVE_MAXIMUM_WORK_ITEMS, 7_500)
+        ToolExecutionContract::bounded_first_step(Self::NATIVE_MAXIMUM_RAW_BYTES, 4_096, 1, Self::NATIVE_MAXIMUM_RAW_BYTES, 7_500)
     }
 
     fn native_edit_extent(command: &Self::Command, _snapshot: &Self::Snapshot, _interaction: &kernel::InteractionState) -> Option<usize> {

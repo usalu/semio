@@ -41,5 +41,10 @@ input SetPageParent { id: String! }
 input SetPageGuides { id: String! }
 input SetStoryRuns { id: String! }
 input UpdateLink { id: String! }
+input SetPageOverrides { id: String! }
+input CreateLayer { id: String! }
+input SetFrameLayer { id: String! }
+input SetDrawingText { id: String! }
+input ReorderFrame { id: String! }
 
-union LayoutMutation = RenameLayout | ChangePrintTarget | ChangeDataFields | CreatePage | DeletePage | RenamePage | ChangePageWidth | ChangePageHeight | UpdatePageMargins | UpdatePageColumns | ReorderPages | CreateStory | DeleteStory | EditStory | CreateLink | DeleteLink | ChangeLinkPath | CreateFrame | DeleteFrame | MoveFrame | ResizeFrame | RotateFrame | ChangeFrameFill | ChangeFrameStroke | ChangeFrameWrapMode | ChangeFrameColumns | UpdateGrid | SetFrameFlags | UpdateParagraphStyle | UpdateTextFrame | UpdateLayer | CreateCharacterStyle | DeleteCharacterStyle | UpdateCharacterStyle | UpdateParentPage | UpdateSpread | SetPageParent | SetPageGuides | SetStoryRuns | UpdateLink
+union LayoutMutation = RenameLayout | ChangePrintTarget | ChangeDataFields | CreatePage | DeletePage | RenamePage | ChangePageWidth | ChangePageHeight | UpdatePageMargins | UpdatePageColumns | ReorderPages | CreateStory | DeleteStory | EditStory | CreateLink | DeleteLink | ChangeLinkPath | CreateFrame | DeleteFrame | MoveFrame | ResizeFrame | RotateFrame | ChangeFrameFill | ChangeFrameStroke | ChangeFrameWrapMode | ChangeFrameColumns | UpdateGrid | SetFrameFlags | UpdateParagraphStyle | UpdateTextFrame | UpdateLayer | CreateCharacterStyle | DeleteCharacterStyle | UpdateCharacterStyle | UpdateParentPage | UpdateSpread | SetPageParent | SetPageGuides | SetStoryRuns | UpdateLink | SetPageOverrides | CreateLayer | SetFrameLayer | SetDrawingText | ReorderFrame

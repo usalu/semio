@@ -62,6 +62,9 @@ pub enum TransportError {
     Cancelled,
     /// ⏰️ `ctx.deadline_ms` elapsed before this call could complete.
     DeadlineExceeded,
+    /// 💰️ The transport's per-package byte budget is spent until its next refill turn: nothing is wrong with the hub, and
+    /// the same request succeeds once the budget refills, so a caller waits instead of reporting a fault.
+    BudgetExhausted,
 }
 
 impl std::fmt::Display for TransportError {
@@ -70,6 +73,7 @@ impl std::fmt::Display for TransportError {
             Self::Io(detail) => write!(formatter, "transport io: {detail}"),
             Self::Cancelled => formatter.write_str("cancelled"),
             Self::DeadlineExceeded => formatter.write_str("deadline exceeded"),
+            Self::BudgetExhausted => formatter.write_str("network byte budget exhausted until its next refill"),
         }
     }
 }
@@ -1939,6 +1943,11 @@ pub mod native {
             Self { runtime, scope, http_pool, package, actor }
         }
 
+        /// 💰️ This transport's package byte budget right now (see [`HttpPool::package_budget_now`]).
+        pub fn network_budget(&self) -> semio_framework_os_services::HttpPackageBudget {
+            self.http_pool.package_budget_now(&self.package)
+        }
+
         /// 🛡️ Starts one protected bounded binary GET without exposing bearer text to the caller.
         pub async fn fetch_protected_stream(&self, ctx: &OperationContext, credential: &LocalHubCredential, url: &str, accept: &str) -> Result<(HttpResponseHead, semio_framework_os_services::HttpPoolBody), TransportError>
         where
@@ -1953,15 +1962,41 @@ pub mod native {
             }
             let bearer = credential.capability().map_err(|_| TransportError::Io("protected binary credential was invalid".into()))?;
             let request = PoolHttpRequest { method: "GET".to_string(), url: url.to_string(), headers: vec![("Authorization".to_string(), format!("Bearer {bearer}")), ("Accept".to_string(), accept.to_string())], body: Vec::new() };
-            self.http_pool.fetch(self.runtime.as_ref(), &self.scope, ctx.clone(), self.package.clone(), self.actor, request).await.map_err(|error| {
-                if matches!(error, HttpPoolError::Compute(ComputeError::DeadlineExceeded)) {
-                    TransportError::DeadlineExceeded
-                } else if ctx.cancel.is_cancelled_now() {
-                    TransportError::Cancelled
-                } else {
-                    TransportError::Io(error.to_string())
-                }
-            })
+            self.http_pool.fetch(self.runtime.as_ref(), &self.scope, ctx.clone(), self.package.clone(), self.actor, request).await.map_err(|error| pool_stream_error(ctx, error))
+        }
+
+        /// 🧩️ Starts one protected execution-target COMPONENT stream for `intent`: the plugin wasm the hub selected for that
+        /// document, handed over chunk by chunk as it arrives, so a caller reports its progress, verifies it against the lease
+        /// and keeps it. A component is an immutable, catalog-verified, content-addressed asset, so it belongs on a transport of
+        /// its own whose bytes the per-minute budget of the directory's API requests never meters (the semio MCP gateway's
+        /// asset transport); the route is built from the intent and the credential's own origin, never from a caller's URL.
+        pub async fn execution_target_component_stream(&self, ctx: &OperationContext, credential: &LocalHubCredential, intent: &super::DocumentOpenIntentV1) -> Result<(HttpResponseHead, semio_framework_os_services::HttpPoolBody), TransportError>
+        where
+            R: 'static,
+        {
+            intent.validate().map_err(|_| TransportError::Io("document execution-target intent is invalid".into()))?;
+            if ctx.cancel.is_cancelled().await {
+                return Err(TransportError::Cancelled);
+            }
+            let bearer = credential.capability().map_err(|_| TransportError::Io("protected asset credential was invalid".into()))?;
+            let url = format!(
+                "{}/spaces/{}/documents/{}/execution-target/component",
+                credential.hub_origin().trim_end_matches('/'),
+                super::encode_url_component(&intent.scope.space_id),
+                super::encode_url_component(&intent.scope.document_id)
+            );
+            let request = PoolHttpRequest { method: "POST".to_string(), url, headers: vec![("Authorization".to_string(), format!("Bearer {bearer}"))], body: crate::os_pack::json::to_json_string(intent).into_bytes() };
+            self.http_pool.fetch(self.runtime.as_ref(), &self.scope, ctx.clone(), self.package.clone(), self.actor, request).await.map_err(|error| pool_stream_error(ctx, error))
+        }
+    }
+
+    /// 🚦️ A pooled stream's start failure on the transport's closed errors.
+    fn pool_stream_error(ctx: &OperationContext, error: HttpPoolError) -> TransportError {
+        match error {
+            HttpPoolError::Compute(ComputeError::DeadlineExceeded) => TransportError::DeadlineExceeded,
+            HttpPoolError::ByteBudgetExhausted { .. } => TransportError::BudgetExhausted,
+            _ if ctx.cancel.is_cancelled_now() => TransportError::Cancelled,
+            other => TransportError::Io(other.to_string()),
         }
     }
 
@@ -2023,6 +2058,7 @@ pub mod native {
                     let cancelled = matches!(error, HttpPoolError::Compute(ComputeError::WorkerLost)) && ctx.cancel.is_cancelled().await;
                     Err(match error {
                         HttpPoolError::Compute(ComputeError::DeadlineExceeded) => TransportError::DeadlineExceeded,
+                        HttpPoolError::ByteBudgetExhausted { .. } => TransportError::BudgetExhausted,
                         _ if cancelled => TransportError::Cancelled,
                         other => TransportError::Io(other.to_string()),
                     })

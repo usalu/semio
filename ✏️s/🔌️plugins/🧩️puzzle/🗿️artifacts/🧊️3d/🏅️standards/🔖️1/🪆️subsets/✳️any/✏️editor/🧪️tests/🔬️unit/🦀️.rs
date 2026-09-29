@@ -6151,23 +6151,12 @@ async fn inspection_flag_rows_toggle_back_off() {
 }
 
 /// 🙈️ `📓️2026-09-09-user-feature-checklist.md` §17: the outliner row's own Hide/Show control, driven
-/// through the args the panel itself declares — never a hand-written literal, since the reported defect
-/// ("Hide does nothing, Show can never un-hide") was exactly a wrong `value` baked into those args. Hide,
-/// re-read the panel, and use the row's NEW args to show again; the flag must round-trip both ways.
+/// through the target the panel itself declares — never a hand-written literal, since the reported defect
+/// ("Hide does nothing, Show can never un-hide") was exactly a wrong value baked into the row. Hide,
+/// re-read the panel, and dispatch the row's `setSelectionHidden` with its NEW target args to show again;
+/// the flag must round-trip both ways, exactly as the host binds a row verb to the row's one target.
 #[semio_framework_async_macros::async_test]
 async fn outliner_row_hide_and_show_round_trip_through_their_own_declared_args() {
-    fn hidden_flag_args(node: &Value, object_id: &str) -> Option<Value> {
-        if node.get("flag").and_then(Value::as_str) == Some("hidden")
-            && node.get("ids").and_then(Value::as_array).is_some_and(|ids| ids.iter().any(|id| id.as_str() == Some(object_id)))
-        {
-            return Some(node.clone());
-        }
-        match node {
-            Value::Object(fields) => fields.iter().find_map(|(_, child)| hidden_flag_args(child, object_id)),
-            Value::Array(items) => items.iter().find_map(|item| hidden_flag_args(item, object_id)),
-            _ => None,
-        }
-    }
     let mut app = app().await;
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [1.0, 0.0, 0.0] })), None).await.expect("addObjectKind");
     let object_id = first_object_id(&app);
@@ -6182,9 +6171,9 @@ async fn outliner_row_hide_and_show_round_trip_through_their_own_declared_args()
     assert!(!hidden_of(&app, &object_id), "a freshly added object starts visible");
     for expected in [true, false] {
         let panel: Value = from_json_str(&to_json_string(&render_body(&mut app, artifact::BODY_KEY).await)).expect("the outliner renders parseable ui json");
-        let args = hidden_flag_args(&panel, &object_id).unwrap_or_else(|| panic!("the outliner row must declare a hidden-flag action for {object_id}: {panel}"));
-        assert_eq!(args.get("value").and_then(Value::as_bool), Some(expected), "the row's own action must ask for the INVERSE of the state it renders: {args}");
-        dispatch(&mut app, "setSelectionFlag", Some(&args), None).await.expect("setSelectionFlag from the outliner row's own args");
+        let args = outliner_verb_row(&panel, &object_id, "setSelectionHidden").and_then(|row| row.pointer("/target/args").cloned()).unwrap_or_else(|| panic!("the outliner row must declare a setSelectionHidden target for {object_id}: {panel}"));
+        assert_eq!(args.get("hidden").and_then(Value::as_bool), Some(expected), "the row's own target must ask for the INVERSE of the state it renders: {args}");
+        dispatch(&mut app, "setSelectionHidden", Some(&args), None).await.expect("setSelectionHidden from the outliner row's own target");
         assert_eq!(hidden_of(&app, &object_id), expected, "the outliner row's hidden flag must reach {expected}");
     }
 }
@@ -6209,33 +6198,14 @@ async fn outliner_hide_reaches_the_world_instance_lane_and_flips_the_row_control
             .map(|scale| scale.iter().filter_map(Value::as_f64).collect())
             .unwrap_or_default()
     }
-    /// 🙈️ The visibility row action's rendered face: the smallest node that both carries an `icon` and
-    /// declares this object's `hidden` flag args underneath it. Keyed on the args rather than on a row
-    /// id so the law survives any reshaping of the tree above the control.
+    /// 🙈️ The visibility row action's rendered face: the icon of the `setSelectionHidden` action on the row whose
+    /// target names this object. Keyed on the target rather than on a row id so the law survives any reshaping
+    /// of the tree above the control.
     fn visibility_control_icon(panel: &Value, object_id: &str) -> Option<String> {
-        fn declares_hidden(node: &Value, object_id: &str) -> bool {
-            if node.get("flag").and_then(Value::as_str) == Some("hidden") && node.get("ids").and_then(Value::as_array).is_some_and(|ids| ids.iter().any(|id| id.as_str() == Some(object_id))) {
-                return true;
-            }
-            match node {
-                Value::Object(fields) => fields.iter().any(|(_, child)| declares_hidden(child, object_id)),
-                Value::Array(items) => items.iter().any(|item| declares_hidden(item, object_id)),
-                _ => false,
-            }
-        }
-        fn walk(node: &Value, object_id: &str) -> Option<String> {
-            let deeper = match node {
-                Value::Object(fields) => fields.iter().find_map(|(_, child)| walk(child, object_id)),
-                Value::Array(items) => items.iter().find_map(|item| walk(item, object_id)),
-                _ => None,
-            };
-            if deeper.is_some() {
-                return deeper;
-            }
-            let icon = node.get("icon").and_then(Value::as_str)?;
-            (declares_hidden(node, object_id) && matches!(icon, "eye" | "eye-off")).then(|| icon.to_string())
-        }
-        walk(panel, object_id)
+        let row = outliner_verb_row(panel, object_id, "setSelectionHidden")?;
+        let actions = row.get("rowActions").and_then(Value::as_array)?;
+        let action = actions.iter().find(|action| action.get("verb").and_then(Value::as_str) == Some("setSelectionHidden"))?;
+        action.get("icon").and_then(Value::as_str).filter(|icon| matches!(*icon, "eye" | "eye-off")).map(str::to_string)
     }
     let mut app = app().await;
     let object_id = first_object_id(&app);
@@ -6244,7 +6214,7 @@ async fn outliner_hide_reaches_the_world_instance_lane_and_flips_the_row_control
     let before_icon = visibility_control_icon(&render_body(&mut app, artifact::BODY_KEY).await, &object_id);
     assert_eq!(before_icon.as_deref(), Some("eye"), "a visible object's row renders the Hide control");
 
-    dispatch(&mut app, "setSelectionFlag", Some(&json!({ "entity": "object", "flag": "hidden", "ids": [object_id.clone()], "value": true })), None).await.expect("setSelectionFlag hidden");
+    dispatch(&mut app, "setSelectionHidden", Some(&json!({ "entity": "object", "hidden": true, "ids": [object_id.clone()] })), None).await.expect("setSelectionHidden");
 
     let hidden = render_body(&mut app, main::BODY_KEY).await;
     assert_eq!(instance_scale(&hidden, &object_id), vec![0.0, 0.0, 0.0], "a hidden object must publish a zero scale into the world instance lane");
@@ -6274,13 +6244,13 @@ async fn outliner_show_restores_the_world_instance_scale_in_the_same_settle() {
             .map(|scale| scale.iter().filter_map(Value::as_f64).collect())
             .unwrap_or_default()
     }
-    let flag_args = |object_id: &str, value: bool| json!({ "entity": "object", "flag": "hidden", "ids": [object_id], "value": value });
+    let flag_args = |object_id: &str, value: bool| json!({ "entity": "object", "hidden": value, "ids": [object_id] });
     let mut app = app().await;
     let object_id = first_object_id(&app);
     assert_eq!(instance_scale(&render_body(&mut app, main::BODY_KEY).await, &object_id), vec![1.0, 1.0, 1.0], "a visible object publishes its real scale");
-    dispatch(&mut app, "setSelectionFlag", Some(&flag_args(&object_id, true)), None).await.expect("setSelectionFlag hidden=true");
+    dispatch(&mut app, "setSelectionHidden", Some(&flag_args(&object_id, true)), None).await.expect("setSelectionHidden hidden=true");
     assert_eq!(instance_scale(&render_body(&mut app, main::BODY_KEY).await, &object_id), vec![0.0, 0.0, 0.0], "the hide half must still reach the world lane");
-    dispatch(&mut app, "setSelectionFlag", Some(&flag_args(&object_id, false)), None).await.expect("setSelectionFlag hidden=false");
+    dispatch(&mut app, "setSelectionHidden", Some(&flag_args(&object_id, false)), None).await.expect("setSelectionHidden hidden=false");
     let shown = render_body(&mut app, main::BODY_KEY).await;
     assert_eq!(object_flag(&app, &object_id, "hidden"), Some(false), "the show write must reach the document");
     assert_eq!(instance_scale(&shown, &object_id), vec![1.0, 1.0, 1.0], "un-hiding must republish the object's real scale — a residency that cached the zero-scale record would leave it invisible for good");
@@ -6299,12 +6269,53 @@ async fn an_explicit_outliner_flag_write_ignores_whatever_is_selected() {
     let object_id = first_object_id(&app);
     let vortex = first_vortex_full_id(&app);
     select_id(&mut app, PUZZLE3D_GRANULARITY_VORTEX, &vortex).await.expect("select a vortex, i.e. NOT the object the row names");
-    dispatch(&mut app, "setSelectionFlag", Some(&json!({ "entity": "object", "flag": "locked", "ids": [object_id.clone()], "value": true })), None).await.expect("lock the object by its own row");
+    dispatch(&mut app, "setSelectionLocked", Some(&json!({ "entity": "object", "ids": [object_id.clone()], "locked": true })), None).await.expect("lock the object by its own row");
     assert_eq!(object_flag(&app, &object_id, "locked"), Some(true), "an explicit lock write lands while a vortex is the live selection");
 
-    dispatch(&mut app, "setSelectionFlag", Some(&json!({ "entity": "object", "flag": "hidden", "ids": [object_id.clone()], "value": true })), None).await.expect("hide the object by its own row");
+    dispatch(&mut app, "setSelectionHidden", Some(&json!({ "entity": "object", "hidden": true, "ids": [object_id.clone()] })), None).await.expect("hide the object by its own row");
 
     assert_eq!(object_flag(&app, &object_id, "hidden"), Some(true), "the row's explicit id decides what is hidden — never the live selection, and never its lock");
+}
+
+/// 🎯️ The rendered outliner row that offers `verb` and whose ONE target names `object_id` — the row a host binds that verb to.
+fn outliner_verb_row<'a>(node: &'a Value, object_id: &str, verb: &str) -> Option<&'a Value> {
+    let offers = node.get("rowActions").and_then(Value::as_array).is_some_and(|actions| actions.iter().any(|action| action.get("verb").and_then(Value::as_str) == Some(verb)));
+    let names = node.pointer("/target/args/ids").and_then(Value::as_array).is_some_and(|ids| ids.iter().any(|id| id.as_str() == Some(object_id)));
+    if offers && names {
+        return Some(node);
+    }
+    match node {
+        Value::Object(fields) => fields.iter().find_map(|(_, child)| outliner_verb_row(child, object_id, verb)),
+        Value::Array(items) => items.iter().find_map(|item| outliner_verb_row(item, object_id, verb)),
+        _ => None,
+    }
+}
+
+/// 🙈️ LAW: the outliner's set-verbs are idempotent by value — replaying `setSelectionHidden`/`setSelectionLocked` with the
+/// same `{entity, ids, flag: true}` (a stale view's second click) leaves exactly the first dispatch's one applied history
+/// row and a byte-identical document; and a set-verb without its value is refused at the command boundary, never defaulted.
+#[semio_framework_async_macros::async_test]
+async fn outliner_set_verbs_are_idempotent_by_value_and_refuse_a_missing_value() {
+    let mut app = app().await;
+    let object_id = first_object_id(&app);
+    let bare = json!({ "entity": "object", "ids": [object_id.clone()] });
+    for (verb, flag, args) in [
+        ("setSelectionHidden", "hidden", json!({ "entity": "object", "hidden": true, "ids": [object_id.clone()] })),
+        ("setSelectionLocked", "locked", json!({ "entity": "object", "ids": [object_id.clone()], "locked": true })),
+    ] {
+        assert!(Puzzle3dPlayApp::command_from_action(verb, Some(&json::to_dsl_value(&bare))).is_err(), "{verb} without its {flag} value must be refused");
+        let (first, settled) = dispatch_reporting(&mut app, verb, Some(&args), None).await;
+        first.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
+        let rows = history_row_labels(&settled);
+        assert_eq!(rows.iter().filter(|row| row.contains("applied=true") && !row.contains("ops=0")).count(), 1, "{verb} commits exactly one document edit: {rows:?}");
+        assert_eq!(object_flag(&app, &object_id, flag), Some(true), "{verb} sets {flag}");
+        let set = committed_document(&app);
+        let (replay, settled) = dispatch_reporting(&mut app, verb, Some(&args), None).await;
+        replay.unwrap_or_else(|fault| panic!("{verb} replay: {fault:?}"));
+        let rows = history_row_labels(&settled);
+        assert!(rows.iter().all(|row| !row.contains("applied=true") || row.contains("ops=0")), "replaying {verb} with the same value commits no second edit: {rows:?}");
+        assert_eq!(committed_document(&app), set, "replaying {verb} with the same value leaves the document byte-identical");
+    }
 }
 
 fn first_target_volume_id(app: &Puzzle3dApp) -> String {

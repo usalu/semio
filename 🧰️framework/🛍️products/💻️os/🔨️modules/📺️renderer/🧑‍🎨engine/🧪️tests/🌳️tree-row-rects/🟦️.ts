@@ -131,7 +131,8 @@ describe("🧊️ the wgpu side takes the same metric from the same token", () =
     expect(paint).toContain("let metrics = TreeRowMetrics::from_theme(theme);");
     const mounted = readFileSync(resolve(wgpuRoot, "📌️mounted_layout/🦀️.rs"), "utf8");
     expect(mounted).toContain("let height = live_tree_item_height(tree, id, item, &metrics, 0);");
-    expect(mounted).toContain("LayoutNodeKind::TreeRow { row: if expanded { metrics.row_height } else { 0.0 }, height, expanded, reversed }");
+    expect(mounted).toContain("let lead = row_window_lead(tree, id, key, owner);");
+    expect(mounted).toContain("LayoutNodeKind::TreeRow { row: if expanded { metrics.row_height } else { 0.0 }, height, expanded, reversed, lead }");
   });
 });
 

@@ -43,6 +43,11 @@ line = rename-layout
      / set-page-guides
      / set-story-runs
      / update-link
+     / set-page-overrides
+     / create-layer
+     / set-frame-layer
+     / set-drawing-text
+     / reorder-frame
 
 rename-layout = "rename-layout" SP text
 change-print-target = "change-print-target" SP text?
@@ -84,6 +89,11 @@ set-page-parent = "set-page-parent" SP id
 set-page-guides = "set-page-guides" SP id
 set-story-runs = "set-story-runs" SP id
 update-link = "update-link" SP id
+set-page-overrides = "set-page-overrides" SP id
+create-layer = "create-layer" SP id
+set-frame-layer = "set-frame-layer" SP id
+set-drawing-text = "set-drawing-text" SP id
+reorder-frame = "reorder-frame" SP id
 
 id = OCTET+
 number = OCTET+

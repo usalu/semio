@@ -4531,19 +4531,32 @@ pub struct DwgHeaderRelations {
     pub current_material: u64,
     pub dimension_style: u64,
     pub multiline_style: u64,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub paper_ucs_name: Option<u64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub paper_ucs_orthographic_reference: Option<u64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub paper_ucs_base: Option<u64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub model_ucs_name: Option<u64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub model_ucs_orthographic_reference: Option<u64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub model_ucs_base: Option<u64>,
     pub dimension_text_style: u64,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub dimension_leader_block: Option<u64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub dimension_block: Option<u64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub dimension_block1: Option<u64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub dimension_block2: Option<u64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub dimension_linetype: Option<u64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub dimension_extension_linetype1: Option<u64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub dimension_extension_linetype2: Option<u64>,
     pub block_control: u64,
     pub layer_control: u64,
@@ -4568,8 +4581,11 @@ pub struct DwgHeaderRelations {
     pub by_layer_linetype: u64,
     pub by_block_linetype: u64,
     pub continuous_linetype: u64,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub interfere_object_visual_style: Option<u64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub interfere_viewport_visual_style: Option<u64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub drag_visual_style: Option<u64>,
 }
 

@@ -13,6 +13,7 @@ input DeleteNodeInput { id: String! }
 input MoveNodeInput { id: String!, x: Float!, y: Float! }
 input RemoveDataPropertyInput { entity: JackMutationEntityRefInput!, key: String! }
 input RenameNodeInput { id: String!, newName: String! }
+input SetQueryInput { value: String! }
 
 input JackMutationInput {
   changeDataProperty: ChangeDataPropertyInput
@@ -23,4 +24,5 @@ input JackMutationInput {
   moveNode: MoveNodeInput
   removeDataProperty: RemoveDataPropertyInput
   renameNode: RenameNodeInput
+  setQuery: SetQueryInput
 }

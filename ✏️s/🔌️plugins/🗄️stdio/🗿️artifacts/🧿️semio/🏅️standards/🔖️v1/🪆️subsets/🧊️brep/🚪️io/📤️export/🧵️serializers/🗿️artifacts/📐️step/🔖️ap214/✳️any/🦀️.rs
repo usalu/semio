@@ -4,7 +4,7 @@
 //! `ORIENTED_EDGE`/`EDGE_LOOP`/`FACE_BOUND`/`FACE_OUTER_BOUND`/`ADVANCED_FACE`/`CLOSED_SHELL`/
 //! `MANIFOLD_SOLID_BREP`/`BREP_WITH_VOIDS`) from semio's explicit id-keyed b-rep graph. Zero
 //! codec reimplementation: entity allocation and Part-21 text writing both stay step's own
-//! (`engine::part21::Part21Builder`/`write_part21`, reused directly via `StepSnapshot::
+//! (`semio_s_artifact_stdio_contract::part21::Part21Builder`/`write_part21`, reused directly via `StepSnapshot::
 //! from_part21_document`) — this file only maps typed snapshot to typed snapshot.
 //!
 //! Honest boundaries — see the mirror `📥️import` leaf's module doc comment for the full list;
@@ -22,7 +22,7 @@ use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
 use crate::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepSurface, SemioBrepSnapshot};
-use semio_s_artifact_stdio_step::engine::part21::{Part21Builder, Part21Header, Part21Value};
+use semio_s_artifact_stdio_contract::part21::{Part21Builder, Part21Header, Part21Value};
 use semio_s_artifact_stdio_step::schema::snapshot::StepSnapshot;
 
 //#region 🔖️ValueBuild
@@ -187,7 +187,7 @@ fn surface_to_part21(b: &mut Part21Builder, surface: &BrepSurface) -> u64 {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn build_part21(snapshot: &SemioBrepSnapshot) -> Result<semio_s_artifact_stdio_step::engine::part21::Part21Document, String> {
+fn build_part21(snapshot: &SemioBrepSnapshot) -> Result<semio_s_artifact_stdio_contract::part21::Part21Document, String> {
     let mut b = Part21Builder::new();
 
     let mut vertex_ids: HashMap<&str, u64> = HashMap::new();

@@ -5141,7 +5141,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         { kind: { kind: "app", id: panelSurfaces[1]!.key }, label: "History", group: "details", bodyKey: panelSurfaces[1]!.bodyKey, children: [] },
       ];
       const panelVisible = (view: ResolvedPluginViewState) => panelSurfaces.map((panel) => ({ tag: "surface-visible", val: { surface: { instance: 0, surface: panel.key }, bodyKey: panel.bodyKey, viewState: encodePackValue(panelViewContext(view)) } }));
-      const { panelViewContext, windowViewContext } = await import("../../../../🔨️modules/🛂️manifest/🟦️.ts");
+      const { panelViewContext, sectionViewContext, windowViewContext } = await import("../../../../🔨️modules/🛂️manifest/🟦️.ts");
+      const { BROWSER_ACTOR_VISIBLE_SURFACES_V1 } = await import("../../🔨️modules/🏪️store/👷️worker/🪟️visible-surfaces/🟦️.ts");
+      const sectionVisible = (view: ResolvedPluginViewState, mount: boolean) => BROWSER_ACTOR_VISIBLE_SURFACES_V1.sections.filter((section) => mount || !section.static).map((section) => ({ tag: "surface-visible", val: { surface: { instance: 0, surface: section.bodyKey }, bodyKey: section.bodyKey, viewState: encodePackValue(sectionViewContext(view)) } }));
       const secondWindowVisible = (view: ResolvedPluginViewState) => ({ tag: "surface-visible", val: { surface: { instance: 0, surface: secondWindow.key }, bodyKey: secondWindow.bodyKey, viewState: encodePackValue(windowViewContext(view, secondWindow.key)!) } });
       const descriptor = encodePackValue(guest),
         descriptorByteSha256 = await executionTargetSha256Hex(descriptor);
@@ -5255,7 +5257,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             const patchRejection = events[0]?.tag === "patch-rejected" ? events[0].val : null;
             const panelRefresh = events[0]?.tag === "surface-visible" && events[0].val.surface.surface !== windowKindId;
             if (panelRefresh) {
-              expect(events).toEqual(panelVisible(state.browserActorViewState!));
+              expect(events).toEqual([...panelVisible(state.browserActorViewState!), ...sectionVisible(state.browserActorViewState!, false)]);
               panelRefreshes++;
             }
             const visible = events[0]?.tag === "surface-visible" && !panelRefresh ? events[0].val : null;
@@ -5280,7 +5282,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
               const visibleView = decodePackValue(visible.viewState) as Record<string, unknown>;
               expect(visibleView).toEqual(state.browserActorViewState);
               visibleViews.push(visibleView);
-              expect(events.slice(1)).toEqual([secondWindowVisible(state.browserActorViewState!), ...panelVisible(state.browserActorViewState!)]);
+              expect(events.slice(1)).toEqual([secondWindowVisible(state.browserActorViewState!), ...panelVisible(state.browserActorViewState!), ...sectionVisible(state.browserActorViewState!, visibleViews.length === 1)]);
             }
             if (wake) {
               expect(renderEvents[0]).toBe("surface-visible");
@@ -5879,7 +5881,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             async invoke(path: readonly string[], args: BrowserActorChildValue[]): Promise<BrowserActorChildValue> {
               expect(path).toEqual(["reactor", "poll"]);
               const events = args[0] as Record<string, any>[];
-              expect(events).toEqual(turns === 0 ? [{ tag: "surface-visible", val: { surface: { instance: 0, surface: windowKindId }, bodyKey, viewState: encodePackValue(state.browserActorViewState!) } }, secondWindowVisible(state.browserActorViewState!), ...panelVisible(state.browserActorViewState!)] : [{ tag: "wake" }]);
+              expect(events).toEqual(turns === 0 ? [{ tag: "surface-visible", val: { surface: { instance: 0, surface: windowKindId }, bodyKey, viewState: encodePackValue(state.browserActorViewState!) } }, secondWindowVisible(state.browserActorViewState!), ...panelVisible(state.browserActorViewState!), ...sectionVisible(state.browserActorViewState!, false)] : [{ tag: "wake" }]);
               turns++;
               if (row.name === "stale-after-turn") current = false;
               return {

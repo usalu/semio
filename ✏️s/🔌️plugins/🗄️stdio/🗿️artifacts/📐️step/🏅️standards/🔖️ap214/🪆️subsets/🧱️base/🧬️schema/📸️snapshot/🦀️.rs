@@ -1,11 +1,11 @@
 //! 🧬️ StepSnapshot schema — persistent fields + real Part-21 codecs. `StepSnapshot` owns its own
 //! typed ISO 10303-21 exchange-structure model (`StepHeader`, `StepEntity`, `StepValue`) — the
-//! shared `engine::part21` tokenizer/writer stays the reused SYNTAX layer (spec-mandated reuse,
+//! shared `semio_s_artifact_stdio_contract::part21` tokenizer/writer stays the reused SYNTAX layer (spec-mandated reuse,
 //! same rationale as gif 87a/89a sharing one root), but the PERSISTED type is step's own, never a
 //! raw `Part21Document` (that was the copy-paste-type defect flagged against ifc in
 //! `w0-recon-report.md` §7 — step does not repeat it for itself).
 
-use crate::engine::part21::{parse_part21, write_part21, Part21Document, Part21Header, Part21Instance, Part21Value};
+use semio_s_artifact_stdio_contract::part21::{parse_part21, write_part21, Part21Document, Part21Header, Part21Instance, Part21Value};
 use crate::STDIO_STEP_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 

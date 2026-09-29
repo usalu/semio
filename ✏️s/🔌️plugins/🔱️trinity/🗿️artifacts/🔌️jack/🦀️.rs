@@ -99,6 +99,11 @@ pub enum TrinityRamError {
         path: String,
         key: String,
     },
+    /// 📏️ A `set-query` beyond [`JACK_QUERY_MAXIMUM_BYTES`].
+    QueryTooLarge {
+        bytes: usize,
+        maximum: usize,
+    },
 }
 
 impl std::fmt::Display for TrinityRamError {
@@ -128,6 +133,7 @@ impl std::fmt::Display for TrinityRamError {
             Self::UnknownPropertyAtPath { path, key } => write!(formatter, "{path}: unknown property {key:?}"),
             Self::PropertyTypeMismatch { path, name, value_type } => write!(formatter, "{path}/{name}: property type mismatch for {value_type}"),
             Self::UnknownPropertyInBag { path, key } => write!(formatter, "{path}/{key}: unknown property {key:?}"),
+            Self::QueryTooLarge { bytes, maximum } => write!(formatter, "query: {bytes} bytes exceed the {maximum}-byte bound"),
         }
     }
 }
@@ -422,6 +428,7 @@ impl JackSnapshot {
             "nodes": scene.nodes,
             "edges": scene.edges,
             "rootNodeId": self.root_node_id,
+            "query": self.query,
         });
         Ok(pack::json_to_string_pretty(&value))
     }
@@ -450,15 +457,17 @@ impl JackSnapshot {
         let nodes: Vec<Node> = value.get("nodes").map(|v| dsl::FromValue::from_value(pack::json_to_dsl_value(v))).transpose()?.unwrap_or_default();
         let edges: Vec<Edge> = value.get("edges").map(|v| dsl::FromValue::from_value(pack::json_to_dsl_value(v))).transpose()?.unwrap_or_default();
         let root_node_id: Option<String> = value.get("rootNodeId").and_then(|v| v.as_str()).map(str::to_string);
-        let mut snapshot = Self::with_content(schema, name, manifest_id, manifest, camera, JackWorkingScene { nodes: nodes, edges: edges }, root_node_id);
+        let query = value.get("query").and_then(|v| v.as_str()).unwrap_or_default().to_string();
+        let mut snapshot = Self { query, ..Self::with_content(schema, name, manifest_id, manifest, camera, JackWorkingScene { nodes: nodes, edges: edges }, root_node_id) };
         snapshot.validate_schema()?;
         snapshot.resolve_manifest()?;
         Ok(snapshot)
     }
 
-    /// 🏗️ Transfers one working scene into the snapshot's exact composed content owner.
+    /// 🏗️ Transfers one working scene into the snapshot's exact composed content owner. The query starts empty: a document
+    /// constructor names its own (`Self { query, ..Self::with_content(..) }`).
     pub fn with_content(schema: String, name: String, manifest_id: Option<String>, manifest: Manifest, camera: Camera, scene: JackWorkingScene, root_node_id: Option<String>) -> Self {
-        Self { schema, name, manifest_id, manifest, camera, content: jack_content_child_with_owner(scene.nodes, scene.edges), root_node_id }
+        Self { schema, name, manifest_id, manifest, camera, content: jack_content_child_with_owner(scene.nodes, scene.edges), root_node_id, query: String::new() }
     }
 
     /// 🔎 Live node list, read through the working-scene cache — replaces the old direct `.nodes`
@@ -483,6 +492,7 @@ pub struct Graph {
     pub nodes: BTreeMap<String, Node>,
     pub edges: BTreeMap<String, Edge>,
     pub root_node_id: Option<String>,
+    pub query: String,
 }
 
 impl Graph {
@@ -503,11 +513,11 @@ impl Graph {
         for edge in scene.edges {
             edges.insert(edge.id.clone(), edge);
         }
-        Ok(Self { name: snapshot.name, manifest_id: snapshot.manifest_id, manifest: snapshot.manifest, camera: snapshot.camera, nodes, edges, root_node_id: snapshot.root_node_id })
+        Ok(Self { name: snapshot.name, manifest_id: snapshot.manifest_id, manifest: snapshot.manifest, camera: snapshot.camera, nodes, edges, root_node_id: snapshot.root_node_id, query: snapshot.query })
     }
 
     pub fn to_snapshot(&self) -> JackSnapshot {
-        JackSnapshot::with_content(JackSnapshot::SCHEMA.to_string(), self.name.clone(), self.manifest_id.clone(), self.manifest.clone(), self.camera.clone(), JackWorkingScene { nodes: self.nodes.values().cloned().collect(), edges: self.edges.values().cloned().collect() }, self.root_node_id.clone())
+        JackSnapshot { query: self.query.clone(), ..JackSnapshot::with_content(JackSnapshot::SCHEMA.to_string(), self.name.clone(), self.manifest_id.clone(), self.manifest.clone(), self.camera.clone(), JackWorkingScene { nodes: self.nodes.values().cloned().collect(), edges: self.edges.values().cloned().collect() }, self.root_node_id.clone()) }
     }
 
     pub fn load_json(json: &str) -> Result<Self, TrinityRamError> {
@@ -636,6 +646,13 @@ pub fn port_key(node_id: &str, port_id: &str) -> String {
 
 pub const TRINITY_GRAPH_SCHEMA: &str = JackSnapshot::SCHEMA;
 
+/// 🔎️ The Jack query a new document opens with — `JackSnapshot::query` is document content, undoable and shared like the graph.
+pub const TRINITY_JACK_DEFAULT_QUERY: &str = "MATCH (a:Piece)-[r:Connection]->(b:Piece) WHERE a.name = 'b' AND b.name != 'b' RETURN a.name, b.name, b.label";
+
+/// 📏️ Largest query text a jack document holds: one `set-query` stays inside the 4 KiB document-mutation admission
+/// (`TRINITY_JACK_ARTIFACT_MUTATION_MAXIMUM_BYTES`) and the store initializer's 4 KiB owned-field bound.
+pub const JACK_QUERY_MAXIMUM_BYTES: usize = 3_584;
+
 /// 🎯️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: the one `Dialect` coordinate every
 /// surface (editor AND viewer) of this artifact shares — lives at the ARTIFACT level, not under
 /// `editor`, so a viewer file can read it without ever importing through the sibling `editor` module.
@@ -646,7 +663,7 @@ pub const TRINITY_GRAPH_SCHEMA: &str = JackSnapshot::SCHEMA;
 pub const TRINITY_JACK_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.trinity.jack", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
 
 pub fn empty_trinity_graph_fixture() -> JackSnapshot {
-    JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "trinity".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: Vec::new(), edges: Vec::new() }, None)
+    JackSnapshot { query: TRINITY_JACK_DEFAULT_QUERY.into(), ..JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "trinity".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: Vec::new(), edges: Vec::new() }, None) }
 }
 
 /// 🎯️ `ArtifactKindSpec` identity shared by every `jack`-family app that mounts this artifact.
@@ -1038,6 +1055,23 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-data-property/📝️text/🦀️.rs"]
                             pub mod text;
                         }
+                        #[path = "."]
+                        pub mod set_query {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔎️set-query/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔎️set-query/💾️binary/🦀️.rs"]
+                            pub mod binary;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔎️set-query/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔎️set-query/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔎️set-query/🧪️tests/🔎️replaces-the-query/🦀️.rs"]
+                            mod tests_replaces_the_query;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔎️set-query/📝️text/🦀️.rs"]
+                            pub mod text;
+                        }
                     }
                 }
                 #[path = "."]
@@ -1174,9 +1208,6 @@ pub mod editor {
 
         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config/🦀️.rs"]
         pub mod window_config;
-
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🎚️config/🦀️.rs"]
-        pub mod query_window_config;
 
         #[path = "."]
         pub mod transient {

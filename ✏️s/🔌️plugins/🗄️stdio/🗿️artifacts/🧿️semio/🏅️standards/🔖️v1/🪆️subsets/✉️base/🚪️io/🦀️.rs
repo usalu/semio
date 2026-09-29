@@ -138,6 +138,16 @@ pub mod derived_composition {
         register_artifact_inferences();
     }
 
+    /// 🧾️ The declarative twin of [`register`]: this envelope's document codec, `SubsetValidator` and inference
+    /// descriptor (its schema opens the declaration) as rows of [`crate::declaration`].
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn declare(builder: semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady>) -> semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady> {
+        builder
+            .document_codec_bare::<SemioSnapshot, crate::standards::v1::subsets::base::schema::mutations::SemioMutation>(crate::standards::v1::subsets::base::schema::snapshot::STDIO_SEMIO_DOCUMENT_SCHEMA)
+            .subset_validators(std::slice::from_ref(validator_entry()))
+            .inferences([crate::standards::v1::subsets::base::schema::inferences::semio_artifact_inference_descriptor()])
+    }
+
     /// 💡️ Registers `s.stdio.semio.inference`'s facet leaves into the OS-wide inference catalog —
     /// sibling to `register_artifact_schema_descriptor` above (separate registry, ticket
     /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:flow:mesh:inspection",
+  "title": "Mesh Component Inspection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "index"
+  ],
+  "properties": {
+    "kind": {
+      "enum": [
+        "vertex",
+        "edge",
+        "face"
+      ]
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

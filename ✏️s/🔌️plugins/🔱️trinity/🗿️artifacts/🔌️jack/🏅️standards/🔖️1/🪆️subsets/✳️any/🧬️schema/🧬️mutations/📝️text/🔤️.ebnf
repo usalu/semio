@@ -13,7 +13,8 @@ line = create node
      | rename node
      | move node
      | change data property
-     | remove data property ;
+     | remove data property
+     | set query ;
 create node = 'create-node', space, id, space, text, space, text, space, number, space, number, space, number, space, number, space, port table ;
 delete node = 'delete-node', space, id ;
 create edge = 'create-edge', space, id, space, text, space, text, space, text, space, property bag ;
@@ -22,6 +23,7 @@ rename node = 'rename-node', space, id, space, text ;
 move node = 'move-node', space, id, space, number, space, number ;
 change data property = 'change-data-property', space, entity, space, text, space, value ;
 remove data property = 'remove-data-property', space, entity, space, text ;
+set query = 'set-query', space, text ;
 entity = 'node', ':', id
      | 'edge', ':', id ;
 port table = '{', newline, { port row }, '}' ;

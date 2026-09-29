@@ -13,6 +13,9 @@ use std::collections::{BTreeMap, BTreeSet};
 
 #[path = "✏️editing/🦀️.rs"]
 pub mod editing;
+/// 📐️ The canonical ISO 10303-21 codec every STEP-family artifact shares.
+#[path = "📐️part21/🦀️.rs"]
+pub mod part21;
 
 /// 🧩 One schema definition paired with its optional executable declaration.
 pub enum ArtifactAssembly {
@@ -579,7 +582,7 @@ fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
         }
         let claims = runtime_claims(item);
         if claims.len() != item.claims.len()
-            || !item.claims.iter().all(|claim| matches!(claim.namespace.as_str(), "schema" | "codec" | "codec-extension" | "extension" | "mime" | "dialect" | "validated-dialect" | "grammar") && !claim.value.trim().is_empty())
+            || !item.claims.iter().all(|claim| matches!(claim.namespace.as_str(), "schema" | "schema-export" | "codec" | "codec-extension" | "extension" | "mime" | "dialect" | "validated-dialect" | "grammar") && !claim.value.trim().is_empty())
             || (item.category == "subset-validator" && item.claims.iter().any(|claim| claim.namespace != "validated-dialect"))
             || !runtime_claim_sets.insert((item.category.clone(), claims.clone()))
         {
@@ -1266,8 +1269,8 @@ pub fn render_structural_table(
     windows: &semio_framework_plugin::TreeWindows<'_>,
     table: impl FnOnce() -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    use semio_framework_plugin::app::{editable_table_window_row, table_row_action, TableWindowKit, WindowedEditableTableCell};
-    use semio_framework_plugin::{ActionId, Buildable, HasBase, HasChildren, PluginAssemblyError, Trigger};
+    use semio_framework_plugin::app::{editable_table_window_row, row_action, row_target, TableWindowKit, WindowedEditableTableCell};
+    use semio_framework_plugin::{ActionId, Buildable, HasBase, HasChildren, PluginAssemblyError, RowActionPlacement, Trigger};
     use semio_framework_ui_contract::{self as ui, Label as UiLabel};
     let labels = match locale {
         semio_framework_plugin::Locale::De => ("Zeile hinzufügen", "Spalte hinzufügen", "Spaltenköpfe", "Spaltenkopf", "Aktionen", "Spalte entfernen"),
@@ -1297,14 +1300,15 @@ pub fn render_structural_table(
         .map_err(|_| PluginAssemblyError::new("stdio.table.toolbar", "toolbar admission"))?;
     let mut children = vec![toolbar];
     children.push(TableWindowKit::render_indexed_rows_with_id(windows, "stdio-table-headers", labels.2, &[labels.3], Some(labels.4), header_count, |column| {
-        let remove = table_row_action("trash-2", labels.5, (action(REMOVE_TABLE_COLUMN_ACTION_ID)?, Some(window_kit_indexed_revision_arguments("column", column, revision)?)))?;
+        let remove = row_action("trash-2", labels.5, REMOVE_TABLE_COLUMN_ACTION_ID, RowActionPlacement::Row)?;
+        let target = row_target(controller_id, Some(window_kit_indexed_revision_arguments("column", column, revision)?), None)?;
         let value = header(column);
         let cell = if editable_headers {
             WindowedEditableTableCell::new(value, labels.3, SET_TABLE_HEADER_ACTION_ID, window_kit_indexed_revision_arguments("column", column, revision)?)
         } else {
             WindowedEditableTableCell::read_only(value, labels.3)
         };
-        editable_table_window_row(&format!("header-{column}"), controller_id, locale, [cell], [remove])
+        editable_table_window_row(&format!("header-{column}"), controller_id, locale, [cell], [remove], Some(target))
     })?);
     children.push(table()?);
     ui::column()

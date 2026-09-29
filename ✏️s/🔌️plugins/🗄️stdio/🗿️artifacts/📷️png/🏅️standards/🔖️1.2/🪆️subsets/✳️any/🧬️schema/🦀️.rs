@@ -119,12 +119,13 @@ impl PngArtifact {
 }
 
 //#region 🔖️DemoFixtures
-/// 🕳️ Relocated verbatim from `⚙️engine` (ticket
-/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, rule 5: pure helpers over document
-/// types live in `🧬️schema/`).
+/// 🆕️ A new png document: one opaque white RGBA pixel as the real codec round-trips it — `IHDR` has no zero dimension
+/// (PNG §11.2.2), and a new document must save and reopen as itself.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn empty_png_snapshot() -> PngSnapshot {
-    PngSnapshot::default()
+pub fn blank_png_snapshot() -> PngSnapshot {
+    use crate::standards::v1_2::subsets::any::io::{decode_png, encode_png};
+    let seed = PngSnapshot { width: 1, height: 1, pixels: vec![255, 255, 255, 255], ..PngSnapshot::default() };
+    encode_png(&seed).and_then(|bytes| decode_png(&bytes)).expect("blank_png_snapshot: the 1×1 seed round-trips through the real codec")
 }
 
 /// 📄️ P2-P2: the demo `stdio.png` document — a genuinely non-trivial `PngSnapshot` exercising

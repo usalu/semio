@@ -382,6 +382,7 @@ fn frame_in_reply_to(frame: &AppFrame) -> Option<u64> {
         // 🏁️ A terminal typed operation's completion correlates by its own operation id — the command
         // that started it resolved on an earlier turn, so there is no `AppCommand::seq` awaiting it.
         AppFrame::OperationCompleted { .. } => None,
+        AppFrame::DocumentIdentity { in_reply_to, .. } => Some(*in_reply_to),
         AppFrame::DocumentArchive { in_reply_to, .. } => Some(*in_reply_to),
         AppFrame::DocumentArchiveLoad { in_reply_to, .. } => Some(*in_reply_to),
         AppFrame::MediaExportSubmitted { in_reply_to, .. } | AppFrame::MediaExportStatus { in_reply_to, .. } | AppFrame::MediaExportChunk { in_reply_to, .. } => Some(*in_reply_to),
@@ -2214,6 +2215,7 @@ fn app_command_seq(command: &AppCommand) -> u64 {
         | AppCommand::SubmitMediaExport { seq, .. }
         | AppCommand::PollMediaExport { seq, .. }
         | AppCommand::CancelMediaExport { seq, .. }
+        | AppCommand::ReadDocumentIdentity { seq }
         | AppCommand::TakeMediaExportChunk { seq, .. } => *seq,
     }
 }

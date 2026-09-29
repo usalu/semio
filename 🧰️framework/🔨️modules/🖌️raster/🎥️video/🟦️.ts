@@ -1,4 +1,4 @@
-/** @emoji 🎥️ The video tier of the raster module — TypeScript twin of `🦀️.rs` beside this file: RGBA8 frames → H.264
+/** 🎥️ The video tier of the raster module — TypeScript twin of `🦀️.rs` beside this file: RGBA8 frames → H.264
  * (AVC) access units → ISO-BMFF (MP4) bytes, first-party and dependency-free. `AvcPcmEncoder` writes every new picture
  * as an exact all-`I_PCM` IDR and every repeat as an all-`P_Skip` P picture; `writeAvcMp4` muxes any encoder's AVCC
  * samples (this one's, or WebCodecs' `VideoEncoder` chunks on the browser host) into a progressive MP4. Both twins answer

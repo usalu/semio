@@ -998,8 +998,14 @@ pub(crate) const fn resident_static_backing_bytes() -> usize {
         + size_of::<UiArenaHandbacks<UI_VALUE_ADMISSION_SLOTS, UI_VALUE_HANDBACK_WORDS>>()
 }
 
+/// ☣️ Runs `f` on the process-global value arena. A poisoned lock is recovered AND cleared: the arena's fixed slots keep their
+/// authority through a panic, so every later `try_lock` (retirement, copy, compare) admits the arena again instead of refusing it
+/// as poisoned forever.
 fn with_ui_value_arena<T>(f: impl FnOnce(&mut UiValueArena) -> T) -> T {
-    let mut arena = UI_VALUE_ARENA.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    let mut arena = UI_VALUE_ARENA.lock().unwrap_or_else(|poisoned| {
+        UI_VALUE_ARENA.clear_poison();
+        poisoned.into_inner()
+    });
     f(&mut arena)
 }
 
@@ -1803,7 +1809,7 @@ pub struct UiIntent {
 /// os-kernel crate, never here.
 // 🌱️ No `ToValue`/`FromValue` on `UiValue` — see the DslValue prohibition above. `#[serde(untagged)]`
 // also has no `#[value(...)]` equivalent regardless (would need a hand-written impl).
-#[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Default, PartialEq, Deserialize)]
 #[serde(untagged)]
 #[expect(clippy::large_enum_variant, reason = "Text stays in its fixed inline byte ceiling; collection payloads use separately credited arena handles.")]
 pub enum UiValue {
@@ -1819,6 +1825,27 @@ pub enum UiValue {
 impl UiValue {
     pub fn credited_clone(&self) -> Option<Self> {
         with_ui_value_arena(|arena| arena.try_clone_value(self))
+    }
+}
+
+/// 🔢️ A `UiValue` serializes as the JSON text React's wire carries: a number goes through the value module's one rule
+/// ([`protocol::value::json_integer`]) — `7.0` is written `7`, a non-finite number `null` — so every JSON projection of a UI
+/// value (reconciled action arguments, extension params, snapshots) reads back exactly as `JSON.parse(JSON.stringify(v))`.
+impl Serialize for UiValue {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        match self {
+            UiValue::Null => serializer.serialize_unit(),
+            UiValue::Bool(value) => serializer.serialize_bool(*value),
+            UiValue::Number(value) => match protocol::value::json_integer(*value) {
+                Some(protocol::value::JsonInteger::Unsigned(integer)) => serializer.serialize_u64(integer),
+                Some(protocol::value::JsonInteger::Signed(integer)) => serializer.serialize_i64(integer),
+                None if value.is_finite() => serializer.serialize_f64(*value),
+                None => serializer.serialize_unit(),
+            },
+            UiValue::Text(value) => value.serialize(serializer),
+            UiValue::List(value) => value.serialize(serializer),
+            UiValue::Map(value) => value.serialize(serializer),
+        }
     }
 }
 

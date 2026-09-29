@@ -48,7 +48,7 @@ fn emoji_codepoints_resolve_through_the_noto_emoji_fallback_family() {
 fn packing_a_synthetic_color_glyph_lands_on_the_rgba_page_and_marks_it_dirty() {
     let mut atlas = FontAtlas::from_bytes(super::ANTA_LATIN).expect("embedded Anta bytes must load");
     assert!(!atlas.take_color_dirty());
-    atlas.pack_glyph((super::TextFace::Sans, '🔥', 32), super::RasterizedGlyph { bitmap: vec![255u8; 4 * 4 * 4], width: 4, height: 4, bearing_x: 0.0, bearing_y: 0.0, advance: 32.0, raster_scale: 1.0, is_color: true });
+    atlas.pack_glyph((super::TextFace::Sans, '🔥', 128), super::RasterizedGlyph { bitmap: vec![255u8; 4 * 4 * 4], width: 4, height: 4, bearing_x: 0.0, bearing_y: 0.0, advance: 32.0, raster_scale: 1.0, is_color: true });
     let glyph = atlas.ensure_glyph('🔥', 32.0);
     assert!(glyph.is_color);
     assert_eq!((glyph.width, glyph.height), (4, 4));
@@ -115,18 +115,178 @@ fn changing_the_scale_factor_re_rasterises_and_re_setting_it_does_not() {
     assert_eq!(atlas.raster_scale(), 2.0, "a non-finite scale is refused, not applied");
 }
 
-/// 🔑️ The glyph cache is keyed on the DEVICE size, so 16 logical px at 2x and 32 logical px at 1x
-/// are distinct rows even though both rasterise 32 device px — otherwise a scale change would hand
-/// back a correctly-sized raster with the WRONG logical metrics.
+/// 🔑️ The glyph cache is keyed on the DEVICE size on the quarter-pixel raster grid, so 16 logical px at 2x (32 device px =
+/// 128 grid steps) is its own row, a fractional size rasterises on the nearest quarter pixel, and one grid row serves every
+/// exact size that snaps to it — while each size's advance stays exact.
 #[test]
-fn the_glyph_cache_key_is_the_device_size_not_the_logical_one() {
+fn the_glyph_cache_key_is_the_device_size_on_the_quarter_pixel_grid() {
     let mut atlas = FontAtlas::builtin();
     atlas.set_raster_scale(2.0);
     atlas.ensure_glyph('A', 16.0);
     assert_eq!(atlas.glyphs.len(), 1);
-    assert!(atlas.glyphs.contains_key(&(super::TextFace::Sans, 'A', 32)), "16 logical px at 2x must be cached under its 32 device px key");
+    assert!(atlas.glyphs.contains_key(&(super::TextFace::Sans, 'A', 128)), "16 logical px at 2x is cached under 32 device px = 128 quarter-pixel steps");
     atlas.ensure_glyph('A', 16.0);
     assert_eq!(atlas.glyphs.len(), 1, "the same logical size must hit the same cache row");
+    atlas.set_raster_scale(1.0);
+    let wide = atlas.ensure_glyph('A', 9.6).advance;
+    let narrow = atlas.ensure_glyph('A', 9.55).advance;
+    assert!(atlas.glyphs.contains_key(&(super::TextFace::Sans, 'A', 38)), "9.6 device px rasterises on the 9.5 px grid step");
+    assert_eq!(atlas.glyphs.len(), 1, "9.55 px snaps to the same raster row");
+    assert!(wide > narrow, "yet each exact size keeps its own advance: {wide} vs {narrow}");
+}
+
+/// 📏️ LAW (ticket 26/09/23 session 14d, WG11 T7a): an advance is the face's own advance at the EXACT size — linear in it, never
+/// read off a rounded raster size (9.6 px measured as 10 px before: text-2xs sat 4 % wide of React).
+#[test]
+fn advances_are_exact_at_fractional_sizes() {
+    let mut atlas = FontAtlas::shaped_default();
+    let at = |atlas: &mut FontAtlas, size: f32| "feature-editor".chars().map(|ch| atlas.ensure_glyph(ch, size).advance).sum::<f32>();
+    let (small, double) = (at(&mut atlas, 9.6), at(&mut atlas, 19.2));
+    assert!((double - 2.0 * small).abs() < 0.01, "an advance scales linearly with the exact size: {small} vs {double}");
+    assert!((small - 62.75).abs() < 0.05, "Anta's own units put 'feature-editor' at 62.75 px at 9.6 px: {small}");
+}
+
+/// 📏️ LAW (WG11 T7a): the retained layout's text worker and the atlas pen by ONE advance source — `font_advance_em` from the
+/// face's units — so a label lays out exactly as wide as it paints.
+#[test]
+fn the_layout_advance_source_is_the_atlas_advance() {
+    let mut atlas = FontAtlas::shaped_default();
+    for (face, text) in [(super::TextFace::Sans, "Einstellungen · Größe 1.2"), (super::TextFace::Mono, "fn main() { 42 }")] {
+        for ch in text.chars() {
+            let painted = atlas.ensure_glyph_for(face, ch, 11.2).advance;
+            let laid_out = super::font_advance_em(face, ch) * 11.2;
+            assert!((painted - laid_out).abs() < 0.001, "{face:?} {ch:?}: atlas {painted} vs layout {laid_out}");
+        }
+    }
+}
+
+/// 🔤️ LAW (WG11 T7a): the shared corpus — both faces, sizes 2xs…2xl, en + de strings — sums its ADVANCES within the fixture's
+/// tolerance (0.5 px) of Chromium's UNKERNED DOM width (`🧫️fixtures/🔤️text-advances`, re-measured in Chromium by the React-side law).
+#[test]
+fn the_shared_corpus_advances_sum_to_chromiums_unkerned_width() {
+    for_each_corpus_row(|atlas, face, text, size, row| {
+        let advances: f32 = text.chars().map(|ch| atlas.ensure_glyph_for(face, ch, size).advance).sum();
+        (advances, row["unkernedWidthPx"].as_f64().expect("unkerned width") as f32)
+    });
+}
+
+/// 🤝️ LAW (WG11 T7b): the same corpus MEASURES — advances plus every adjacent pair's kerning — within the fixture's tolerance
+/// (0.5 px) of Chromium's default, KERNED DOM width; 54 of its 144 rows kern, by up to 9.5 px.
+#[test]
+fn the_shared_corpus_measures_as_chromium_does_with_kerning() {
+    for_each_corpus_row(|atlas, face, text, size, row| (atlas.measure_text_face(face, text, size).0, row["kernedWidthPx"].as_f64().expect("kerned width") as f32));
+}
+
+/// 🔤️ Walks every corpus row (`🧫️fixtures/🔤️text-advances`) through `width`, which answers the wgpu width and the Chromium width it
+/// must land within the fixture's tolerance of.
+fn for_each_corpus_row(mut width: impl FnMut(&mut FontAtlas, super::TextFace, &str, f32, &serde_json::Value) -> (f32, f32)) {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔤️text-advances/🔣️.json")).expect("the text advance corpus parses");
+    let tolerance = fixture["tolerancePx"].as_f64().expect("tolerance") as f32;
+    let mut atlas = FontAtlas::shaped_default();
+    for row in fixture["rows"].as_array().expect("corpus rows") {
+        let face = match row["face"].as_str() {
+            Some("mono") => super::TextFace::Mono,
+            _ => super::TextFace::Sans,
+        };
+        let text = row["text"].as_str().expect("text");
+        let size = row["sizePx"].as_f64().expect("size") as f32;
+        let (measured, expected) = width(&mut atlas, face, text, size, row);
+        assert!((measured - expected).abs() <= tolerance, "{face:?} {size}px {text:?}: {measured} vs Chromium {expected}");
+    }
+}
+
+/// 🤝️ The corpus pangram — Anta kerns six of its pairs (−0.127 em in all).
+const KERNED_PANGRAM: &str = "The quick brown fox jumps over the lazy dog";
+
+/// 🤝️ LAW (WG11 T7b): the atlas and the retained layout's text worker kern by ONE source — the face's own pair table read through
+/// `PairKerning` — which Anta's `A`+`V` and `f`+`o` pin at Chromium's own −0.0928 and −0.0391 em; the monospace face does not
+/// kern, a scalar outside the authored face never kerns against its neighbour, and the fixed-pitch bitmap fallback never kerns.
+#[test]
+fn the_layout_kerning_source_is_the_atlas_kerning() {
+    let mut atlas = FontAtlas::shaped_default();
+    let mut source = super::PairKerning::default();
+    for (left, right, chromium) in [('A', 'V', -0.0928), ('f', 'o', -0.0391)] {
+        let em = source.em(super::TextFace::Sans, left, right);
+        assert!((em - chromium).abs() < 0.0005, "Anta kerns {left:?}+{right:?} by Chromium's own {chromium} em: {em}");
+    }
+    for (face, left, right) in [(super::TextFace::Sans, 'A', 'V'), (super::TextFace::Sans, 'y', ' '), (super::TextFace::Sans, 'T', 'h'), (super::TextFace::Mono, 'f', 'o')] {
+        let cached = atlas.kerning_for(face, left, right, 11.2);
+        let direct = source.em(face, left, right) * 11.2;
+        assert!((cached - direct).abs() < 0.0001, "{face:?} {left:?}+{right:?}: atlas {cached} vs source {direct}");
+    }
+    assert_eq!(source.em(super::TextFace::Mono, 'f', 'o'), 0.0, "Share Tech Mono is fixed-pitch");
+    assert_eq!(source.em(super::TextFace::Sans, 'o', '🔥'), 0.0, "an emoji fallback never kerns against Anta");
+    assert_eq!(FontAtlas::builtin().kerning_for(super::TextFace::Sans, 'f', 'o', 11.2), 0.0, "the bitmap fallback never kerns");
+}
+
+/// 🤝️ LAW (WG11 T7b): pair kerning is ONE rule for measure, wrap and caret — a run measures as its advances plus each adjacent
+/// pair's kerning, the per-scalar pen walk (`pen_advance`) lands every caret where `pen_at` puts it (a caret after a kerned pair
+/// includes the pair, as Chromium's does) and ends at the measured width, and a box exactly as wide as the kerned run holds it on
+/// one line where the unkerned sum would overflow.
+#[test]
+fn pair_kerning_is_one_rule_for_measure_wrap_and_caret() {
+    let (text, size) = (KERNED_PANGRAM, 12.8);
+    let mut atlas = FontAtlas::shaped_default();
+    let scalars: Vec<(usize, char)> = text.char_indices().collect();
+    let advances: f32 = scalars.iter().map(|&(_, ch)| atlas.ensure_glyph(ch, size).advance).sum();
+    let kerning: f32 = scalars.windows(2).map(|pair| atlas.kerning_for(super::TextFace::Sans, pair[0].1, pair[1].1, size)).sum();
+    let measured = atlas.measure_text(text, size).0;
+    assert!(kerning < -0.5, "the pangram kerns in Anta: {kerning}");
+    assert!((measured - (advances + kerning)).abs() < 0.001, "measured {measured} vs advances {advances} + kerning {kerning}");
+    let mut pen = 0.0f32;
+    for &(byte, ch) in &scalars {
+        let caret = atlas.pen_at(text, byte, size);
+        assert!((caret - pen).abs() < 0.001, "the caret before {ch:?} at byte {byte}: {caret} vs pen walk {pen}");
+        pen += atlas.pen_advance(text, byte, size);
+    }
+    assert!((pen - measured).abs() < 0.001, "the pen walk ends at the measured width: {pen} vs {measured}");
+    assert!((atlas.pen_at(text, text.len(), size) - measured).abs() < 0.001, "the caret at the end is the measured width");
+    let fits = measured + 0.01;
+    assert!(advances > fits + super::LINE_BREAK_FIT_EPSILON, "the unkerned sum {advances} would overflow a {fits} box");
+    assert_eq!(atlas.wrap_lines(text, fits, size).len(), 1, "the kerned run fits its own box");
+    assert_eq!(atlas.pre_wrap_lines(super::TextFace::Sans, text, fits, size).len(), 1, "pre-wrap prices the same kerned run");
+}
+
+/// 🤝️ LAW (WG11 T7b): the retained painter pens every glyph at its kerned caret and breaks where the kerned wrap does — measure,
+/// wrap, caret and paint read one pair-kerning table under one rule.
+#[test]
+fn the_retained_painter_pens_the_kerned_caret_and_breaks_where_the_kerned_wrap_does() {
+    use crate::wgpu::draw::{DrawList, KIND_GLYPH};
+    use crate::wgpu::geometry::Rect;
+    use crate::wgpu::paint::{paint_retained_glyph_step_flowed, RetainedGlyphCursor, RetainedGlyphStep, RetainedTextFlow};
+    use crate::wgpu::theme::Rgba;
+
+    let (text, size) = (KERNED_PANGRAM, 12.8);
+    let mut atlas = FontAtlas::shaped_default();
+    let paint = |atlas: &mut FontAtlas, bounds: Rect, flow: RetainedTextFlow| {
+        let (mut draw, mut cursor, mut lines) = (DrawList::default(), RetainedGlyphCursor::default(), Vec::new());
+        loop {
+            let byte = cursor.byte();
+            match paint_retained_glyph_step_flowed(text, bounds, size, Rgba::new(1.0, 1.0, 1.0, 1.0), flow, atlas, &mut draw, &mut cursor) {
+                RetainedGlyphStep::Pending => lines.push((byte, cursor.line())),
+                RetainedGlyphStep::Complete => break,
+                RetainedGlyphStep::Fault => panic!("the pangram never faults the retained painter"),
+            }
+        }
+        let glyphs: Vec<f32> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| (instance.params[2] - KIND_GLYPH).abs() < 0.01).map(|instance| instance.rect[0]).collect();
+        (glyphs, lines)
+    };
+    let (glyphs, _) = paint(&mut atlas, Rect::new(10.0, 0.0, 1_000.0, 40.0), RetainedTextFlow::Clip);
+    assert_eq!(glyphs.len(), text.chars().count(), "one glyph per scalar");
+    for ((byte, ch), x) in text.char_indices().zip(glyphs) {
+        let caret = 10.0 + atlas.pen_at(text, byte, size) + atlas.ensure_glyph(ch, size).bearing_x;
+        assert!((x - caret).abs() < 0.001, "{ch:?} at byte {byte} painted at {x}, its kerned caret is {caret}");
+    }
+    let first_line = "The quick brown fox jumps over ";
+    let width = atlas.measure_text(first_line.trim_end(), size).0 + 0.01;
+    let expected = atlas.wrap_lines(text, width, size);
+    assert_eq!(expected.iter().map(|line| line.start).collect::<Vec<_>>(), [0, first_line.len()], "the kerned first line keeps `over`");
+    let (_, lines) = paint(&mut atlas, Rect::new(0.0, 0.0, width, 400.0), RetainedTextFlow::Wrap);
+    assert_eq!(lines.len(), text.chars().count(), "every scalar is stepped exactly once");
+    for (byte, line) in lines {
+        let assigned = expected.iter().position(|range| range.contains(&byte)).unwrap_or_else(|| panic!("byte {byte} lands on no measured line"));
+        assert_eq!(line, assigned, "scalar at byte {byte} painted on line {line}, measured onto line {assigned}");
+    }
 }
 
 //#endregion 📐️DPI
@@ -414,6 +574,21 @@ fn a_newline_always_breaks_and_a_trailing_space_hangs() {
     assert_eq!(atlas.wrap_lines("one two ", exact, size).len(), 1, "the trailing space hangs off the end of its own line");
     let (width, _) = atlas.measure_text_wrapped("one two ", exact, size);
     assert!((width - exact).abs() < 0.001, "a hanging space is not priced into the line box, got {width}");
+}
+
+/// ⚖️ LAW (ticket 26/09/23 session 14d, WG11): `white-space: pre-wrap` keeps every space, and the spaces ending a line hang —
+/// a line whose last word fits breaks AFTER its trailing spaces, never before that word (the DiffView presentation fixture's
+/// `preWrap` vector, `🧬️contract/🧫️fixtures/🆚️diff-view-presentation/🔣️.json`). A hard newline still breaks, empty lines stay.
+#[test]
+fn pre_wrap_keeps_repeated_spaces_and_hangs_the_ones_ending_a_line() {
+    use super::TextFace;
+    let size = ui_styling::metrics::typography::TEXT_XS_PX as f32;
+    let mut atlas = FontAtlas::builtin();
+    let text = "a  b  c  d";
+    let fits = atlas.measure_range_face(TextFace::Mono, text, 0, "a  b  c".len(), size);
+    let lines = atlas.pre_wrap_lines(TextFace::Mono, text, fits + 0.5, size).into_iter().map(|range| &text[range]).collect::<Vec<_>>();
+    assert_eq!(lines, ["a  b  c  ", "d"], "the spaces after `c` hang; `d` opens the next line");
+    assert_eq!(atlas.pre_wrap_lines(TextFace::Mono, "one\n\ntwo", 1_000.0, size).len(), 3, "a hard newline breaks and an empty line is kept");
 }
 
 /// ⚖️ LAW: **the retained painter breaks where the measure says it does.** Driven glyph by glyph over

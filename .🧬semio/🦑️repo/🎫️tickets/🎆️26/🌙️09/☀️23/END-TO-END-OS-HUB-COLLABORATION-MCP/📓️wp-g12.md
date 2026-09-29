@@ -6,7 +6,86 @@ Ports: hubs 8030–8039, serves 6530–6539. Private cargo target `.tmp-ticket/w
 `fleet-mutex.sh native g12` in build-fleet-b. Durable data + logs `.🧬semio/🌐hub/s14-g12-*` (logs `s14-g12-logs/`).
 Scripts `wp-g12/`.
 
+## Session 15
+
+Successor agent, 2026-09-29 19:1x (predecessor died ~18:45 without handover). Chain 57946 → catalog `s14-w4-catalog-t6`; 7800 on p33
+until W4 moves it. GUEST FREEZE on (host-only fixes, rules 20/22). Gate script `wp-g12/g12-gate-mcp.sh`, logs `.🧬semio/🌐hub/s14-g12-logs/`.
+
+| # | Item | Status |
+|---|---|---|
+| R1 | Reconcile predecessor (rule 30) | orphan waiter 67185 = MY queued gate `viewlanes` (check + 3 law filters, NO build) for the in-tree host fix `headless_agent_ops` (🏠️workspace: a headless agent's prepare keeps config/draft view state in the shell — warning `view-state-omitted`, view-only verb → `interactive-job.agent-lane-uncarried` at prepare) + law `a_headless_agent_carries_document_operations_and_leaves_view_state_in_the_shell`. Killed 19:19 (queued, mine) and re-queued at the SAME FIFO stamp as gate `s15a` = check + laws (headless_agent, no-operation, agent_lane, abandoned, remote::) + gateway build → `s14-g12-bin/semio-os-mcp-s15a` (`gate-s15a.log`). No half-applied hunk found (viewlanes edit complete: symbol + law + TransactionPrepare guard message) |
+| R2 | Coverage p33-4 (predecessor, gateway `codecpage`, 18:14–18:49) | **17/63** (p33-3: 32/63): from the ~16th kind on, opens take 10 s (live-link wait) and edits die "hub did not acknowledge … link backoff" then `link-expired` for the rest of the kind; the 18:27 probe shows `lastFault: storage: limit exceeded: WAL writer capacity` = the hub's live-document cap (H13 P1). Not a regression of `codecpage` |
+| H1 | Host: one agent session held a live hub link (document socket = one of the hub's 32 WAL writer slots) for EVERY document it ever opened (63 in coverage → capacity refusals for everyone); two documents of one app left the app with no session document ("open exactly one"), so an agent could never edit a second note in one session; an expired link could never be relinked | **GREEN 19:59** (gate `s15c`) (`wp-g12/g12-live-links.py`, idempotent, dry-run/apply): `🏠️workspace` `HUB_SESSION_LIVE_LINK_LIMIT` = 8, `hub_links_to_close` (own expired link → relinked; same app's older link → superseded; past the bound → least recently used), `route_session_artifact` (an app's session document = the hub document opened/edited last; folder rule unchanged), `hub_link_tick` + `PluginArtifactBinding.used` (touched on open and on every admitted edit), `close_hub_links` (actor closed, binding keeps the reason: "artifact_open … again"), `load_session_document` discards a guest that holds another artifact. Fixture `🏠️workspace/🧫️fixtures/🔗️hub-live-links.json` (14 cases) + law `a_hub_session_keeps_one_live_link_per_app_within_its_bound_and_edits_the_document_opened_last` + Python oracle `wp-g12/g12-live-links-oracle.py` **14/14 agree**. Proof = gate `s15c` (H3 row) |
+| H3 | S19 relay (coordinator 19:5x): forms `addBlock` "missing field `kind`" — the gateway sent the agent's input verbatim, the guest SDK no longer fills declared defaults | **GREEN 19:59** (gate `s15c`) (`wp-g12/g12-declared-defaults.py`, idempotent): `🗂️catalog` `CapabilityArgSummary.definition` (the declared `manifest::ActionArgDef`, `#[serde(skip)]`/`#[value(skip)]` — wire shape unchanged) at both summary sites; `🔀️dispatch` `declared_effective_input` runs the input through the shells' ONE rule `manifest::effective_action_args` in `ActionAdapter::prepare` BEFORE validation + PureCommand (omitted args get their default; the caller's keys are never replaced or dropped, so an undeclared key is still INPUT_INVALID). Law `an_omitted_optional_argument_runs_with_its_declared_default` (`{}` → `{kind:"text"}`, given values as given, undeclared refused). Gate re-queued as `s15c` (same stamp; filters fixed: the dispatch module is `actions::`, + `catalog::`, `search::`) → `gate-s15c.log` |
+| G1 | Gate `s15c` (native lane 19:57–19:59, `gate-s15c.log`) | os-mcp `check --lib --tests` rc 0; laws workspace::quick 54/54, remote 26/26, actions 36/36, inference 58/58, catalog 8/8, search 17/19 (reds = `search::long::every_installed_agent_verb_explains_itself_in_en_and_de` + `…gates_destructive_and_user_path_verbs…`: installed-plugin manifest content audits, not my sets — owner unknown, told main); gateway build rc 0 → `s14-g12-bin/semio-os-mcp-s15c` (viewlanes + H1 + H3). Landing rows written |
+| T6 | t6 runbook `wp-g12/g12-run-t6.sh <tag>` (gateway default `s15c`): 7800 battery (participant, quartet, security, refused-relay, untrusted, coverage) → own hub 8031 on a t6 catalog clone with fresh users + serve 6530 → user path en + de → both stopped → durability (own hub 8032) → 8031 root deleted. `zsh -n` clean; waits for 'T6 HUB READY' (W4's t6 hub binary path assumed `s14-w4-bin/s14-w4-hub-7800-t6/os-hub`, override `G12_T6_HUB_BIN`) |
+| L1 | Live p33-5 (7800/p33, gateway `s15c`, harness H2; `battery-p33-5/`) | quartet **19/19 PASS**; hub coverage **36/63** (p33-3 32, p33-4 17) in **11 min** (was 34): every open 0.3–1.4 s (no 10 s live-link waits, no link backoff, no `link-expired` = H1 live), forms `form.dictionary` now mutates + undo/redo (**H3 live**), 3d.fem / wfc3d / grid3d / 5d.block / note / text.document / graph.wires / norm iso16757 + vdi3805 + din18599 pass. 27 failing, by owner: **S19** procedural 2d/3d (prepare ok; EVERY invoke traps `wasm function 30081` — addWidget, add/rename/removeGeneration, reorganize, setActiveExample; viewlanes removed the old "no wire representation"), norm ×12 (`insertItem`/`removeItem` "missing field 'Coverage' in path", `setSnapshot` "unexpected byte 67" = a string arg decoded as bytes, `applyRemedy` missing check; all INTERNAL, not INPUT_INVALID), flow (`addWidget` "ownership violation: flow-content-… not a currently-tracked owned child", target verbs find no widget), sequence (`addStep` same ownership violation; move/connect/setStepParams "command does not match its exact retained route or payload envelope"); **LB2** stdio ×5 ("no live link to the hub": codec `pack-schema-hash` has no structural record spec → p17/T7d); **S20** exports layout / shooting / cad; **P9** trinity (`loadExampleQuery`/`runQuery` "targeted window transient capture requires an attached window instance"); **SH2** space.sspace (`set-cell` published but the guest answers "space index: unhandled action id set-cell"; rename/touch/delete rejected on a blank space = need a real artifact); **unowned** catalogue.sourcing (curationAdd/SetCount/Remove no-change on a blank catalogue — harness input vs guest, needs an owner) |
+| H2 | Coverage harness (hub lane) | tsc rc 0 (`tsc-g12-s15.txt`): id-like required inputs take an id from the document's `artifact_snapshot` (`harvestIds`/`agentInput` — what an agent reading the doc first does), 16 candidate verbs (was 8), no 10 s head wait after a failed invoke, the successful `input` recorded in the row |
+
+### Session 15 Log
+
+- 19:1x read preambles 15 + 14 (rules 1–33), fleet-15, this report. Native lane: U6 orphan `r6-base` holds (since 18:21), queue LW1, S19, G12.
+- 19:19 R1 done (row above).
+- 19:2x–19:4x H1 written + applied (one atomic script run), oracle 14/14; gate re-queued at the same stamp as `s15b` with the new law. H2 harness + tsc.
+- 19:5x H3 (S19 relay) written + applied; gate s15b killed while queued and re-queued at the same stamp as `s15c` (s15b's `dispatch::` filter would have matched nothing: the module is `actions`).
+- 19:57–19:59 gate s15c green (G1). 20:0x battery `p33-5` (quartet + coverage, gateway s15c) on 7800/p33 → `battery-p33-5/`. 20:11 done: L1 row. Relays sent via main.
+
 ## Session 14
+
+### Session 14c — live wave on p33 (2026-09-29 15:3x)
+
+7800 = catalog `s14-w4-catalog-p33` (33 packages; not the 9 stdio families + demonstrator), fresh root `s14-w4-hub-7800-p33`, hub
+built from the post-T5 tree. Gateway = `dist/build/semio-os-mcp` staged 15:35 from the post-T5 tree (684 sources unchanged; carries the
+scoped offers + revision guard) → `s14-g12-bin/semio-os-mcp-p33`. No T6 row landed yet when copied.
+
+| # | Item | Status |
+|---|---|---|
+| L1 | Battery on 7800/p33 (`battery-p33-1/summary.txt`) | participant **19/19 PASS** · security **6/6 PASS** · untrusted **6/6 PASS** · durability **23/23 PASS** (own hub 8032, p33 binary + catalog) · refused-relay correct (read → `viewer.read-only`, head stays 0; revoke → refused) · quartet **18/19** (row 8 → L3, fixed) · hub coverage **2/63** (L4) |
+| L2 | User path en + de, fresh users (own hub 8031, p33 binary + catalog clone, default rendezvous — no pin) | **en 9/9 PASS, de 9/9 PASS** (`battery-p33-8031-1/`): agent edit 10–11 s, destructive approval in the shell ("Approve Once" / "Einmal genehmigen") 33 s from a clean profile, withdrawal refuses the connected client (`access-revoked`); gateway offer line "offered to the shell of the human who delegated agent:… on http://127.0.0.1:8031 space …" = scoped offers live |
+| L3 | Quartet row 8: a second concurrent grid3d solve failed "the activation job ended without answering" | **ROOT CAUSE + FIX LANDED (host)**: pool-worker panic "there is no reactor running" at `🔗️remote/🧩️pair` — a joined canonical-pair reader polled with `tokio::time::sleep` on the framework executor; now woken by the completion or its own cancel; law `a_joined_reader_waits_without_a_tokio_reactor_…` (framework `block_on`) 1/1, pair laws 5/5, check rc 0 (`gate-pair1.txt`). Live re-run with the next gateway |
+| L4 | Hub coverage: 63 creatable kinds all CREATED; 2d.drawing + 2d.fem pass end to end (open, mutate, undo 1→2, redo 2→3, export); the other 61 never opened | root causes (os-mcp 🔗️remote, relayed to H13 16:0x): (a) first `artifact_open` right after initialize → "canonical pair descriptor is unavailable" (authority not ready; no settle wait on that path); (b) a fresh gateway in a 63-doc / 33-package space exhausts `network_bytes_per_min` (64+16 MiB) on its FIRST open (`block-open-probe-2.txt`: 30 s), then every open → "cannot be matched to one of 33 registered plugins". Harness fixed: an unopened kind is `mutate: not-reached` + `openDetail`, never "no mutation declared". Not published on p33: the 9 stdio families + demonstrator (T6 hosting) |
+
+### Session 14c — coverage wave on p33 after H13's budget fix (2026-09-29 16:5x–18:1x)
+
+Gateways (all native lane, private target, copied never in place): `semio-os-mcp-budget` (H13), `s14-g12-bin/semio-os-mcp-abandon`
+(17:23, + L5), `s14-g12-bin/semio-os-mcp-codecpage` (18:12, + L6/L7). Captures `.🧬semio/🌐hub/s14-g12-logs/battery-p33-{2,3,4}/`.
+
+| # | Item | Status |
+|---|---|---|
+| L5 | Coverage p33-2 (H13 gateway) stopped after 3 kinds: gateway main-thread panic `assert_eq!(pending.seq, seq)` "left 5 right 6" (🏠️workspace) | **ROOT CAUSE + FIX LANDED (host)**: an abandoned command (turn fault → instance discarded, or wall budget spent) left its exchange ACTIVE in the fixed registries; the next command on the instance met it. `begin_closing_abandoned_exchange` closes it (existing bounded teardown) before admission; the wall-budget exit now discards the instance too. Law `an_abandoned_commands_exchange_is_closed_before_the_next_command_on_its_instance` 1/1; live: p33-3 ran all 63 kinds without a panic |
+| L6 | A space past 64 documents: every `artifact_open` → "descriptor index is refreshing" (`hub directory response was invalid: space administration page exceeds one bounded window`) | **FIXED (host, os-mcp 🔗️remote)**: the binding pages the documents window to its end and the members window to the principal's row, one authorization generation; schema-first fixture cases + Python receipt oracle + TS oracle + Rust law; live: open on the 68-document coverage space → `remote: live` |
+| L7 | stdio opens: the write-path refusal carried the guest fault as raw bytes | **FIXED (host, plugin host)**: wasmtime `codec` exports decode the guest's own `plugin-error` (as the interpreter does). Live reason now: `codec.pack-schema-hash(stdio.md)` → "guest fault plugin.internal: artifact codec schema has no structural record specification" → **LB2** (all 5 stdio kinds, txt too despite TC4's `record_spec`: stale p33 stdio component or the codec table's hash fn) |
+| L8 | Quartet (row 8 pair-waiter fix live) | **19/19 PASS** p33-2 (16:56) and p33-3 (17:24) |
+| L9 | Hub coverage p33-3 (gateway `abandon`): 63/63 created + opened; **32/63 pass end to end** (open, mutate, undo, redo, export) | failures by owner below; per-kind open latency (ms) below; not published on p33: `🎪️demonstrator` (package absent) + stdio's 9 extension families (media, bim, office, pdf, binary, mesh, image, cad, semio: avi…zip kinds) |
+
+**Per-kind open latency p33-3** (ms, first `artifact_open` of each kind in one fresh gateway, budget-paced by H13's fix; ✗ = first failing stage):
+2d.block 786 · 2d.drawing 341 · 2d.fem 377 · 2d.generation 452 ✗mutate · 2d.layout 404 ✗export · 2d.puzzle 610 · 2d.raster 861 ·
+2d.shooting 26980 ✗export · 2d.wfc2d 452 · 2d.wfcbitmap 247 · 2d.wfcgrid2d 230 · 3d.block 225 · 3d.cad 452 ✗export · 3d.fem 268 ✗mutate ·
+3d.generation 216 ✗mutate · 3d.lowpoly 510 · 3d.process 628 · 3d.puzzle 232 · 3d.remodeling 357 · 3d.wfc3d 291 · 3d.wfcgrid3d 326 ·
+5d.block 307 · 5d.puzzle 455 · animate.presentation 535 · catalogue.sourcing 360 ✗mutate · computation.equation 538 · computation.flow 585 ✗mutate ·
+norm.din16798 46493 ✗mutate · norm.din18599 257 · norm.din4108 780 ✗mutate · norm.en1990 851 ✗ · norm.en1991 870 ✗ · norm.en1992 474 ✗ ·
+norm.en1993 2094 ✗ · norm.en1994 10301 ✗ · norm.en1995 994 ✗ · norm.en1996 3923 ✗ · norm.en1997 2329 ✗ · norm.en1998 8155 ✗ · norm.en1999 8353 ✗ ·
+norm.iso16757 10556 ✗ · norm.vdi3805 8205 · computation.procedure 4202 · computation.sequence 711 ✗mutate · data.model 2436 · data.program 33235 ·
+form.dictionary 512 ✗mutate · graph.dag 4187 · graph.trinity 45661 ✗mutate · graph.wires 10333 ✗mutate · s.gis.gismap 21377 · s.gis.gisterrain 463 ·
+s.note.note 2132 · s.stdio.csv 44284 ✗mutate · s.stdio.html 151 ✗ · s.stdio.md 153 ✗ · s.stdio.tsv 172 ✗ · s.stdio.txt 163 ✗mutate · s.vcs.vcs 55924 ·
+space.sspace 897 ✗mutate · text.document 2010 · text.playbook 4154 · text.rewriting 350. Median 610 ms; > 20 s = the first open of a package whose
+component the budget paces (stdio 44 s, vcs 56 s, trinity 46 s, norm 46 s, data.program 33 s, shooting 27 s, gismap 21 s).
+
+**Failures by owner** (neutral harness input: a required string = "Coverage", first 8 non-destructive verbs; "no-change" = the gateway's own
+`no-change` warning, the verb emitted no operation):
+- **LB2 / stdio (5)**: csv, html, md, tsv, txt — no hub write path (L7).
+- **procedural (2d/3d.generation)**: `addWidget` → guest trap (wasm fn 30081); add/rename/removeGeneration → gateway `TransactionPrepare` refuses
+  config/draft-lane prepared ops ("no wire representation yet") — **host design gap (G12/L1)**: the real wire `TransactionPrepare` carries the
+  document lane only; decision needed whether an agent's config/draft ops travel (new wire lanes) or are dropped for a headless participant.
+- **exports (3)**: layout `layout:out` "media export owner lacks an exact bounded snapshot"; shooting `photos:out` "SVG rasterization requires
+  the native …" (headless raster capability); cad `brep:out` "brep export failed".
+- **S19 / norm (12 of 14)**: every neutral verb refused (`removeItem` "missing field 'Coverage' in path", `setField` needs args,
+  `applyRemedy` missing check, "unexpected byte 67 at offset 0" = a `string` arg decoded as bytes) — guest refusals are INTERNAL, not INPUT_INVALID.
+- **flow / sequence**: add verbs → "ownership violation: …-content-… is not a currently-tracked owned child".
+- **forms**: `addBlock`/`submit`/`updateForm` args don't decode (missing `kind`/`windowKindId`/`title`) while describe declares none required = schema gap.
+- **trinity**: `loadExampleQuery` "targeted window transient capture requires an attached window instance" (headless agent lane); others need selection.
+- **fem3d / sourcing / space**: neutral verbs are no-change or `mutation.target-missing` (need real targets) — harness input limit, not a fault.
+- **graph.wires, norm.iso16757**: "the hub did not acknowledge edit … in time (link backoff)" → H13 (transport under paced component fetches).
 
 ### Session 14c
 
@@ -37,6 +116,11 @@ window-3 trains cannot make the harnesses re-stage it. Serve `s` React dev 6530 
 | 54078 | `g12-gate-mcp.sh p24b …` (native lane, build first) → `gate-p24b.txt` | 22:19 | 22:42 reboot (build rc 0 22:32, os-mcp check rc 0 22:36, laws not reached) |
 | 16985 → | serve 6530 | 21:15 | 22:42 reboot |
 | 62814 | `g12-battery.sh … p24b-1` (participant, coverage, user path de/en; gateway p24b) | 22:33 | 22:42 reboot (participant done; coverage in its creation phase) |
+| 7370 | `g12-gate-mcp.sh abandon` (native lane) → `s14-g12-logs/gate-abandon.log` | 29 17:03 | 17:23 done (green, gateway `abandon`) |
+| 19126 | `g12-battery.sh … p33-3` (quartet + coverage, gateway `abandon`) | 29 17:23 | 17:43 done (quartet 19/19, coverage 32/63) |
+| 34871 | `g12-gate-host.sh codecfault` (queued) | 29 17:47 | 17:57 killed by me while queued (re-queued at the same stamp with the paging laws) |
+| 44485 | `g12-gate-host.sh codecpage` (native lane) → `gate-codecpage.log` | 29 17:57 | 18:12 done (green, gateway `codecpage`) |
+| — | `g12-battery.sh … p33-4` (quartet + coverage, gateway `codecpage`) → `battery-p33-4.log` | 29 18:14 | |
 
 #### Session 14c Log
 

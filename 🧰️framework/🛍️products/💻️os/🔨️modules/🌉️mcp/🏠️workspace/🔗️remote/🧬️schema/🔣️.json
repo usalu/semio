@@ -10,7 +10,7 @@
     "HubOrigin": { "type": "string", "minLength": 1, "maxLength": 2048, "pattern": "^https?://[^\\s/]+" },
     "Generation": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
     "HubUnavailableCauseV1": {
-      "description": "🔎️ What made the hub directory unavailable (os-mcp 🔗️remote `HubUnavailableCause`): an HTTP answer with its typed hub code, a transport fault with its own bounded detail, or an unreadable answer.",
+      "description": "🔎️ What made the hub directory unavailable (os-mcp 🔗️remote `HubUnavailableCause`): an HTTP answer with its typed hub code, a transport fault with its own bounded detail, this gateway's own spent network byte budget (the hub is fine; the call continues once it refills), or an unreadable answer.",
       "oneOf": [
         {
           "type": "object",
@@ -28,6 +28,7 @@
           "required": ["kind", "detail"],
           "properties": { "kind": { "const": "transport" }, "detail": { "type": "string", "minLength": 1, "maxLength": 512 } }
         },
+        { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "network-budget" } } },
         { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "undecodable-response" } } }
       ]
     },
@@ -67,7 +68,8 @@
                 "oneOf": [
                   { "type": "object", "additionalProperties": false, "required": ["kind", "io"], "properties": { "kind": { "const": "transport" }, "io": { "type": "string", "minLength": 1 } } },
                   { "type": "object", "additionalProperties": false, "required": ["kind", "status", "body"], "properties": { "kind": { "const": "http" }, "status": { "type": "integer", "minimum": 100, "maximum": 599 }, "body": { "type": "string" } } },
-                  { "type": "object", "additionalProperties": false, "required": ["kind", "decode"], "properties": { "kind": { "const": "decode" }, "decode": { "type": "string" } } }
+                  { "type": "object", "additionalProperties": false, "required": ["kind", "decode"], "properties": { "kind": { "const": "decode" }, "decode": { "type": "string" } } },
+                  { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "budget" } } }
                 ]
               },
               "expected": {
@@ -86,6 +88,57 @@
         }
       }
     },
+    "HubComponentTransferPhaseV1": {
+      "description": "📶️ Where one execution-target component transfer is, the first word of every progress message it publishes: `awaiting-stream` while the hub's asset stream rule or this gateway's one stream is taken, `receiving` while its bytes arrive, `retrying` after an interrupted stream or a hub shortage.",
+      "enum": ["awaiting-stream", "receiving", "retrying"]
+    },
+    "HubComponentAssetCorpusV1": {
+      "description": "🧪️ Neutral corpus: execution-target components as static assets. Each case starts from a store state and runs the gateway once per `runs` entry — a new store over the same root between runs, as a restarted gateway — against a hub answering the listed stream answers in order: `exact` the lease's bytes, `wrong` bytes of the declared length that do not hash to the lease, `short` a stream ending half-way, `busy` the typed `429` of the hub's asset stream rule naming `busyRetryAfterMs`, `unavailable` a `503`, `unauthorized` a `401`. A store copy that verifies costs no request; a busy hub is a wait; an interrupted stream or a shortage is asked again up to `streamAttempts` requests; bytes off the lease are refused and never kept. `phases` is the transfer's progress with repeats folded. The component is `byteLength` bytes, byte i being (31 i + 7) mod 251.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "component", "busyRetryAfterMs", "streamAttempts", "cases"],
+      "properties": {
+        "schema": { "const": "semio.os-mcp.hub-component-asset-corpus/v1" },
+        "component": { "type": "object", "additionalProperties": false, "required": ["byteLength", "sha256"], "properties": { "byteLength": { "type": "integer", "minimum": 1 }, "sha256": { "$ref": "#/$defs/Sha256Hex" } } },
+        "busyRetryAfterMs": { "type": "integer", "minimum": 1, "maximum": 30000 },
+        "streamAttempts": { "const": 4 },
+        "cases": {
+          "type": "array",
+          "minItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "store", "runs"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+              "store": { "enum": ["empty", "verified", "tampered"] },
+              "runs": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["hub", "expected"],
+                  "properties": {
+                    "hub": { "type": "array", "items": { "enum": ["exact", "wrong", "short", "busy", "unavailable", "unauthorized"] } },
+                    "expected": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["outcome", "componentRequests", "phases"],
+                      "properties": {
+                        "outcome": { "enum": ["store", "hub", "refused", "unavailable", "denied"] },
+                        "componentRequests": { "type": "integer", "minimum": 0 },
+                        "phases": { "type": "array", "items": { "$ref": "#/$defs/HubComponentTransferPhaseV1" } }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "AuthenticatedHubDescriptorIndexCaseV1": {
       "type": "object",
       "additionalProperties": false,
@@ -94,7 +147,7 @@
         "tokenPresent": { "type": "boolean" },
         "responses": {
           "type": "array",
-          "maxItems": 2,
+          "maxItems": 8,
           "items": {
             "type": "object",
             "additionalProperties": false,
@@ -124,7 +177,8 @@
               "uniqueItems": true,
               "items": { "type": "string", "pattern": "^semio://" }
             },
-            "noTokenLeak": { "const": true }
+            "noTokenLeak": { "const": true },
+            "requests": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^/" } }
           }
         }
       }
@@ -149,7 +203,7 @@
         "cases": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["noToken", "expiredToken", "publicWithoutMembership", "memberReady", "sameDocumentOtherSpace", "memberRevoked", "streamReconnect", "agentBelowMembership", "humanBelowMembership", "principalAboveMembership"],
+          "required": ["noToken", "expiredToken", "publicWithoutMembership", "memberReady", "sameDocumentOtherSpace", "memberRevoked", "streamReconnect", "agentBelowMembership", "humanBelowMembership", "principalAboveMembership", "pagedWindows", "pagesCrossAnAuthorizationChange"],
           "properties": {
             "noToken": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
             "expiredToken": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
@@ -160,7 +214,9 @@
             "streamReconnect": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
             "agentBelowMembership": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
             "humanBelowMembership": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
-            "principalAboveMembership": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" }
+            "principalAboveMembership": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
+            "pagedWindows": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
+            "pagesCrossAnAuthorizationChange": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" }
           }
         }
       }

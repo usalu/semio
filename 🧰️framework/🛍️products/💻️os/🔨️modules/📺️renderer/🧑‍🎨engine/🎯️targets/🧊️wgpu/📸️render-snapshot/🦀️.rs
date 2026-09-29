@@ -17,12 +17,18 @@ pub struct RenderSnapshot {
     pub accepted_cursor: SemioCursor,
     pub accepted_theme_dark: bool,
     pub ime: Option<ImeDirective>,
+    pub media_slots: Vec<crate::media_slots::PresentedMediaSlot>,
 }
 
 impl RenderSnapshot {
     /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new(revision: u64, cursor: CursorRequest, accepted_cursor: SemioCursor, accepted_theme_dark: bool, ime: Option<ImeDirective>) -> Self {
-        Self { revision, cursor, accepted_cursor, accepted_theme_dark, ime }
+        Self { revision, cursor, accepted_cursor, accepted_theme_dark, ime, media_slots: Vec::new() }
+    }
+    /// 🎬️ Attaches descriptors from the same completed presentation transaction.
+    pub fn with_media_slots(mut self, media_slots: Vec<crate::media_slots::PresentedMediaSlot>) -> Self {
+        self.media_slots = media_slots;
+        self
     }
 }
 

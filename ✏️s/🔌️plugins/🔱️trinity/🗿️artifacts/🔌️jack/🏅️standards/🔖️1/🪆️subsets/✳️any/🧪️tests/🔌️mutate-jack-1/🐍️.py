@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""🔌 An INDEPENDENT second implementation of the `s.trinity.jack` assembly scene and all eight of
+"""🔌 An INDEPENDENT second implementation of the `s.trinity.jack` assembly scene and all nine of
 its typed mutations, in Python, serving as this case's differential oracle.
 
 **Why a second implementation and not a third-party library.** A jack scene is a labelled property
@@ -15,13 +15,13 @@ what this file implements, from the specification, in another language.
 **What it was written from.**
 
 * ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — `JackSnapshot` is
-  `schema`, `name`, `manifestId`, `manifest`, `camera`, `nodes`, `edges` and `rootNodeId`; a `Node`
+  `schema`, `name`, `manifestId`, `manifest`, `camera`, `nodes`, `edges`, `rootNodeId` and `query`; a `Node`
   is `{id, kind, name, x, y, width, height, properties, ports}` and a `Port` is
   `{id, kind, direction, properties}`; an `Edge` is `{id, kind, source, target, properties}`; both
   property bags are open objects, everything else is `additionalProperties: false`.
-* ``…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`` — the eight verbs and their positional
+* ``…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`` — the nine verbs and their positional
   argument lists, including `entity = "node" ":" id / "edge" ":" id` for the two property verbs.
-* the eight committed specification vectors, which give the INTERNALLY tagged wire form of each verb
+* the nine committed specification vectors, which give the INTERNALLY tagged wire form of each verb
   and — this is all they give — its REJECTION rule.
 
 **A defect in the specification, found while writing this and reported rather than worked around.**
@@ -30,10 +30,11 @@ copy of the snapshot schema, `title` changed to `JackMutation` and nothing else.
 therefore read off the committed vectors, which spell it internally tagged and — inconsistently —
 mix camelCase discriminators with snake_case arguments (`new_name`, `new_value`).
 
-**A gap in the evidence, likewise reported.** ALL EIGHT committed vectors are NEGATIVE: three
+**A gap in the evidence, likewise reported.** ALL EIGHT committed SCENE vectors are NEGATIVE: three
 rejections and five accepted no-ops. Not one of them exercises a mutation that actually changes the
-scene, so the accepting direction of this entire vocabulary had no committed evidence before this
-case's real-document scenarios.
+scene, so the accepting direction of the scene vocabulary had no committed evidence before this
+case's real-document scenarios. The ninth, `set-query`'s, is the first positive one: it replaces the
+document's query and leaves the scene alone.
 
 **What is inferred rather than read, and on what grounds.** Nothing states whether deleting a node
 also deletes the edges that name it. The document HAS the invariant — `create-edge`'s committed
@@ -59,19 +60,19 @@ from semio_repo_test import Adapter, Context, Outcome, digest
 
 
 # region 🔖️Vocabulary
-MEMBERS = ("schema", "name", "camera", "nodes", "edges", "rootNodeId")
+MEMBERS = ("schema", "name", "camera", "nodes", "edges", "rootNodeId", "query")
 """🗂️ The cross-language projection: the members BOTH committed serializations of a jack scene carry.
 
-The committed carrier writes `schema`, `name`, `manifestId`, `camera`, `nodes`, `edges` and
-`rootNodeId`; the committed specification vectors write `schema`, `name`, `manifest`, `camera` and a
+The committed carrier writes `schema`, `name`, `manifestId`, `camera`, `nodes`, `edges`,
+`rootNodeId` and `query`; the committed specification vectors write `schema`, `name`, `manifest`, `camera` and a
 composed `content` child, and omit `nodes` and `edges` entirely because theirs are empty. Neither
 `manifest`/`manifestId` — the kind vocabulary, which no mutation in this catalog edits — nor
 `content` is therefore comparable across both, and `content` is not even declared by the snapshot
 schema. What both forms do carry, once an absent `nodes`/`edges`/`rootNodeId` is read as empty, is
-the six members above.
+the seven members above.
 """
 
-KINDS = ("create-node", "delete-node", "create-edge", "delete-edge", "rename-node", "move-node", "change-data-property", "remove-data-property")
+KINDS = ("create-node", "delete-node", "create-edge", "delete-edge", "rename-node", "move-node", "change-data-property", "remove-data-property", "set-query")
 """🏷️ Every kind the catalog declares."""
 
 TAGS = {
@@ -83,6 +84,7 @@ TAGS = {
     "move-node": "moveNode",
     "change-data-property": "changeDataProperty",
     "remove-data-property": "removeDataProperty",
+    "set-query": "setQuery",
 }
 """🔤️ The internally tagged `mutation` discriminator of each kind, as the committed vectors spell it."""
 
@@ -375,6 +377,10 @@ def apply_mutation(document, mutation):
         if mutation["key"] in properties and properties[mutation["key"]] == mutation["new_value"]:
             return result, True
         properties[mutation["key"]] = copy.deepcopy(mutation["new_value"])
+    elif kind == "set-query":
+        if result.get("query", "") == mutation["value"]:
+            return result, True
+        result["query"] = mutation["value"]
     else:
         properties = bag(result, mutation["entity"], kind)
         if mutation["key"] not in properties:
@@ -408,6 +414,8 @@ def inverse_mutation(document, mutation):
         at = find(document["nodes"], mutation["id"])
         node = document["nodes"][at]
         return {"mutation": TAGS[kind], "id": mutation["id"], "x": node["x"], "y": node["y"]}
+    if kind == "set-query":
+        return {"mutation": TAGS[kind], "value": document.get("query", "")}
     properties = bag(document, mutation["entity"], "inverse of %s" % kind)
     if kind == "change-data-property":
         if mutation["key"] not in properties:
@@ -479,7 +487,7 @@ def tower(ctx):
 
 
 def projection_of(document):
-    """📤️ What parity compares: the six members both committed serializations carry."""
+    """📤️ What parity compares: the seven members both committed serializations carry."""
     return {name: document.get(name, [] if name in ("nodes", "edges") else "") for name in MEMBERS}
 
 
@@ -512,7 +520,7 @@ def mutate_handler(kind):
 def inverse_handler(kind):
     """↩️ Applies one kind to the REAL tower scene and then its OWN computed inverse.
 
-    The projection carries BOTH scenes; projecting only the restored one would make all eight rows
+    The projection carries BOTH scenes; projecting only the restored one would make all nine rows
     project the same value and the differential would be vacuous.
     """
 
@@ -534,7 +542,7 @@ def inverse_handler(kind):
 
 def spec_vector_handler(kind):
     """📐️ Replays one committed handcrafted vector over the composed scene the feature names for it.
-    All eight are NEGATIVE, so the feature's `verdict` column states which of the two refusals each one
+    Eight of the nine are NEGATIVE and `set-query`'s is applied, so the feature's `verdict` column states which answer each one
     commits to: `refused` must be refused outright, and `noop` must be accepted while leaving the scene
     exactly where it was."""
 
@@ -556,7 +564,10 @@ def spec_vector_handler(kind):
                 return outcome_of(projection_of(before))
             raise AssertionError("spec-vector-%s: the committed vector declares a refusal, but the mutation applied" % kind)
         applied, noop = apply_mutation(before, mutation)
-        if not noop:
+        if verdict == "applied":
+            if noop:
+                raise AssertionError("spec-vector-%s: the committed vector declares an applied change, but the mutation was a no-op" % kind)
+        elif not noop:
             raise AssertionError("spec-vector-%s: the committed vector declares an accepted no-op, but the mutation moved the scene" % kind)
         if projection_of(applied) != projection_of(after):
             raise AssertionError("spec-vector-%s: the applied scene is not the committed after-scene" % kind)

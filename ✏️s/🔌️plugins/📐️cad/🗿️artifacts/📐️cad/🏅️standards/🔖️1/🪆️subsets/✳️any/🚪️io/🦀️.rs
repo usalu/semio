@@ -152,7 +152,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::export::seri
 use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::obj::v3_0::any::SemioMeshToObj;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_step::standards::v_ap214::engine::part21::{parse_part21, write_part21};
+use semio_s_artifact_stdio_contract::part21::{parse_part21, write_part21};
 use semio_s_artifact_stdio_step::StepSnapshot;
 use semio_s_artifact_stdio_stl::standards::v_ascii::engine::encode_stl_binary;
 

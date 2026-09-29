@@ -7,7 +7,7 @@ grammar Layout_layout_mutations;
 
 DOCUMENT: 'schema' [ ]+ 'layout.layout.mutations' ;
 
-line: renameLayout | changePrintTarget | changeDataFields | createPage | deletePage | renamePage | changePageWidth | changePageHeight | updatePageMargins | updatePageColumns | reorderPages | createStory | deleteStory | editStory | createLink | deleteLink | changeLinkPath | createFrame | deleteFrame | moveFrame | resizeFrame | rotateFrame | changeFrameFill | changeFrameStroke | changeFrameWrapMode | changeFrameColumns | updateGrid | setFrameFlags | updateParagraphStyle | updateTextFrame | updateLayer | createCharacterStyle | deleteCharacterStyle | updateCharacterStyle | updateParentPage | updateSpread | setPageParent | setPageGuides | setStoryRuns | updateLink ;
+line: renameLayout | changePrintTarget | changeDataFields | createPage | deletePage | renamePage | changePageWidth | changePageHeight | updatePageMargins | updatePageColumns | reorderPages | createStory | deleteStory | editStory | createLink | deleteLink | changeLinkPath | createFrame | deleteFrame | moveFrame | resizeFrame | rotateFrame | changeFrameFill | changeFrameStroke | changeFrameWrapMode | changeFrameColumns | updateGrid | setFrameFlags | updateParagraphStyle | updateTextFrame | updateLayer | createCharacterStyle | deleteCharacterStyle | updateCharacterStyle | updateParentPage | updateSpread | setPageParent | setPageGuides | setStoryRuns | updateLink | setPageOverrides | createLayer | setFrameLayer | setDrawingText | reorderFrame ;
 renameLayout: 'rename-layout' SP text ;
 changePrintTarget: 'change-print-target' SP text? ;
 changeDataFields: 'change-data-fields' SP text? ;
@@ -48,6 +48,11 @@ setPageParent: 'set-page-parent' SP id ;
 setPageGuides: 'set-page-guides' SP id ;
 setStoryRuns: 'set-story-runs' SP id ;
 updateLink: 'update-link' SP id ;
+setPageOverrides: 'set-page-overrides' SP id ;
+createLayer: 'create-layer' SP id ;
+setFrameLayer: 'set-frame-layer' SP id ;
+setDrawingText: 'set-drawing-text' SP id ;
+reorderFrame: 'reorder-frame' SP id ;
 id: OCTET+ ;
 number: OCTET+ ;
 text: OCTET+ ;

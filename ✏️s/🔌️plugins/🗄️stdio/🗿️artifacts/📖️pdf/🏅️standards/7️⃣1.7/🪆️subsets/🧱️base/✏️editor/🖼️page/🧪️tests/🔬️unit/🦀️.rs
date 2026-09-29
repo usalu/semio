@@ -415,10 +415,172 @@ fn info_page_extras_annotation_style_and_viewer_details_publish() {
 }
 
 #[test]
+fn annotation_markup_form_settings_and_extra_entries_publish() {
+    use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfAnnotation, PdfObject};
+    let mut snapshot = sample();
+    snapshot.pages[0].annotations.push(PdfAnnotation::new([0.0, 0.0, 10.0, 10.0], PdfAnnotationKind::Text { open: false, icon: None, state: None, state_model: None }));
+    let annotation = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Annotation).expect("annotation").id;
+    let page = dsl::DslValue::float(0.0);
+    let object = dsl::DslValue::String(annotation);
+    apply(&mut snapshot, edit_from_action("set-annotation-border", Some(&args(vec![("page", page.clone()), ("object", object.clone()), ("text", dsl::DslValue::String("D".into())), ("extra", dsl::DslValue::String("3,1".into())), ("x", dsl::DslValue::float(2.0)), ("y", dsl::DslValue::float(1.0)), ("width", dsl::DslValue::float(2.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-annotation-markup", Some(&args(vec![("page", page.clone()), ("object", object.clone()), ("text", dsl::DslValue::String("title".into())), ("extra", dsl::DslValue::String("Reviewer".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-annotation-markup", Some(&args(vec![("page", page.clone()), ("object", object.clone()), ("text", dsl::DslValue::String("opacity".into())), ("x", dsl::DslValue::float(0.4))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-annotation-markup", Some(&args(vec![("page", page.clone()), ("object", object.clone()), ("text", dsl::DslValue::String("layer".into())), ("extra", dsl::DslValue::String("OC1".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-annotation-markup", Some(&args(vec![("page", page), ("object", object), ("text", dsl::DslValue::String("entry".into())), ("extra", dsl::DslValue::String("OC=On".into()))]))).unwrap());
+    let note = &snapshot.pages[0].annotations[0];
+    let border = note.border.as_ref().expect("border");
+    assert!((border.width - 2.0).abs() < 0.01 && border.style.as_deref() == Some("D") && border.dash.as_deref() == Some(&[3.0, 1.0][..]) && border.radii == Some([1.0, 2.0]));
+    let markup = note.markup.as_ref().expect("markup");
+    assert_eq!(markup.title.as_deref(), Some("Reviewer"));
+    assert_eq!(markup.opacity, Some(0.4));
+    assert_eq!(note.optional_content.as_deref(), Some("OC1"));
+    assert!(matches!(&note.extra[0].value, PdfObject::Name(name) if name == "On"));
+    apply(&mut snapshot, edit_from_action("set-form-field", Some(&args(vec![("object", dsl::DslValue::String("Name".into())), ("text", dsl::DslValue::String("Ada".into())), ("extra", dsl::DslValue::String("text".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-form-settings", Some(&args(vec![("object", dsl::DslValue::String("signatureFlags".into())), ("x", dsl::DslValue::float(1.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-form-settings", Some(&args(vec![("object", dsl::DslValue::String("defaultAppearance".into())), ("text", dsl::DslValue::String("/Helv 0 Tf".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-form-settings", Some(&args(vec![("object", dsl::DslValue::String("quadding".into())), ("x", dsl::DslValue::float(2.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-form-settings", Some(&args(vec![("object", dsl::DslValue::String("defaultFonts".into())), ("text", dsl::DslValue::String("F1,F2".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-form-settings", Some(&args(vec![("object", dsl::DslValue::String("Name".into())), ("text", dsl::DslValue::String("appearance".into())), ("extra", dsl::DslValue::String("/Helv 12 Tf".into()))]))).unwrap());
+    let form = snapshot.acro_form.as_ref().expect("form");
+    assert_eq!(form.signature_flags, 1);
+    assert_eq!(form.default_appearance.as_deref(), Some("/Helv 0 Tf"));
+    assert_eq!(form.quadding, Some(2));
+    assert_eq!(form.default_fonts, vec!["F1".to_string(), "F2".to_string()]);
+    assert_eq!(form.fields[0].default_appearance.as_deref(), Some("/Helv 12 Tf"));
+    apply(&mut snapshot, edit_from_action("set-extra-entry", Some(&args(vec![("object", dsl::DslValue::String("info".into())), ("extra", dsl::DslValue::String("Custom".into())), ("text", dsl::DslValue::String("Kept".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-extra-entry", Some(&args(vec![("object", dsl::DslValue::String("viewer".into())), ("extra", dsl::DslValue::String("PrintArea".into())), ("text", dsl::DslValue::String("CropBox".into()))]))).unwrap());
+    assert!(matches!(&snapshot.info.extra[0].value, PdfObject::Name(name) if name == "Kept"));
+    assert!(matches!(&snapshot.viewer_preferences.as_ref().expect("viewer").extra[0].value, PdfObject::Name(name) if name == "CropBox"));
+}
+
+#[test]
+fn annotation_kinds_and_choice_options_publish() {
+    use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfActionKind, PdfAnnotation, PdfAnnotationKind, PdfFormFieldKind};
+    let mut snapshot = sample();
+    snapshot.pages[0].annotations.push(PdfAnnotation::new([0.0, 0.0, 10.0, 10.0], PdfAnnotationKind::Text { open: false, icon: None, state: None, state_model: None }));
+    let annotation = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Annotation).expect("annotation").id;
+    let page = dsl::DslValue::float(0.0);
+    let object = dsl::DslValue::String(annotation);
+    apply(&mut snapshot, edit_from_action("set-annotation-kind", Some(&args(vec![("page", page.clone()), ("object", object.clone()), ("text", dsl::DslValue::String("kind".into())), ("extra", dsl::DslValue::String("link".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-annotation-kind", Some(&args(vec![("page", page.clone()), ("object", object.clone()), ("text", dsl::DslValue::String("uri".into())), ("extra", dsl::DslValue::String("https://example.test".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-annotation-kind", Some(&args(vec![("page", page.clone()), ("object", object.clone()), ("text", dsl::DslValue::String("quads".into())), ("extra", dsl::DslValue::String("0,0,10,0,10,10,0,10".into()))]))).unwrap());
+    match &snapshot.pages[0].annotations[0].kind {
+        PdfAnnotationKind::Link { action, quad_points, .. } => {
+            let PdfActionKind::Uri { uri, .. } = &action.as_ref().expect("uri").kind else { panic!("uri action") };
+            assert_eq!(uri, "https://example.test");
+            assert_eq!(quad_points, &vec![0.0, 0.0, 10.0, 0.0, 10.0, 10.0, 0.0, 10.0]);
+        }
+        _ => panic!("link"),
+    }
+    apply(&mut snapshot, edit_from_action("set-annotation-kind", Some(&args(vec![("page", page.clone()), ("object", object.clone()), ("text", dsl::DslValue::String("kind".into())), ("extra", dsl::DslValue::String("ink".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-annotation-kind", Some(&args(vec![("page", page.clone()), ("object", object.clone()), ("text", dsl::DslValue::String("paths".into())), ("extra", dsl::DslValue::String("0,0,8,0;8,0,8,8".into()))]))).unwrap());
+    match &snapshot.pages[0].annotations[0].kind {
+        PdfAnnotationKind::Ink { paths } => assert_eq!(paths, &vec![vec![0.0, 0.0, 8.0, 0.0], vec![8.0, 0.0, 8.0, 8.0]]),
+        _ => panic!("ink"),
+    }
+    apply(&mut snapshot, edit_from_action("set-annotation-kind", Some(&args(vec![("page", page.clone()), ("object", object.clone()), ("text", dsl::DslValue::String("kind".into())), ("extra", dsl::DslValue::String("line".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-annotation-kind", Some(&args(vec![("page", page), ("object", object), ("text", dsl::DslValue::String("points".into())), ("extra", dsl::DslValue::String("1,2,3,4".into()))]))).unwrap());
+    match &snapshot.pages[0].annotations[0].kind {
+        PdfAnnotationKind::Line { points, .. } => assert_eq!(points, &[1.0, 2.0, 3.0, 4.0]),
+        _ => panic!("line"),
+    }
+    apply(&mut snapshot, edit_from_action("set-form-field", Some(&args(vec![("object", dsl::DslValue::String("City".into())), ("text", dsl::DslValue::String(String::new())), ("extra", dsl::DslValue::String("choice".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-field-data", Some(&args(vec![("object", dsl::DslValue::String("City".into())), ("text", dsl::DslValue::String("options".into())), ("extra", dsl::DslValue::String("Bern=Bern,Zug=Zug".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-field-data", Some(&args(vec![("object", dsl::DslValue::String("City".into())), ("text", dsl::DslValue::String("values".into())), ("extra", dsl::DslValue::String("Bern".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-field-data", Some(&args(vec![("object", dsl::DslValue::String("City".into())), ("text", dsl::DslValue::String("top".into())), ("x", dsl::DslValue::float(1.0))]))).unwrap());
+    let PdfFormFieldKind::Choice { options, values, top_index, .. } = &snapshot.acro_form.as_ref().expect("form").fields[0].kind else { panic!("choice") };
+    assert_eq!(options, &vec![("Bern".to_string(), "Bern".to_string()), ("Zug".to_string(), "Zug".to_string())]);
+    assert_eq!(values, &vec!["Bern".to_string()]);
+    assert_eq!(top_index, &Some(1));
+}
+
+#[test]
+fn resource_details_publish_onto_the_document() {
+    let mut snapshot = sample();
+    apply(&mut snapshot, edit_from_action("set-outline", Some(&args(vec![("page", dsl::DslValue::float(0.0)), ("x", dsl::DslValue::float(-1.0)), ("text", dsl::DslValue::String("Chapter".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-resource-detail", Some(&args(vec![("object", dsl::DslValue::String("0".into())), ("text", dsl::DslValue::String("outline.bold".into())), ("x", dsl::DslValue::float(1.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-resource-detail", Some(&args(vec![("object", dsl::DslValue::String("0".into())), ("text", dsl::DslValue::String("outline.color".into())), ("red", dsl::DslValue::float(1.0)), ("green", dsl::DslValue::float(0.0)), ("blue", dsl::DslValue::float(0.0))]))).unwrap());
+    assert!(snapshot.outlines[0].bold);
+    assert_eq!(snapshot.outlines[0].color, Some([1.0, 0.0, 0.0]));
+    apply(&mut snapshot, edit_from_action("set-resource-detail", Some(&args(vec![("object", dsl::DslValue::String("Im1".into())), ("text", dsl::DslValue::String("image.interpolate".into())), ("x", dsl::DslValue::float(1.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-resource-detail", Some(&args(vec![("object", dsl::DslValue::String("Im1".into())), ("text", dsl::DslValue::String("image.decode".into())), ("extra", dsl::DslValue::String("0,1".into()))]))).unwrap());
+    assert!(snapshot.images[0].interpolate);
+    assert_eq!(snapshot.images[0].decode, vec![0.0, 1.0]);
+    apply(&mut snapshot, edit_from_action("set-resource-detail", Some(&args(vec![("object", dsl::DslValue::String("GS1".into())), ("text", dsl::DslValue::String("graphics.cap".into())), ("x", dsl::DslValue::float(1.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-resource-detail", Some(&args(vec![("object", dsl::DslValue::String("GS1".into())), ("text", dsl::DslValue::String("graphics.dash".into())), ("extra", dsl::DslValue::String("3,1".into())), ("x", dsl::DslValue::float(0.0))]))).unwrap());
+    assert!(matches!(snapshot.ext_g_states[0].line_cap, Some(crate::standards::v1_7::subsets::base::schema::snapshot::PdfLineCap::Round)));
+    assert_eq!(snapshot.ext_g_states[0].dash.as_ref().map(|(dash, phase)| (dash.clone(), *phase)), Some((vec![3.0, 1.0], 0.0)));
+    apply(&mut snapshot, edit_from_action("set-resource-detail", Some(&args(vec![("object", dsl::DslValue::String("F1".into())), ("text", dsl::DslValue::String("font.italicAngle".into())), ("x", dsl::DslValue::float(-12.0))]))).unwrap());
+    let italic = match &snapshot.fonts[0].kind {
+        crate::standards::v1_7::subsets::base::schema::snapshot::PdfFontKind::Type1 { descriptor, .. } => descriptor.as_ref().expect("descriptor").italic_angle,
+        _ => panic!("simple font"),
+    };
+    assert!((italic + 12.0).abs() < 0.01);
+}
+
+#[test]
 fn page_window_declares_object_selection() {
     let definition = crate::editor::pdf17::create_pdf17_editor();
     assert!(definition.interactions.iter().any(|item| item.id == OBJECT_DOMAIN));
     let window = definition.window_kinds.iter().find(|window| window.id == WINDOW_KIND_ID).expect("page window");
     assert_eq!(window.interactions[0].as_str(), OBJECT_DOMAIN);
     assert!(window.actions.iter().any(|action| action.id == "canvasPointerDown"));
+    let inspector = definition.window_kinds.iter().find(|window| window.id == INSPECTOR_WINDOW_KIND_ID).expect("object window");
+    assert_eq!(inspector.body_key, INSPECTOR_BODY_KEY);
+}
+
+#[test]
+fn selected_object_fields_commit_through_the_value_argument() {
+    let snapshot = sample();
+    let text = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Text).expect("text");
+    let vector = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Vector).expect("vector");
+    let mut edited = snapshot.clone();
+    apply(&mut edited, edit_from_action("set-text", Some(&args(vec![("page", dsl::DslValue::float(0.0)), ("object", dsl::DslValue::String(text.id.clone())), ("field", dsl::DslValue::String("text".into())), ("value", dsl::DslValue::String("World".into()))]))).unwrap());
+    assert_eq!(edited.pages[0].text(), "World");
+    apply(&mut edited, edit_from_action("move", Some(&args(vec![("page", dsl::DslValue::float(0.0)), ("object", dsl::DslValue::String(vector.id.clone())), ("field", dsl::DslValue::String("x".into())), ("y", dsl::DslValue::float(20.0)), ("value", dsl::DslValue::float(44.0))]))).unwrap());
+    let moved = objects(&edited).into_iter().find(|object| object.id == vector.id).expect("vector");
+    assert!((moved.x - 44.0).abs() < 0.01);
+    let node = render_inspector(&snapshot, Some(&text.id), "s.stdio.pdf@1.7/*#editor", semio_framework_plugin::Locale::En).expect("inspector");
+    let mut names = Vec::new();
+    let mut shown = Vec::new();
+    collect_inspector(&node, &mut names, &mut shown);
+    assert!(names.iter().any(|name| name == "set-text"));
+    assert!(names.iter().any(|name| name == "set-font"));
+    assert!(names.iter().any(|name| name == "delete"));
+    assert!(shown.iter().any(|value| value == "Hello"));
+    assert!(shown.iter().any(|value| value == "Helvetica"));
+    apply(&mut edited, edit_from_action("set-font", Some(&args(vec![("page", dsl::DslValue::float(0.0)), ("object", dsl::DslValue::String(text.id.clone())), ("field", dsl::DslValue::String("text".into())), ("value", dsl::DslValue::String("Times-Roman".into()))]))).unwrap());
+    assert!(edited.fonts.iter().any(|font| font.base_font() == "Times-Roman"));
+    let image = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Image).expect("image");
+    let image_panel = render_inspector(&snapshot, Some(&image.id), "s.stdio.pdf@1.7/*#editor", semio_framework_plugin::Locale::En).expect("image inspector");
+    let mut image_names = Vec::new();
+    let mut image_shown = Vec::new();
+    collect_inspector(&image_panel, &mut image_names, &mut image_shown);
+    assert!(image_names.iter().any(|name| name == "set-resource-detail"));
+    assert!(image_shown.iter().any(|value| value == "0"));
+    apply(&mut edited, edit_from_action("set-resource-detail", Some(&args(vec![("object", dsl::DslValue::String(image.text.clone())), ("text", dsl::DslValue::String("image.interpolate".into())), ("field", dsl::DslValue::String("x".into())), ("value", dsl::DslValue::float(1.0))]))).unwrap());
+    assert!(edited.images[0].interpolate);
+    let empty = render_inspector(&snapshot, None, "s.stdio.pdf@1.7/*#editor", semio_framework_plugin::Locale::De).expect("empty inspector");
+    let mut empty_names = Vec::new();
+    let mut empty_shown = Vec::new();
+    collect_inspector(&empty, &mut empty_names, &mut empty_shown);
+    assert!(empty_names.iter().any(|name| name == "set-page-size"));
+    assert!(empty_names.iter().any(|name| name == "set-info"));
+    assert!(empty_shown.iter().any(|value| value == "200"));
+    apply(&mut edited, edit_from_action("set-page-size", Some(&args(vec![("page", dsl::DslValue::float(0.0)), ("field", dsl::DslValue::String("width".into())), ("height", dsl::DslValue::float(300.0)), ("value", dsl::DslValue::float(180.0))]))).unwrap());
+    assert!((edited.pages[0].width() - 180.0).abs() < 0.01);
+    apply(&mut edited, edit_from_action("set-info", Some(&args(vec![("field", dsl::DslValue::String("text".into())), ("value", dsl::DslValue::String("Title".into()))]))).unwrap());
+    assert_eq!(edited.info.title.as_deref(), Some("Title"));
+}
+
+fn collect_inspector(node: &semio_framework_ui_contract::BuiltNode, names: &mut Vec<String>, shown: &mut Vec<String>) {
+    for binding in node.bindings.iter() {
+        names.push(binding.action.name.as_str().to_string());
+    }
+    if let semio_framework_ui_contract::Component::Input(input) = &node.component {
+        shown.push(input.value.as_str().to_string());
+    }
+    for child in node.children.iter() {
+        collect_inspector(child, names, shown);
+    }
 }

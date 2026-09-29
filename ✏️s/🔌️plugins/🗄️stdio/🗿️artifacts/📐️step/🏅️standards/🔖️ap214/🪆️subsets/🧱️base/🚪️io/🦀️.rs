@@ -8,11 +8,6 @@ pub mod brep;
 /// `✳️ccN` subset analyzers (ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES).
 #[path = "🪜️ladder/🦀️.rs"]
 pub mod ladder;
-/// 📐 Shared ISO 10303-21 tokenizer + generic graph — public, importable cross-artifact (ifc
-/// reuses it) and cross-plugin (📐️cad reuses it too) — dissolved out of `⚙️engine`
-/// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
-#[path = "📐️part21/🦀️.rs"]
-pub mod part21;
 //#endregion 🔖️Submodules
 
 //#region 🎹️DerivedComposition

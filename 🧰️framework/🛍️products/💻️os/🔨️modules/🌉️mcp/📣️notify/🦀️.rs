@@ -445,6 +445,15 @@ pub fn job_progress_changed(job_id: &str, progress: f64, message: Option<&str>) 
     publish(Some(&binding.slot), JsonRpcNotification::new(NOTIFICATION_PROGRESS, Some(params)))
 }
 
+/// 📈️ Publishes one `notifications/progress` for the `tools/call` running on this thread while it waits on work no job
+/// of its own carries — an authority refresh of the hub binding, a network byte budget refill — so a client that sent a
+/// `_meta.progressToken` hears what the call waits for instead of silence. Outside a progress scope nothing is published.
+pub fn publish_call_progress(progress: f64, message: &str) -> bool {
+    let Some(binding) = active_progress_binding() else { return false };
+    let params = serde_json::json!({ "progressToken": binding.token, "progress": progress.clamp(0.0, 1.0), "total": 1.0, "message": message });
+    publish(Some(&binding.slot), JsonRpcNotification::new(NOTIFICATION_PROGRESS, Some(params)))
+}
+
 /// 🧹️ Forgets a terminal job's binding — a long-lived stdio process must not accumulate one entry
 /// per job it ever ran.
 pub fn release_job_binding(job_id: &str) {

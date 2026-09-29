@@ -158,16 +158,7 @@ pub(crate) fn generation_tree(
         if let Component::TreeItem(props) = &mut item.component {
             props.icon = Some(ui_text("layers")?);
             let mut row_actions = UiFixedList::default();
-            let remove_args = ui_value_map([("id", ui_value_text(&entry.id)?)])?;
-            let (remove_action, remove_args) = factory.action("removeGeneration", Some(remove_args))?;
-            row_actions
-                .try_push(RowAction {
-                    icon: ui_text("trash-2")?,
-                    label: Some(ui_label(label("remove"))?),
-                    action: ActionBinding { trigger: Trigger::Activate, action: remove_action, args: remove_args, capability: None },
-                    placement: RowActionPlacement::Row,
-                })
-                .map_err(|_| ui_assembly_error("ui.generation.row-actions"))?;
+            row_actions.try_push(row_action("trash-2", &label("remove"), "removeGeneration", RowActionPlacement::Row)?).map_err(|_| ui_assembly_error("ui.generation.row-actions"))?;
             props.row_actions = row_actions;
         }
         if selected_id == Some(entry.id.as_str()) {

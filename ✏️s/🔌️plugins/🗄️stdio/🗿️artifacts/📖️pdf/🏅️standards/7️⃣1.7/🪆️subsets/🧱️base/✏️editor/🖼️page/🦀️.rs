@@ -1,24 +1,28 @@
 //! 📄 PDF page editor — paints every page and addresses text, vectors, images, forms, shadings,
 //! and annotations as objects the end user can insert, move, resize, restyle, and delete.
 //! Document info and page structure use the same command channel. A canvas click hit-tests a page
-//! object and redispatches `interactionSelect`; it does not mutate the PDF. Raw fields that have no
-//! page geometry stay on the snapshot details window.
+//! object and redispatches `interactionSelect`; it does not mutate the PDF. The object window then
+//! shows that selection's own fields and commits them through the same page actions. Raw fields that
+//! have no page geometry stay on the snapshot details window.
 
 use crate::standards::v1_7::subsets::base::schema::diff::PdfPageBox;
 use crate::standards::v1_7::subsets::base::schema::mutations::{
     insert_object::InsertObject, insert_page::InsertPage, move_page::MovePage, remove_catalog_entry::RemoveCatalogEntry, remove_object::RemoveObject, remove_embedded_file::RemoveEmbeddedFile, remove_named_destination::RemoveNamedDestination, remove_page::RemovePage, remove_trailer_entry::RemoveTrailerEntry, set_annotation::SetAnnotation, set_embedded_file::SetEmbeddedFile, set_acro_form::SetAcroForm, set_document_id::SetDocumentId, set_color_space::SetColorSpace, set_catalog_entry::SetCatalogEntry, set_encryption::SetEncryption, set_ext_g_state::SetExtGState, set_font::SetFont, set_form::SetForm, set_snapshot::SetSnapshot, set_trailer_entry::SetTrailerEntry, set_open_action::SetOpenAction, set_output_intents::SetOutputIntents, set_pattern::SetPattern, set_properties::SetProperties, set_image::SetImage, set_info::SetInfo, set_language::SetLanguage, set_mark_info::SetMarkInfo, set_metadata::SetMetadata, set_named_destination::SetNamedDestination, set_object_value::SetObjectValue, set_optional_content::SetOptionalContent, set_outlines::SetOutlines, set_page_box::SetPageBox, set_page_content::SetPageContent, set_page_labels::SetPageLabels, set_page_layout::SetPageLayout, set_page_media_box::SetPageMediaBox, set_page_mode::SetPageMode, set_page_rotation::SetPageRotation, set_page_user_unit::SetPageUserUnit, set_shading::SetShading, set_viewer_preferences::SetViewerPreferences, PdfMutation,
 };
-use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfAction, PdfAnnotation, PdfAppearance, PdfAppearanceEntry, PdfBaseEncoding, PdfCharProc, PdfColorSpace, PdfDate, PdfDestination, PdfDestinationFit, PdfDictEntry, PdfEmbeddedFile, PdfEncryption, PdfEncryptionAlgorithm, PdfExtGState, PdfFont, PdfFontDescriptor, PdfFontKind, PdfFontProgram, PdfFormField, PdfFormFieldKind, PdfFunction, PdfFormXObject, PdfImage, PdfImageCodec, PdfImageMask, PdfMarkInfo, PdfMatrix, PdfNamedColorSpace, PdfNamedDestination, PdfNamedProperties, PdfObject, PdfOpenAction, PdfOutputIntent, PdfPattern, PdfPatternKind, PdfSimpleEncoding, PdfOp, PdfOptionalContentGroup, PdfOutlineItem, PdfPage, PdfPageLabelRange, PdfPageLabelStyle, PdfPageLayout, PdfPageMode, PdfShadingKind, PdfTextArrayItem, PdfTextString, PdfTransparencyGroup, PdfViewerPreferences, PDF_IDENTITY_MATRIX};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfAction, PdfAnnotation, PdfAnnotationKind, PdfAppearance, PdfAppearanceEntry, PdfBaseEncoding, PdfBorderStyle, PdfCharProc, PdfColorSpace, PdfDate, PdfDestination, PdfDestinationFit, PdfDictEntry, PdfEmbeddedFile, PdfEncryption, PdfEncryptionAlgorithm, PdfExtGState, PdfFileSpecification, PdfFont, PdfLineCap, PdfLineJoin, PdfFontDescriptor, PdfFontKind, PdfFontProgram, PdfFormField, PdfFormFieldKind, PdfFunction, PdfFormXObject, PdfImage, PdfImageCodec, PdfImageMask, PdfMarkInfo, PdfMarkupAnnotation, PdfMatrix, PdfNamedColorSpace, PdfNamedDestination, PdfNamedProperties, PdfObject, PdfOpenAction, PdfOutputIntent, PdfPattern, PdfPatternKind, PdfSimpleEncoding, PdfOp, PdfOptionalContent, PdfOptionalContentGroup, PdfOutlineItem, PdfPage, PdfPageLabelRange, PdfPageLabelStyle, PdfPageLayout, PdfPageMode, PdfShadingKind, PdfTextArrayItem, PdfTextString, PdfTransparencyGroup, PdfViewerPreferences, PDF_IDENTITY_MATRIX};
 use crate::PdfSnapshot;
-use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionKind, Canvas2dScene, Fault, FaultCode, FaultOrigin, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::plugin_app_close_prelude as ui;
+use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionId, ActionKind, Buildable, Canvas2dScene, Fault, FaultCode, FaultOrigin, HasBase, HasChildren, Locale, LocalizedLabel, PluginAssemblyError, SurfaceKind, UiAssemblyResult, UiMapBuilder, UiText, UiValue, WindowKindDefinition, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowOptions};
 use serde_json::{json, Value};
 
 pub const WINDOW_KIND_ID: &str = "pdf.page";
 pub const BODY_KEY: &str = "pdf.page";
+pub const INSPECTOR_WINDOW_KIND_ID: &str = "pdf.object";
+pub const INSPECTOR_BODY_KEY: &str = "pdf.object";
 
 pub const OBJECT_DOMAIN: &str = "objects";
 
-const PAGE_ACTIONS: [&str; 60] = [
+const PAGE_ACTIONS: [&str; 67] = [
     "set-text",
     "move",
     "resize",
@@ -76,6 +80,13 @@ const PAGE_ACTIONS: [&str; 60] = [
     "set-info-field",
     "set-page-extra",
     "set-annotation-style",
+    "set-annotation-border",
+    "set-annotation-markup",
+    "set-form-settings",
+    "set-extra-entry",
+    "set-annotation-kind",
+    "set-field-data",
+    "set-resource-detail",
     "canvasPointerDown",
     "canvasPointerMove",
     "canvasPointerUp",
@@ -121,6 +132,7 @@ pub struct PageObject {
     pub width: f64,
     pub height: f64,
     pub text: String,
+    pub font: String,
     pub font_size: f64,
     pub fill: [f64; 3],
     pub stroke: [f64; 3],
@@ -202,6 +214,13 @@ pub fn window_definition() -> WindowKindDefinition {
             action("set-info-field", "Set Info Field", "Infofeld setzen", vec![object(), text()]),
             action("set-annotation", "Set Annotation", "Anmerkung setzen", vec![page(), object(), text(), x(), y(), width(), height()]),
             action("set-annotation-style", "Set Annotation Style", "Anmerkung gestalten", vec![page(), object(), text(), ActionArgDef::text("extra", LocalizedLabel::native("Value", "Wert")).min_length(0), x(), red(), green(), blue()]),
+            action("set-annotation-border", "Set Annotation Border", "Rahmen setzen", vec![page(), object(), ActionArgDef::text("text", LocalizedLabel::native("Style", "Stil")).min_length(0), ActionArgDef::text("extra", LocalizedLabel::native("Dash", "Strich")).min_length(0), x(), y(), width()]),
+            action("set-annotation-markup", "Set Annotation Markup", "Markierung setzen", vec![page(), object(), text(), ActionArgDef::text("extra", LocalizedLabel::native("Value", "Wert")).min_length(0), x()]),
+            action("set-form-settings", "Set Form Settings", "Formular setzen", vec![object(), ActionArgDef::text("text", LocalizedLabel::native("Value", "Wert")).min_length(0), ActionArgDef::text("extra", LocalizedLabel::native("Key", "Schlüssel")).min_length(0), x()]),
+            action("set-extra-entry", "Set Extra Entry", "Zusatzeintrag setzen", vec![object(), ActionArgDef::text("extra", LocalizedLabel::native("Key", "Schlüssel")).min_length(1).required(), ActionArgDef::text("text", LocalizedLabel::native("Value", "Wert")).min_length(0)]),
+            action("set-annotation-kind", "Set Annotation Kind", "Anmerkungsart setzen", vec![page(), object(), text(), ActionArgDef::text("extra", LocalizedLabel::native("Value", "Wert")).min_length(0), x(), y(), width(), height(), red(), green(), blue()]),
+            action("set-field-data", "Set Field Data", "Felddaten setzen", vec![object(), text(), ActionArgDef::text("extra", LocalizedLabel::native("Value", "Wert")).min_length(0), x()]),
+            action("set-resource-detail", "Set Resource Detail", "Ressource setzen", vec![object(), text(), ActionArgDef::text("extra", LocalizedLabel::native("Value", "Wert")).min_length(0), x(), y(), width(), height(), red(), green(), blue()]),
             action("set-page-extra", "Set Page Extra", "Seite ergänzen", vec![page(), object(), text(), ActionArgDef::text("extra", LocalizedLabel::native("Key", "Schlüssel")).min_length(0), x(), y()]),
             action("set-font", "Set Font", "Schrift setzen", vec![page(), object(), text()]),
             action("set-outline", "Set Outline", "Lesezeichen setzen", vec![page(), x(), text()]),
@@ -266,6 +285,97 @@ pub fn render_selected(snapshot: &PdfSnapshot, interaction: &semio_framework_plu
     render_window_with_selection(snapshot, interaction.selection(OBJECT_DOMAIN).ids.first().map(String::as_str))
 }
 
+/// 🪟 Fields for the object selected on the page. The canvas window stays a canvas.
+pub fn inspector_window_definition() -> WindowKindDefinition {
+    WindowKindDefinition {
+        id: INSPECTOR_WINDOW_KIND_ID.into(),
+        label: LocalizedLabel::native("Object", "Objekt"),
+        body_key: INSPECTOR_BODY_KEY.into(),
+        surface_kind: SurfaceKind::BlockList,
+        icon_id: "square".into(),
+        options: WindowOptions::default(),
+        actions: Vec::new(),
+        utilities: Vec::new(),
+        interactions: Vec::new(),
+        params_schema: None,
+        artifact_snapshot_schema: None,
+        input_event_schema: None,
+        output_schema: None,
+        capabilities: Vec::new(),
+    }
+}
+
+/// 🪟 Page, the selected object's fields, and snapshot details side by side.
+pub fn document_layout(main_window_kind_id: &str) -> WindowLayout {
+    let stack = |size: f64, window_kind_id: &str, title: &str| {
+        WindowLayoutChild::Stack(WindowLayoutStackNode {
+            kind: "stack".into(),
+            size: Some(size),
+            active_window_kind_id: None,
+            children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: window_kind_id.into(), title: Some(title.into()), instance_id: None, template_id: None, corner: None }],
+        })
+    };
+    WindowLayout {
+        root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
+            kind: "row".into(),
+            size: None,
+            children: vec![stack(0.56, main_window_kind_id, "Document"), stack(0.22, INSPECTOR_WINDOW_KIND_ID, "Object"), stack(0.22, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_WINDOW_KIND_ID, "Details")],
+        }),
+    }
+}
+
+/// 🎛️ The selected page object's fields. A commit names `field` and lets the host supply `value`.
+pub fn render_inspector(snapshot: &PdfSnapshot, selected: Option<&str>, controller_id: &str, locale: Locale) -> UiAssemblyResult<semio_framework_ui_contract::BuiltNode> {
+    let object = selected.and_then(|id| objects(snapshot).into_iter().find(|object| object.id == id));
+    let mut column = ui::column().try_id("pdf-object").map_err(|_| inspector_error("pdf.object.root-id"))?;
+    let Some(object) = object else {
+        let prompt = match locale {
+            Locale::De => "Wählen Sie ein Objekt auf der Seite.",
+            Locale::En => "Select an object on the page.",
+        };
+        let note = ui::text(ui::Label(UiText::clipped(prompt))).try_id("pdf-object-empty").map_err(|_| inspector_error("pdf.object.empty-id"))?.try_build().map_err(|_| inspector_error("pdf.object.empty"))?;
+        column = column.try_child(note).map_err(|_| inspector_error("pdf.object.empty"))?;
+        let heading = match locale {
+            Locale::De => "Seite",
+            Locale::En => "Page",
+        };
+        column = column.try_child(ui::text(ui::Label(UiText::clipped(heading))).try_id("pdf-object-kind").map_err(|_| inspector_error("pdf.object.kind-id"))?.try_build().map_err(|_| inspector_error("pdf.object.kind"))?).map_err(|_| inspector_error("pdf.object.kind"))?;
+        for field in page_fields(snapshot) {
+            column = column.try_child(field_input(0, "", &field, controller_id, locale)?).map_err(|_| inspector_error("pdf.object.field"))?;
+        }
+        return column.try_build().map_err(|_| inspector_error("pdf.object.root"));
+    };
+    let heading = match locale {
+        Locale::De => match object.kind {
+            ObjectKind::Text => "Text",
+            ObjectKind::Vector => "Vektor",
+            ObjectKind::Image => "Bild",
+            ObjectKind::Form => "Formular",
+            ObjectKind::Shading => "Verlauf",
+            ObjectKind::Annotation => "Anmerkung",
+        },
+        Locale::En => match object.kind {
+            ObjectKind::Text => "Text",
+            ObjectKind::Vector => "Vector",
+            ObjectKind::Image => "Image",
+            ObjectKind::Form => "Form",
+            ObjectKind::Shading => "Shading",
+            ObjectKind::Annotation => "Annotation",
+        },
+    };
+    column = column.try_child(ui::text(ui::Label(UiText::clipped(heading))).try_id("pdf-object-kind").map_err(|_| inspector_error("pdf.object.kind-id"))?.try_build().map_err(|_| inspector_error("pdf.object.kind"))?).map_err(|_| inspector_error("pdf.object.kind"))?;
+    for field in inspector_fields(snapshot, &object) {
+        column = column.try_child(field_input(object.page, &object.id, &field, controller_id, locale)?).map_err(|_| inspector_error("pdf.object.field"))?;
+    }
+    let delete_label = match locale {
+        Locale::De => "Löschen",
+        Locale::En => "Delete",
+    };
+    let delete = ui::button(ui::Label(UiText::clipped(delete_label))).try_id("pdf-object-delete").map_err(|_| inspector_error("pdf.object.delete-id"))?;
+    let delete = delete.try_on_with(ui::Trigger::Activate, inspector_action(controller_id, "delete")?, object_args(object.page, &object.id, "delete", &[])?).map_err(|_| inspector_error("pdf.object.delete-binding"))?.try_build().map_err(|_| inspector_error("pdf.object.delete"))?;
+    column.try_child(delete).map_err(|_| inspector_error("pdf.object.delete"))?.try_build().map_err(|_| inspector_error("pdf.object.root"))
+}
+
 /// 🧾 Reads a page-edit action into a replayable payload.
 pub fn edit_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<PdfPageEdit, Fault> {
     if !is_page_action(action) {
@@ -306,6 +416,13 @@ pub fn edit_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Pd
         "set-info-field" => (0, text_arg(args, "object"), text_arg(args, "text"), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-page-extra" => (page_index()?, text_arg(args, "object"), text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-annotation-style" => (page_index()?, object_id()?, text_value()?, text_arg(args, "extra"), opt_num(args, "x", 0.0), 0.0, 0.0, 0.0, opt_num(args, "red", 0.0), opt_num(args, "green", 0.0), opt_num(args, "blue", 0.0)),
+        "set-annotation-border" => (page_index()?, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", 0.0), opt_num(args, "y", -1.0), opt_num(args, "width", 0.0), 0.0, 0.0, 0.0, 0.0),
+        "set-annotation-markup" => (page_index()?, object_id()?, text_value()?, text_arg(args, "extra"), opt_num(args, "x", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-form-settings" => (0, text_arg(args, "object"), text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-extra-entry" => (0, text_arg(args, "object"), text_arg(args, "text"), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-annotation-kind" => (page_index()?, object_id()?, text_value()?, text_arg(args, "extra"), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 0.0), opt_num(args, "height", 0.0), opt_num(args, "red", 0.0), opt_num(args, "green", 0.0), opt_num(args, "blue", 0.0)),
+        "set-field-data" => (0, object_id()?, text_value()?, text_arg(args, "extra"), opt_num(args, "x", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-resource-detail" => (0, object_id()?, text_value()?, text_arg(args, "extra"), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 0.0), opt_num(args, "height", 0.0), opt_num(args, "red", 0.0), opt_num(args, "green", 0.0), opt_num(args, "blue", 0.0)),
         "set-encryption" => (0, text_arg(args, "object"), text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", -1.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-output-intent" | "set-form-field" | "set-document-id" => (0, text_arg(args, "object"), text_arg(args, "text"), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-open-action" => (opt_index(args, "page"), text_arg(args, "object"), text_arg(args, "text"), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
@@ -382,6 +499,13 @@ pub fn apply_payload(snapshot: &PdfSnapshot, action: &str, payload: &str) -> Res
         "set-info-field" => set_info_field(snapshot, &object, &text),
         "set-page-extra" => set_page_extra(snapshot, page, &object, &text, &extra, x, y),
         "set-annotation-style" => set_annotation_style(snapshot, page, &object, &text, &extra, red, green, blue, x),
+        "set-annotation-border" => set_annotation_border(snapshot, page, &object, &text, &extra, x, y, width),
+        "set-annotation-markup" => set_annotation_markup(snapshot, page, &object, &text, &extra, x),
+        "set-form-settings" => set_form_settings(snapshot, &object, &text, &extra, x),
+        "set-extra-entry" => set_extra_entry(snapshot, &object, &extra, &text),
+        "set-annotation-kind" => set_annotation_kind(snapshot, page, &object, &text, &extra, x, y, width, height, red, green, blue),
+        "set-field-data" => set_field_data(snapshot, &object, &text, &extra, x),
+        "set-resource-detail" => set_resource_detail(snapshot, &object, &text, &extra, x, y, width, height, red, green, blue),
         "set-encryption" => set_encryption(&text, &extra, &object, x),
         "set-output-intent" => set_output_intent(snapshot, &object, &text, &extra),
         "set-form-field" => set_form_field(snapshot, &object, &text, &extra),
@@ -1070,6 +1194,403 @@ fn set_page_extra(snapshot: &PdfSnapshot, page: usize, kind: &str, text: &str, e
     Ok(vec![PdfMutation::SetSnapshot(SetSnapshot { snapshot: next })])
 }
 
+fn annotation_at(snapshot: &PdfSnapshot, page: usize, object_id: &str) -> Result<(usize, PdfAnnotation), Fault> {
+    let index = object_id.rsplit_once(":a").and_then(|(_, raw)| raw.parse::<usize>().ok()).ok_or_else(|| fault(format!("pdf annotation '{object_id}' is not addressable")))?;
+    let annotation = snapshot.pages.get(page).and_then(|item| item.annotations.get(index)).cloned().ok_or_else(|| fault(format!("pdf annotation '{object_id}' is gone")))?;
+    Ok((index, annotation))
+}
+
+fn store_annotation(page: usize, index: usize, annotation: PdfAnnotation) -> Vec<PdfMutation> {
+    vec![PdfMutation::SetAnnotation(SetAnnotation { index: page, at: index, annotation })]
+}
+
+fn csv_numbers(text: &str) -> Result<Vec<f64>, Fault> {
+    text.split(',').map(str::trim).filter(|item| !item.is_empty()).map(|item| item.parse::<f64>().map_err(|_| fault("a list needs numbers"))).collect()
+}
+
+fn upsert_name_entry(entries: &mut Vec<PdfDictEntry>, key: &str, value: &str) -> Result<(), Fault> {
+    if key.is_empty() {
+        return Err(fault("an entry needs a key"));
+    }
+    if value.is_empty() {
+        entries.retain(|item| item.key != key);
+    } else if let Some(existing) = entries.iter_mut().find(|item| item.key == key) {
+        *existing = PdfDictEntry::new(key, PdfObject::Name(value.to_string()));
+    } else {
+        entries.push(PdfDictEntry::new(key, PdfObject::Name(value.to_string())));
+    }
+    Ok(())
+}
+
+fn set_annotation_border(snapshot: &PdfSnapshot, page: usize, object_id: &str, style: &str, dash: &str, width: f64, radius_x: f64, radius_y: f64) -> Result<Vec<PdfMutation>, Fault> {
+    let (index, mut annotation) = annotation_at(snapshot, page, object_id)?;
+    annotation.border = if style == "clear" {
+        None
+    } else {
+        Some(PdfBorderStyle { width, style: none_if_empty(style), dash: if dash.is_empty() { None } else { Some(csv_numbers(dash)?) }, radii: (radius_x >= 0.0).then_some([radius_x, radius_y]) })
+    };
+    Ok(store_annotation(page, index, annotation))
+}
+
+fn set_annotation_markup(snapshot: &PdfSnapshot, page: usize, object_id: &str, aspect: &str, value: &str, number: f64) -> Result<Vec<PdfMutation>, Fault> {
+    let (index, mut annotation) = annotation_at(snapshot, page, object_id)?;
+    match aspect {
+        "layer" => annotation.optional_content = none_if_empty(value),
+        "structParent" => annotation.struct_parent = (number >= 0.0).then_some(number.round() as u32),
+        "entry" => {
+            let (key, entry) = value.split_once('=').filter(|(key, _)| !key.is_empty()).ok_or_else(|| fault("an entry needs key=value"))?;
+            upsert_name_entry(&mut annotation.extra, key, entry)?;
+        }
+        "title" | "subject" | "richContents" | "replyType" | "intent" | "opacity" | "popup" | "inReplyTo" | "creationDate" => {
+            let markup = annotation.markup.get_or_insert_with(PdfMarkupAnnotation::default);
+            match aspect {
+                "title" => markup.title = none_if_empty(value),
+                "subject" => markup.subject = none_if_empty(value),
+                "richContents" => markup.rich_contents = none_if_empty(value),
+                "replyType" => markup.reply_type = none_if_empty(value),
+                "intent" => markup.intent = none_if_empty(value),
+                "opacity" => markup.opacity = (number >= 0.0).then_some(number.clamp(0.0, 1.0)),
+                "popup" => markup.popup = (number >= 0.0).then_some(number.round() as usize),
+                "inReplyTo" => markup.in_reply_to = (number >= 0.0).then_some(number.round() as usize),
+                "creationDate" => markup.creation_date = parse_optional_date(value)?,
+                _ => {}
+            }
+            if annotation.markup.as_ref().is_some_and(|item| item == &PdfMarkupAnnotation::default()) {
+                annotation.markup = None;
+            }
+        }
+        other => return Err(fault(format!("unknown annotation markup '{other}'"))),
+    }
+    Ok(store_annotation(page, index, annotation))
+}
+
+fn set_form_settings(snapshot: &PdfSnapshot, aspect: &str, text: &str, extra: &str, number: f64) -> Result<Vec<PdfMutation>, Fault> {
+    if aspect.is_empty() {
+        return Err(fault("a form setting needs a name"));
+    }
+    let mut form = snapshot.acro_form.clone().unwrap_or_default();
+    match aspect {
+        "signatureFlags" => form.signature_flags = number.max(0.0).round() as u32,
+        "defaultAppearance" => form.default_appearance = none_if_empty(text),
+        "quadding" => form.quadding = (number >= 0.0).then_some(number.round() as u32),
+        "defaultFonts" => form.default_fonts = if text.is_empty() { Vec::new() } else { text.split(',').map(str::trim).filter(|item| !item.is_empty()).map(str::to_string).collect() },
+        "entry" => upsert_name_entry(&mut form.extra, extra, text)?,
+        field_name => {
+            let field = form.fields.iter_mut().find(|field| field.name == field_name).ok_or_else(|| fault(format!("pdf form field '{field_name}' is gone")))?;
+            match text {
+                "appearance" => field.default_appearance = none_if_empty(extra),
+                "quadding" => field.quadding = (number >= 0.0).then_some(number.round() as u32),
+                "flags" => field.flags = number.max(0.0).round() as u32,
+                "alternate" => field.alternate_name = none_if_empty(extra),
+                "mapping" => field.mapping_name = none_if_empty(extra),
+                "action" => {
+                    let (key, value) = extra.split_once('=').filter(|(key, _)| !key.is_empty()).ok_or_else(|| fault("an entry needs key=value"))?;
+                    upsert_name_entry(&mut field.additional_actions, key, value)?;
+                }
+                "entry" => {
+                    let (key, value) = extra.split_once('=').filter(|(key, _)| !key.is_empty()).ok_or_else(|| fault("an entry needs key=value"))?;
+                    upsert_name_entry(&mut field.extra, key, value)?;
+                }
+                other => return Err(fault(format!("unknown form field setting '{other}'"))),
+            }
+        }
+    }
+    Ok(vec![PdfMutation::SetAcroForm(SetAcroForm { form: Some(form) })])
+}
+
+fn set_extra_entry(snapshot: &PdfSnapshot, owner: &str, key: &str, value: &str) -> Result<Vec<PdfMutation>, Fault> {
+    match owner {
+        "info" => {
+            let mut info = snapshot.info.clone();
+            upsert_name_entry(&mut info.extra, key, value)?;
+            Ok(vec![PdfMutation::SetInfo(SetInfo { info })])
+        }
+        "viewer" => {
+            let mut preferences = snapshot.viewer_preferences.clone().unwrap_or_default();
+            upsert_name_entry(&mut preferences.extra, key, value)?;
+            Ok(vec![PdfMutation::SetViewerPreferences(SetViewerPreferences { preferences: (preferences != PdfViewerPreferences::default()).then_some(preferences) })])
+        }
+        other => Err(fault(format!("unknown extra dictionary '{other}'"))),
+    }
+}
+
+fn two_names(value: &str) -> Result<Option<[String; 2]>, Fault> {
+    if value.is_empty() {
+        return Ok(None);
+    }
+    let names: Vec<String> = value.split(',').map(str::trim).filter(|item| !item.is_empty()).map(str::to_string).collect();
+    names.try_into().map(Some).map_err(|_| fault("a line needs two endings"))
+}
+
+fn ink_paths(value: &str) -> Result<Vec<Vec<f64>>, Fault> {
+    if value.is_empty() {
+        return Ok(Vec::new());
+    }
+    value.split(';').map(csv_numbers).collect()
+}
+
+fn name_entry(value: &str) -> Result<(&str, &str), Fault> {
+    value.split_once('=').filter(|(key, _)| !key.is_empty()).ok_or_else(|| fault("an entry needs key=value"))
+}
+
+fn annotation_kind(name: &str) -> Result<PdfAnnotationKind, Fault> {
+    Ok(match name {
+        "text" => PdfAnnotationKind::Text { open: false, icon: None, state: None, state_model: None },
+        "link" => PdfAnnotationKind::Link { action: None, destination: None, highlight: None, quad_points: Vec::new() },
+        "freeText" => PdfAnnotationKind::FreeText { default_appearance: String::new(), quadding: 0, callout: None, line_ending: None, rich_text: None },
+        "line" => PdfAnnotationKind::Line { points: [0.0; 4], line_endings: None, interior_color: None, leader_length: None, caption: false },
+        "square" => PdfAnnotationKind::Square { interior_color: None, rect_differences: None },
+        "circle" => PdfAnnotationKind::Circle { interior_color: None, rect_differences: None },
+        "polygon" => PdfAnnotationKind::Polygon { vertices: Vec::new(), interior_color: None },
+        "polyLine" => PdfAnnotationKind::PolyLine { vertices: Vec::new(), line_endings: None, interior_color: None },
+        "highlight" => PdfAnnotationKind::Highlight { quad_points: Vec::new() },
+        "underline" => PdfAnnotationKind::Underline { quad_points: Vec::new() },
+        "squiggly" => PdfAnnotationKind::Squiggly { quad_points: Vec::new() },
+        "strikeOut" => PdfAnnotationKind::StrikeOut { quad_points: Vec::new() },
+        "stamp" => PdfAnnotationKind::Stamp { icon: None },
+        "caret" => PdfAnnotationKind::Caret { rect_differences: None, symbol: None },
+        "ink" => PdfAnnotationKind::Ink { paths: Vec::new() },
+        "popup" => PdfAnnotationKind::Popup { parent: None, open: false },
+        "file" => PdfAnnotationKind::FileAttachment { file: PdfFileSpecification::Embedded { file: String::new() }, icon: None },
+        "sound" => PdfAnnotationKind::Sound { sound: Vec::new(), icon: None },
+        "movie" => PdfAnnotationKind::Movie { title: None, movie: Vec::new(), activation: None },
+        "widget" => PdfAnnotationKind::Widget { field: None, highlight: None, characteristics: Vec::new(), action: None, additional_actions: Vec::new() },
+        "screen" => PdfAnnotationKind::Screen { title: None, characteristics: Vec::new(), action: None, additional_actions: Vec::new() },
+        "printerMark" => PdfAnnotationKind::PrinterMark { mark_style: None, colorants: Vec::new() },
+        "trapNet" => PdfAnnotationKind::TrapNet { entries: Vec::new() },
+        "watermark" => PdfAnnotationKind::Watermark { fixed_print: None },
+        "threeD" => PdfAnnotationKind::ThreeD { entries: Vec::new() },
+        "redact" => PdfAnnotationKind::Redact { quad_points: Vec::new(), interior_color: None, overlay_text: None, repeat: false, default_appearance: None, quadding: 0 },
+        other => return Err(fault(format!("unknown annotation kind '{other}'"))),
+    })
+}
+
+fn set_annotation_kind(snapshot: &PdfSnapshot, page: usize, object_id: &str, aspect: &str, value: &str, x: f64, y: f64, width: f64, height: f64, red: f64, green: f64, blue: f64) -> Result<Vec<PdfMutation>, Fault> {
+    let (index, mut annotation) = annotation_at(snapshot, page, object_id)?;
+    if aspect == "kind" {
+        annotation.kind = annotation_kind(value)?;
+        return Ok(store_annotation(page, index, annotation));
+    }
+    let color = if value == "clear" { None } else { Some(vec![red, green, blue]) };
+    let differences = if x < 0.0 { None } else { Some([x, y, x + width, y + height]) };
+    let unknown = |field: &str| fault(format!("this annotation has no '{field}'"));
+    match &mut annotation.kind {
+        PdfAnnotationKind::Text { open, icon, state, state_model } => match aspect {
+            "open" => *open = x >= 0.5,
+            "icon" => *icon = none_if_empty(value),
+            "state" => *state = none_if_empty(value),
+            "stateModel" => *state_model = none_if_empty(value),
+            other => return Err(unknown(other)),
+        },
+        PdfAnnotationKind::Link { action, destination, highlight, quad_points } => match aspect {
+            "uri" => *action = none_if_empty(value).map(PdfAction::uri),
+            "page" => *destination = (x >= 0.0).then_some(PdfDestination::Page { page: x.round() as u32, fit: PdfDestinationFit::Fit }),
+            "highlight" => *highlight = none_if_empty(value),
+            "quads" => *quad_points = if value.is_empty() { Vec::new() } else { csv_numbers(value)? },
+            other => return Err(unknown(other)),
+        },
+        PdfAnnotationKind::FreeText { default_appearance, quadding, callout, line_ending, rich_text } => match aspect {
+            "appearance" => *default_appearance = value.to_string(),
+            "quadding" => *quadding = x.max(0.0).round() as u32,
+            "callout" => *callout = if value.is_empty() { None } else { Some(csv_numbers(value)?) },
+            "ending" => *line_ending = none_if_empty(value),
+            "rich" => *rich_text = none_if_empty(value),
+            other => return Err(unknown(other)),
+        },
+        PdfAnnotationKind::Line { points, line_endings, interior_color, leader_length, caption } => match aspect {
+            "points" => {
+                let numbers = csv_numbers(value)?;
+                let [x1, y1, x2, y2] = <[f64; 4]>::try_from(numbers).map_err(|_| fault("a line needs four coordinates"))?;
+                *points = [x1, y1, x2, y2];
+            }
+            "endings" => *line_endings = two_names(value)?,
+            "interior" => *interior_color = color,
+            "leader" => *leader_length = (x >= 0.0).then_some(x),
+            "caption" => *caption = x >= 0.5,
+            other => return Err(unknown(other)),
+        },
+        PdfAnnotationKind::Square { interior_color, rect_differences } | PdfAnnotationKind::Circle { interior_color, rect_differences } => match aspect {
+            "interior" => *interior_color = color,
+            "differences" => *rect_differences = differences,
+            other => return Err(unknown(other)),
+        },
+        PdfAnnotationKind::Polygon { vertices, interior_color } => match aspect {
+            "vertices" => *vertices = if value.is_empty() { Vec::new() } else { csv_numbers(value)? },
+            "interior" => *interior_color = color,
+            other => return Err(unknown(other)),
+        },
+        PdfAnnotationKind::PolyLine { vertices, line_endings, interior_color } => match aspect {
+            "vertices" => *vertices = if value.is_empty() { Vec::new() } else { csv_numbers(value)? },
+            "endings" => *line_endings = two_names(value)?,
+            "interior" => *interior_color = color,
+            other => return Err(unknown(other)),
+        },
+        PdfAnnotationKind::Highlight { quad_points } | PdfAnnotationKind::Underline { quad_points } | PdfAnnotationKind::Squiggly { quad_points } | PdfAnnotationKind::StrikeOut { quad_points } => match aspect {
+            "quads" => *quad_points = if value.is_empty() { Vec::new() } else { csv_numbers(value)? },
+            other => return Err(unknown(other)),
+        },
+        PdfAnnotationKind::Stamp { icon } => match aspect {
+            "icon" => *icon = none_if_empty(value),
+            other => return Err(unknown(other)),
+        },
+        PdfAnnotationKind::Caret { rect_differences, symbol } => match aspect {
+            "differences" => *rect_differences = differences,
+            "symbol" => *symbol = none_if_empty(value),
+            other => return Err(unknown(other)),
+        },
+        PdfAnnotationKind::Ink { paths } => match aspect {
+            "paths" => *paths = ink_paths(value)?,
+            other => return Err(unknown(other)),
+        },
+        PdfAnnotationKind::Popup { parent, open } => match aspect {
+            "parent" => *parent = (x >= 0.0).then_some(x.round() as usize),
+            "open" => *open = x >= 0.5,
+            other => return Err(unknown(other)),
+        },
+        PdfAnnotationKind::FileAttachment { file, icon } => match aspect {
+            "embedded" => *file = PdfFileSpecification::Embedded { file: value.to_string() },
+            "path" => *file = PdfFileSpecification::Path { path: value.to_string() },
+            "icon" => *icon = none_if_empty(value),
+            other => return Err(unknown(other)),
+        },
+        PdfAnnotationKind::Sound { sound, icon } => match aspect {
+            "icon" => *icon = none_if_empty(value),
+            "entry" => {
+                let (key, entry) = name_entry(value)?;
+                upsert_name_entry(sound, key, entry)?;
+            }
+            other => return Err(unknown(other)),
+        },
+        PdfAnnotationKind::Movie { title, movie, activation } => match aspect {
+            "title" => *title = none_if_empty(value),
+            "entry" => {
+                let (key, entry) = name_entry(value)?;
+                upsert_name_entry(movie, key, entry)?;
+            }
+            "activation" => {
+                let entries = activation.get_or_insert_with(Vec::new);
+                let (key, entry) = name_entry(value)?;
+                upsert_name_entry(entries, key, entry)?;
+            }
+            other => return Err(unknown(other)),
+        },
+        PdfAnnotationKind::Widget { field, highlight, characteristics, action, additional_actions } => match aspect {
+            "field" => *field = none_if_empty(value),
+            "highlight" => *highlight = none_if_empty(value),
+            "uri" => *action = none_if_empty(value).map(PdfAction::uri),
+            "entry" => {
+                let (key, entry) = name_entry(value)?;
+                upsert_name_entry(characteristics, key, entry)?;
+            }
+            "action" => {
+                let (key, entry) = name_entry(value)?;
+                upsert_name_entry(additional_actions, key, entry)?;
+            }
+            other => return Err(unknown(other)),
+        },
+        PdfAnnotationKind::Screen { title, characteristics, action, additional_actions } => match aspect {
+            "title" => *title = none_if_empty(value),
+            "uri" => *action = none_if_empty(value).map(PdfAction::uri),
+            "entry" => {
+                let (key, entry) = name_entry(value)?;
+                upsert_name_entry(characteristics, key, entry)?;
+            }
+            "action" => {
+                let (key, entry) = name_entry(value)?;
+                upsert_name_entry(additional_actions, key, entry)?;
+            }
+            other => return Err(unknown(other)),
+        },
+        PdfAnnotationKind::PrinterMark { mark_style, colorants } => match aspect {
+            "style" => *mark_style = none_if_empty(value),
+            "entry" => {
+                let (key, entry) = name_entry(value)?;
+                upsert_name_entry(colorants, key, entry)?;
+            }
+            other => return Err(unknown(other)),
+        },
+        PdfAnnotationKind::TrapNet { entries } | PdfAnnotationKind::ThreeD { entries } => match aspect {
+            "entry" => {
+                let (key, entry) = name_entry(value)?;
+                upsert_name_entry(entries, key, entry)?;
+            }
+            other => return Err(unknown(other)),
+        },
+        PdfAnnotationKind::Watermark { fixed_print } => match aspect {
+            "entry" => {
+                let entries = fixed_print.get_or_insert_with(Vec::new);
+                let (key, entry) = name_entry(value)?;
+                upsert_name_entry(entries, key, entry)?;
+            }
+            other => return Err(unknown(other)),
+        },
+        PdfAnnotationKind::Redact { quad_points, interior_color, overlay_text, repeat, default_appearance, quadding } => match aspect {
+            "quads" => *quad_points = if value.is_empty() { Vec::new() } else { csv_numbers(value)? },
+            "interior" => *interior_color = color,
+            "overlay" => *overlay_text = none_if_empty(value),
+            "repeat" => *repeat = x >= 0.5,
+            "appearance" => *default_appearance = none_if_empty(value),
+            "quadding" => *quadding = x.max(0.0).round() as u32,
+            other => return Err(unknown(other)),
+        },
+        PdfAnnotationKind::Unknown { subtype, entries } => match aspect {
+            "subtype" => *subtype = value.to_string(),
+            "entry" => {
+                let (key, entry) = name_entry(value)?;
+                upsert_name_entry(entries, key, entry)?;
+            }
+            other => return Err(unknown(other)),
+        },
+    }
+    Ok(store_annotation(page, index, annotation))
+}
+
+fn choice_options(value: &str) -> Vec<(String, String)> {
+    value.split(',').map(str::trim).filter(|item| !item.is_empty()).map(|item| match item.split_once('=') { Some((export, display)) => (export.to_string(), display.to_string()), None => (item.to_string(), item.to_string()) }).collect()
+}
+
+fn csv_strings(value: &str) -> Vec<String> {
+    value.split(',').map(str::trim).filter(|item| !item.is_empty()).map(str::to_string).collect()
+}
+
+fn set_field_data(snapshot: &PdfSnapshot, name: &str, aspect: &str, value: &str, number: f64) -> Result<Vec<PdfMutation>, Fault> {
+    if name.is_empty() {
+        return Err(fault("a form field needs a name"));
+    }
+    let mut form = snapshot.acro_form.clone().ok_or_else(|| fault("the document has no form"))?;
+    let field = form.fields.iter_mut().find(|field| field.name == name).ok_or_else(|| fault(format!("pdf form field '{name}' is gone")))?;
+    match &mut field.kind {
+        PdfFormFieldKind::Choice { values, default_values, options, top_index } => match aspect {
+            "options" => *options = choice_options(value),
+            "values" => *values = csv_strings(value),
+            "defaults" => *default_values = csv_strings(value),
+            "top" => *top_index = (number >= 0.0).then_some(number.round() as u32),
+            other => return Err(fault(format!("a choice field has no '{other}'"))),
+        },
+        PdfFormFieldKind::Text { default_value, max_length, rich_value, .. } => match aspect {
+            "default" => *default_value = none_if_empty(value),
+            "maxLength" => *max_length = (number >= 0.0).then_some(number.round() as u32),
+            "rich" => *rich_value = none_if_empty(value),
+            other => return Err(fault(format!("a text field has no '{other}'"))),
+        },
+        PdfFormFieldKind::Button { default_value, options, .. } => match aspect {
+            "default" => *default_value = none_if_empty(value),
+            "options" => *options = csv_strings(value),
+            other => return Err(fault(format!("a button field has no '{other}'"))),
+        },
+        PdfFormFieldKind::Signature { value: signature } => match aspect {
+            "entry" => {
+                let entries = signature.get_or_insert_with(Vec::new);
+                let (key, entry) = name_entry(value)?;
+                upsert_name_entry(entries, key, entry)?;
+            }
+            other => return Err(fault(format!("a signature field has no '{other}'"))),
+        },
+        PdfFormFieldKind::Container => return Err(fault("a container field has no value")),
+    }
+    Ok(vec![PdfMutation::SetAcroForm(SetAcroForm { form: Some(form) })])
+}
+
 fn set_annotation_style(snapshot: &PdfSnapshot, page: usize, object_id: &str, aspect: &str, value: &str, red: f64, green: f64, blue: f64, flags: f64) -> Result<Vec<PdfMutation>, Fault> {
     let index = object_id.rsplit_once(":a").and_then(|(_, raw)| raw.parse::<usize>().ok()).ok_or_else(|| fault(format!("pdf annotation '{object_id}' is not addressable")))?;
     let mut annotation = snapshot.pages.get(page).and_then(|item| item.annotations.get(index)).cloned().ok_or_else(|| fault(format!("pdf annotation '{object_id}' is gone")))?;
@@ -1161,6 +1682,137 @@ fn set_mesh_data(snapshot: &PdfSnapshot, id: &str, decode_text: &str, hex: &str)
         *decode = decode_text.split(',').map(|item| item.trim().parse::<f64>().map_err(|_| fault("mesh decode is comma-separated numbers"))).collect::<Result<Vec<_>, _>>()?;
     }
     Ok(vec![PdfMutation::SetShading(SetShading { shading })])
+}
+
+fn line_cap(number: f64) -> Result<PdfLineCap, Fault> {
+    match number.round() as i32 {
+        0 => Ok(PdfLineCap::Butt),
+        1 => Ok(PdfLineCap::Round),
+        2 => Ok(PdfLineCap::Square),
+        _ => Err(fault("a line cap is 0, 1, or 2")),
+    }
+}
+
+fn line_join(number: f64) -> Result<PdfLineJoin, Fault> {
+    match number.round() as i32 {
+        0 => Ok(PdfLineJoin::Miter),
+        1 => Ok(PdfLineJoin::Round),
+        2 => Ok(PdfLineJoin::Bevel),
+        _ => Err(fault("a line join is 0, 1, or 2")),
+    }
+}
+
+fn clear_number(value: &str, number: f64) -> Option<f64> {
+    if value == "clear" || number < 0.0 { None } else { Some(number) }
+}
+
+fn set_resource_detail(snapshot: &PdfSnapshot, id: &str, aspect: &str, value: &str, x: f64, y: f64, width: f64, height: f64, red: f64, green: f64, blue: f64) -> Result<Vec<PdfMutation>, Fault> {
+    let (owner, field) = aspect.split_once('.').ok_or_else(|| fault("a resource detail needs owner.field"))?;
+    match owner {
+        "outline" => {
+            let mut outlines = snapshot.outlines.clone();
+            let index = id.parse::<usize>().map_err(|_| fault("an outline index needs a whole number"))?;
+            let item = outlines.get_mut(index).ok_or_else(|| fault("that outline is gone"))?;
+            match field {
+                "bold" => item.bold = x >= 0.5,
+                "italic" => item.italic = x >= 0.5,
+                "open" => item.open = x >= 0.5,
+                "color" => item.color = if value == "clear" { None } else { Some([red, green, blue]) },
+                "uri" => item.action = none_if_empty(value).map(PdfAction::uri),
+                other => return Err(fault(format!("an outline has no '{other}'"))),
+            }
+            Ok(vec![PdfMutation::SetOutlines(SetOutlines { outlines })])
+        }
+        "image" => {
+            let mut image = snapshot.images.iter().find(|image| image.id == id).cloned().ok_or_else(|| fault(format!("pdf image '{id}' is gone")))?;
+            match field {
+                "interpolate" => image.interpolate = x >= 0.5,
+                "decode" => image.decode = if value.is_empty() { Vec::new() } else { csv_numbers(value)? },
+                "intent" => image.intent = none_if_empty(value),
+                "matte" => image.matte = if value.is_empty() || value == "clear" { None } else { Some(csv_numbers(value)?) },
+                other => return Err(fault(format!("an image has no '{other}'"))),
+            }
+            Ok(vec![PdfMutation::SetImage(SetImage { image })])
+        }
+        "graphics" => {
+            let mut state = snapshot.ext_g_states.iter().find(|item| item.id == id).cloned().unwrap_or_else(|| PdfExtGState { id: id.to_string(), ..PdfExtGState::default() });
+            match field {
+                "cap" => state.line_cap = Some(line_cap(x)?),
+                "join" => state.line_join = Some(line_join(x)?),
+                "miter" => state.miter_limit = clear_number(value, x),
+                "dash" => state.dash = if value.is_empty() { None } else { Some((csv_numbers(value)?, x.max(0.0))) },
+                "intent" => state.rendering_intent = none_if_empty(value),
+                "overprintStroke" => state.overprint_stroke = (value != "clear").then_some(x >= 0.5),
+                "overprintFill" => state.overprint_fill = (value != "clear").then_some(x >= 0.5),
+                "flatness" => state.flatness = clear_number(value, x),
+                other => return Err(fault(format!("a graphics state has no '{other}'"))),
+            }
+            Ok(vec![PdfMutation::SetExtGState(SetExtGState { state })])
+        }
+        "font" => {
+            let mut font = snapshot.fonts.iter().find(|font| font.id == id).cloned().ok_or_else(|| fault(format!("pdf font '{id}' is gone")))?;
+            let base_font = match &font.kind {
+                PdfFontKind::Type1 { base_font, .. } | PdfFontKind::TrueType { base_font, .. } => base_font.clone(),
+                _ => return Err(fault("font descriptor details apply to a simple font")),
+            };
+            let descriptor = match &mut font.kind {
+                PdfFontKind::Type1 { descriptor, .. } | PdfFontKind::TrueType { descriptor, .. } => descriptor,
+                _ => unreachable!(),
+            };
+            let slot = descriptor.get_or_insert_with(|| PdfFontDescriptor { font_name: base_font, ..PdfFontDescriptor::default() });
+            match field {
+                "flags" => slot.flags = x.max(0.0).round() as u32,
+                "italicAngle" => slot.italic_angle = x,
+                "ascent" => slot.ascent = x,
+                "descent" => slot.descent = x,
+                "capHeight" => slot.cap_height = x,
+                "stemV" => slot.stem_v = x,
+                "bbox" => slot.font_bbox = [x, y, x + width, y + height],
+                other => return Err(fault(format!("a font descriptor has no '{other}'"))),
+            }
+            Ok(vec![PdfMutation::SetFont(SetFont { font })])
+        }
+        "form" => {
+            let mut form = snapshot.forms.iter().find(|form| form.id == id).cloned().ok_or_else(|| fault(format!("pdf form '{id}' is gone")))?;
+            match field {
+                "layer" => form.optional_content = none_if_empty(value),
+                "structParent" => form.struct_parent = (x >= 0.0).then_some(x.round() as u32),
+                "group" if value == "clear" => form.group = None,
+                "group" => {
+                    let color_space = match value {
+                        "" => None,
+                        "deviceGray" => Some(PdfColorSpace::DeviceGray),
+                        "deviceRgb" => Some(PdfColorSpace::DeviceRgb),
+                        "deviceCmyk" => Some(PdfColorSpace::DeviceCmyk),
+                        other => return Err(fault(format!("unknown group color space '{other}'"))),
+                    };
+                    form.group = Some(PdfTransparencyGroup { color_space, isolated: x >= 0.5, knockout: y >= 0.5 });
+                }
+                other => return Err(fault(format!("a form has no '{other}'"))),
+            }
+            Ok(vec![PdfMutation::SetForm(SetForm { form })])
+        }
+        "shading" => {
+            let mut shading = snapshot.shadings.iter().find(|item| item.id == id).cloned().ok_or_else(|| fault(format!("pdf shading '{id}' is gone")))?;
+            match field {
+                "antiAlias" => shading.anti_alias = x >= 0.5,
+                "background" => shading.background = if value.is_empty() || value == "clear" { None } else { Some(csv_numbers(value)?) },
+                "bbox" => shading.bbox = if x < 0.0 { None } else { Some([x, y, x + width, y + height]) },
+                other => return Err(fault(format!("a shading has no '{other}'"))),
+            }
+            Ok(vec![PdfMutation::SetShading(SetShading { shading })])
+        }
+        "layers" => {
+            let mut content = snapshot.optional_content.clone().unwrap_or_default();
+            match field {
+                "name" => content.name = none_if_empty(value),
+                "baseOff" => content.base_state_off = x >= 0.5,
+                other => return Err(fault(format!("optional content has no '{other}'"))),
+            }
+            Ok(vec![PdfMutation::SetOptionalContent(SetOptionalContent { content: Some(content) })])
+        }
+        other => Err(fault(format!("unknown resource owner '{other}'"))),
+    }
 }
 
 fn set_graphics_state(snapshot: &PdfSnapshot, id: &str, blend: &str, fill_alpha: f64, stroke_alpha: f64) -> Result<Vec<PdfMutation>, Fault> {
@@ -1716,6 +2368,7 @@ fn bounded_object(page_index: usize, kind: ObjectKind, start: usize, end: usize,
         width,
         height,
         text,
+        font: state.font.clone(),
         font_size,
         fill: state.fill,
         stroke: state.stroke,
@@ -1952,11 +2605,213 @@ fn fault(message: impl Into<String>) -> Fault {
 }
 
 fn text_arg(args: Option<&dsl::DslValue>, key: &str) -> String {
-    semio_s_artifact_stdio_contract::window_kit_text_argument(args, &[key], "")
+    committed_argument(args, key).unwrap_or_else(|| semio_s_artifact_stdio_contract::window_kit_text_argument(args, &[key], ""))
 }
 
 fn req_text(args: Option<&dsl::DslValue>, key: &str) -> Result<String, Fault> {
+    if directed_field(args) == key {
+        return committed_argument(args, key).ok_or_else(|| fault(format!("the action requires argument '{key}'")));
+    }
     semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, key).map_err(|error| fault(error.message))
+}
+
+fn directed_field(args: Option<&dsl::DslValue>) -> String {
+    semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["field"], "")
+}
+
+fn committed_argument(args: Option<&dsl::DslValue>, key: &str) -> Option<String> {
+    if key == "field" || directed_field(args) != key {
+        return None;
+    }
+    let dsl::DslValue::Object(entries) = args? else { return None };
+    match entries.iter().find(|(name, _)| name == "value").map(|(_, value)| value)? {
+        dsl::DslValue::String(raw) => Some(raw.clone()),
+        dsl::DslValue::Number(number) => Some(number.as_u64().map(|reading| reading.to_string()).or_else(|| number.as_i64().map(|reading| reading.to_string())).unwrap_or_else(|| number.as_f64().to_string())),
+        dsl::DslValue::Bool(flag) => Some(flag.to_string()),
+        _ => None,
+    }
+}
+
+struct InspectorField {
+    id: &'static str,
+    label_en: &'static str,
+    label_de: &'static str,
+    action: &'static str,
+    key: &'static str,
+    kind: ui::InputKind,
+    value: String,
+    numbers: Vec<(&'static str, f64)>,
+    text: Option<String>,
+    object_key: Option<String>,
+}
+
+fn inspector_fields(snapshot: &PdfSnapshot, object: &PageObject) -> Vec<InspectorField> {
+    let mut fields = Vec::new();
+    let geometry = |id, label_en, label_de, key, value, x, y, width, height| InspectorField { id, label_en, label_de, action: "resize", key, kind: ui::InputKind::Number, value: shown_number(value), numbers: vec![("x", x), ("y", y), ("width", width), ("height", height)], text: None, object_key: None };
+    match object.kind {
+        ObjectKind::Text => {
+            let font = snapshot.font(&object.font).map(|font| font.base_font().to_string()).unwrap_or_else(|| object.font.clone());
+            fields.push(InspectorField { id: "pdf-object-text", label_en: "Text", label_de: "Text", action: "set-text", key: "text", kind: ui::InputKind::Text, value: object.text.clone(), numbers: Vec::new(), text: None, object_key: None });
+            fields.push(InspectorField { id: "pdf-object-font", label_en: "Font", label_de: "Schrift", action: "set-font", key: "text", kind: ui::InputKind::Text, value: font, numbers: Vec::new(), text: None, object_key: None });
+            fields.push(placed("pdf-object-x", "X", "X", "move", "x", object.x, &[("y", object.y)]));
+            fields.push(placed("pdf-object-y", "Y", "Y", "move", "y", object.y, &[("x", object.x)]));
+            fields.push(geometry("pdf-object-size", "Font size", "Schriftgröße", "height", object.font_size, object.x, object.y, object.width, object.font_size));
+            fields.extend(color_fields("set-fill", object.fill, &[]));
+        }
+        ObjectKind::Vector => {
+            fields.push(geometry("pdf-object-x", "X", "X", "x", object.x, object.x, object.y, object.width, object.height));
+            fields.push(geometry("pdf-object-y", "Y", "Y", "y", object.y, object.x, object.y, object.width, object.height));
+            fields.push(geometry("pdf-object-width", "Width", "Breite", "width", object.width, object.x, object.y, object.width, object.height));
+            fields.push(geometry("pdf-object-height", "Height", "Höhe", "height", object.height, object.x, object.y, object.width, object.height));
+            fields.extend(color_fields("set-fill", object.fill, &[]));
+            fields.extend(color_fields("set-stroke", object.stroke, &[("width", object.line_width)]));
+            fields.push(placed("pdf-object-line", "Line width", "Linienstärke", "set-stroke", "width", object.line_width, &[("red", object.stroke[0]), ("green", object.stroke[1]), ("blue", object.stroke[2])]));
+        }
+        ObjectKind::Image | ObjectKind::Form => {
+            fields.push(geometry("pdf-object-x", "X", "X", "x", object.x, object.x, object.y, object.width, object.height));
+            fields.push(geometry("pdf-object-y", "Y", "Y", "y", object.y, object.x, object.y, object.width, object.height));
+            fields.push(geometry("pdf-object-width", "Width", "Breite", "width", object.width, object.x, object.y, object.width, object.height));
+            fields.push(geometry("pdf-object-height", "Height", "Höhe", "height", object.height, object.x, object.y, object.width, object.height));
+            if object.kind == ObjectKind::Image {
+                if let Some(image) = snapshot.image(&object.text) {
+                    fields.push(resource_number("pdf-object-interpolate", "Interpolate", "Interpolieren", "x", if image.interpolate { 1.0 } else { 0.0 }, "image.interpolate", &object.text));
+                    fields.push(resource_text("pdf-object-intent", "Intent", "Absicht", image.intent.clone().unwrap_or_default(), "image.intent", &object.text));
+                    fields.push(resource_text("pdf-object-decode", "Decode", "Dekodierung", image.decode.iter().map(|value| shown_number(*value)).collect::<Vec<_>>().join(","), "image.decode", &object.text));
+                }
+            }
+        }
+        ObjectKind::Shading => {
+            fields.push(placed("pdf-object-x", "X", "X", "move", "x", object.x, &[("y", object.y)]));
+            fields.push(placed("pdf-object-y", "Y", "Y", "move", "y", object.y, &[("x", object.x)]));
+            fields.push(geometry("pdf-object-width", "Width", "Breite", "width", object.width, object.x, object.y, object.width, object.height));
+            fields.push(geometry("pdf-object-height", "Height", "Höhe", "height", object.height, object.x, object.y, object.width, object.height));
+        }
+        ObjectKind::Annotation => {
+            fields.push(InspectorField { id: "pdf-object-text", label_en: "Text", label_de: "Text", action: "set-annotation", key: "text", kind: ui::InputKind::Text, value: object.text.clone(), numbers: vec![("x", object.x), ("y", object.y), ("width", object.width), ("height", object.height)], text: None, object_key: None });
+            fields.push(annotation_box("pdf-object-x", "X", "X", "x", object));
+            fields.push(annotation_box("pdf-object-y", "Y", "Y", "y", object));
+            fields.push(annotation_box("pdf-object-width", "Width", "Breite", "width", object));
+            fields.push(annotation_box("pdf-object-height", "Height", "Höhe", "height", object));
+            if let Ok((_, annotation)) = annotation_at(snapshot, object.page, &object.id) {
+                let color = [annotation.color.first().copied().unwrap_or(0.0), annotation.color.get(1).copied().unwrap_or(0.0), annotation.color.get(2).copied().unwrap_or(0.0)];
+                fields.extend(color_fields("set-annotation-style", color, &[]));
+                let border = annotation.border.as_ref().map(|border| border.width).unwrap_or(0.0);
+                fields.push(placed("pdf-object-border", "Border", "Rahmen", "set-annotation-border", "x", border, &[]));
+            }
+        }
+    }
+    fields
+}
+
+fn page_fields(snapshot: &PdfSnapshot) -> Vec<InspectorField> {
+    let (width, height, rotation) = snapshot.pages.first().map(|page| (page.width(), page.height(), page.rotate as f64)).unwrap_or((0.0, 0.0, 0.0));
+    vec![
+        InspectorField { id: "pdf-page-title", label_en: "Title", label_de: "Titel", action: "set-info", key: "text", kind: ui::InputKind::Text, value: snapshot.info.title.clone().unwrap_or_default(), numbers: Vec::new(), text: None, object_key: Some(String::new()) },
+        InspectorField { id: "pdf-page-author", label_en: "Author", label_de: "Autor", action: "set-info", key: "extra", kind: ui::InputKind::Text, value: snapshot.info.author.clone().unwrap_or_default(), numbers: Vec::new(), text: None, object_key: Some(String::new()) },
+        InspectorField { id: "pdf-page-language", label_en: "Language", label_de: "Sprache", action: "set-language", key: "text", kind: ui::InputKind::Text, value: snapshot.language.clone().unwrap_or_default(), numbers: Vec::new(), text: None, object_key: Some(String::new()) },
+        placed("pdf-page-width", "Page width", "Seitenbreite", "set-page-size", "width", width, &[("height", height)]),
+        placed("pdf-page-height", "Page height", "Seitenhöhe", "set-page-size", "height", height, &[("width", width)]),
+        placed("pdf-page-rotation", "Rotation", "Drehung", "set-page-rotation", "x", rotation, &[]),
+    ]
+}
+
+fn resource_number(id: &'static str, label_en: &'static str, label_de: &'static str, key: &'static str, value: f64, aspect: &str, resource_id: &str) -> InspectorField {
+    InspectorField { id, label_en, label_de, action: "set-resource-detail", key, kind: ui::InputKind::Number, value: shown_number(value), numbers: Vec::new(), text: Some(aspect.to_string()), object_key: Some(resource_id.to_string()) }
+}
+
+fn resource_text(id: &'static str, label_en: &'static str, label_de: &'static str, value: String, aspect: &str, resource_id: &str) -> InspectorField {
+    InspectorField { id, label_en, label_de, action: "set-resource-detail", key: "extra", kind: ui::InputKind::Text, value, numbers: Vec::new(), text: Some(aspect.to_string()), object_key: Some(resource_id.to_string()) }
+}
+
+fn placed(id: &'static str, label_en: &'static str, label_de: &'static str, action: &'static str, key: &'static str, value: f64, numbers: &[(&'static str, f64)]) -> InspectorField {
+    InspectorField { id, label_en, label_de, action, key, kind: ui::InputKind::Number, value: shown_number(value), numbers: numbers.to_vec(), text: None, object_key: None }
+}
+
+fn color_fields(action: &'static str, color: [f64; 3], extra: &[(&'static str, f64)]) -> Vec<InspectorField> {
+    let channels = [("red", "Red", "Rot", color[0]), ("green", "Green", "Grün", color[1]), ("blue", "Blue", "Blau", color[2])];
+    channels
+        .into_iter()
+        .map(|(key, en, de, value)| {
+            let mut numbers = vec![("red", color[0]), ("green", color[1]), ("blue", color[2])];
+            numbers.extend_from_slice(extra);
+            let id = match action {
+                "set-fill" => match key { "red" => "pdf-object-fill-red", "green" => "pdf-object-fill-green", _ => "pdf-object-fill-blue" },
+                "set-annotation-style" => match key { "red" => "pdf-object-color-red", "green" => "pdf-object-color-green", _ => "pdf-object-color-blue" },
+                _ => match key { "red" => "pdf-object-stroke-red", "green" => "pdf-object-stroke-green", _ => "pdf-object-stroke-blue" },
+            };
+            let text = (action == "set-annotation-style").then(|| "color".to_string());
+            InspectorField { id, label_en: en, label_de: de, action, key, kind: ui::InputKind::Number, value: shown_number(value), numbers, text, object_key: None }
+        })
+        .collect()
+}
+
+fn annotation_box(id: &'static str, label_en: &'static str, label_de: &'static str, key: &'static str, object: &PageObject) -> InspectorField {
+    let value = match key {
+        "x" => object.x,
+        "y" => object.y,
+        "width" => object.width,
+        _ => object.height,
+    };
+    InspectorField { id, label_en, label_de, action: "set-annotation", key, kind: ui::InputKind::Number, value: shown_number(value), numbers: vec![("x", object.x), ("y", object.y), ("width", object.width), ("height", object.height)], text: Some(object.text.clone()), object_key: None }
+}
+
+fn field_input(page: usize, object_id: &str, field: &InspectorField, controller_id: &str, locale: Locale) -> UiAssemblyResult<semio_framework_ui_contract::BuiltNode> {
+    let label = match locale {
+        Locale::De => field.label_de,
+        Locale::En => field.label_en,
+    };
+    let mut numbers = field.numbers.clone();
+    numbers.retain(|(key, _)| *key != field.key);
+    let object_id = field.object_key.as_deref().unwrap_or(object_id);
+    let mut arguments = object_args(page, object_id, field.key, &numbers)?;
+    if let Some(text) = &field.text {
+        arguments = insert_text_arg(arguments, text)?;
+    }
+    let builder = ui::input(field.kind).value(inspector_text(&field.value)?).commit(inspector_text("blur")?).try_label(label).map_err(|_| inspector_error("pdf.object.input-label"))?.try_id(field.id).map_err(|_| inspector_error("pdf.object.input-id"))?;
+    builder.try_on_with(ui::Trigger::Commit, inspector_action(controller_id, field.action)?, arguments).map_err(|_| inspector_error("pdf.object.binding"))?.try_build().map_err(|_| inspector_error("pdf.object.input"))
+}
+
+fn object_args(page: usize, object_id: &str, field: &str, numbers: &[(&str, f64)]) -> UiAssemblyResult<UiValue> {
+    let mut entries = vec![("page", UiValue::Number(page as f64)), ("object", UiValue::Text(inspector_text(object_id)?)), ("field", UiValue::Text(inspector_text(field)?))];
+    for (key, value) in numbers {
+        entries.push((key, UiValue::Number(*value)));
+    }
+    let mut map = UiMapBuilder::try_new().ok_or_else(|| inspector_error("pdf.object.args"))?;
+    for (key, value) in entries {
+        map.try_insert(key.to_string(), value).map_err(|_| inspector_error("pdf.object.arg"))?;
+    }
+    Ok(UiValue::Map(map.finish()))
+}
+
+fn insert_text_arg(arguments: UiValue, text: &str) -> UiAssemblyResult<UiValue> {
+    let UiValue::Map(map) = arguments else { return Err(inspector_error("pdf.object.args")) };
+    let mut rebuilt = UiMapBuilder::try_new().ok_or_else(|| inspector_error("pdf.object.args"))?;
+    for (key, value) in map.iter() {
+        rebuilt.try_insert(key.as_str().to_string(), value.credited_clone().ok_or_else(|| inspector_error("pdf.object.arg"))?).map_err(|_| inspector_error("pdf.object.arg"))?;
+    }
+    rebuilt.try_insert("text".to_string(), UiValue::Text(inspector_text(text)?)).map_err(|_| inspector_error("pdf.object.arg"))?;
+    Ok(UiValue::Map(rebuilt.finish()))
+}
+
+fn inspector_action(controller_id: &str, name: &str) -> UiAssemblyResult<ActionId> {
+    ActionId::try_v1(controller_id, name).ok_or_else(|| inspector_error("pdf.object.action"))
+}
+
+fn inspector_text(value: &str) -> UiAssemblyResult<UiText> {
+    UiText::try_from_str(value).ok_or_else(|| inspector_error("pdf.object.text"))
+}
+
+fn inspector_error(code: &'static str) -> PluginAssemblyError {
+    PluginAssemblyError::new(code, "pdf object inspector admission failed")
+}
+
+fn shown_number(value: f64) -> String {
+    if !value.is_finite() {
+        return "0".into();
+    }
+    let text = format!("{value:.4}");
+    let trimmed = text.trim_end_matches('0').trim_end_matches('.').to_string();
+    if trimmed.is_empty() || trimmed == "-" { "0".into() } else { trimmed }
 }
 
 fn req_index(args: Option<&dsl::DslValue>, key: &str) -> Result<u32, Fault> {

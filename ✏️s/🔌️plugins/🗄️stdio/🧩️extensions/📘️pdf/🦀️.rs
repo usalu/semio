@@ -44,13 +44,15 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 
 /// 🔌️ Builds the `stdio-pdf` bundle: every pdf subset's editor and viewer (with the owner-mutation roster where
 /// the subset's mutation enum derives one), one activation per artifact kind it opens read live from that kind's own
-/// `artifact_kind().id`, and the exact-pin runtime dependency on `stdio`, which owns those kinds and their codecs.
+/// `artifact_kind().id`, the exact-pin runtime dependency on `stdio`, which owns those kinds and their codecs, and the hosted runtime of
+/// each of them (`host_artifact`: schemas, inferences, document codecs, composers, formats, subset validators) in this component.
 pub fn plugin() -> Result<Plugin<StdioPdfApps>, PluginAssemblyError> {
     Plugin::<StdioPdfApps>::builder("stdio-pdf")
         .label("Stdio PDF")
         .version(env!("CARGO_PKG_VERSION"))
         .package_id("semio:stdio-pdf")
         .depends_on("stdio", semio_framework::tree_pin!())
+        .host_artifact(semio_s_artifact_stdio_pdf::declaration(semio_s_artifact_stdio_pdf::definition()?).map_err(PluginAssemblyError::definition)?)
         .editor::<semio_s_artifact_stdio_pdf::editor::pdf14a::Pdf14AEditor>(semio_s_artifact_stdio_pdf::editor::pdf14a::create_pdf14_a_editor())
         .viewer::<semio_s_artifact_stdio_pdf::viewer::pdf14a::Pdf14AViewer>(semio_s_artifact_stdio_pdf::viewer::pdf14a::create_pdf14_a_viewer())
         .editor::<semio_s_artifact_stdio_pdf::editor::pdf14::Pdf14Editor>(semio_s_artifact_stdio_pdf::editor::pdf14::create_pdf14_editor())

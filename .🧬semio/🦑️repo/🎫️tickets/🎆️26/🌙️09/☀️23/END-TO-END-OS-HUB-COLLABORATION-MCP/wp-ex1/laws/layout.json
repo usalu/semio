@@ -1,0 +1,22 @@
+{
+ "plugin": "layout",
+ "dir": "📏️layout",
+ "apps": [
+  {
+   "app": "s.layout.layout@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "crate::editor::layout::LayoutPlayApp",
+   "create": "crate::editor::layout::create_layout_app",
+   "app": "s.layout.layout@1/*#editor"
+  }
+ ]
+}

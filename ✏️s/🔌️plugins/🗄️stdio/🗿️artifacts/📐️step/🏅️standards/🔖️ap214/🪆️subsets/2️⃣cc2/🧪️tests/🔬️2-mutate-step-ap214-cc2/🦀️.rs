@@ -141,7 +141,7 @@ mod subject {
     use super::{class_claim, mutable_input, no_mutation, CLASS};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_step::engine::ladder::{ProductIdentity, ShapeRepresentationRow};
-    use semio_s_artifact_stdio_step::engine::part21::{parse_part21, write_part21};
+    use semio_s_artifact_stdio_contract::part21::{parse_part21, write_part21};
     use semio_s_artifact_stdio_step::standards::v_ap214::subsets::cc2::schema::mutations::{apply_step_cc2_mutation_checked, inverse_step_cc2_mutation, StepCc2Mutation};
     use semio_s_artifact_stdio_step::StepSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::step::standards::v_ap214::subsets::cc2::project_step_ap214_cc2;

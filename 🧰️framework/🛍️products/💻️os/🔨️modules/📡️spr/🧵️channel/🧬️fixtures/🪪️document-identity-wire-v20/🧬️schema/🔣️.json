@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio://framework/app-document-identity/v1",
+  "title": "Trusted App Document Identity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "appInstanceId",
+    "parentDocumentId"
+  ],
+  "properties": {
+    "appInstanceId": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "parentDocumentId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "maxLength": 512
+    }
+  }
+}

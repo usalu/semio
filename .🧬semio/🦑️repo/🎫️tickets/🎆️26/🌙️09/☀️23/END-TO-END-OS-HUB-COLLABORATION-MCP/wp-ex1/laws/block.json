@@ -1,0 +1,62 @@
+{
+ "plugin": "block",
+ "dir": "🧱️block",
+ "apps": [
+  {
+   "app": "s.block.block3d@1/*#editor",
+   "examples": [
+    {
+     "id": "hexagonal-cut-concrete-forest-left",
+     "document": "distinct"
+    },
+    {
+     "id": "nakagin-capsule",
+     "document": "distinct"
+    }
+   ]
+  },
+  {
+   "app": "s.block.block5d@1/*#editor",
+   "examples": [
+    {
+     "id": "hexagonal-cut-concrete-forest-left",
+     "document": "distinct"
+    },
+    {
+     "id": "nakagin-capsule",
+     "document": "distinct"
+    }
+   ]
+  },
+  {
+   "app": "s.block.block2d@1/*#editor",
+   "examples": [
+    {
+     "id": "hexagonal-cut-concrete-forest-right",
+     "document": "distinct"
+    },
+    {
+     "id": "hexagonal-cut-concrete-forest-left",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "semio_s_artifact_block_3d::editor::block3d::Block3dPlayApp",
+   "create": "semio_s_artifact_block_3d::editor::block3d::create_block3d_app",
+   "app": "s.block.block3d@1/*#editor"
+  },
+  {
+   "editor": "semio_s_artifact_block_5d::editor::block5d::Block5dPlayApp",
+   "create": "semio_s_artifact_block_5d::editor::block5d::create_block5d_app",
+   "app": "s.block.block5d@1/*#editor"
+  },
+  {
+   "editor": "semio_s_artifact_block_2d::editor::block2d::Block2dPlayApp",
+   "create": "semio_s_artifact_block_2d::editor::block2d::create_block2d_app",
+   "app": "s.block.block2d@1/*#editor"
+  }
+ ]
+}

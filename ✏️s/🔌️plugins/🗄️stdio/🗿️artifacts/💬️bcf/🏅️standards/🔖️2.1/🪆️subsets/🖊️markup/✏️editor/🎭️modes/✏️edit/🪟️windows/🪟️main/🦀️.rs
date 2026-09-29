@@ -47,7 +47,7 @@ pub fn render_revisioned(document: &BcfSnapshot, revision: &str, locale: Locale,
                 cells.push(WindowedEditableTableCell::new(value.clone(), columns[column], "set-cell", arguments));
             }
         }
-        editable_table_window_row(&format!("topic-{row}"), "s.stdio.bcf@2.1/*#editor", locale, cells, std::iter::empty())
+        editable_table_window_row(&format!("topic-{row}"), "s.stdio.bcf@2.1/*#editor", locale, cells, std::iter::empty(), None)
     })
 }
 //#endregion 🔖️Render

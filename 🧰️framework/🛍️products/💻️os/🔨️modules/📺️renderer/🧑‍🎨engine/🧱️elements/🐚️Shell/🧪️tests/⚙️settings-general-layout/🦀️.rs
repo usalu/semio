@@ -180,7 +180,11 @@ fn rendered_footer_root_closes_settings_without_selecting_or_dragging_the_pendin
     semio_framework_async::block_on(shell.handle_pointer_button(x, y, true, 0, &mut input, &theme)).expect("footer Settings press");
     semio_framework_async::block_on(shell.handle_pointer_button(x, y, false, 0, &mut input, &theme)).expect("footer Settings release");
     assert!(!shell.anchor_open(anchor), "the physical footer root gesture closes its anchor");
-    assert_eq!(shell.chrome_accessibility_selected(FRAMEWORK_SETTINGS_GENERAL_TAB_ID, &HitKind::PanelTab), Some(false), "closing the root leaves no selected panel tab");
+    assert_eq!(
+        shell.chrome_accessibility_selected(FRAMEWORK_SETTINGS_GENERAL_TAB_ID, &HitKind::PanelTab),
+        None,
+        "a panel tab is a toggle — it announces `aria-pressed` (React `PanelTabButton`), never a selection, so closing the root selects nothing"
+    );
     assert!(shell.dock_tab_drag.is_none() && !input.drag.active, "the footer root gesture never arms a dock-tab drag");
 }
 
@@ -571,4 +575,13 @@ fn a_framework_setting_dispatch_completes_on_a_one_mebibyte_thread() {
         .expect("a 1 MiB shell thread starts")
         .join();
     assert_eq!(completed.ok().and_then(Result::ok).as_deref(), Some("dark"), "the setting dispatch completes and applies without overflowing a 1 MiB stack");
+}
+
+/// 🧵️ LAW (ticket 26/09/23 session 14d, WG11 — the shell-turn law still overflowed its 1 MiB thread: `ShellState` was 400 888 bytes, so
+/// `ShellState::new`'s own debug frame was 803 KB before any dispatch): the shell's state is small enough to live on a bounded thread —
+/// every phase owner that exists only while its phase runs (icon export, admitted World3d rejection/retirement) lives in a `Box`.
+#[test]
+fn a_shell_state_stays_small_enough_to_live_on_a_bounded_thread() {
+    let bytes = std::mem::size_of::<ShellState>();
+    assert!(bytes <= 64 * 1024, "ShellState is {bytes} bytes; a phase owner moved inline again");
 }

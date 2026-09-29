@@ -778,12 +778,28 @@ pub fn delete_selection_from_host_snapshot(fixture: &mut Value, selected: &[Stri
 }
 
 /// 🙈️ Patches `hidden`/`locked` onto every selected node, handle, and edge in the fixture.
+/// 🙈️ Whether a node, handle or edge is hidden. The document stores the inverse, `visible` (absent = shown): a `hidden`
+/// key written onto one of them never reaches the typed model, so it would neither persist nor reach a peer.
+pub fn puzzle2d_entity_hidden(entity: &Value) -> bool {
+    entity.get("visible").and_then(Value::as_bool) == Some(false)
+}
+
+/// 🙈️ The document field and value one flag write stores on a node, handle or edge — `hidden` is written as its inverse,
+/// `visible`, the field the typed model carries; `locked` is stored as itself.
+fn puzzle2d_entity_flag_entry(flag: &str, value: bool) -> (&'static str, bool) {
+    if flag == "locked" {
+        ("locked", value)
+    } else {
+        ("visible", !value)
+    }
+}
+
 pub fn apply_selection_flag(fixture: &mut Value, selected: &[String], flag: &str, value: bool) {
     if selected.is_empty() {
         return;
     }
     let selected: HashSet<&str> = selected.iter().map(String::as_str).collect();
-    let key = if flag == "locked" { "locked" } else { "hidden" };
+    let (key, value) = puzzle2d_entity_flag_entry(flag, value);
     if let Some(nodes) = fixture.get_mut("nodes").and_then(|entry| entry.as_array_mut()) {
         for node in nodes.iter_mut() {
             let node_selected = node.get("id").and_then(|entry| entry.as_str()).is_some_and(|id| selected.contains(id));
@@ -982,6 +998,8 @@ fn patched_field_value(entity: &Value, field: &str, value: Option<&Value>, delta
  * the same one verb the node rows use. An empty `ids` addresses every node, the pre-existing
  * whole-selection behaviour. */
 pub fn patch_inspector_nodes(fixture: &mut Value, ids: &[String], field: &str, value: Option<&Value>, delta: Option<&Value>) {
+    let visible = (field == "hidden").then(|| value.and_then(Value::as_bool).map(|hidden| Value::Bool(!hidden))).flatten();
+    let (field, value) = if field == "hidden" { ("visible", visible.as_ref()) } else { (field, value) };
     let Some(nodes) = fixture.get_mut("nodes").and_then(|entry| entry.as_array_mut()) else { return };
     for node in nodes {
         let node_id = node.get("id").and_then(|entry| entry.as_str()).map(str::to_string).unwrap_or_default();
@@ -1774,6 +1792,8 @@ puzzle2d_command_variants! {
     ProximityConnect = "proximityConnect",
     SetProximityRadius = "setProximityRadius",
     SetSelectionFlag = "setSelectionFlag",
+    SetSelectionHidden = "setSelectionHidden",
+    SetSelectionLocked = "setSelectionLocked",
     PatchInspectorNodes = "patchInspectorNodes",
     RedrawHandles = "redrawHandles",
     Reorganize = "reorganize",
@@ -1802,6 +1822,8 @@ puzzle2d_command_variants! {
     DeleteTargetRegion = "deleteTargetRegion",
     RelocateTargetRegion = "relocateTargetRegion",
     SetTargetRegionFlag = "setTargetRegionFlag",
+    SetTargetRegionHidden = "setTargetRegionHidden",
+    SetTargetRegionLocked = "setTargetRegionLocked",
     SetAreaBrushSize = "setAreaBrushSize",
     CycleBrushCandidate = "cycleBrushCandidate",
     CycleBrushCandidateBack = "cycleBrushCandidateBack",
@@ -1955,7 +1977,7 @@ async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActio
             }
         }
     }
-    let any_visible = entities.iter().any(|entity| entity.get("hidden").and_then(|v| v.as_bool()) != Some(true));
+    let any_visible = entities.iter().any(|entity| !puzzle2d_entity_hidden(entity));
     let any_unlocked = entities.iter().any(|entity| entity.get("locked").and_then(|v| v.as_bool()) != Some(true));
     let phrase = selection_count_phrase(is_de, &[(selected.len(), if is_de { "Element" } else { "item" }, if is_de { "Elemente" } else { "items" })]);
     let hide_label = match (any_visible, is_de) {
@@ -2104,12 +2126,16 @@ pub(crate) const PUZZLE2D_RETAINED_TOOL_IDS: &[&str] = &[
     "importFixture",
     "openImportFixture",
     "setSelectionFlag",
+    "setSelectionHidden",
+    "setSelectionLocked",
     "setSuggestionOffset",
     "setTransformGumballFlag",
     "addTargetRegion",
     "deleteTargetRegion",
     "relocateTargetRegion",
     "setTargetRegionFlag",
+    "setTargetRegionHidden",
+    "setTargetRegionLocked",
     "setAreaBrushSize",
     "createEdge",
     "deleteEdge",
@@ -2179,12 +2205,16 @@ const PUZZLE2D_GENERIC_TOOL_IDS: &[&str] = &[
     "openAddNodeDialog",
     "setLodModeForPane",
     "setSelectionFlag",
+    "setSelectionHidden",
+    "setSelectionLocked",
     "setSuggestionOffset",
     "setTransformGumballFlag",
     "addTargetRegion",
     "deleteTargetRegion",
     "relocateTargetRegion",
     "setTargetRegionFlag",
+    "setTargetRegionHidden",
+    "setTargetRegionLocked",
     "setAreaBrushSize",
     "translateSelection",
     "rotateSelection",
@@ -2312,6 +2342,8 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Puzzle2dRetainedCom
         ArtifactToolPublicationContract { tool_id: "deleteTargetRegion", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "relocateTargetRegion", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "setTargetRegionFlag", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setTargetRegionHidden", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setTargetRegionLocked", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "setAreaBrushSize", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "applyBoardEvents", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::WindowTransient, ArtifactToolPublicationLane::Interaction] },
         ArtifactToolPublicationContract { tool_id: "acceptSuggestion", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient, ArtifactToolPublicationLane::Interaction] },
@@ -2320,6 +2352,8 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Puzzle2dRetainedCom
         ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "setFillCount", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setSelectionFlag", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setSelectionHidden", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setSelectionLocked", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "lodScaleJson", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "selectSameKind", lanes: &[ArtifactToolPublicationLane::Interaction] },
         ArtifactToolPublicationContract { tool_id: "duplicateSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Interaction] },
@@ -2899,6 +2933,8 @@ fn puzzle2d_dispatch_emit(
             "deleteSelection" => delete_selection::delete_selection(ctx),
             "duplicateSelection" => duplicate_selection::duplicate_selection(ctx),
             "setSelectionFlag" => set_selection_flag::set_selection_flag(ctx, args),
+            "setSelectionHidden" => set_selection_flag::set_selection_flag_value(ctx, args, "hidden"),
+            "setSelectionLocked" => set_selection_flag::set_selection_flag_value(ctx, args, "locked"),
             "addNode" => add_node::add_node(ctx, args),
             "patchInspectorNodes" => patch_inspector::patch_inspector(ctx, args),
             "forceLayout" | "reorganize" => force_layout::force_layout(ctx),
@@ -2934,6 +2970,8 @@ fn puzzle2d_dispatch_emit(
             "deleteTargetRegion" => delete_target_region::delete_target_region(ctx, args),
             "relocateTargetRegion" => relocate_target_region::relocate_target_region(ctx, args),
             "setTargetRegionFlag" => set_target_region_flag::set_target_region_flag(ctx, args),
+            "setTargetRegionHidden" => set_target_region_flag::set_target_region_flag_value(ctx, args, "hidden"),
+            "setTargetRegionLocked" => set_target_region_flag::set_target_region_flag_value(ctx, args, "locked"),
             "setAreaBrushSize" => set_area_brush_size::set_area_brush_size(ctx, args),
             "setFillCount" => set_fill_count::set_fill_count(ctx, args),
             "cycleBrushCandidate" => cycle_candidate::cycle_candidate(ctx, args.and_then(|value| value.get("forward")).and_then(|value| value.as_bool()).unwrap_or(true)),
@@ -2995,14 +3033,14 @@ fn puzzle2d_generic_extent(command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySn
     if action == "importFixture" {
         return Some(PUZZLE2D_IMPORT_FIXTURE_WORK_ITEMS);
     }
-    if !matches!(action, "patchInspectorNodes" | "setSelectionFlag" | "setTargetRegionFlag" | "deleteSelection" | "duplicateSelection" | "translateSelection" | "rotateSelection" | "scaleSelection" | "proximityConnect") {
+    if !matches!(action, "patchInspectorNodes" | "setSelectionFlag" | "setSelectionHidden" | "setSelectionLocked" | "setTargetRegionFlag" | "setTargetRegionHidden" | "setTargetRegionLocked" | "deleteSelection" | "duplicateSelection" | "translateSelection" | "rotateSelection" | "scaleSelection" | "proximityConnect") {
         return Some(1);
     }
     let selected = interaction.selection.get(PUZZLE2D_INTERACTION_DOMAIN).map_or(0, |selection| selection.ids.len());
-    let addressed = if action == "setTargetRegionFlag" && command.args().and_then(|args| args.get("id")).is_some() {
+    let addressed = if matches!(action, "setTargetRegionFlag" | "setTargetRegionHidden" | "setTargetRegionLocked") && command.args().and_then(|args| args.get("id")).is_some() {
         1
     } else {
-        command.args().filter(|_| action == "patchInspectorNodes").and_then(|args| args.get("ids")).and_then(Value::as_array).map_or(selected, Vec::len)
+        command.args().filter(|_| matches!(action, "patchInspectorNodes" | "setSelectionHidden" | "setSelectionLocked")).and_then(|args| args.get("ids")).and_then(Value::as_array).map_or(selected, Vec::len)
     };
     if addressed > PUZZLE2D_SELECTION_BATCH_LIMIT {
         return None;
@@ -4901,12 +4939,16 @@ impl Puzzle2dRetainedCommandProofs {
             "setLodModeForPane",
             "setSelectableKind",
             "setSelectionFlag",
+            "setSelectionHidden",
+            "setSelectionLocked",
             "setSuggestionOffset",
             "setTransformGumballFlag",
             "addTargetRegion",
             "deleteTargetRegion",
             "relocateTargetRegion",
             "setTargetRegionFlag",
+            "setTargetRegionHidden",
+            "setTargetRegionLocked",
             "setAreaBrushSize",
             "translateSelection",
             "rotateSelection",
@@ -5053,6 +5095,9 @@ impl ArtifactEditor for Puzzle2dPlayApp {
 
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
         let window_id = args.and_then(|value| value.get("windowId").or_else(|| value.get("window_id"))).and_then(dsl::DslValue::as_str).map(str::to_string);
+        if let Some(flag) = puzzle2d_flag_value_argument(action) {
+            args.and_then(|value| value.get(flag)).and_then(dsl::DslValue::as_bool).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("puzzle2d.action.flag-value-required"), format!("action '{action}' requires the boolean '{flag}' it sets")))?;
+        }
         let args = args.map(Value::from);
         Puzzle2dCommand::try_from_action(action, args, window_id).ok_or_else(|| Fault::from(format!("unknown Puzzle 2D action '{action}'")))
     }
@@ -5356,6 +5401,22 @@ fn puzzle2d_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: Ac
     ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(id, label, kind) }
 }
 
+/// 🙈️ The flag a set-verb sets to exactly the boolean its arguments carry (`setSelectionHidden{hidden}`,
+/// `setTargetRegionLocked{locked}`, …) — the row target's explicit next state, so a stale view sets a value and never flips one.
+fn puzzle2d_flag_value_argument(action: &str) -> Option<&'static str> {
+    match action {
+        "setSelectionHidden" | "setTargetRegionHidden" => Some("hidden"),
+        "setSelectionLocked" | "setTargetRegionLocked" => Some("locked"),
+        _ => None,
+    }
+}
+
+/// 🙈️ A set-verb's definition: the explicit identity a row names (or, left empty, the live selection) and the REQUIRED
+/// boolean `flag` it sets — a missing value is refused, never defaulted.
+fn puzzle2d_flag_value_action(id: &str, category: &str, identity: ActionArgDef, flag: &str, label: LocalizedLabel, value: LocalizedLabel) -> ActionDefinition {
+    puzzle2d_internal_action(id, label, ActionKind::Mutation).with_category(category).with_args([identity, ActionArgDef::toggle(flag, value).required()])
+}
+
 /// 🎭️✏️ `.example_source(...)` (×2, concrete-forest + nakagin) and `.workflow("puzzle2d", …)` were
 /// dropped, not ported — `EditorBuilder` has neither method (contract §2.4: `.editor::<E>(def:
 /// AppDefinition)` only takes the definition, `App.examples` has no seam on this builder). Flagged to
@@ -5419,6 +5480,8 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(ActionDefinition::bounded_catalog("selectSameKind", LocalizedLabel::native("Select Same Kind", "Gleiche Art auswählen"), ActionKind::View).with_category("selection"))
             // 🔧️ Internal content operations — inspector/panel/board/import-bound, not palette commands.
             .action_with(puzzle2d_internal_action("setSelectionFlag", LocalizedLabel::native("Set Selection Flag", "Auswahlmarkierung festlegen"), ActionKind::Mutation).with_category("settings"))
+            .action_with(puzzle2d_flag_value_action("setSelectionHidden", "settings", ActionArgDef::text_list("ids", LocalizedLabel::native("Ids", "IDs")), "hidden", LocalizedLabel::native("Set Hidden", "Verborgen festlegen"), LocalizedLabel::native("Hidden", "Verborgen")))
+            .action_with(puzzle2d_flag_value_action("setSelectionLocked", "settings", ActionArgDef::text_list("ids", LocalizedLabel::native("Ids", "IDs")), "locked", LocalizedLabel::native("Set Locked", "Gesperrt festlegen"), LocalizedLabel::native("Locked", "Gesperrt")))
             .action_with(puzzle2d_internal_action("patchInspectorNodes", LocalizedLabel::native("Patch Inspector Nodes", "Inspektorknoten aktualisieren"), ActionKind::Mutation))
             .action_with(puzzle2d_internal_action("redrawHandles", LocalizedLabel::native("Redraw Handles", "Anschlüsse neu zeichnen"), ActionKind::Mutation))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation, "rotate-cw") })
@@ -5454,6 +5517,8 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("deleteTargetRegion", LocalizedLabel::native("Delete Target Region", "Zielbereich löschen"), ActionKind::Mutation).with_category("targets") })
             .action_destructive("deleteTargetRegion")
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("setTargetRegionFlag", LocalizedLabel::native("Set Target Region Flag", "Zielbereichsmarkierung festlegen"), ActionKind::Mutation).with_category("targets") })
+            .action_with(puzzle2d_flag_value_action("setTargetRegionHidden", "targets", ActionArgDef::text("id", puzzle2d_localized(|l| l.id)), "hidden", LocalizedLabel::native("Set Target Region Hidden", "Zielbereich verborgen festlegen"), LocalizedLabel::native("Hidden", "Verborgen")))
+            .action_with(puzzle2d_flag_value_action("setTargetRegionLocked", "targets", ActionArgDef::text("id", puzzle2d_localized(|l| l.id)), "locked", LocalizedLabel::native("Set Target Region Locked", "Zielbereich gesperrt festlegen"), LocalizedLabel::native("Locked", "Gesperrt")))
             .action_with(puzzle2d_internal_action("relocateTargetRegion", LocalizedLabel::native("Relocate Target Region", "Zielbereich verlagern"), ActionKind::Mutation))
             .action_with(puzzle2d_internal_action("setAreaBrushSize", LocalizedLabel::native("Set Area Brush Size", "Flächenpinselgröße festlegen"), ActionKind::View))
             .action_with(puzzle2d_internal_action("cycleBrushCandidate", puzzle2d_localized(|l| l.cycle_candidate), ActionKind::View))
@@ -5540,12 +5605,16 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("importFixture", InteractiveJobClassification::Migrated)
             .action_interactive_job("openImportFixture", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSelectionFlag", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSelectionHidden", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSelectionLocked", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSuggestionOffset", InteractiveJobClassification::Migrated)
             .action_interactive_job("setTransformGumballFlag", InteractiveJobClassification::Migrated)
             .action_interactive_job("addTargetRegion", InteractiveJobClassification::Migrated)
             .action_interactive_job("deleteTargetRegion", InteractiveJobClassification::Migrated)
             .action_interactive_job("relocateTargetRegion", InteractiveJobClassification::Migrated)
             .action_interactive_job("setTargetRegionFlag", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setTargetRegionHidden", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setTargetRegionLocked", InteractiveJobClassification::Migrated)
             .action_interactive_job("setAreaBrushSize", InteractiveJobClassification::Migrated)
             .action_interactive_job("setGridVisible", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSelectableKind", InteractiveJobClassification::Migrated)
@@ -5580,6 +5649,8 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("openImportFixture", LocalizedLabel::native("Opens the host's file picker for a 2D puzzle JSON file; the chosen file then replaces the whole puzzle.", "Öffnet die Dateiauswahl des Hosts für eine 2D-Puzzle-JSON-Datei; die gewählte Datei ersetzt dann das gesamte Puzzle."))
             .action_describe("importFixture", LocalizedLabel::native("Replaces the whole 2D puzzle with one read from an imported JSON file; the previous puzzle is discarded.", "Ersetzt das gesamte 2D-Puzzle durch eines aus einer importierten JSON-Datei; das bisherige Puzzle wird verworfen."))
             .action_describe("setSelectionFlag", LocalizedLabel::native("Sets one flag (such as hidden or locked) on the given or selected nodes.", "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen oder ausgewählten Knoten."))
+            .action_describe("setSelectionHidden", LocalizedLabel::native("Sets the given or selected nodes hidden or shown, to exactly the value passed; repeating it changes nothing.", "Verbirgt die angegebenen oder ausgewählten Knoten oder zeigt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."))
+            .action_describe("setSelectionLocked", LocalizedLabel::native("Sets the given or selected nodes locked or unlocked, to exactly the value passed; repeating it changes nothing.", "Sperrt die angegebenen oder ausgewählten Knoten oder entsperrt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."))
             .action_describe("acceptSuggestion", LocalizedLabel::native("Places the suggested piece chosen from the suggestion list (by index, or the highlighted one) at its connection point.", "Setzt das aus der Vorschlagsliste gewählte Teil (per Index oder das hervorgehobene) an seinem Anschlusspunkt."))
             .action_describe("addNode", LocalizedLabel::native("Adds a node of the given kind (a 2D block kind) to the puzzle at x, y.", "Fügt dem Puzzle an x, y einen Knoten der angegebenen Art (einer 2D-Blockart) hinzu."))
             .action_describe("forceLayout", LocalizedLabel::native("Lays out every node of the 2D puzzle with a force-directed layout, overwriting their positions.", "Ordnet alle Knoten des 2D-Puzzles mit einem kraftbasierten Layout an und überschreibt ihre Positionen."))
@@ -5593,6 +5664,8 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("addTargetRegion", LocalizedLabel::native("Adds a rectangular target region at the given origin and size (the area brush size by default).", "Fügt an Ursprung und Größe (standardmäßig der Flächenpinselgröße) einen rechteckigen Zielbereich hinzu."))
             .action_describe("deleteTargetRegion", LocalizedLabel::native("Deletes one target region by id.", "Löscht einen Zielbereich anhand seiner Id."))
             .action_describe("setTargetRegionFlag", LocalizedLabel::native("Sets one flag (such as hidden or locked) on the given target regions.", "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen Zielbereichen."))
+            .action_describe("setTargetRegionHidden", LocalizedLabel::native("Sets the given or selected target regions hidden or shown, to exactly the value passed; repeating it changes nothing.", "Verbirgt die angegebenen oder ausgewählten Zielbereiche oder zeigt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."))
+            .action_describe("setTargetRegionLocked", LocalizedLabel::native("Sets the given or selected target regions locked or unlocked, to exactly the value passed; repeating it changes nothing.", "Sperrt die angegebenen oder ausgewählten Zielbereiche oder entsperrt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."))
             .action_describe("relocateTargetRegion", LocalizedLabel::native("Moves or resizes one target region to the given rectangle.", "Verschiebt oder skaliert einen Zielbereich auf das angegebene Rechteck."))
             .action_describe("openAddNodeDialog", LocalizedLabel::native("Opens the Add Node dialog to pick a node kind to place.", "Öffnet den Dialog Knoten hinzufügen, um eine zu setzende Knotenart zu wählen."))
             .action_audience("applyBoardEvents", semio_framework_plugin::CapabilityAudience::Input)

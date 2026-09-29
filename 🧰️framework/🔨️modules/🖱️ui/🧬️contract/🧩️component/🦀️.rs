@@ -9,9 +9,9 @@
 //! below is plain sync by owner ruling U1.
 
 // 🌱️ `ToValue`/`FromValue` here is the first-party analog of `Serialize`/`Deserialize` below, for
-// ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS. `RowAction`,
-// `TreeItemProps`, `ExtensionProps` and the `Component` enum itself are the deliberate exception —
-// each embeds `crate::UiValue`/`crate::ActionBinding` (directly or via `RowAction`), which stay
+// ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS. `RowTarget`,
+// `TreeItemProps`, `TableRowProps`, `ExtensionProps` and the `Component` enum itself are the deliberate
+// exception — each embeds `crate::UiValue`/`crate::UiMap` (directly or via `RowTarget`), which stay
 // DslValue-free by construction (see `UiValue`'s own docstring in `🎬️action.rs`).
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
@@ -142,32 +142,110 @@ pub struct KeyValueEntry {
     pub value: crate::UiText,
 }
 
-/// 🎬️ One action affordance painted on (or reachable from) a [`Component::TreeItem`] row —
-/// `action` reuses [`crate::ActionBinding`] rather than a second parallel action-id type, since a row
-/// action is exactly a binding fired unconditionally on click (no `Trigger` ambiguity to add here).
-// 🌱️ No `ToValue`/`FromValue` here: `action: crate::ActionBinding` embeds `UiValue`, the deliberate
-// DslValue-free exception — see `UiValue`'s docstring in `🎬️action.rs`.
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+/// 🎬️ One action affordance painted on (or reachable from) a [`Component::TreeItem`] or
+/// [`Component::TableRow`] row. It names only its `verb`: the scope, version and argument map are the
+/// row's ONE [`RowTarget`], which every row action and the row's activation inherit, so N actions cost N
+/// verbs, never N argument maps.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct RowAction {
     /// 🖼️ Icon key. See [`ButtonProps::icon`] for why this is a plain `String`, not a closed enum.
     pub icon: crate::UiText,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<Label>,
-    pub action: crate::ActionBinding,
+    /// ▶️ The verb this action fires on the row's [`RowTarget`].
+    pub verb: crate::UiText,
     #[serde(default, skip_serializing_if = "is_default_row_action_placement")]
+    #[value(default, skip_serializing_if = "is_default_row_action_placement")]
     pub placement: RowActionPlacement,
+    /// 🚫️ A disabled action paints and announces disabled and never dispatches ([`RowTarget::action_binding`] refuses it
+    /// typed). Only a disabled action carries the flag, so an enabled row costs nothing for it.
+    #[serde(default, skip_serializing_if = "is_enabled_row_action")]
+    #[value(default, skip_serializing_if = "is_enabled_row_action")]
+    pub disabled: bool,
 }
 
 impl RowAction {
+    /// 🚫️ This action with its enabled state set — `true` paints it disabled and refuses its dispatch.
+    pub fn disabled(mut self, disabled: bool) -> Self {
+        self.disabled = disabled;
+        self
+    }
+}
+
+/// 🚫️ Why a row action does not dispatch — the ONE typed refusal every host answers a row verb with.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RowActionRefusal {
+    /// 🚫️ The action is disabled on this row.
+    Disabled,
+    /// 🧮️ The target's argument map could not be admitted into one more binding.
+    Credit,
+}
+
+/// 🎯️ The ONE action target of a row: the controller `scope` at its contract `version` that every
+/// [`RowAction::verb`] and the row's `activation` fire in, the ONE argument map they all inherit, and the
+/// verb the row's primary activation (open, select) fires. A host dispatches a row verb as
+/// [`RowTarget::binding`] — the same [`crate::ActionBinding`] shape any record binding has, so a tree row
+/// and a table row with the same target dispatch identically. `args` is a [`crate::UiMap`] handle, not an
+/// inline [`crate::UiValue`], so a targeted row costs one scope and one activation verb inline.
+// 🌱️ No `ToValue`/`FromValue` here: `args` embeds `UiMap`, the deliberate DslValue-free exception —
+// see `UiValue`'s docstring in `🎬️action.rs`.
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RowTarget {
+    pub scope: crate::UiText,
+    pub version: u16,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub args: Option<crate::UiMap>,
+    /// ▶️ The verb the row's primary activation fires on this target.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub activation: Option<crate::UiText>,
+}
+
+impl RowTarget {
     pub fn credited_clone(&self) -> Option<Self> {
-        Some(Self { icon: self.icon.clone(), label: self.label.clone(), action: self.action.credited_clone()?, placement: self.placement })
+        Some(Self { scope: self.scope.clone(), version: self.version, args: credited_args(&self.args)?, activation: self.activation.clone() })
+    }
+
+    /// 🔗️ The `Trigger::Activate` binding `verb` fires on this target: its scope and version, its argument map.
+    pub fn binding(&self, verb: &crate::UiText) -> Option<crate::ActionBinding> {
+        Some(crate::ActionBinding { trigger: crate::Trigger::Activate, action: crate::ActionId::new(self.scope.clone(), verb.clone(), self.version), args: credited_args(&self.args)?.map(crate::UiValue::Map), capability: None })
+    }
+
+    /// 🎬️ The versioned id one of the row's actions fires on this target — refused typed when the action is disabled, so a
+    /// host never dispatches what the row paints disabled.
+    pub fn action_id(&self, action: &RowAction) -> Result<crate::ActionId, RowActionRefusal> {
+        if action.disabled {
+            return Err(RowActionRefusal::Disabled);
+        }
+        Ok(crate::ActionId::new(self.scope.clone(), action.verb.clone(), self.version))
+    }
+
+    /// 🔗️ The binding one of the row's actions fires on this target: [`Self::action_id`] with the target's argument map.
+    pub fn action_binding(&self, action: &RowAction) -> Result<crate::ActionBinding, RowActionRefusal> {
+        let action = self.action_id(action)?;
+        Ok(crate::ActionBinding { trigger: crate::Trigger::Activate, action, args: credited_args(&self.args).ok_or(RowActionRefusal::Credit)?.map(crate::UiValue::Map), capability: None })
+    }
+}
+
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+fn credited_args(args: &Option<crate::UiMap>) -> Option<Option<crate::UiMap>> {
+    match args {
+        Some(args) => Some(Some(args.credited_clone()?)),
+        None => Some(None),
     }
 }
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn is_default_row_action_placement(value: &RowActionPlacement) -> bool {
     *value == RowActionPlacement::default()
+}
+
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+fn is_enabled_row_action(disabled: &bool) -> bool {
+    !*disabled
 }
 //#endregion 🧱️Nested
 
@@ -577,10 +655,9 @@ pub struct TreeSectionProps {
 /// type). [`TreeItemProps::inline_toolbar`] identifies the one direct horizontal Toolbar child whose
 /// real Button children remain independently focusable and actionable inside the row, while
 /// [`TreeItemProps::detail`] identifies one direct Surface child placed below the row. The row's
-/// primary click action (old `action: Option<ActionDescriptor>`) moved to the record's `bindings`
-/// (`Trigger::Activate`).
-// 🌱️ No `ToValue`/`FromValue` here: `row_actions: UiFixedList<RowAction>` needs `RowAction: ToValue`,
-// which RowAction deliberately does not implement (embeds `UiValue`) — see its own note above.
+/// primary click action (old `action: Option<ActionDescriptor>`) is [`RowTarget::activation`], a verb on
+/// the row's target — never a record `Trigger::Activate` binding.
+// 🌱️ No `ToValue`/`FromValue` here: `target: Option<RowTarget>` embeds `UiValue` — see [`RowTarget`].
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TreeItemProps {
@@ -618,14 +695,13 @@ pub struct TreeItemProps {
     pub detail: Option<crate::UiNodeId>,
     #[serde(default, skip_serializing_if = "crate::UiFixedList::is_empty")]
     pub row_actions: crate::UiFixedList<RowAction>,
+    /// 🎯️ The one target `row_actions` and the activation fire on — present exactly when either is.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target: Option<RowTarget>,
 }
 
 impl TreeItemProps {
     fn credited_clone(&self) -> Option<Self> {
-        let mut row_actions = crate::UiFixedList::default();
-        for action in self.row_actions.iter() {
-            row_actions.try_push(action.credited_clone()?).ok()?;
-        }
         Some(Self {
             label: self.label.clone(),
             description: self.description.clone(),
@@ -638,8 +714,17 @@ impl TreeItemProps {
             granularity: self.granularity.clone(),
             inline_toolbar: self.inline_toolbar,
             detail: self.detail,
-            row_actions,
+            row_actions: self.row_actions.clone(),
+            target: credited_target(&self.target)?,
         })
+    }
+}
+
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+fn credited_target(target: &Option<RowTarget>) -> Option<Option<RowTarget>> {
+    match target {
+        Some(target) => Some(Some(target.credited_clone()?)),
+        None => Some(None),
     }
 }
 
@@ -681,10 +766,11 @@ pub struct TableProps {
     pub column_window: Option<TreeWindow>,
 }
 
-/// 📊️ Props for `Component::TableRow` — one row of a [`TableProps`] table: its cells in column order and
-/// its row-scoped actions, both as props, so a row is ONE node record. The row's primary activation (open,
-/// select) is the record's own `Trigger::Activate` binding. No `ToValue`/`FromValue`: [`RowAction`] embeds
-/// `UiValue`, the same deliberate exception [`TreeItemProps`] documents.
+/// 📊️ Props for `Component::TableRow` — one row of a [`TableProps`] table: its cells in column order, its
+/// row-scoped actions and its target, all as props, so a row is ONE node record. Actions and activation
+/// are verbs on the row's ONE [`RowTarget`], exactly as a [`TreeItemProps`] row's are. No
+/// `ToValue`/`FromValue`: [`RowTarget`] embeds `UiMap`, the same deliberate exception [`TreeItemProps`]
+/// documents.
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TableRowProps {
@@ -693,15 +779,14 @@ pub struct TableRowProps {
     /// 🎬️ Row-scoped actions, rendered in the table's trailing actions column.
     #[serde(default, skip_serializing_if = "crate::UiFixedList::is_empty")]
     pub row_actions: crate::UiFixedList<RowAction>,
+    /// 🎯️ The one target `row_actions` and the activation fire on — present exactly when either is.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target: Option<RowTarget>,
 }
 
 impl TableRowProps {
     fn credited_clone(&self) -> Option<Self> {
-        let mut row_actions = crate::UiFixedList::default();
-        for action in self.row_actions.iter() {
-            row_actions.try_push(action.credited_clone()?).ok()?;
-        }
-        Some(Self { cells: self.cells.clone(), row_actions })
+        Some(Self { cells: self.cells.clone(), row_actions: self.row_actions.clone(), target: credited_target(&self.target)? })
     }
 }
 

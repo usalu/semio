@@ -87,6 +87,7 @@ async fn fixture_manifest(plugin_id: &str, dependency_ids: Vec<&str>, artifact_k
         topic_contributions: Vec::new(),
         commands: Vec::new(),
         artifact_kinds,
+        hosted_artifact_kinds: Vec::new(),
         dependencies,
         contributions: Vec::new(),
     }

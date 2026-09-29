@@ -655,6 +655,10 @@ export type UiTranslationSchema = {
         readonly invariant: UiLabelValue;
         readonly cascade: UiLabelValue;
       };
+      /** 🪪️ `history.*` refusals of the event log: `foreignTransition` = an undo or redo naming another author's edit. */
+      readonly history: {
+        readonly foreignTransition: UiLabelValue;
+      };
       readonly policy: {
         readonly laissezFaire: { readonly label: UiLabelValue; readonly description: UiLabelValue };
         readonly normal: { readonly label: UiLabelValue; readonly description: UiLabelValue };

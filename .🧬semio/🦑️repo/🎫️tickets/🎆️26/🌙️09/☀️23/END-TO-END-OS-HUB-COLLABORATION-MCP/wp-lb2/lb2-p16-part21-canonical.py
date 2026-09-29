@@ -18,8 +18,11 @@ projection belong to the stdio CONTRACT, not to one artifact that others borrow 
 - laws (contract `📐️part21/🧪️tests`): the projection is exactly the contract shape for every value kind (serde_json literal);
   value codec round trip; the canonical text is a fixed point (`write(parse(write(parse(t)))) == write(parse(t))`); path edits.
   Third-party oracle: `lb2-p16-part21-oracle.py` (IfcOpenShell 0.8.4 reads the canonical IFC 2x3 text the contract writes).
-- assets: the three committed ifc 2x3 set-snapshot fixtures are converted to the canonical projection (structural transform,
-  proven equal to the documented mapping).
+- assets: the committed ifc 2x3 set-snapshot fixture (mutation, diff `upsertedInstances`, before/after snapshots) is converted
+  to the canonical projection (structural transform, proven equal to the documented mapping); the six payload schemas that
+  copied the old serde-style encoding (`upsert-instance`, `set-header`, `set-snapshot` of base/sav/cv20/cobie) `$ref` the one
+  canonical contract (`…/ifc/2x3/base/artifact.json#/$defs/Part21*`, `…/base/snapshot.json`) — the jpg/svg/bmp precedent.
+  (The diff facets type `header`/`upsertedInstances` opaquely — `string`/`unknown`/`Bytes` in all four twins — reported.)
 
 usage: python3 lb2-p16-part21-canonical.py --dry-run | --write | --revert [--root <tree>]   (after p13: `edit_through_value`)
 Backups (byte-exact, per root) under `.🧬semio/🌐hub/s14-lb2-backup/p16/<root-hash>/`; the moved files are recreated/removed.
@@ -39,7 +42,6 @@ CONTRACT_ROOT = f"{CONTRACT}/🦀️.rs"
 IFC_ROOT = f"{ART}/🏗️ifc/🦀️.rs"
 CAD_MANIFEST = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust/Cargo.toml"
 LOCK = "Cargo.lock"
-IFC2X3_FIXTURES = f"{ART}/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧫️fixtures"
 TARGET = "semio_s_artifact_stdio_contract::part21"
 ABSOLUTE = [
     "semio_s_artifact_stdio_step::standards::v_ap214::engine::part21",
@@ -191,7 +193,7 @@ NEW_LAWS = r'''
 #[test]
 fn value_projection_is_the_canonical_contract_shape() {
     let document = parse_part21("ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('d'),'2;1');\nFILE_NAME('n','t',('a'),('o'),'p','s','z');\nFILE_SCHEMA(('IFC2X3'));\nENDSEC;\nDATA;\n#1=X(#2,'s',.E.,3,1.5,(1,2),Y(3.),$,*);\n#2=(A(1)B(2));\nENDSEC;\nEND-ISO-10303-21;\n").expect("parses");
-    let json: serde_json::Value = serde_json::from_str(&crate::pack::json::to_json_string(&document)).expect("json");
+    let json: serde_json::Value = serde_json::from_str(&pack::json::to_json_string(&document)).expect("json");
     assert_eq!(json["header"]["fileSchema"], serde_json::json!([{ "kind": "list", "values": [{ "kind": "str", "value": "IFC2X3" }] }]));
     assert_eq!(
         json["instances"][0],
@@ -204,10 +206,10 @@ fn value_projection_is_the_canonical_contract_shape() {
         ] }] })
     );
     assert_eq!(json["instances"][1]["entities"], serde_json::json!([{ "typeName": "A", "arguments": [{ "kind": "int", "value": 1 }] }, { "typeName": "B", "arguments": [{ "kind": "int", "value": 2 }] }]));
-    let reopened: Part21Document = crate::pack::json::from_json_str(&crate::pack::json::to_json_string(&document)).expect("the projection decodes");
+    let reopened: Part21Document = pack::json::from_json_str(&pack::json::to_json_string(&document)).expect("the projection decodes");
     assert_eq!(reopened, document);
-    assert!(crate::pack::json::from_json_str::<Part21Value>(r#"{"kind":"str","value":"s","extra":1}"#).is_err(), "an undeclared member is refused");
-    assert!(crate::pack::json::from_json_str::<Part21Value>(r#"{"kind":"blob"}"#).is_err(), "an unknown kind is refused");
+    assert!(pack::json::from_json_str::<Part21Value>(r#"{"kind":"str","value":"s","extra":1}"#).is_err(), "an undeclared member is refused");
+    assert!(pack::json::from_json_str::<Part21Value>(r#"{"kind":"blob"}"#).is_err(), "an unknown kind is refused");
 }
 
 /// ✍️ The canonical writer is a fixed point: writing a parsed canonical text reproduces it byte for byte.
@@ -341,6 +343,17 @@ def ifc2x3_io_tests(text):
 
 
 #region Fixtures
+IFC2X3 = f"{ART}/🏗️ifc/🏅️standards/🔖️2x3"
+OLD_ENCODING = r'"(Str|Ref|Enum|Int|Real|Typed|List)": |"(Unset|Derived)"'
+ARTIFACT_ID = "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/base/artifact.json"
+SNAPSHOT_ID = "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/base/snapshot.json"
+MUTATION_SCHEMAS = {
+    f"{IFC2X3}/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🧱upsert-instance/🧬️schema/🔣️.json": ("instance", "Part21Instance", f"{ARTIFACT_ID}#/$defs/Part21Instance"),
+    f"{IFC2X3}/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📋set-header/🧬️schema/🔣️.json": ("header", "Part21Header", f"{ARTIFACT_ID}#/$defs/Part21Header"),
+    **{f"{IFC2X3}/🪆️subsets/{subset}/🧬️schema/🧬️mutations/📸️set-snapshot/🧬️schema/🔣️.json": ("snapshot", "Ifc2x3Snapshot", SNAPSHOT_ID) for subset in ("🧱️base", "🧮️sav", "🤝️cv20", "🏢️cobie")},
+}
+
+
 def canonical_value(node):
     if node in ("Unset", "Derived"):
         return {"kind": node.lower()}
@@ -356,17 +369,35 @@ def canonical_value(node):
     raise ValueError(f"unknown Part-21 value {tag}")
 
 
+def canonical_header(header):
+    return {"fileDescription": [canonical_value(v) for v in header["file_description"]], "fileName": [canonical_value(v) for v in header["file_name"]], "fileSchema": [canonical_value(v) for v in header["file_schema"]]}
+
+
+def canonical_instance(instance):
+    return {"id": instance["id"], "entities": [{"typeName": name, "arguments": [canonical_value(v) for v in arguments]} for name, arguments in instance["entities"]]}
+
+
+def old_instances(value):
+    return isinstance(value, list) and all(isinstance(instance, dict) and isinstance(instance.get("entities"), list) and all(isinstance(entity, list) for entity in instance["entities"]) for instance in value)
+
+
 def canonical_document(document):
-    header = document["header"]
-    return {
-        "header": {"fileDescription": [canonical_value(v) for v in header["file_description"]], "fileName": [canonical_value(v) for v in header["file_name"]], "fileSchema": [canonical_value(v) for v in header["file_schema"]]},
-        "instances": [{"id": instance["id"], "entities": [{"typeName": name, "arguments": [canonical_value(v) for v in arguments]} for name, arguments in instance["entities"]]} for instance in document["instances"]],
-    }
+    return {"header": canonical_header(document["header"]), "instances": [canonical_instance(instance) for instance in document["instances"]]}
 
 
 def convert_documents(node):
     if isinstance(node, dict):
-        return {key: (canonical_document(value) if key == "document" and isinstance(value, dict) and "file_description" in value.get("header", {}) else convert_documents(value)) for key, value in node.items()}
+        converted = {}
+        for key, value in node.items():
+            if key == "document" and isinstance(value, dict) and "file_description" in value.get("header", {}):
+                converted[key] = canonical_document(value)
+            elif key == "header" and isinstance(value, dict) and "file_description" in value:
+                converted[key] = canonical_header(value)
+            elif key == "upsertedInstances" and value and old_instances(value):
+                converted[key] = [canonical_instance(instance) for instance in value]
+            else:
+                converted[key] = convert_documents(value)
+        return converted
     if isinstance(node, list):
         return [convert_documents(value) for value in node]
     return node
@@ -378,12 +409,28 @@ def fixture(text, label):
     if converted == document:
         problems.append(f"{label}: no Part-21 document")
         return text
-    return json.dumps(converted, indent=2, ensure_ascii=False) + ("\n" if text.endswith("\n") else "")
+    after = json.dumps(converted, indent=2, ensure_ascii=False) + ("\n" if text.endswith("\n") else "")
+    if re.search(OLD_ENCODING, after):
+        problems.append(f"{label}: an old Part-21 encoding remains")
+    return after
 
 
 def fixture_files():
-    out = subprocess.run(["/usr/bin/grep", "-rl", "--include=🔣️.json", "file_description", IFC2X3_FIXTURES], cwd=TREE, capture_output=True, text=True).stdout.split("\n")
-    return sorted(path for path in out if path)
+    out = subprocess.run(["/usr/bin/grep", "-rlE", "--include=🔣️.json", OLD_ENCODING, IFC2X3], cwd=TREE, capture_output=True, text=True).stdout.split("\n")
+    return sorted(path for path in out if path and "/🧫️fixtures/" in path)
+
+
+def mutation_schema(text, path):
+    """🧬️ A mutation payload schema names the ONE canonical Part-21 contract (the base artifact/snapshot contract) instead of a
+    local copy of the old serde-style encoding — the jpg/svg/bmp `set-snapshot` precedent."""
+    member, local, target = MUTATION_SCHEMAS[path]
+    schema = json.loads(text)
+    if schema.get("properties", {}).get(member) != {"$ref": f"#/$defs/{local}"} or "$defs" not in schema:
+        problems.append(f"{path}: {member} is not the local {local}")
+        return text
+    schema["properties"][member] = {"$ref": target}
+    del schema["$defs"]
+    return json.dumps(schema, indent=2, ensure_ascii=False) + "\n"
 #endregion Fixtures
 
 
@@ -399,6 +446,8 @@ def plan():
     edits[IFC2X3_IO_TESTS] = lambda text, previous=edits.get(IFC2X3_IO_TESTS): ifc2x3_io_tests(previous(text) if previous else text)
     for path in fixture_files():
         edits[path] = lambda text, path=path: fixture(text, path)
+    for path in MUTATION_SCHEMAS:
+        edits[path] = lambda text, path=path: mutation_schema(text, path)
     return edits
 
 

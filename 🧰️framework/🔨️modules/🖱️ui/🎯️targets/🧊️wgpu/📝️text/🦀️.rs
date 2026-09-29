@@ -18,6 +18,7 @@ use parley::fontique::{Blob, Collection, CollectionOptions, FamilyId, FontInfoOv
 use parley::{FontContext, FontStack, LayoutContext, PositionedLayoutItem, StyleProperty};
 use swash::scale::image::Content as SwashContent;
 use swash::scale::{Render, ScaleContext, Source, StrikeWith};
+use swash::shape::ShapeContext;
 use swash::zeno::Format as SwashFormat;
 use swash::zeno::{Cap as ZenoCap, Join as ZenoJoin, Mask as ZenoMask, Stroke as ZenoStroke, Style as ZenoStyle, Transform as ZenoTransform};
 use swash::FontRef as SwashFontRef;
@@ -27,12 +28,16 @@ use swash::FontRef as SwashFontRef;
 /// `advance`/`bearing_*` and [`Self::logical_width`]/[`Self::logical_height`] are LOGICAL (CSS)
 /// pixels, the only unit a layout or paint call site is ever allowed to see. See the ticket
 /// 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1g report for the whole unit model.
+#[derive(Clone, Copy, Debug)]
 pub struct GlyphEntry {
     pub atlas_x: u32,
     pub atlas_y: u32,
     pub width: u32,
     pub height: u32,
     pub advance: f32,
+    /// 📏️ The advance per logical pixel of font size, from the face's own units — what [`FontAtlas::ensure_glyph_for`] scales to
+    /// the EXACT requested size, so no layout ever sees the raster grid.
+    pub advance_em: f32,
     pub bearing_x: f32,
     pub bearing_y: f32,
     /// 📐️ The atlas raster scale this glyph was rasterised at — the divisor that turns its texel
@@ -135,6 +140,13 @@ const FAUX_MEDIUM_MIN_PX: f32 = 0.17;
 /// 🔤️ Fixed family names every registered font is forced under via `FontInfoOverride`, so
 /// multi-file families (Noto Emoji's 12 codepoint-range buckets) merge into one fontique family
 /// regardless of what each file's own `name` table declares.
+/// 🔤️ Raster grid steps per device pixel — glyph bitmaps snap to a quarter pixel, advances never do.
+const RASTER_GRID_STEPS_PER_PX: f32 = 4.0;
+/// 🔤️ Exact-size glyph entries kept before the derived map is rebuilt — a continuous zoom must not grow it without bound.
+const SIZED_GLYPH_CAPACITY: usize = 16_384;
+/// 🤝️ Kerned scalar pairs cached before the pair map is rebuilt — no document may grow it without bound.
+const KERNING_PAIR_CAPACITY: usize = 16_384;
+
 const FAMILY_SANS: &str = "Anta";
 const FAMILY_SERIF: &str = "Kelly Slab";
 const FAMILY_MONO: &str = "Share Tech Mono";
@@ -174,6 +186,93 @@ static NOTO_EMOJI_BUCKETS: [&[u8]; 12] = [
     include_bytes!("../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🔗️joined-forms/📖️regular/🔤️outline.ttf"),
     include_bytes!("../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/📖️regular/🔤️outline.ttf"),
 ];
+
+/// 📏️ One scalar's advance per logical pixel of font size, straight from the face's own units (`hmtx` / unitsPerEm) — the ONE
+/// advance source both the retained layout's text worker (off the main thread, no atlas) and the atlas answer to: the authored
+/// face, then the emoji buckets (the atlas's own fallback), then the bitmap fallback's fixed `0.625` em; a default-ignorable
+/// format control advances by nothing.
+pub(crate) fn font_advance_em(face: TextFace, ch: char) -> f32 {
+    if is_zero_width_format_char(ch) {
+        return 0.0;
+    }
+    let advance = |bytes: &'static [u8]| {
+        let font = SwashFontRef::from_index(bytes, 0)?;
+        let glyph = font.charmap().map(ch);
+        let units = f32::from(font.metrics(&[]).units_per_em);
+        (glyph != 0 && units > 0.0).then(|| font.glyph_metrics(&[]).advance_width(glyph) / units)
+    };
+    advance(authored_face_bytes(face)).or_else(|| NOTO_EMOJI_BUCKETS.iter().find_map(|bytes| advance(bytes))).unwrap_or(BITMAP_ADVANCE_EM)
+}
+
+/// 📏️ The bitmap fallback's advance per logical pixel of font size.
+const BITMAP_ADVANCE_EM: f32 = 0.625;
+
+/// 🔤️ The embedded font file an authored face is drawn from — Anta for [`TextFace::Sans`] (React's `--font-sans`, and the file
+/// every host's atlas fetches), Share Tech Mono for [`TextFace::Mono`].
+fn authored_face_bytes(face: TextFace) -> &'static [u8] {
+    match face {
+        TextFace::Sans => ANTA_LATIN,
+        TextFace::Mono => SHARE_TECH_MONO_LATIN,
+    }
+}
+
+/// 🤝️ Pair kerning read from the authored faces' own tables — GPOS pair adjustments, or the legacy `kern` table — through one
+/// reusable shaping context over faces held once (so the context's per-font caches stay warm): the ONE kerning source both the
+/// atlas (which caches it per face and pair, [`FontAtlas::kerning_for`]) and the retained layout's text worker (which holds one
+/// per job) answer to. Chromium's kerning is pairwise for the shipped faces: the corpus's kerned widths are its unkerned widths
+/// plus the sum of each adjacent pair's kerning within 0.008 px (ticket 26/09/23 session 14d, WG11 T7b probe).
+pub(crate) struct PairKerning {
+    shaper: ShapeContext,
+    sans: Option<SwashFontRef<'static>>,
+    mono: Option<SwashFontRef<'static>>,
+}
+
+impl Default for PairKerning {
+    fn default() -> Self {
+        Self { shaper: ShapeContext::new(), sans: SwashFontRef::from_index(authored_face_bytes(TextFace::Sans), 0), mono: SwashFontRef::from_index(authored_face_bytes(TextFace::Mono), 0) }
+    }
+}
+
+impl PairKerning {
+    /// 🤝️ The kerning between two adjacent scalars of `face`, per logical pixel of font size: the pair shaped alone in design
+    /// units with ligatures and contextual alternates off, less its two nominal advances — exactly the adjustment Chromium's
+    /// shaper puts between the two nominal glyphs. A scalar outside the authored face, or a default-ignorable one, never kerns:
+    /// a fallback run does not kern against its neighbour.
+    pub(crate) fn em(&mut self, face: TextFace, left: char, right: char) -> f32 {
+        if is_zero_width_format_char(left) || is_zero_width_format_char(right) {
+            return 0.0;
+        }
+        let font = match face {
+            TextFace::Sans => self.sans,
+            TextFace::Mono => self.mono,
+        };
+        let Some(font) = font else { return 0.0 };
+        let (charmap, metrics) = (font.charmap(), font.glyph_metrics(&[]));
+        let units = f32::from(font.metrics(&[]).units_per_em);
+        if units <= 0.0 || charmap.map(left) == 0 || charmap.map(right) == 0 {
+            return 0.0;
+        }
+        let mut bytes = [0u8; 8];
+        let left_len = left.encode_utf8(&mut bytes).len();
+        let pair_len = left_len + right.encode_utf8(&mut bytes[left_len..]).len();
+        let Ok(pair) = std::str::from_utf8(&bytes[..pair_len]) else { return 0.0 };
+        let mut shaper = self.shaper.builder(font).features(&[("liga", 0), ("clig", 0), ("calt", 0)]).build();
+        shaper.add_str(pair);
+        let (mut shaped, mut nominal, mut glyphs) = (0.0f32, 0.0f32, 0usize);
+        shaper.shape_with(|cluster| {
+            for glyph in cluster.glyphs {
+                shaped += glyph.advance;
+                nominal += metrics.advance_width(glyph.id);
+                glyphs += 1;
+            }
+        });
+        if glyphs == 2 {
+            (shaped - nominal) / units
+        } else {
+            0.0
+        }
+    }
+}
 
 const BITMAP_GLYPH_W: u32 = 8;
 const BITMAP_GLYPH_H: u32 = 16;
@@ -561,6 +660,12 @@ pub struct FontAtlas {
     layout_cx: LayoutContext<[u8; 4]>,
     scale_cx: ScaleContext,
     glyphs: HashMap<(TextFace, char, u32), GlyphEntry>,
+    /// 📏️ Per EXACT device size (`f32` bits), the grid glyph with its advance at that size — derived, bounded by
+    /// [`SIZED_GLYPH_CAPACITY`], rebuilt from `glyphs` on demand.
+    sized: HashMap<(TextFace, char, u32), GlyphEntry>,
+    /// 🤝️ Pair kerning per face and scalar pair, in em — [`PairKerning::em`]'s answers, bounded by [`KERNING_PAIR_CAPACITY`].
+    kerning: HashMap<(TextFace, char, char), f32>,
+    pair_kerning: PairKerning,
     /// 📐️ Device pixels per logical pixel the atlas rasterises at — the ONLY place the surface
     /// scale factor reaches the text stack. Everything a caller passes in or reads back stays
     /// logical; see [`Self::set_raster_scale`].
@@ -604,6 +709,9 @@ impl FontAtlas {
             layout_cx: LayoutContext::new(),
             scale_cx: ScaleContext::new(),
             glyphs: HashMap::new(),
+            sized: HashMap::new(),
+            kerning: HashMap::new(),
+            pair_kerning: PairKerning::default(),
             raster_scale: 1.0,
             cursor_x: 1,
             cursor_y: 1,
@@ -669,6 +777,9 @@ impl FontAtlas {
             layout_cx: LayoutContext::new(),
             scale_cx: ScaleContext::new(),
             glyphs: HashMap::new(),
+            sized: HashMap::new(),
+            kerning: HashMap::new(),
+            pair_kerning: PairKerning::default(),
             raster_scale: 1.0,
             cursor_x: 1,
             cursor_y: 1,
@@ -716,6 +827,7 @@ impl FontAtlas {
         }
         self.raster_scale = raster_scale;
         self.glyphs.clear();
+        self.sized.clear();
         self.pixels.iter_mut().for_each(|texel| *texel = 0);
         self.color_pixels.iter_mut().for_each(|texel| *texel = 0);
         self.cursor_x = 1;
@@ -733,10 +845,16 @@ impl FontAtlas {
         self.raster_scale
     }
 
-    /// 🔑️ Quantizes a float px size to the glyph-cache's integer key component, so float jitter
-    /// (e.g. 15.999999 vs 16.0) doesn't fragment the cache into near-duplicate entries.
+    /// 🔑️ The glyph-cache key of a DEVICE size: its position on the quarter-pixel raster grid (`RASTER_GRID_STEPS_PER_PX`
+    /// steps per pixel), so float jitter never fragments the cache and a raster is never more than an eighth of a pixel
+    /// off the size it paints. Only rasters snap: advances stay exact ([`GlyphEntry::advance_em`]).
     fn quantize_size(size_px: f32) -> u32 {
-        size_px.round().max(1.0) as u32
+        (size_px * RASTER_GRID_STEPS_PER_PX).round().max(1.0) as u32
+    }
+
+    /// 📐️ The device size one grid key rasterises at.
+    fn grid_px(key: u32) -> f32 {
+        key as f32 / RASTER_GRID_STEPS_PER_PX
     }
 
     /// 🔍️ Fetches (rasterizing on first use) the glyph for `ch` at LOGICAL `size_px`, keyed by
@@ -750,12 +868,24 @@ impl FontAtlas {
     }
 
     /// 🔤️ Resolves and caches one glyph under its authored face and device size.
+    /// The raster comes from the quarter-pixel grid; the answered entry's `advance` is the face's advance at the EXACT
+    /// `size_px` (`advance_em × size_px`) — the one width measure, wrap and paint all pen by.
     pub fn ensure_glyph_for(&mut self, face: TextFace, ch: char, size_px: f32) -> &GlyphEntry {
-        let key = (face, ch, Self::quantize_size(size_px * self.raster_scale));
-        if !self.glyphs.contains_key(&key) {
-            self.rasterize_glyph(key);
+        let device = size_px * self.raster_scale;
+        let exact = (face, ch, device.to_bits());
+        if !self.sized.contains_key(&exact) {
+            let key = (face, ch, Self::quantize_size(device));
+            if !self.glyphs.contains_key(&key) {
+                self.rasterize_glyph(key);
+            }
+            let mut glyph = *self.glyphs.get(&key).expect("glyph inserted");
+            glyph.advance = glyph.advance_em * size_px;
+            if self.sized.len() >= SIZED_GLYPH_CAPACITY {
+                self.sized.clear();
+            }
+            self.sized.insert(exact, glyph);
         }
-        self.glyphs.get(&key).expect("glyph inserted")
+        self.sized.get(&exact).expect("sized glyph inserted")
     }
 
     /// 🔍️ Resolution order, and the ONE place it is written down: a default-ignorable format control
@@ -769,13 +899,14 @@ impl FontAtlas {
             self.pack_glyph(key, glyph);
             return;
         }
-        if let Some(glyph) = symbol_face_path(ch).and_then(|path| self.rasterize_symbol_glyph(path, device_size_px as f32)) {
+        let raster_px = Self::grid_px(device_size_px);
+        if let Some(glyph) = symbol_face_path(ch).and_then(|path| self.rasterize_symbol_glyph(path, raster_px)) {
             self.pack_glyph(key, glyph);
             return;
         }
         let glyph = match self.mode {
-            AtlasMode::Bitmap => self.rasterize_bitmap_glyph(ch, device_size_px as f32),
-            AtlasMode::Shaped => self.rasterize_shaped_glyph(face, ch, device_size_px as f32),
+            AtlasMode::Bitmap => self.rasterize_bitmap_glyph(ch, raster_px),
+            AtlasMode::Shaped => self.rasterize_shaped_glyph(face, ch, raster_px),
         };
         self.pack_glyph(key, glyph);
     }
@@ -933,20 +1064,25 @@ impl FontAtlas {
             self.dirty = true;
             (x, y)
         };
-        self.glyphs.insert(key, GlyphEntry { atlas_x, atlas_y, width, height, advance, bearing_x, bearing_y, raster_scale, is_color });
+        let logical_size = Self::grid_px(key.2) / self.raster_scale;
+        let advance_em = if logical_size > 0.0 { advance / logical_size } else { 0.0 };
+        self.glyphs.insert(key, GlyphEntry { atlas_x, atlas_y, width, height, advance, advance_em, bearing_x, bearing_y, raster_scale, is_color });
     }
 
-    /// 📏️ Advance-summed width and the CSS line box height (`line_height`) — a single line of text
+    /// 📏️ Advance-and-kerning-summed width and the CSS line box height (`line_height`) — a single line of text
     /// occupies its whole line box in React, exactly as a wrapped paragraph's first line does.
     pub fn measure_text(&mut self, text: &str, size: f32) -> (f32, f32) {
         self.measure_text_face(TextFace::Sans, text, size)
     }
 
-    /// 📏️ Measures one run with the same face-specific advances its painter consumes.
+    /// 📏️ Measures one run with the same face-specific advances and pair kerning its painter pens.
     pub fn measure_text_face(&mut self, face: TextFace, text: &str, size: f32) -> (f32, f32) {
         let mut width = 0.0f32;
         let mut max_height = 0.0f32;
+        let mut previous = None;
         for ch in text.chars() {
+            width += self.pen_kerning(face, previous, width, ch, size);
+            previous = Some(ch);
             let glyph = self.ensure_glyph_for(face, ch, size);
             width += glyph.advance;
             max_height = max_height.max(glyph.logical_height() + glyph.bearing_y);
@@ -960,13 +1096,69 @@ impl FontAtlas {
         self.measure_range_face(TextFace::Sans, text, byte, end, size)
     }
 
-    /// 📏️ Measures a byte range with one face-specific glyph stream.
+    /// 📏️ Measures a byte range with one face-specific glyph stream, kerned within the range only — the range's own width.
     pub fn measure_range_face(&mut self, face: TextFace, text: &str, byte: usize, end: usize, size: f32) -> f32 {
         let Some(run) = text.get(byte..end) else { return 0.0 };
-        run.chars().map(|ch| self.ensure_glyph_for(face, ch, size).advance).sum()
+        self.measure_text_face(face, run, size).0
     }
 
-    /// ↩️ Returns CSS `white-space: pre-wrap` line ranges while retaining repeated and trailing spaces.
+    /// 🤝️ The pair kerning between `left` and `right` in `face` at `size` — [`PairKerning::em`] cached per face and pair. The
+    /// fixed-pitch bitmap fallback never kerns.
+    pub fn kerning_for(&mut self, face: TextFace, left: char, right: char, size: f32) -> f32 {
+        if !matches!(self.mode, AtlasMode::Shaped) {
+            return 0.0;
+        }
+        let key = (face, left, right);
+        let em = match self.kerning.get(&key).copied() {
+            Some(em) => em,
+            None => {
+                let em = self.pair_kerning.em(face, left, right);
+                if self.kerning.len() >= KERNING_PAIR_CAPACITY {
+                    self.kerning.clear();
+                }
+                self.kerning.insert(key, em);
+                em
+            }
+        };
+        em * size
+    }
+
+    /// 🤝️ The kerning a line pens before `ch`: its pair with the `previous` scalar once the pen has left the line start, nothing
+    /// at a line start — the ONE rule measure, wrap, caret and paint all apply.
+    pub fn pen_kerning(&mut self, face: TextFace, previous: Option<char>, pen: f32, ch: char, size: f32) -> f32 {
+        match previous {
+            Some(left) if pen > 0.0 => self.kerning_for(face, left, ch, size),
+            _ => 0.0,
+        }
+    }
+
+    /// 🤝️ The pair kerning at `byte` of `text`: between the scalar ending there and the scalar starting there, nothing at either
+    /// end of the text.
+    pub fn kerning_at(&mut self, text: &str, byte: usize, size: f32) -> f32 {
+        let (Some(before), Some(after)) = (text.get(..byte), text.get(byte..)) else { return 0.0 };
+        match (before.chars().next_back(), after.chars().next()) {
+            (Some(left), Some(right)) => self.kerning_for(TextFace::Sans, left, right, size),
+            _ => 0.0,
+        }
+    }
+
+    /// ✒️ How far the scalar at `byte` moves a line's pen: its advance plus its pair kerning with the scalar after it — summed over
+    /// a run, exactly [`Self::measure_text`]; summed up to a caret, exactly [`Self::pen_at`].
+    pub fn pen_advance(&mut self, text: &str, byte: usize, size: f32) -> f32 {
+        let Some(ch) = text.get(byte..).and_then(|rest| rest.chars().next()) else { return 0.0 };
+        let advance = self.ensure_glyph(ch, size).advance;
+        advance + self.kerning_at(text, byte + ch.len_utf8(), size)
+    }
+
+    /// 📍️ Where the scalar at `byte` is penned on a single line of `text` — the caret's x: the run before it plus that run's pair
+    /// kerning with it, where Chromium places a caret after a kerned pair.
+    pub fn pen_at(&mut self, text: &str, byte: usize, size: f32) -> f32 {
+        let pen = self.measure_range(text, 0, byte, size);
+        pen + if pen > 0.0 { self.kerning_at(text, byte, size) } else { 0.0 }
+    }
+
+    /// ↩️ Returns CSS `white-space: pre-wrap` line ranges: every space is kept, and the spaces ending a line HANG (CSS Text 3
+    /// §4.1.3) — they never push the line over its box, so the break falls after them and only a word opens the next line.
     pub fn pre_wrap_lines(&mut self, face: TextFace, text: &str, max_width: f32, size: f32) -> Vec<std::ops::Range<usize>> {
         let limit = max_width.max(1.0);
         let mut lines = Vec::new();
@@ -975,6 +1167,7 @@ impl FontAtlas {
             let line_start = byte;
             let mut pen = 0.0f32;
             let mut last_break = None;
+            let mut previous = None;
             let mut completed = false;
             while let Some(ch) = text.get(byte..).and_then(|rest| rest.chars().next()) {
                 let next = byte + ch.len_utf8();
@@ -984,8 +1177,9 @@ impl FontAtlas {
                     completed = true;
                     break;
                 }
+                let kerning = self.pen_kerning(face, previous, pen, ch, size);
                 let advance = self.ensure_glyph_for(face, ch, size).advance;
-                if pen + advance > limit + LINE_BREAK_FIT_EPSILON && byte > line_start {
+                if !is_wrap_space(ch) && pen + kerning + advance > limit + LINE_BREAK_FIT_EPSILON && byte > line_start {
                     if let Some(split) = last_break.filter(|split| *split > line_start) {
                         lines.push(line_start..split);
                         byte = split;
@@ -993,7 +1187,9 @@ impl FontAtlas {
                         break;
                     }
                 }
+                pen += kerning;
                 pen += advance;
+                previous = Some(ch);
                 byte = next;
                 if is_wrap_space(ch) {
                     last_break = Some(next);
@@ -1027,27 +1223,30 @@ impl FontAtlas {
     pub fn wrap_lines_face(&mut self, face: TextFace, text: &str, max_width: f32, size: f32) -> Vec<std::ops::Range<usize>> {
         let limit = max_width.max(1.0);
         let mut lines = Vec::new();
-        let (mut line_start, mut pen, mut byte) = (0usize, 0.0f32, 0usize);
+        let (mut line_start, mut pen, mut byte, mut previous) = (0usize, 0.0f32, 0usize, None);
         while let Some(ch) = text.get(byte..).and_then(|rest| rest.chars().next()) {
             let next = byte + ch.len_utf8();
             if ch == '\n' {
                 lines.push(line_start..byte);
-                (line_start, pen, byte) = (next, 0.0, next);
+                (line_start, pen, byte, previous) = (next, 0.0, next, None);
                 continue;
             }
+            let mut kerning = self.pen_kerning(face, previous, pen, ch, size);
             if pen > 0.0 && is_break_opportunity(text, byte) {
                 let run = self.measure_range_face(face, text, byte, unbreakable_run_end(text, byte), size);
-                if pen + run > limit + LINE_BREAK_FIT_EPSILON {
+                if pen + kerning + run > limit + LINE_BREAK_FIT_EPSILON {
                     lines.push(line_start..byte);
-                    (line_start, pen) = (byte, 0.0);
+                    (line_start, pen, kerning) = (byte, 0.0, 0.0);
                 }
             }
             let advance = self.ensure_glyph_for(face, ch, size).advance;
-            if pen > 0.0 && !is_wrap_space(ch) && pen + advance > limit + LINE_BREAK_FIT_EPSILON {
+            if pen > 0.0 && !is_wrap_space(ch) && pen + kerning + advance > limit + LINE_BREAK_FIT_EPSILON {
                 lines.push(line_start..byte);
-                (line_start, pen) = (byte, 0.0);
+                (line_start, pen, kerning) = (byte, 0.0, 0.0);
             }
+            pen += kerning;
             pen += advance;
+            previous = Some(ch);
             byte = next;
         }
         lines.push(line_start..text.len());

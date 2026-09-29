@@ -224,15 +224,21 @@ semio_framework_plugin::derive_artifact_facets!(
 
 //#region 🔖️DocumentHelpers
 // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
-// `empty_tiff_snapshot`/`demo_tiff_snapshot` relocated here verbatim (pure helpers over the
+// `blank_tiff_snapshot`/`demo_tiff_snapshot` relocated here verbatim (pure helpers over the
 // document type, destination rule 5); `TiffEngine` (zero construction sites) and the dead
 // `register`/`register_pilot_languages`/`register_artifact_inferences` cluster (superseded by
 // `declaration()` in the artifact root, zero real callers) deleted outright; the real codec
 // (`encode_tiff`/`encode_tiff_packbits`/`decode_tiff` + every pure format algorithm) and
 // `io_registry` moved to `../🚪️io`; tests moved beside what they now test.
+/// 🆕️ A new tiff document: one opaque white pixel in one IFD as the real codec round-trips it — baseline TIFF has no
+/// image without `ImageWidth`/`ImageLength` (TIFF 6.0 §8), and a new document must save and reopen as itself.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn empty_tiff_snapshot() -> TiffSnapshot {
-    TiffSnapshot::default()
+pub fn blank_tiff_snapshot() -> TiffSnapshot {
+    use crate::standards::v6_0::subsets::document::io::{decode_tiff, encode_tiff};
+    use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffFieldType, TiffTag, TiffValues, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH};
+    let geometry = vec![TiffTag { tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![1]) }, TiffTag { tag: TAG_IMAGE_LENGTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![1]) }];
+    let seed = TiffSnapshot { ifds: vec![TiffIfd { pixels: Vec::new(), entries: geometry }], pixels: vec![255, 255, 255, 255], ..TiffSnapshot::default() };
+    encode_tiff(&seed).and_then(|bytes| decode_tiff(&bytes)).expect("blank_tiff_snapshot: the 1×1 seed round-trips through the real codec")
 }
 
 /// 📄️ P2-FG2: the demo `stdio.tiff` document — a genuinely non-trivial `TiffSnapshot` exercising

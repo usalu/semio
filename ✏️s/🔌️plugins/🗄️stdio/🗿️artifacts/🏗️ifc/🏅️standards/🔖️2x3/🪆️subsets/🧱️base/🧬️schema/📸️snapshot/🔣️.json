@@ -5,11 +5,11 @@
   "type": "object",
   "properties": {
     "schema": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/base/artifact.json#/$defs/Part21Document",
+      "type": "string",
       "x-semio-state": "artifact"
     },
     "document": {
-      "type": "string",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/base/artifact.json#/$defs/Part21Document",
       "x-semio-state": "artifact"
     },
     "edmPreamble": {

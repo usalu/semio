@@ -186,6 +186,25 @@ fn base64_encode(bytes: &[u8]) -> String {
     out
 }
 
+fn stroke_segments(points: &[(f32, f32)], closed: bool) -> Value {
+    let mut segments = Vec::with_capacity(points.len() + usize::from(closed));
+    for (index, (x, y)) in points.iter().enumerate() {
+        let kind = if index == 0 { "move" } else { "line" };
+        segments.push(json!({ "kind": kind, "to": [*x as f64, *y as f64] }));
+    }
+    if closed {
+        segments.push(json!({ "kind": "close" }));
+    }
+    Value::Array(segments)
+}
+
+fn push_plan_stroke(layers: &mut Vec<Value>, stroke: &crate::editor::layout::engine::scene::DisplayStroke, id: String) {
+    if stroke.points.len() < 2 {
+        return;
+    }
+    layers.push(host_layer(id, &stroke_segments(&stroke.points, stroke.closed), stroke.fill, Some((stroke.color, stroke.width as f64, None))));
+}
+
 fn line_segments(x0: f64, y0: f64, x1: f64, y1: f64) -> Value {
     json!([
         { "kind": "move", "to": [x0, y0] },
@@ -243,89 +262,78 @@ fn display_list_to_host_layers(list: &crate::editor::layout::engine::scene::Disp
         }
     }
 
-    for rect in &list.rects {
-        let segments = rotated_rect_segments(rect.x as f64, rect.y as f64, rect.width as f64, rect.height as f64, rect.rotation as f64);
-        let fill = rect.fill.as_ref().map(|color| color.0);
-        let dash = (blueprint && rect.inherited).then_some([4.0, 3.0]);
-        let stroke = if let Some(stroke_color) = &rect.stroke {
-            let width = if rect.selected {
-                2.5
-            } else if rect.hovered {
-                1.75
-            } else {
-                1.0
-            };
-            Some((stroke_color.0, width, dash))
-        } else if rect.selected && blueprint {
-            Some(([0.1, 0.45, 0.95, 1.0], 2.0, None))
-        } else if rect.hovered && blueprint {
-            Some(([0.95, 0.72, 0.15, 1.0], 1.5, None))
-        } else {
-            None
-        };
-        layers.push(host_layer(rect.object_id.clone(), &segments, fill, stroke));
-    }
-
-    for image in &list.images {
-        let rotation = image.rotation as f64;
-        let upright = rotation.abs() < 1.0e-6;
-        if let Some(data_url) = &image.proxy_data_url {
-            if upright {
-                layers.push(json!({
-                    "id": format!("{}.image", image.object_id),
-                    "kind": "image",
-                    "x": image.x,
-                    "y": image.y,
-                    "width": image.width,
-                    "height": image.height,
-                    "dataUrl": data_url,
-                }));
-                continue;
+    let mut plan_index = 0usize;
+    let mut frame_index = 0usize;
+    for piece in crate::editor::layout::engine::scene::stack_pieces(list) {
+        match piece {
+            crate::editor::layout::engine::scene::StackPiece::Stroke(stroke) => {
+                push_plan_stroke(&mut layers, stroke, format!("drawing.plan.{plan_index}"));
+                plan_index += 1;
             }
-            if let Some(layer) = rotated_proxy_layer(image) {
-                layers.push(layer);
-                continue;
+            crate::editor::layout::engine::scene::StackPiece::FrameStroke(stroke) => {
+                push_plan_stroke(&mut layers, stroke, format!("drawing.frame.{frame_index}"));
+                frame_index += 1;
+            }
+            crate::editor::layout::engine::scene::StackPiece::Rect(rect) => {
+                let segments = rotated_rect_segments(rect.x as f64, rect.y as f64, rect.width as f64, rect.height as f64, rect.rotation as f64);
+                let fill = rect.fill.as_ref().map(|color| color.0);
+                let dash = (blueprint && rect.inherited).then_some([4.0, 3.0]);
+                let stroke = if let Some(stroke_color) = &rect.stroke {
+                    let width = if rect.selected { 2.5 } else if rect.hovered { 1.75 } else { 1.0 };
+                    Some((stroke_color.0, width, dash))
+                } else if rect.selected && blueprint {
+                    Some(([0.1, 0.45, 0.95, 1.0], 2.0, None))
+                } else if rect.hovered && blueprint {
+                    Some(([0.95, 0.72, 0.15, 1.0], 1.5, None))
+                } else {
+                    None
+                };
+                layers.push(host_layer(rect.object_id.clone(), &segments, fill, stroke));
+            }
+            crate::editor::layout::engine::scene::StackPiece::Image(image) => {
+                let rotation = image.rotation as f64;
+                let upright = rotation.abs() < 1.0e-6;
+                if let Some(data_url) = &image.proxy_data_url {
+                    if upright {
+                        layers.push(json!({ "id": format!("{}.image", image.object_id), "kind": "image", "x": image.x, "y": image.y, "width": image.width, "height": image.height, "dataUrl": data_url }));
+                        continue;
+                    }
+                    if let Some(layer) = rotated_proxy_layer(image) {
+                        layers.push(layer);
+                        continue;
+                    }
+                }
+                let color = if image.placeholder { [0.92, 0.88, 0.84, 1.0] } else { [0.85, 0.85, 0.85, 1.0] };
+                let segments = rotated_rect_segments(image.x as f64, image.y as f64, image.width as f64, image.height as f64, rotation);
+                let stroke = image.placeholder.then_some(([0.75, 0.35, 0.2, 1.0], 1.0, None));
+                layers.push(host_layer(format!("{}.image", image.object_id), &segments, Some(color), stroke));
+                if !image.preview.is_empty() {
+                    let x = image.x as f64;
+                    let y = image.y as f64;
+                    let w = image.width as f64;
+                    let h = image.height as f64;
+                    let cx = x + w * 0.5;
+                    let cy = y + h * 0.5;
+                    let mut mark = match image.preview.as_str() {
+                        "page" => json!([{ "kind": "move", "to": [x + 4.0, y + h * 0.35] }, { "kind": "line", "to": [x + w - 4.0, y + h * 0.35] }, { "kind": "move", "to": [x + 4.0, y + h * 0.6] }, { "kind": "line", "to": [x + w - 4.0, y + h * 0.6] }]),
+                        "stroke" => line_segments(x + 4.0, y + h - 4.0, x + w - 4.0, y + 4.0),
+                        "map" => json!([{ "kind": "move", "to": [x + w * 0.5, y + 4.0] }, { "kind": "line", "to": [x + w * 0.5, y + h - 4.0] }, { "kind": "move", "to": [x + 4.0, y + h * 0.5] }, { "kind": "line", "to": [x + w - 4.0, y + h * 0.5] }]),
+                        "curve" => json!([{ "kind": "move", "to": [x + 4.0, y + h - 4.0] }, { "kind": "line", "to": [x + w * 0.5, y + 4.0] }, { "kind": "line", "to": [x + w - 4.0, y + h * 0.6] }]),
+                        _ => json!([{ "kind": "move", "to": [x + 4.0, y + 4.0] }, { "kind": "line", "to": [x + w - 4.0, y + h - 4.0] }, { "kind": "move", "to": [x + w - 4.0, y + 4.0] }, { "kind": "line", "to": [x + 4.0, y + h - 4.0] }]),
+                    };
+                    if !upright {
+                        rotate_mark_points(&mut mark, cx, cy, rotation);
+                    }
+                    layers.push(host_layer(format!("{}.preview", image.object_id), &mark, None, Some(([0.25, 0.25, 0.28, 0.9], 1.0, None))));
+                }
+            }
+            crate::editor::layout::engine::scene::StackPiece::Text(run) => {
+                if run.content.is_empty() {
+                    continue;
+                }
+                layers.push(json!({ "id": format!("{}.text", run.object_id), "kind": "text", "x": run.origin_x, "y": run.origin_y, "width": run.font_size * run.content.chars().count() as f32 * 0.6, "height": run.font_size, "text": { "content": run.content, "size": run.font_size }, "fill": { "color": run.color } }));
             }
         }
-        let color = if image.placeholder { [0.92, 0.88, 0.84, 1.0] } else { [0.85, 0.85, 0.85, 1.0] };
-        let segments = rotated_rect_segments(image.x as f64, image.y as f64, image.width as f64, image.height as f64, rotation);
-        let stroke = image.placeholder.then_some(([0.75, 0.35, 0.2, 1.0], 1.0, None));
-        layers.push(host_layer(format!("{}.image", image.object_id), &segments, Some(color), stroke));
-        if !image.preview.is_empty() {
-            let x = image.x as f64;
-            let y = image.y as f64;
-            let w = image.width as f64;
-            let h = image.height as f64;
-            let cx = x + w * 0.5;
-            let cy = y + h * 0.5;
-            let mut mark = match image.preview.as_str() {
-                "page" => json!([{ "kind": "move", "to": [x + 4.0, y + h * 0.35] }, { "kind": "line", "to": [x + w - 4.0, y + h * 0.35] }, { "kind": "move", "to": [x + 4.0, y + h * 0.6] }, { "kind": "line", "to": [x + w - 4.0, y + h * 0.6] }]),
-                "stroke" => line_segments(x + 4.0, y + h - 4.0, x + w - 4.0, y + 4.0),
-                "map" => json!([{ "kind": "move", "to": [x + w * 0.5, y + 4.0] }, { "kind": "line", "to": [x + w * 0.5, y + h - 4.0] }, { "kind": "move", "to": [x + 4.0, y + h * 0.5] }, { "kind": "line", "to": [x + w - 4.0, y + h * 0.5] }]),
-                "curve" => json!([{ "kind": "move", "to": [x + 4.0, y + h - 4.0] }, { "kind": "line", "to": [x + w * 0.5, y + 4.0] }, { "kind": "line", "to": [x + w - 4.0, y + h * 0.6] }]),
-                _ => json!([{ "kind": "move", "to": [x + 4.0, y + 4.0] }, { "kind": "line", "to": [x + w - 4.0, y + h - 4.0] }, { "kind": "move", "to": [x + w - 4.0, y + 4.0] }, { "kind": "line", "to": [x + 4.0, y + h - 4.0] }]),
-            };
-            if !upright {
-                rotate_mark_points(&mut mark, cx, cy, rotation);
-            }
-            layers.push(host_layer(format!("{}.preview", image.object_id), &mark, None, Some(([0.25, 0.25, 0.28, 0.9], 1.0, None))));
-        }
-    }
-
-    for run in &list.text_runs {
-        if run.content.is_empty() {
-            continue;
-        }
-        layers.push(json!({
-            "id": format!("{}.text", run.object_id),
-            "kind": "text",
-            "x": run.origin_x,
-            "y": run.origin_y,
-            "width": run.font_size * run.content.chars().count() as f32 * 0.6,
-            "height": run.font_size,
-            "text": { "content": run.content, "size": run.font_size },
-            "fill": { "color": [0.0, 0.0, 0.0, 1.0] },
-        }));
     }
 
     if blueprint && !drop_preview.kind.is_empty() && drop_preview.kind != "page" {

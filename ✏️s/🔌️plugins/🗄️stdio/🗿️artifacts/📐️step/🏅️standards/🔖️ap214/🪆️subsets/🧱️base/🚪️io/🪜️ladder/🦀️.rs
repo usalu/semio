@@ -4,7 +4,7 @@
 //! `✳️ccN`'s `check_ccN_conformance` calls into these primitives rather than re-deriving the
 //! ladder or the shared base scans independently — one classification, six consumers.
 
-use super::part21::{Part21Document, Part21Instance, Part21Value};
+use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Instance, Part21Value};
 
 //#region 🔖️Ladder
 /// 🔢️ Minimum ISO 10303-214 conformance class (2..=6) a `*_SHAPE_REPRESENTATION` subtype

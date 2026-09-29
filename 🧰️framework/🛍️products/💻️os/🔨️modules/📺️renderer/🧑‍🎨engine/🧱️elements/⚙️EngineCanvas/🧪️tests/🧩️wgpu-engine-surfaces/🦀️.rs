@@ -850,6 +850,10 @@ fn board_and_map_two_touch_gestures_share_camera_math_but_keep_distinct_transfer
     let map_id = map_frame.owner.host_id.clone();
     let map_window = map_frame.owner.window_id.clone();
     assert!(tiled_map_set_camera_silent(&map_id, [0.0, 0.0, 10.0]));
+    let seeded = tiled_map_camera(&map_id).expect("the seeded map camera, clamped to cover its viewport");
+    let (initial, expected) = (&spread["initialCamera"], &spread["expectedCamera"]);
+    assert_eq!((initial["x"].as_f64(), initial["y"].as_f64()), (expected["x"].as_f64(), expected["y"].as_f64()), "the spread gesture is centred: it scales about the viewport centre and pans nothing");
+    let zoom_ratio = expected["zoom"].as_f64().expect("expected zoom") / initial["zoom"].as_f64().expect("initial zoom");
     assert!(!crate::scenes::tiled_map_touch_pointer_down(&map_id, bounds, down[0].0, down[0].1, down[0].2));
     assert_eq!(crate::scenes::tiled_map_pointer_down_into(&map_frame.owner, "touch.map", bounds, down[0].1, down[0].2, 0, false, false, "rectangle", &mut InputState::default()), Ok(true));
     assert!(crate::scenes::tiled_map_drag_active(&map_id));
@@ -858,7 +862,7 @@ fn board_and_map_two_touch_gestures_share_camera_math_but_keep_distinct_transfer
     assert!(crate::scenes::tiled_map_touch_pointer_move(&map_id, bounds, moves[0].0, moves[0].1, moves[0].2));
     assert!(crate::scenes::tiled_map_touch_pointer_move(&map_id, bounds, moves[1].0, moves[1].1, moves[1].2));
     let map_camera = tiled_map_camera(&map_id).expect("map camera");
-    close_camera(map_camera, [0.0, 0.0, 20.0]);
+    close_camera(map_camera, [seeded[0], seeded[1], seeded[2] * zoom_ratio]);
     let mut map_input = InputState::default();
     assert_eq!(crate::scenes::tiled_map_touch_pointer_up_into(&map_id, "touch.map", down[0].0, &mut map_input), Ok(true));
     assert!(crate::collect_fixture_actions(&mut map_input).is_empty(), "the first lift is silent");

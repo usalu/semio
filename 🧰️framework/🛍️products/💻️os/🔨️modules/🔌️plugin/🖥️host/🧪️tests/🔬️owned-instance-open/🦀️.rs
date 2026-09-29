@@ -543,7 +543,8 @@ async fn owned_codec_genesis_answers_the_biggest_staged_component_under_the_hub_
 ///
 /// 🚫️ …and a schema this component does not own is a typed refusal, never a fabricated answer —
 /// which is what makes `print-mirror` usable as the pair-validation DISCRIMINATOR the WIT says
-/// it is.
+/// it is. The refusal is the guest's OWN fault (code + message), decoded as the owned interpreter decodes it, never a
+/// "trap" carrying its raw bytes.
 #[semio_framework_async_macros::async_test]
 async fn guest_runtimes_forwards_all_four_codec_exports_to_the_runtime_beneath_it() {
     let Some(path) = plugin_wasm("semio_s_plugin_note.wasm") else { return };
@@ -562,7 +563,8 @@ async fn guest_runtimes_forwards_all_four_codec_exports_to_the_runtime_beneath_i
     let applied = routed.codec_apply_ops(&compiled, NOTE_DOCUMENT_SCHEMA, &direct_pair.pack, &direct_pair.spr, &[], &jit_budget()).await.expect("routed codec.apply-ops with an empty batch");
     assert_eq!(applied, direct_pair, "an empty batch applied to a pair is that pair");
 
-    routed.codec_pack_schema_hash(&compiled, "not.a.kind.this.package.owns", &jit_budget()).await.expect_err("a foreign kind has no fingerprint here");
+    let refusal = routed.codec_pack_schema_hash(&compiled, "not.a.kind.this.package.owns", &jit_budget()).await.expect_err("a foreign kind has no fingerprint here");
+    assert!(matches!(&refusal, TurnFault::Guest(fault) if !fault.code.0.is_empty() && !fault.message.is_empty()), "the guest's refusal reads as its own typed fault, as under the interpreter: {refusal}");
 }
 //#endregion 🗂️GuestCodecDispatch
 

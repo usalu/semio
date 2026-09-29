@@ -771,6 +771,44 @@ impl PendingResponsePage {
     }
 }
 
+/// 🪟️ What a HEADLESS agent's transaction carries of one previewed verb: its document operations and owned children, never
+/// its config or draft lanes — those are the view state (a selection, a viewport, a mode) of a shell the agent does not
+/// have, and the real wire `TransactionPrepare` has no lane for them (coordinator decision, ticket 26/09/23 session 14c: a
+/// headless agent edits DOCUMENTS). Beside a document change they are omitted and the preview says so
+/// ([`VIEW_STATE_OMITTED_WARNING`]); a verb whose whole effect is view state is refused
+/// [`crate::actions::AGENT_LANE_UNCARRIED_FAULT_CODE`] at prepare — it runs only from the shell — instead of failing at
+/// invoke with "no wire representation" (live hub coverage on 7800/p33: procedural's add/rename/removeGeneration publish
+/// `SetSelectedGeneration` beside their document op).
+#[cfg(not(target_arch = "wasm32"))]
+fn headless_agent_ops(capability_id: &str, ops: PreparedOps) -> Result<(PreparedOps, Vec<String>), Fault> {
+    let view_lanes = [("config", !ops.config.is_empty()), ("draft", !ops.draft.is_empty())].into_iter().filter_map(|(lane, held)| held.then_some(lane)).collect::<Vec<_>>();
+    if view_lanes.is_empty() {
+        return Ok((ops, Vec::new()));
+    }
+    if ops.document.is_empty() && ops.children.is_empty() {
+        return Err(Fault {
+            code: crate::actions::AGENT_LANE_UNCARRIED_FAULT_CODE.to_string(),
+            message: format!("action '{capability_id}' changes only {} view state, which a headless agent's transaction cannot carry; it runs only from the shell", view_lanes.join(" and ")),
+        });
+    }
+    Ok((PreparedOps { config: Vec::new(), draft: Vec::new(), ..ops }, vec![VIEW_STATE_OMITTED_WARNING.to_string()]))
+}
+
+/// 🪟️ The preview warning of a verb whose config/draft view state a headless agent's transaction leaves in the shell.
+#[cfg(not(target_arch = "wasm32"))]
+pub const VIEW_STATE_OMITTED_WARNING: &str = "view-state-omitted: the action's config/draft view state (a selection, a viewport, a mode) stays in the shell; this transaction commits its document operations only";
+
+/// 🧹️ Begins closing the exchange an ABANDONED command left on `instance` — a pending exchange whose seq is not `seq`'s —
+/// so the bounded teardown in `exchange_one_turn` retires it before the next command on the instance is admitted.
+#[cfg(not(target_arch = "wasm32"))]
+fn begin_closing_abandoned_exchange(pending_exchanges: &PendingExchangeRegistry<1>, closes: &mut semio_framework::kernel::CommandDriverRegistry<1>, instance: u32, seq: u64) -> Result<(), Fault> {
+    let Some(abandoned) = pending_exchanges.get(instance).map(|pending| pending.seq).filter(|pending_seq| *pending_seq != seq) else { return Ok(()) };
+    if closes.is_active(u64::from(instance), abandoned) {
+        closes.begin_close(u64::from(instance), abandoned).map_err(|fault| Fault { code: "channel.not-wired".to_string(), message: format!("abandoned command owner: {}: {}", fault.code.0, fault.message) })?;
+    }
+    Ok(())
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 struct PendingExchangeRegistry<const CAPACITY: usize> {
     slots: [Option<PendingExchange>; CAPACITY],
@@ -1415,11 +1453,17 @@ impl PluginArtifactChannel {
     /// `TransactionPrepare` and `TransactionCommit`, which is the whole two-phase contract.
     /// [`Self::discard_instance`] forgets it, because a thrown-away guest holds nothing.
     ///
+    /// 🔀️ A guest that holds ANOTHER artifact (its app's session document moved to a document the agent opened since,
+    /// [`route_session_artifact`]) is thrown away first: a guest is only ever seeded fresh, never while its backbone is
+    /// bound to a different document.
+    ///
     /// 🏁️ `LoadDocument` publishes no frame of its own, so its answer is the stamped
     /// `AppFrame::Done` `await_response` mints — see [`PendingResponsePage::Stamped`].
     pub fn load_session_document(&mut self, instance: u32, artifact_id: &str, pack: &[u8], spr: &[u8]) -> Result<(), Fault> {
-        if self.session_documents.get(&instance).is_some_and(|loaded| loaded == artifact_id) {
-            return Ok(());
+        match self.session_documents.get(&instance) {
+            Some(loaded) if loaded == artifact_id => return Ok(()),
+            Some(_) => self.discard_instance(instance),
+            None => {}
         }
         self.ensure_instance(instance)?;
         match self.exchange_one_real(instance, store::AppCommand::LoadDocument { seq: 0, pack: pack.to_vec(), spr: spr.to_vec() })? {
@@ -1782,7 +1826,10 @@ impl PluginArtifactChannel {
             match self.exchange_one_turn(instance, &real_command, seq)? {
                 CommandTurn::Settled(frame) => return Ok(frame),
                 CommandTurn::MoreWork if std::time::Instant::now() < deadline => continue,
-                CommandTurn::MoreWork => return Err(Self::budget_fault("AppCommand")),
+                CommandTurn::MoreWork => {
+                    self.discard_instance(instance);
+                    return Err(Fault { code: "budget.exceeded".to_string(), message: format!("AppCommand seq {seq} reached its wall budget before it settled; the instance was discarded and the next command starts on a fresh one") });
+                }
             }
         }
     }
@@ -1812,11 +1859,17 @@ impl PluginArtifactChannel {
     /// moment it is seen, not read again at the terminal where it no longer exists. It
     /// used to be dropped entirely, and "faulted for seq N after bounded exact-owner
     /// cleanup" told the agent (and every earlier slice of this ticket) nothing at all.
+    ///
+    /// 🧹️ An exchange left behind by an ABANDONED command — its wall budget ran out, or its guest turn faulted and the
+    /// instance was discarded — is closed step by step before the next command on the instance is admitted. It used to
+    /// stay active, and the next command's turn met it with `assert_eq!(pending.seq, seq)`: the gateway's main thread
+    /// panicked and every MCP session on it died (live hub coverage on 7800/p33, ticket 26/09/23 G12 session 14c).
     fn exchange_one_turn(&mut self, instance: u32, real_command: &store::AppCommand, seq: u64) -> Result<CommandTurn, Fault> {
         if !self.rejected_command_builds.terminal_is_empty() {
             self.rejected_command_builds.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
             return Ok(CommandTurn::MoreWork);
         }
+        begin_closing_abandoned_exchange(&self.pending_exchanges, &mut self.pending_command_closes, instance, seq)?;
         if let Some(seq) = self.pending_exchanges.get(instance).map(|pending| pending.seq) {
             if !self.pending_command_closes.is_active(u64::from(instance), seq) {
                 let (response_complete, _) = self.pending_exchanges.close_response_step(instance, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
@@ -2080,6 +2133,7 @@ fn app_command_seq_mut(command: &mut store::AppCommand) -> &mut u64 {
         | store::AppCommand::SubmitMediaExport { seq, .. }
         | store::AppCommand::PollMediaExport { seq, .. }
         | store::AppCommand::CancelMediaExport { seq, .. }
+        | store::AppCommand::ReadDocumentIdentity { seq }
         | store::AppCommand::TakeMediaExportChunk { seq, .. } => seq,
     }
 }
@@ -2112,6 +2166,7 @@ fn app_frame_reply_seq(frame: &store::AppFrame) -> Option<u64> {
         | store::AppFrame::DocumentArchiveLoad { in_reply_to, .. }
         | store::AppFrame::MediaExportSubmitted { in_reply_to, .. }
         | store::AppFrame::MediaExportStatus { in_reply_to, .. }
+        | store::AppFrame::DocumentIdentity { in_reply_to, .. }
         | store::AppFrame::MediaExportChunk { in_reply_to, .. } => Some(*in_reply_to),
         store::AppFrame::Error { in_reply_to, .. } | store::AppFrame::MergeReport { in_reply_to, .. } | store::AppFrame::Conflicts { in_reply_to, .. } | store::AppFrame::UiPatch { in_reply_to, .. } => *in_reply_to,
         store::AppFrame::DocumentChanged { .. }
@@ -2167,6 +2222,7 @@ fn app_frame_tag(frame: &store::AppFrame) -> &'static str {
         store::AppFrame::UiSnapshotEnd { .. } => "UiSnapshotEnd",
         store::AppFrame::OperationCompleted { .. } => "OperationCompleted",
         store::AppFrame::LocalInteractionQuery { .. } => "LocalInteractionQuery",
+        store::AppFrame::DocumentIdentity { .. } => "DocumentIdentity",
         store::AppFrame::DocumentArchive { .. } => "DocumentArchive",
         store::AppFrame::DocumentArchiveLoad { .. } => "DocumentArchiveLoad",
         store::AppFrame::MediaExportSubmitted { .. } => "MediaExportSubmitted",
@@ -2544,7 +2600,8 @@ impl ArtifactChannel for PluginArtifactChannel {
                         store::AppCommand::PureCommand { seq: 0, command, document: Vec::new(), document_spr: Vec::new(), config: Vec::new(), config_spr: Vec::new(), draft: Vec::new(), draft_spr: Vec::new() },
                     )? {
                         store::AppFrame::Emit { document_ops, config_ops, draft_ops, child_ops, .. } => {
-                            AppFrame::Emit { ops: PreparedOps { document: ops_pack_lane(document_ops)?, config: ops_pack_lane(config_ops)?, draft: ops_pack_lane(draft_ops)?, children: child_ops }, warnings: Vec::new() }
+                            let (ops, warnings) = headless_agent_ops(&capability_id, PreparedOps { document: ops_pack_lane(document_ops)?, config: ops_pack_lane(config_ops)?, draft: ops_pack_lane(draft_ops)?, children: child_ops })?;
+                            AppFrame::Emit { ops, warnings }
                         }
                         store::AppFrame::Error { fault, .. } => return Err(decode_guest_fault(&fault)),
                         other => return Err(Self::not_wired("PureCommand", format!("unexpected real AppFrame variant {other:?}"))),
@@ -2552,7 +2609,7 @@ impl ArtifactChannel for PluginArtifactChannel {
                 }
                 AppCommand::TransactionPrepare { txn_id, ops, label, origin: _origin } => {
                     if !ops.config.is_empty() || !ops.draft.is_empty() {
-                        return Err(Self::not_wired("TransactionPrepare", "the real wire TransactionPrepare carries one flat prepared-ops list (document lane only) — config/draft-lane prepared ops have no wire representation yet"));
+                        return Err(Self::not_wired("TransactionPrepare", "a headless agent's transaction carries document operations only; its preview (`headless_agent_ops`) already kept config/draft view state in the shell"));
                     }
                     match self.exchange_one_real(
                         instance,
@@ -3044,19 +3101,19 @@ pub enum PluginComponentSource {
 /// 🌎️ Resolves a plugin id to the component bytes and package descriptor the authenticated Hub
 /// selected for one of the space's own documents. The descriptor comes from the catalog snapshot the
 /// binding already verified (manifest identity, canonical projection, digest); only the component
-/// bytes are fetched here, lazily, and cached by the exact `(catalog generation, component SHA-256)`
-/// that authorized them — so a republished catalog is a different entry, never a stale hit.
+/// bytes are fetched here, lazily — one plugin at a time, when an open or an action needs it — by the
+/// content address the current catalog's lease names, from the persistent execution-target store or
+/// the hub ([`remote::HubComponentAssets`]); a republished catalog names other bytes, never a stale hit.
 #[cfg(not(target_arch = "wasm32"))]
 pub struct HubPluginComponents {
     binding: Arc<HubRemoteBinding>,
     driver: Arc<NativeHubBindingDriver>,
-    cache: Mutex<HashMap<(String, String), Arc<Vec<u8>>>>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl HubPluginComponents {
     pub fn new(binding: Arc<HubRemoteBinding>, driver: Arc<NativeHubBindingDriver>) -> Self {
-        Self { binding, driver, cache: Mutex::new(HashMap::new()) }
+        Self { binding, driver }
     }
 
     /// 🧩️ The component bytes and descriptor for `plugin_id`, fetched through the document scope the
@@ -3073,13 +3130,8 @@ impl HubPluginComponents {
                 format!("this hub space authorizes no execution target for plugin `{plugin_id}`; its catalog selects {}", if available.is_empty() { "no plugin at all".to_string() } else { available.join(", ") }),
             )
         })?;
-        let key = (selection.lease.catalog.generation_id.clone(), selection.lease.component.sha256.clone());
-        if let Some(bytes) = self.cache.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&key) {
-            return Ok((bytes.as_ref().clone(), selection.descriptor.clone()));
-        }
-        let bytes = Arc::new(self.driver.fetch_execution_target_component(&selection.scope, &selection.lease.component, &format!("mcp-component-{plugin_id}"))?);
-        self.cache.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(key, Arc::clone(&bytes));
-        Ok((bytes.as_ref().clone(), selection.descriptor.clone()))
+        let bytes = self.driver.fetch_execution_target_component(plugin_id, &selection.scope, &selection.lease.component)?;
+        Ok((bytes, selection.descriptor.clone()))
     }
 }
 
@@ -3187,16 +3239,18 @@ impl RoutingArtifactChannel {
         Ok(resolved)
     }
 
-    /// 🗿️ The artifact `route`'s live session document IS, or `None` when this workspace has bound
-    /// none to that app — or more than one, which no single stamp could name truthfully.
+    /// 🗿️ The artifact `route`'s live session document IS ([`route_session_artifact`]): the hub document of that app
+    /// the agent opened or edited last, or the one artifact a folder session bound to it — `None` when there is none, or
+    /// two folder artifacts, which no single stamp could name truthfully.
     fn session_artifact_for(&self, route: &AppRoute) -> Option<String> {
         let bound = self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let mut matches = bound.iter().filter(|(_, binding)| binding.plugin_id == route.plugin_id && route.app_id.as_deref().is_none_or(|app_id| binding.app_id == app_id)).map(|(artifact_id, _)| artifact_id.clone());
-        let first = matches.next()?;
-        if matches.next().is_some() {
-            return None;
-        }
-        Some(first)
+        route_session_artifact(
+            bound
+                .iter()
+                .filter(|(_, binding)| binding.plugin_id == route.plugin_id && route.app_id.as_deref().is_none_or(|app_id| binding.app_id == app_id))
+                .map(|(artifact_id, binding)| (artifact_id.as_str(), binding.document.is_some(), binding.used)),
+        )
+        .map(str::to_string)
     }
 
     /// 📥️ The canonical pair `plugin_id`'s single bound artifact carries, when it has one — a hub
@@ -3221,8 +3275,12 @@ impl RoutingArtifactChannel {
         hub.await_settled(remote::HUB_AUTHORITY_SETTLE_WAIT_MS);
         let role = hub.ready_snapshot(i64::try_from(now_ms()).unwrap_or(i64::MAX)).map(|snapshot| snapshot.space.role).map_err(|error| error.message);
         let artifact_id = self.session_artifact_for(route);
-        let bound = self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        hub_edit_refusal(role, &route.plugin_id, artifact_id.as_deref().and_then(|artifact_id| bound.get(artifact_id).map(|binding| (artifact_id, binding))))
+        let mut bound = self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let refusal = hub_edit_refusal(role, &route.plugin_id, artifact_id.as_deref().and_then(|artifact_id| bound.get(artifact_id).map(|binding| (artifact_id, binding))));
+        if let Some(binding) = artifact_id.as_deref().and_then(|artifact_id| bound.get_mut(artifact_id)).filter(|_| refusal.is_none()) {
+            binding.used = hub_link_tick();
+        }
+        refusal
     }
 
     /// 📥️ Takes what `route`'s bound hub document actor delivered since the last take and plans it against
@@ -3762,6 +3820,63 @@ fn commits_with_nothing_relayed(frames: Vec<AppFrame>) -> Vec<AppFrame> {
         .collect()
 }
 
+/// 🔗️ At most this many hub documents hold a live link — a document socket, one of the hub's bounded WAL writer slots
+/// — for one agent session at once ([`hub_links_to_close`]); fixture `🧫️fixtures/🔗️hub-live-links.json`.
+pub const HUB_SESSION_LIVE_LINK_LIMIT: usize = 8;
+
+/// 🔗️ Why a session closes one of its live hub links before it links another document.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum HubLinkClose {
+    /// ♻️ The document being opened again: its link expired and a fresh one replaces it.
+    Relinked,
+    /// 🔀️ Another document of the same app: the one being opened becomes the app's session document.
+    Superseded,
+    /// 📏️ The least recently used link past [`HUB_SESSION_LIVE_LINK_LIMIT`].
+    Bounded,
+}
+
+/// 🔗️ The live hub links a session closes before `opening`, a document of `route` = (plugin, app), links — `live` =
+/// (artifact, plugin, app, used) of every binding with a document actor: the opened document's own (expired) link, every
+/// other live link of the same app, then the least recently used until the new link leaves at most `limit` live.
+pub fn hub_links_to_close(live: &[(String, String, String, u64)], opening: &str, route: (&str, &str), limit: usize) -> Vec<(String, HubLinkClose)> {
+    let mut closes = Vec::new();
+    let mut kept = Vec::new();
+    for (artifact_id, plugin_id, app_id, used) in live {
+        if artifact_id == opening {
+            closes.push((artifact_id.clone(), HubLinkClose::Relinked));
+        } else if (plugin_id.as_str(), app_id.as_str()) == route {
+            closes.push((artifact_id.clone(), HubLinkClose::Superseded));
+        } else {
+            kept.push((artifact_id, *used));
+        }
+    }
+    kept.sort_by_key(|(_, used)| *used);
+    let excess = (kept.len() + 1).saturating_sub(limit);
+    closes.extend(kept.into_iter().take(excess).map(|(artifact_id, _)| (artifact_id.clone(), HubLinkClose::Bounded)));
+    closes
+}
+
+/// 🧭️ A route's session document among the artifacts bound to it — (artifact, hub document?, used): the hub document the
+/// agent opened or edited last, else the single folder artifact; two folder artifacts name none.
+pub fn route_session_artifact<'a>(bound: impl IntoIterator<Item = (&'a str, bool, u64)>) -> Option<&'a str> {
+    let (mut hub, mut folder, mut folders) = (None::<(&'a str, u64)>, None, 0_usize);
+    for (artifact_id, hub_document, used) in bound {
+        if !hub_document {
+            folder = Some(artifact_id);
+            folders += 1;
+        } else if hub.is_none_or(|(_, latest)| used > latest) {
+            hub = Some((artifact_id, used));
+        }
+    }
+    hub.map(|(artifact_id, _)| artifact_id).or(folder.filter(|_| folders == 1))
+}
+
+/// 🕰️ The next tick of this process's hub-link clock — monotonic, so "opened or edited last" is a total order.
+pub fn hub_link_tick() -> u64 {
+    static CLOCK: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    CLOCK.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1
+}
+
 /// 🚫️ Whether a coded message the document actor raised ends its link for good — the hub withdrew access
 /// (`access-revoked`) or a shortage outlived its bound (`link-expired`). A terminal link admits no local
 /// edit and never relinks ([`store::sync::DocumentLink`]).
@@ -3914,6 +4029,9 @@ pub struct PluginArtifactBinding {
     pub relayed: Arc<std::sync::atomic::AtomicU64>,
     /// 🚦️ The document actor's own sync reports, for a binding that opened one.
     pub relay: Arc<HubRelay>,
+    /// 🕰️ When the agent last opened or edited this hub document ([`hub_link_tick`]; 0 for a folder artifact): its app's
+    /// session document is the one with the latest, and the least recent live link closes first past the bound.
+    pub used: u64,
 }
 
 impl std::fmt::Debug for PluginArtifactBinding {
@@ -3927,6 +4045,7 @@ impl std::fmt::Debug for PluginArtifactBinding {
             .field("document_bytes", &self.document.as_ref().map(|pair| pair.pack.len() + pair.spr.len()))
             .field("backbone_blocked_by", &self.backbone_blocked_by)
             .field("relayed", &self.relayed.load(std::sync::atomic::Ordering::Relaxed))
+            .field("used", &self.used)
             .finish()
     }
 }
@@ -4531,7 +4650,13 @@ impl HeadlessWorkspace {
     ///
     /// 🔁️ Re-opening a document this session already bound must not open a SECOND actor: the
     /// first one holds the live socket, the presence lease and the outbox that still owes the hub
-    /// this agent's envelopes. Only the canonical pair is refreshed.
+    /// this agent's envelopes. Only the canonical pair is refreshed — unless its link EXPIRED (a shortage outlived its
+    /// bound), which a new open relinks with a fresh actor.
+    ///
+    /// 🔗️ Opening a new actor first closes the live links [`hub_links_to_close`] names — the app's older document
+    /// (the one opened now becomes the app's session document) and, past [`HUB_SESSION_LIVE_LINK_LIMIT`], the least
+    /// recently used — so one agent never holds more of the hub's document sockets than that (each is one of the hub's
+    /// bounded WAL writer slots; an agent that walked 63 documents took them all, measured on 7800/p33).
     #[cfg(not(target_arch = "wasm32"))]
     pub fn bind_hub_session_document(&self, artifact_id: &str, pack: &[u8], spr: &[u8]) -> Result<bool, GatewayError> {
         let WorkspaceOrigin::Hub { space_id, .. } = &self.origin else {
@@ -4550,10 +4675,17 @@ impl HeadlessWorkspace {
         if lease.package.plugin_id != document.view.descriptor.owner.plugin_id || lease.artifact.schema != document.view.descriptor.artifact_schema || lease.artifact.kind != document.view.descriptor.artifact_kind {
             return Err(GatewayError::new(GatewayErrorCode::PreconditionFailed, "hub execution-target lease disagrees with the authenticated document descriptor"));
         }
-        let established = self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(artifact_id).filter(|binding| binding.backbone.is_some()).cloned();
+        let established = self
+            .plugin_artifacts
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .get(artifact_id)
+            .filter(|binding| binding.backbone.is_some() && binding.relay.terminal().as_deref() != Some(store::sync::DocumentLinkStatus::LinkExpired.code()))
+            .cloned();
         let (backbone, backbone_blocked_by, relayed, relay) = match established {
             Some(binding) => (binding.backbone, binding.backbone_blocked_by, binding.relayed, binding.relay),
             None => {
+                self.close_hub_links(artifact_id, (lease.package.plugin_id.as_str(), lease.surface.app_id.as_str()));
                 let relay = Arc::new(HubRelay::default());
                 let (backbone, blocked) = self.open_hub_document_actor(artifact_id, &lease, Arc::clone(&relay));
                 (backbone, blocked, Arc::new(std::sync::atomic::AtomicU64::new(0)), relay)
@@ -4569,9 +4701,38 @@ impl HeadlessWorkspace {
             backbone_blocked_by,
             relayed,
             relay,
+            used: hub_link_tick(),
         };
         self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(artifact_id.to_string(), binding);
         Ok(true)
+    }
+
+    /// 🔗️ Closes the live hub links [`hub_links_to_close`] names before `opening` (a document of `route` = plugin, app)
+    /// links: each one's actor is closed (its socket, presence row and WAL writer slot released) and its binding keeps
+    /// the reason, which a later edit of it reports until `artifact_open` relinks it. Every edit the agent was told
+    /// succeeded is already acknowledged by the hub; an unacknowledged one was reverted and reported, so nothing an
+    /// agent believes the hub holds rides on a closed actor.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn close_hub_links(&self, opening: &str, route: (&str, &str)) {
+        let closes = {
+            let mut bound = self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let live = bound.iter().filter(|(_, binding)| binding.backbone.is_some()).map(|(artifact_id, binding)| (artifact_id.clone(), binding.plugin_id.clone(), binding.app_id.clone(), binding.used)).collect::<Vec<_>>();
+            let closes = hub_links_to_close(&live, opening, route, HUB_SESSION_LIVE_LINK_LIMIT);
+            for (artifact_id, close) in &closes {
+                if let Some(binding) = bound.get_mut(artifact_id) {
+                    binding.backbone = None;
+                    binding.backbone_blocked_by = Some(match close {
+                        HubLinkClose::Relinked => "its expired link is being replaced by a fresh one".to_string(),
+                        HubLinkClose::Superseded => format!("its link was closed when `{opening}` became its app's open hub document; artifact_open `{artifact_id}` again to edit it"),
+                        HubLinkClose::Bounded => format!("its link was closed to keep this session within {HUB_SESSION_LIVE_LINK_LIMIT} live hub documents (least recently used first); artifact_open `{artifact_id}` again to edit it"),
+                    });
+                }
+            }
+            closes
+        };
+        for (artifact_id, _) in closes {
+            self.artifact_host.close_key(&self.origin.artifact_document_key(&artifact_id));
+        }
     }
 
     /// 🟢️ Waits, at most [`HUB_RELAY_ACK_WAIT_MS`], until `artifact_id`'s document actor is live — its
@@ -4607,9 +4768,9 @@ impl HeadlessWorkspace {
     /// (`🔌️plugin/🧬️schema/📜️.wit`'s `interface codec`, TC3b); it is NOT done here and the
     /// reason is reported rather than papered over.
     /// 🗂️ Registers the document kind's codec from the package the HUB authorized for it — the same
-    /// component bytes `action_prepare` executes, fetched through the same verified route and cached
-    /// by the same `(catalog generation, component SHA-256)` key, so the codec and the guest can
-    /// never be two different builds of one package.
+    /// component bytes `action_prepare` executes, resolved through the same verified route by the same
+    /// content address the lease names, so the codec and the guest can never be two different builds
+    /// of one package.
     ///
     /// 🪪️ The hub's own declared `pack_schema_hash` is passed as a CROSS-CHECK and never as the
     /// value — see [`register_guest_document_codec`] for why registering the hub's number would
@@ -4739,7 +4900,7 @@ impl HeadlessWorkspace {
         self.plugin_artifacts
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner)
-            .insert(artifact_id.to_string(), PluginArtifactBinding { schema: kind.schema.clone(), plugin_id: kind.plugin_id.clone(), app_id: kind.app_id.clone(), surface_id: None, document: None, backbone: None, backbone_blocked_by: None, relayed: Arc::new(std::sync::atomic::AtomicU64::new(0)), relay: Arc::default() });
+            .insert(artifact_id.to_string(), PluginArtifactBinding { schema: kind.schema.clone(), plugin_id: kind.plugin_id.clone(), app_id: kind.app_id.clone(), surface_id: None, document: None, backbone: None, backbone_blocked_by: None, relayed: Arc::new(std::sync::atomic::AtomicU64::new(0)), relay: Arc::default(), used: 0 });
         Ok((pack.len(), spr.len()))
     }
 

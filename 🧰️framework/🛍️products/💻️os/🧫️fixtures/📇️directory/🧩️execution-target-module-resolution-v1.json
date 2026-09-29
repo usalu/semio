@@ -13,5 +13,29 @@
     { "id": "a-hub-short-of-time-is-asked-again", "local": "otherComponent", "store": "empty", "hub": "unavailableOnce", "expected": { "outcome": "hub", "requests": ["manifest", "manifest", "component", "component", "descriptor", "descriptor"], "steps": ["lease", "component", "descriptor", "verified"] } },
     { "id": "a-hub-short-of-time-three-times-is-a-refusal", "local": "otherComponent", "store": "empty", "hub": "unavailable", "expected": { "outcome": "refused", "requests": ["manifest", "manifest", "manifest"], "steps": ["lease"] } },
     { "id": "a-cancel-as-the-component-step-begins-fetches-nothing-more", "local": "otherComponent", "store": "empty", "hub": "cancelledAtComponent", "expected": { "outcome": "cancelled", "requests": ["manifest"], "steps": ["lease", "component"] } }
-  ]
+  ],
+  "eviction": {
+    "componentCapacityBytes": 3072,
+    "components": {
+      "a": { "fill": 97, "byteLength": 1024, "sha256": "2edc986847e209b4016e141a6dc8716d3207350f416969382d431539bf292e4a" },
+      "b": { "fill": 98, "byteLength": 1024, "sha256": "0c66f2c45405de575189209a768399bcaf88ccc51002407e395c0136aad2844d" },
+      "c": { "fill": 99, "byteLength": 1024, "sha256": "f03752e3f29c4db81cb1cb7d4c791bed8785e161d2447ccaa9a49f5c2bc38d06" },
+      "d": { "fill": 100, "byteLength": 1024, "sha256": "e454f02c4b94e9e54b30e9c88b1236f30d7fdd63f0545540d597835904a6d84c" }
+    },
+    "steps": [
+      { "op": "admit", "component": "a", "resident": ["a"] },
+      { "op": "admit", "component": "b", "resident": ["a", "b"] },
+      { "op": "admit", "component": "c", "resident": ["a", "b", "c"] },
+      { "op": "read", "component": "a", "hit": true, "resident": ["a", "b", "c"] },
+      { "op": "admit", "component": "d", "resident": ["a", "c", "d"] },
+      { "op": "read", "component": "b", "hit": false, "resident": ["a", "c", "d"] },
+      { "op": "tamper", "component": "c", "resident": ["a", "c", "d"] },
+      { "op": "read", "component": "c", "hit": false, "resident": ["a", "d"] },
+      { "op": "restart", "resident": ["a", "d"] },
+      { "op": "read", "component": "d", "hit": true, "resident": ["a", "d"] },
+      { "op": "admit", "component": "b", "resident": ["a", "b", "d"] },
+      { "op": "admit", "component": "c", "resident": ["b", "c", "d"] },
+      { "op": "read", "component": "a", "hit": false, "resident": ["b", "c", "d"] }
+    ]
+  }
 }

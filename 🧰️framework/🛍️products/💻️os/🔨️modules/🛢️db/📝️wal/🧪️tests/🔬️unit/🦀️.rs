@@ -1613,3 +1613,55 @@ async fn artifact_wal_open_rejection_retains_exact_writer_for_close_or_same_owne
     storage.acquire_writer(&document).await.unwrap().release().await.unwrap();
 }
 //#endregion 🔖️Segment + ArtifactWal
+
+/// 🅿️ A parked writer is lent, never lost: once other documents took every writer slot of the backend — reclaiming the
+/// least recently parked WAL writer first — a WAL acquires a fresh writer on its next write and appends exactly where it
+/// left off, while a WAL whose active segment another writer sealed meanwhile refuses to append (`Conflict`) and leaves
+/// the segment exactly as that writer left it.
+#[semio_framework_async_macros::async_test]
+async fn a_reclaimed_wal_writer_is_reacquired_and_verified_before_the_next_append() {
+    let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+    let (kept, sealed) = (doc("reclaimed-writer-kept").await, doc("reclaimed-writer-sealed").await);
+    let mut kept_wal = ArtifactWal::create(&storage, kept.clone(), GroupCommitPolicy::default(), 0).await.unwrap();
+    let mut sealed_wal = ArtifactWal::create(&storage, sealed.clone(), GroupCommitPolicy::default(), 0).await.unwrap();
+    submit_one(&storage, &mut kept_wal, WalRecord::Frontier(sample_frontier(&kept).await), DurabilityClass::Fsync, 1).await;
+    submit_one(&storage, &mut sealed_wal, WalRecord::Frontier(sample_frontier(&sealed).await), DurabilityClass::Fsync, 1).await;
+    let (kept_key, sealed_key) = (kept_wal.writer.as_ref().unwrap().key(), sealed_wal.writer.as_ref().unwrap().key());
+    kept_wal.park_writer();
+    sealed_wal.park_writer();
+    let mut fillers = Vec::new();
+    for ordinal in 0..db_storage::writer::WAL_WRITER_CAPACITY {
+        fillers.push(storage.acquire_writer(&doc(&format!("reclaiming-filler-{ordinal}")).await).await.unwrap());
+        let reclaimed = [kept_key, sealed_key].map(|key| db_storage::writer::release::parked_since(key).is_none());
+        let expected = match (ordinal + 3).saturating_sub(db_storage::writer::WAL_WRITER_CAPACITY) {
+            0 => [false, false],
+            1 => [true, false],
+            _ => [true, true],
+        };
+        assert_eq!(reclaimed, expected, "filler {ordinal}: the least recently parked writer is reclaimed first");
+    }
+    for filler in fillers {
+        filler.release().await.unwrap();
+    }
+    let foreign = storage.acquire_writer(&sealed).await.expect("a reclaimed writer no longer owns its document");
+    storage.seal(&foreign, 0).await.unwrap();
+    foreign.release().await.unwrap();
+    let sealed_len = storage.segment_len(&sealed, 0).await.unwrap();
+
+    let receipt = submit_one(&storage, &mut kept_wal, WalRecord::Frontier(sample_frontier(&kept).await), DurabilityClass::Fsync, 2).await;
+    assert!(receipt.committed && receipt.segment_index == 0 && receipt.tx_id == 2, "the kept WAL appends where it left off: {receipt:?}");
+    let commits = replay_summaries(&storage, &kept).await.into_iter().filter(|summary| matches!(summary, ReplaySummary::Commit(..))).count();
+    assert_eq!(commits, 2, "both transactions replay from one unbroken segment");
+
+    let mut records = WalRecordBatch::new();
+    assert!(records.push(WalRecord::Frontier(sample_frontier(&sealed).await)).is_ok());
+    let refused = sealed_wal.submit(&storage, &[], &records, DurabilityClass::Fsync, 2).await;
+    while records.close_step().unwrap() {}
+    assert!(matches!(refused, Err(DbError::Conflict(ref detail)) if detail.contains("changed while its writer was reclaimed")), "{refused:?}");
+    assert_eq!(storage.segment_state(&sealed, 0).await.unwrap(), db_storage::WalSegmentState::Sealed);
+    assert_eq!(storage.segment_len(&sealed, 0).await.unwrap(), sealed_len, "the refused WAL wrote nothing");
+
+    kept_wal.close().await.unwrap();
+    sealed_wal.close().await.unwrap();
+    assert!(kept_wal.terminal_is_empty() && sealed_wal.terminal_is_empty());
+}

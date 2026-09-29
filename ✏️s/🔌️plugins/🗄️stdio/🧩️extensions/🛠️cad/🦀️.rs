@@ -44,13 +44,17 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 
 /// 🔌️ Builds the `stdio-cad` bundle: every step/dxf/dwg subset's editor and viewer (with the owner-mutation roster where
 /// the subset's mutation enum derives one), one activation per artifact kind it opens read live from that kind's own
-/// `artifact_kind().id`, and the exact-pin runtime dependency on `stdio`, which owns those kinds and their codecs.
+/// `artifact_kind().id`, the exact-pin runtime dependency on `stdio`, which owns those kinds and their codecs, and the hosted runtime of
+/// each of them (`host_artifact`: schemas, inferences, document codecs, composers, formats, subset validators) in this component.
 pub fn plugin() -> Result<Plugin<StdioCadApps>, PluginAssemblyError> {
     Plugin::<StdioCadApps>::builder("stdio-cad")
         .label("Stdio CAD")
         .version(env!("CARGO_PKG_VERSION"))
         .package_id("semio:stdio-cad")
         .depends_on("stdio", semio_framework::tree_pin!())
+        .host_artifact(semio_s_artifact_stdio_step::declaration(semio_s_artifact_stdio_step::definition()?).map_err(PluginAssemblyError::definition)?)
+        .host_artifact(semio_s_artifact_stdio_dxf::declaration(semio_s_artifact_stdio_dxf::definition()?).map_err(PluginAssemblyError::definition)?)
+        .host_artifact(semio_s_artifact_stdio_dwg::declaration(semio_s_artifact_stdio_dwg::definition()?).map_err(PluginAssemblyError::definition)?)
         .editor::<semio_s_artifact_stdio_step::editor::step_any::StepAnyEditor>(semio_s_artifact_stdio_step::editor::step_any::create_step_any_editor())
         .viewer::<semio_s_artifact_stdio_step::viewer::step_any::StepAnyViewer>(semio_s_artifact_stdio_step::viewer::step_any::create_step_any_viewer())
         .editor::<semio_s_artifact_stdio_step::editor::step_cc1::StepCc1Editor>(semio_s_artifact_stdio_step::editor::step_cc1::create_step_cc1_editor())

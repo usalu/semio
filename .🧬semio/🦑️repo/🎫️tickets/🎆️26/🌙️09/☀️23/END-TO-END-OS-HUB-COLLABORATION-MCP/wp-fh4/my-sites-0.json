@@ -1,0 +1,1446 @@
+{
+ "X": [
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️change-model/🔺️diff/🦀️.rs",
+   "line": 16,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.unknown-palette-color",
+   "message": "format!(\"Ground colour {ground} is not in this document's palette.\")"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️add-palette-color/🔺️diff/🦀️.rs",
+   "line": 15,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.malformed-payload",
+   "message": "\"The base input pixel buffer does not decode.\".to_string()"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️pin-pixel/🔺️diff/🦀️.rs",
+   "line": 13,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.unknown-palette-color",
+   "message": "format!(\"Palette index {} is not in this document's palette.\", payload.color)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️unpin-pixel/🔺️diff/🦀️.rs",
+   "line": 9,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing-target",
+   "message": "format!(\"({}, {}) carries no pin.\", payload.x, payload.y)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-input/🔺️diff/🦀️.rs",
+   "line": 23,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.malformed-payload",
+   "message": "\"The base input pixel buffer does not decode.\".to_string()"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️set-input-pixels/🔺️diff/🦀️.rs",
+   "line": 9,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.malformed-payload",
+   "message": "\"The region payload is not base64.\".to_string()"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️set-input-pixels/🔺️diff/🦀️.rs",
+   "line": 18,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.unknown-palette-color",
+   "message": "format!(\"Palette index {index} is not in this document's palette.\")"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️set-input-pixels/🔺️diff/🦀️.rs",
+   "line": 21,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.malformed-payload",
+   "message": "\"The base input pixel buffer does not decode.\".to_string()"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖍️change-palette-color/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing-target",
+   "message": "format!(\"The palette has no colour at index {}.\", payload.index)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽️remove-palette-color/🔺️diff/🦀️.rs",
+   "line": 9,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing-target",
+   "message": "format!(\"The palette has no colour at index {}.\", payload.index)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽️remove-palette-color/🔺️diff/🦀️.rs",
+   "line": 15,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.colour-in-use",
+   "message": "format!(\"Palette colour {} is still painted or pinned.\", payload.index)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽️remove-palette-color/🔺️diff/🦀️.rs",
+   "line": 18,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.malformed-payload",
+   "message": "\"The base input pixel buffer does not decode.\".to_string()"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️change-tile-weight/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "error",
+   "code": "wfc3d.tile.missing",
+   "message": "format!(\"Tile \\\"{}\\\" does not exist.\", payload.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️change-tile-weight/🔺️diff/🦀️.rs",
+   "line": 11,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "wfc3d.tile.non-positive-weight",
+   "message": "format!(\"Tile \\\"{}\\\" must carry a positive selection weight.\", payload.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️change-tile-weight/🔺️diff/🦀️.rs",
+   "line": 15,
+   "kind": "builder",
+   "method": "warn",
+   "code": "wfc3d.tile.weight-unchanged",
+   "message": "format!(\"Tile \\\"{}\\\" already weighs {}.\", payload.id, payload.weight)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-slots/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "error",
+   "code": "wfc3d.edge.missing",
+   "message": "format!(\"Edge \\\"{}\\\" does not exist.\", payload.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🀄️create-tile/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "wfc3d.tile.duplicate-id",
+   "message": "format!(\"A tile with id \\\"{}\\\" already exists.\", payload.tile.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🀄️create-tile/🔺️diff/🦀️.rs",
+   "line": 11,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "wfc3d.tile.non-positive-weight",
+   "message": "format!(\"Tile \\\"{}\\\" must carry a positive selection weight.\", payload.tile.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "builder",
+   "method": "warn",
+   "code": "wfc3d.seed.unchanged",
+   "message": "format!(\"Seed is already {}.\", payload.seed)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️pin-slot/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "error",
+   "code": "wfc3d.slot.missing",
+   "message": "format!(\"Slot \\\"{}\\\" does not exist.\", payload.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️pin-slot/🔺️diff/🦀️.rs",
+   "line": 11,
+   "kind": "outcome",
+   "method": "error",
+   "code": "wfc3d.tile.missing",
+   "message": "format!(\"Tile \\\"{}\\\" does not exist.\", payload.tile_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️pin-slot/🔺️diff/🦀️.rs",
+   "line": 15,
+   "kind": "builder",
+   "method": "warn",
+   "code": "wfc3d.slot.pin-unchanged",
+   "message": "format!(\"Slot \\\"{}\\\" is already pinned to \\\"{}\\\".\", payload.id, payload.tile_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️unpin-slot/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "error",
+   "code": "wfc3d.slot.missing",
+   "message": "format!(\"Slot \\\"{}\\\" does not exist.\", payload.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️unpin-slot/🔺️diff/🦀️.rs",
+   "line": 12,
+   "kind": "builder",
+   "method": "warn",
+   "code": "wfc3d.slot.pin-absent",
+   "message": "format!(\"Slot \\\"{}\\\" carries no pin.\", payload.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-slot/🔺️diff/🦀️.rs",
+   "line": 9,
+   "kind": "outcome",
+   "method": "error",
+   "code": "wfc3d.slot.missing",
+   "message": "format!(\"Slot \\\"{}\\\" does not exist.\", payload.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-slot/🔺️diff/🦀️.rs",
+   "line": 12,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "wfc3d.slot.degenerate-box",
+   "message": "format!(\"Slot \\\"{}\\\" must have a positive width, height and depth.\", payload.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-slot/🔺️diff/🦀️.rs",
+   "line": 16,
+   "kind": "builder",
+   "method": "warn",
+   "code": "wfc3d.slot.extent-unchanged",
+   "message": "format!(\"Slot \\\"{}\\\" already has that extent.\", payload.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-slots/🔺️diff/🦀️.rs",
+   "line": 10,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "wfc3d.edge.duplicate-id",
+   "message": "format!(\"An edge with id \\\"{}\\\" already exists.\", edge.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-slots/🔺️diff/🦀️.rs",
+   "line": 13,
+   "kind": "outcome",
+   "method": "error",
+   "code": "wfc3d.slot.missing",
+   "message": "format!(\"Slot \\\"{}\\\" does not exist.\", edge.from_slot_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-slots/🔺️diff/🦀️.rs",
+   "line": 16,
+   "kind": "outcome",
+   "method": "error",
+   "code": "wfc3d.slot.missing",
+   "message": "format!(\"Slot \\\"{}\\\" does not exist.\", edge.to_slot_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-slots/🔺️diff/🦀️.rs",
+   "line": 19,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "wfc3d.edge.self-loop",
+   "message": "format!(\"Slot \\\"{}\\\" cannot connect to itself.\", edge.from_slot_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-slots/🔺️diff/🦀️.rs",
+   "line": 26,
+   "kind": "builder",
+   "method": "warn",
+   "code": "wfc3d.edge.already-connected",
+   "message": "format!(\"\\\"{}\\\" already relates to \\\"{}\\\" as \\\"{}\\\".\", edge.from_slot_id, edge.to_slot_id, edge.relation)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️delete-slot/🔺️diff/🦀️.rs",
+   "line": 9,
+   "kind": "outcome",
+   "method": "error",
+   "code": "wfc3d.slot.missing",
+   "message": "format!(\"Slot \\\"{}\\\" does not exist.\", payload.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️delete-slot/🔺️diff/🦀️.rs",
+   "line": 16,
+   "kind": "builder",
+   "method": "info",
+   "code": "wfc3d.slot.edges-cascaded",
+   "message": "format!(\"Deleting slot \\\"{}\\\" also removed {} adjacency edge(s): {}.\", payload.id, incident_edge_ids.len(), incident_edge_ids.join(\", \"))"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-tile-media/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "error",
+   "code": "wfc3d.tile.missing",
+   "message": "format!(\"Tile \\\"{}\\\" does not exist.\", payload.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-tile-media/🔺️diff/🦀️.rs",
+   "line": 12,
+   "kind": "builder",
+   "method": "warn",
+   "code": "wfc3d.tile.media-unchanged",
+   "message": "format!(\"Tile \\\"{}\\\" already carries that media.\", payload.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-tile/🔺️diff/🦀️.rs",
+   "line": 9,
+   "kind": "outcome",
+   "method": "error",
+   "code": "wfc3d.tile.missing",
+   "message": "format!(\"Tile \\\"{}\\\" does not exist.\", payload.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-tile/🔺️diff/🦀️.rs",
+   "line": 29,
+   "kind": "builder",
+   "method": "info",
+   "code": "wfc3d.tile.references-cascaded",
+   "message": "format!(\"Deleting tile \\\"{}\\\" also removed {cascaded_rules} rule(s) and released {cascaded_pins} slot pin(s).\", payload.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-slot/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "error",
+   "code": "wfc3d.slot.missing",
+   "message": "format!(\"Slot \\\"{}\\\" does not exist.\", payload.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-slot/🔺️diff/🦀️.rs",
+   "line": 12,
+   "kind": "builder",
+   "method": "warn",
+   "code": "wfc3d.slot.position-unchanged",
+   "message": "format!(\"Slot \\\"{}\\\" is already there.\", payload.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️create-rule/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "wfc3d.rule.duplicate-id",
+   "message": "format!(\"A rule with id \\\"{}\\\" already exists.\", payload.rule.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️create-rule/🔺️diff/🦀️.rs",
+   "line": 11,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "wfc3d.rule.unknown-tile",
+   "message": "format!(\"Rule \\\"{}\\\" references unknown tile \\\"{}\\\".\", payload.rule.id, payload.rule.tile_a_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️create-rule/🔺️diff/🦀️.rs",
+   "line": 14,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "wfc3d.rule.unknown-tile",
+   "message": "format!(\"Rule \\\"{}\\\" references unknown tile \\\"{}\\\".\", payload.rule.id, payload.rule.tile_b_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-rule/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "error",
+   "code": "wfc3d.rule.missing",
+   "message": "format!(\"Rule \\\"{}\\\" does not exist.\", payload.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️create-slot/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "wfc3d.slot.duplicate-id",
+   "message": "format!(\"A slot with id \\\"{}\\\" already exists.\", payload.slot.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️create-slot/🔺️diff/🦀️.rs",
+   "line": 11,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "wfc3d.slot.degenerate-box",
+   "message": "format!(\"Slot \\\"{}\\\" must have a positive width, height and depth.\", payload.slot.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️create-slot/🔺️diff/🦀️.rs",
+   "line": 15,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "wfc3d.slot.unknown-pinned-tile",
+   "message": "format!(\"Slot \\\"{}\\\" pins unknown tile \\\"{}\\\".\", payload.slot.id, pinned)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️change-tile-weight/🔺️diff/🦀️.rs",
+   "line": 9,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing-target",
+   "message": "format!(\"No tile with id \\\"{}\\\" exists.\", payload.tile_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌️delete-rule/🔺️diff/🦀️.rs",
+   "line": 9,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing-target",
+   "message": "format!(\"No rule with id \\\"{}\\\" exists.\", payload.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️unpin-cell/🔺️diff/🦀️.rs",
+   "line": 10,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing-target",
+   "message": "format!(\"Cell {key} carries no pin.\")"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔓️unmask-cell/🔺️diff/🦀️.rs",
+   "line": 10,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing-target",
+   "message": "format!(\"Cell {key} is not masked.\")"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️delete-tile/🔺️diff/🦀️.rs",
+   "line": 9,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing-target",
+   "message": "format!(\"No tile with id \\\"{}\\\" exists.\", payload.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-tile-media/🔺️diff/🦀️.rs",
+   "line": 9,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing-target",
+   "message": "format!(\"No tile with id \\\"{}\\\" exists.\", payload.tile_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧬️schema/🧬️mutations/📏️set-layer-stroke-scale/🦀️.rs",
+   "line": 24,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.invalid-number",
+   "message": "\"Layer stroke scale must be finite.\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 153,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.id-mismatch",
+   "message": "format!(\"A replace-{noun} selects \\\"{target}\\\" but carries a record identified \\\"{replacement}\\\"; a replacement may not rename its target.\")"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 169,
+   "kind": "outcome",
+   "method": "error",
+   "code": "mutation.target-referenced",
+   "message": "format!(\"{noun} \\\"{target}\\\" is still referenced by {count} {blocker}(s): {listed}.\")"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 109,
+   "kind": "outcome",
+   "method": "error",
+   "code": "mutation.target-referenced",
+   "message": "format!(\"{label} \\\"{id}\\\" is still referenced by {listed}.\")"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 117,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.id-mismatch",
+   "message": "format!(\"{label} \\\"{id}\\\" cannot be renamed to \\\"{new_id}\\\" by a replace.\")"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↩️discard-response/🔺️diff/🦀️.rs",
+   "line": 6,
+   "kind": "outcome",
+   "method": "error",
+   "code": "forms.missing-response",
+   "message": "\"The response does not exist.\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📨️commit-response/🔺️diff/🦀️.rs",
+   "line": 6,
+   "kind": "outcome",
+   "method": "error",
+   "code": "forms.invalid-response",
+   "message": "message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📨️commit-response/🔺️diff/🦀️.rs",
+   "line": 9,
+   "kind": "outcome",
+   "method": "error",
+   "code": "forms.duplicate-response",
+   "message": "\"A different response has this id.\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️create-character-style/🦀️.rs",
+   "line": 30,
+   "kind": "outcome",
+   "method": "error",
+   "code": "mutation.duplicate",
+   "message": "format!(\"Character style \\\"{}\\\" already exists.\", payload.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡create-energy-model/🔺️diff/🦀️.rs",
+   "line": 11,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.child-identity",
+   "message": "reason"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️create-structure-classic-model/🔺️diff/🦀️.rs",
+   "line": 11,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.child-identity",
+   "message": "reason"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢create-building-model/🔺️diff/🦀️.rs",
+   "line": 11,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.child-identity",
+   "message": "reason"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️create-drawing/🔺️diff/🦀️.rs",
+   "line": 11,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.child-identity",
+   "message": "reason"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱create-shape-model/🔺️diff/🦀️.rs",
+   "line": 11,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.child-identity",
+   "message": "reason"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/#️⃣change-bar-layer-count/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "format!(\"Member {} not found.\", payload.member_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/#️⃣change-bar-layer-count/🔺️diff/🦀️.rs",
+   "line": 11,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "format!(\"Layer {} not found.\", payload.layer_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-member-width/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "format!(\"Member {} not found.\", payload.member_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-member-height/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "format!(\"Member {} not found.\", payload.member_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↘️change-action-v-ed/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "format!(\"Member {} not found.\", payload.member_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↘️change-action-v-ed/🔺️diff/🦀️.rs",
+   "line": 11,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "format!(\"Action {} not found.\", payload.action_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-member/🔺️diff/🦀️.rs",
+   "line": 7,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.duplicate",
+   "message": "format!(\"Member id {} already exists.\", payload.member.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-member/🔺️diff/🦀️.rs",
+   "line": 7,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "format!(\"Member {} not found.\", payload.member_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️change-action-mk/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "format!(\"Member {} not found.\", payload.member_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️change-action-mk/🔺️diff/🦀️.rs",
+   "line": 11,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "format!(\"Action {} not found.\", payload.action_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⭕change-bar-layer-diameter/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "format!(\"Member {} not found.\", payload.member_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⭕change-bar-layer-diameter/🔺️diff/🦀️.rs",
+   "line": 11,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "format!(\"Layer {} not found.\", payload.layer_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️change-member-span/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "format!(\"Member {} not found.\", payload.member_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌦change-member-exposure/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "format!(\"Member {} not found.\", payload.member_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-action-n-ed/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "format!(\"Member {} not found.\", payload.member_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-action-n-ed/🔺️diff/🦀️.rs",
+   "line": 11,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "format!(\"Action {} not found.\", payload.action_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍change-anchor-h-ef/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "format!(\"Anchor {} not found.\", payload.anchor_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-member-effective-depth/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "format!(\"Member {} not found.\", payload.member_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-members/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "\"from_index out of range\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥change-member-axis-distance/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "format!(\"Member {} not found.\", payload.member_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥change-member-axis-distance/🔺️diff/🦀️.rs",
+   "line": 11,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "\"Member has no fire spec.\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-member-fire-rating/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "format!(\"Member {} not found.\", payload.member_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-member-fire-rating/🔺️diff/🦀️.rs",
+   "line": 11,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "\"Member has no fire spec.\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩change-reinforcement-f-yk/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "format!(\"Grade {} not found.\", payload.grade_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️change-member-cover/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "format!(\"Member {} not found.\", payload.member_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-concrete-f-ck/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "format!(\"Grade {} not found.\", payload.grade_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-anchor-a-s/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "format!(\"Anchor {} not found.\", payload.anchor_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢change-member-stirrup-spacing/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "format!(\"Member {} not found.\", payload.member_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢change-member-stirrup-spacing/🔺️diff/🦀️.rs",
+   "line": 11,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing",
+   "message": "\"Member has no stirrups.\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️retire-geometry-object/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing-id",
+   "message": "format!(\"Geometry \\\"{}\\\" does not exist.\", payload.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️retire-product-class/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing-id",
+   "message": "format!(\"No entity with id \\\"{}\\\" exists.\", payload.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️retire-product-index/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing-id",
+   "message": "format!(\"No entity with id \\\"{}\\\" exists.\", payload.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️retire-product-series/🔺️diff/🦀️.rs",
+   "line": 8,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.missing-id",
+   "message": "format!(\"No entity with id \\\"{}\\\" exists.\", payload.id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏁commit-reconstruction/🔺️diff/🦀️.rs",
+   "line": 14,
+   "kind": "outcome",
+   "method": "error",
+   "code": "mutation.invalid-reconstruction-sparse",
+   "message": "\"The sparse cloud names durable content that is not complete.\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏁commit-reconstruction/🔺️diff/🦀️.rs",
+   "line": 19,
+   "kind": "outcome",
+   "method": "error",
+   "code": "mutation.invalid-reconstruction-mesh",
+   "message": "\"The mesh names durable content that is not complete.\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏁commit-reconstruction/🔺️diff/🦀️.rs",
+   "line": 28,
+   "kind": "outcome",
+   "method": "error",
+   "code": "mutation.invalid-reconstruction-asset",
+   "message": "\"A bound asset names durable image content that is not complete.\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦append-content/🔺️diff/🦀️.rs",
+   "line": 17,
+   "kind": "outcome",
+   "method": "error",
+   "code": "mutation.invalid-content-chunk",
+   "message": "\"A content leaf is not base64 or exceeds the 4 KiB leaf envelope.\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦append-content/🔺️diff/🦀️.rs",
+   "line": 21,
+   "kind": "outcome",
+   "method": "error",
+   "code": "mutation.invalid-content-chunk",
+   "message": "\"An append carries no content leaves.\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦append-content/🔺️diff/🦀️.rs",
+   "line": 25,
+   "kind": "outcome",
+   "method": "error",
+   "code": "mutation.content-gap",
+   "message": "\"The first leaf index is out of range.\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦append-content/🔺️diff/🦀️.rs",
+   "line": 27,
+   "kind": "outcome",
+   "method": "error",
+   "code": "mutation.content-gap",
+   "message": "format!(\"Leaf {first} would leave a gap after {} stored leaves.\", stored.len())"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦append-content/🔺️diff/🦀️.rs",
+   "line": 31,
+   "kind": "outcome",
+   "method": "error",
+   "code": "mutation.content-kind-mismatch",
+   "message": "format!(\"Content \\\"{}\\\" is stored as another kind or presentation.\", payload.content_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦append-content/🔺️diff/🦀️.rs",
+   "line": 36,
+   "kind": "outcome",
+   "method": "error",
+   "code": "mutation.content-conflict",
+   "message": "\"An appended leaf differs from the leaf already stored at its index.\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦append-content/🔺️diff/🦀️.rs",
+   "line": 44,
+   "kind": "outcome",
+   "method": "error",
+   "code": "mutation.content-capacity",
+   "message": "format!(\"Content \\\"{}\\\" would exceed its {} envelope.\", payload.content_id, payload.kind.wire())"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔪remove-content/🔺️diff/🦀️.rs",
+   "line": 14,
+   "kind": "outcome",
+   "method": "error",
+   "code": "mutation.content-gap",
+   "message": "format!(\"Content \\\"{}\\\" stores only {stored} leaves.\", payload.content_id)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗞️delete-asset/🔺️diff/🦀️.rs",
+   "line": 27,
+   "kind": "outcome",
+   "method": "error",
+   "code": "mutation.referenced",
+   "message": "format!(\"Asset \\\"{}\\\" is still referenced by {} place(s) in the document.\", payload.key, referencing.len())"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫delete-camera-calibration/🔺️diff/🦀️.rs",
+   "line": 19,
+   "kind": "outcome",
+   "method": "error",
+   "code": "mutation.referenced",
+   "message": "format!(\"Camera calibration \\\"{}\\\" is still referenced by {} record(s); detach them first.\", payload.camera_id, referencing.len())"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱replace-mesh-result/🔺️diff/🦀️.rs",
+   "line": 11,
+   "kind": "outcome",
+   "method": "error",
+   "code": "mutation.incomplete-mesh",
+   "message": "\"The mesh names durable content that is not complete.\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷create-asset/🔺️diff/🦀️.rs",
+   "line": 19,
+   "kind": "outcome",
+   "method": "error",
+   "code": "mutation.invalid-asset-payload",
+   "message": "\"Durable content handles are bound only by CommitReconstruction.\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷create-asset/🔺️diff/🦀️.rs",
+   "line": 24,
+   "kind": "outcome",
+   "method": "error",
+   "code": "mutation.invalid-asset-payload",
+   "message": "\"The asset payload is malformed or exceeds its exact bounded envelope.\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪓delete-stream/🔺️diff/🦀️.rs",
+   "line": 17,
+   "kind": "outcome",
+   "method": "error",
+   "code": "mutation.referenced",
+   "message": "format!(\"Stream \\\"{}\\\" is still observed by {} ground control point(s); remove those observations first.\", payload.id, referencing.len())"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🔺️diff/🦀️.rs",
+   "line": 12,
+   "kind": "outcome",
+   "method": "error",
+   "code": "mutation.blend-mode-invalid",
+   "message": "\"Unsupported blend mode.\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/📝️update-text/🔺️diff/🦀️.rs",
+   "line": 4,
+   "kind": "outcome",
+   "method": "error",
+   "code": "mutation.text-missing",
+   "message": "\"The target is not an existing text layer\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/📝️update-text/🔺️diff/🦀️.rs",
+   "line": 6,
+   "kind": "outcome",
+   "method": "error",
+   "code": "mutation.invalid-text-size",
+   "message": "\"Text size must be finite and positive\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🧩️set-group-isolation/🔺️diff/🦀️.rs",
+   "line": 4,
+   "kind": "outcome",
+   "method": "error",
+   "code": "mutation.target-invalid",
+   "message": "\"Isolation needs an existing group\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/✏️update-path-geometry/🔺️diff/🦀️.rs",
+   "line": 5,
+   "kind": "outcome",
+   "method": "error",
+   "code": "mutation.path-missing",
+   "message": "\"The target is not an existing path\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/✏️update-path-geometry/🔺️diff/🦀️.rs",
+   "line": 7,
+   "kind": "outcome",
+   "method": "error",
+   "code": "mutation.invalid-geometry",
+   "message": "\"Path coordinates must be finite and radii nonnegative\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-layer-adjustment-parameter/🦀️.rs",
+   "line": 29,
+   "kind": "outcome",
+   "method": "error",
+   "code": "code",
+   "message": "\"Adjustment parameter cannot be applied to this layer revision.\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️change-layer-pixels/🦀️.rs",
+   "line": 33,
+   "kind": "outcome",
+   "method": "error",
+   "code": "code",
+   "message": "\"Pixel content cannot be applied to this image revision.\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎭️change-layer-mask/🦀️.rs",
+   "line": 33,
+   "kind": "outcome",
+   "method": "error",
+   "code": "code",
+   "message": "\"Mask cannot be applied to this layer revision.\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-layer-transform/🦀️.rs",
+   "line": 18,
+   "kind": "outcome",
+   "method": "error",
+   "code": "code",
+   "message": "\"Transform cannot be applied to this layer revision.\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️change-layer-locked/🦀️.rs",
+   "line": 16,
+   "kind": "outcome",
+   "method": "error",
+   "code": "code",
+   "message": "\"Layer protection changed before this edit.\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+   "line": 206,
+   "kind": "message",
+   "method": "error",
+   "code": "s.home.local-studio-tombstone-refused",
+   "message": "format!(\"Local studio {space_id} cannot be retired: its id is not admissible or {HOME_RETIRED_LOCAL_STUDIOS_MAXIMUM} studios are retired already.\")"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/🧬️mutations/📬️apply-directory-page/🦀️.rs",
+   "line": 22,
+   "kind": "message",
+   "method": "error",
+   "code": "code",
+   "message": "text"
+  }
+ ],
+ "Y": [
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 134,
+   "kind": "outcome",
+   "method": "error",
+   "code": "CODE_REJECTED",
+   "message": "format!(\"a member named {:?} already exists -- ISO/IEC 21320-1 containers address members by name\", entry.name)"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 137,
+   "kind": "outcome",
+   "method": "error",
+   "code": "CODE_REJECTED",
+   "message": "\"ZIP insertion anchor no longer exists\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 146,
+   "kind": "outcome",
+   "method": "error",
+   "code": "CODE_REJECTED",
+   "message": "format!(\"a member named {new_name:?} already exists\")"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 105,
+   "kind": "outcome",
+   "method": "error",
+   "code": "mutation.apply.missing-target",
+   "message": "\"ZIP insertion anchor no longer exists\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs",
+   "line": 20,
+   "kind": "outcome",
+   "method": "error",
+   "code": "error.code",
+   "message": "String::new()"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 229,
+   "kind": "outcome",
+   "method": "error",
+   "code": "CODE_REJECTED",
+   "message": "message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 240,
+   "kind": "outcome",
+   "method": "error",
+   "code": "CODE_REJECTED",
+   "message": "format!(\"attribute '{name}' is forbidden anywhere in SVG Tiny 1.1\")"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 259,
+   "kind": "outcome",
+   "method": "error",
+   "code": "CODE_REJECTED",
+   "message": "message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 267,
+   "kind": "outcome",
+   "method": "error",
+   "code": "CODE_REJECTED",
+   "message": "message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 277,
+   "kind": "outcome",
+   "method": "error",
+   "code": "CODE_REJECTED",
+   "message": "message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 285,
+   "kind": "outcome",
+   "method": "error",
+   "code": "CODE_REJECTED",
+   "message": "\"the inserted shape carries a text element -- SVG Basic 1.1 forbids clipping to text\".to_string()"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 288,
+   "kind": "outcome",
+   "method": "error",
+   "code": "CODE_REJECTED",
+   "message": "message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 292,
+   "kind": "outcome",
+   "method": "error",
+   "code": "CODE_REJECTED",
+   "message": "message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 146,
+   "kind": "outcome",
+   "method": "error",
+   "code": "stdio.ifc.2x3.cobie.mutation-rejected",
+   "message": "message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 115,
+   "kind": "outcome",
+   "method": "error",
+   "code": "stdio.ifc.2x3.cv20.mutation-rejected",
+   "message": "message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 151,
+   "kind": "outcome",
+   "method": "error",
+   "code": "stdio.ifc.2x3.sav.mutation-rejected",
+   "message": "message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs",
+   "line": 26,
+   "kind": "outcome",
+   "method": "error",
+   "code": "error.code",
+   "message": "String::new()"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 132,
+   "kind": "outcome",
+   "method": "error",
+   "code": "stdio.step.cc1.mutation-rejected",
+   "message": "message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 114,
+   "kind": "outcome",
+   "method": "error",
+   "code": "stdio.step.cc2.mutation-rejected",
+   "message": "message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 113,
+   "kind": "outcome",
+   "method": "error",
+   "code": "stdio.step.cc3.mutation-rejected",
+   "message": "message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 112,
+   "kind": "outcome",
+   "method": "error",
+   "code": "stdio.step.cc4.mutation-rejected",
+   "message": "message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 113,
+   "kind": "outcome",
+   "method": "error",
+   "code": "stdio.step.cc5.mutation-rejected",
+   "message": "message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 117,
+   "kind": "outcome",
+   "method": "error",
+   "code": "stdio.step.cc6.mutation-rejected",
+   "message": "message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 110,
+   "kind": "outcome",
+   "method": "error",
+   "code": "stdio.xlsx.canonical-edit.invalid",
+   "message": "message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🧬️schema/🧬️mutations/📉️collapse-page-size/🦀️.rs",
+   "line": 29,
+   "kind": "outcome",
+   "method": "error",
+   "code": "stdio.pdf.collapse-page-size.invalid-target",
+   "message": "\"Page target or geometry is outside the PDF 1.4 domain\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🧬️schema/🧬️mutations/📐️set-page-size/🦀️.rs",
+   "line": 35,
+   "kind": "outcome",
+   "method": "error",
+   "code": "stdio.pdf.set-page-size.invalid-target",
+   "message": "\"Page target or geometry is outside the PDF 1.4 domain\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🧬️schema/🧬️mutations/📝️set-page-text/🦀️.rs",
+   "line": 33,
+   "kind": "outcome",
+   "method": "error",
+   "code": "stdio.pdf.set-page-text.invalid-target",
+   "message": "\"Page target or geometry is outside the PDF 1.4 domain\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🧬️schema/🧬️mutations/🧹️clear-page-text/🦀️.rs",
+   "line": 29,
+   "kind": "outcome",
+   "method": "error",
+   "code": "stdio.pdf.clear-page-text.invalid-target",
+   "message": "\"Page target or geometry is outside the PDF 1.4 domain\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/♻️replace-page-text/🦀️.rs",
+   "line": 32,
+   "kind": "outcome",
+   "method": "error",
+   "code": "stdio.pdf.replace-page-text.invalid-target",
+   "message": "\"Page target or geometry is outside the PDF 1.4 domain\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📐️resize-page/🦀️.rs",
+   "line": 33,
+   "kind": "outcome",
+   "method": "error",
+   "code": "stdio.pdf.resize-page.invalid-target",
+   "message": "\"Page target or geometry is outside the PDF 1.4 domain\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📥️insert-page/🦀️.rs",
+   "line": 46,
+   "kind": "outcome",
+   "method": "error",
+   "code": "stdio.pdf.insert-page.invalid-target",
+   "message": "\"Page target or geometry is outside the PDF 1.4 domain\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🔀️move-page/🦀️.rs",
+   "line": 32,
+   "kind": "outcome",
+   "method": "error",
+   "code": "stdio.pdf.move-page.invalid-target",
+   "message": "\"Page target or geometry is outside the PDF 1.4 domain\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🗑️remove-page/🦀️.rs",
+   "line": 31,
+   "kind": "outcome",
+   "method": "error",
+   "code": "stdio.pdf.remove-page.invalid-target",
+   "message": "\"Page target or geometry is outside the PDF 1.4 domain\""
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 433,
+   "kind": "outcome",
+   "method": "error",
+   "code": "stdio.docx.xml-address.invalid",
+   "message": "message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 202,
+   "kind": "outcome",
+   "method": "error",
+   "code": "CODE_REJECTED",
+   "message": "message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-pixels/🦀️.rs",
+   "line": 49,
+   "kind": "outcome",
+   "method": "error",
+   "code": "stdio.png.patch-pixels.invalid-range",
+   "message": "message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs",
+   "line": 26,
+   "kind": "outcome",
+   "method": "error",
+   "code": "error.code",
+   "message": "String::new()"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs",
+   "line": 26,
+   "kind": "outcome",
+   "method": "error",
+   "code": "error.code",
+   "message": "String::new()"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 103,
+   "kind": "outcome",
+   "method": "error",
+   "code": "issue.code",
+   "message": "issue.message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-data/🦀️.rs",
+   "line": 69,
+   "kind": "outcome",
+   "method": "error",
+   "code": "stdio.wav.patch-data.invalid-range",
+   "message": "message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs",
+   "line": 18,
+   "kind": "outcome",
+   "method": "error",
+   "code": "error.code",
+   "message": "String::new()"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs",
+   "line": 26,
+   "kind": "outcome",
+   "method": "error",
+   "code": "error.code",
+   "message": "String::new()"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🧬️schema/🧬️mutations/🦀️.rs",
+   "line": 285,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "code",
+   "message": "message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs",
+   "line": 26,
+   "kind": "outcome",
+   "method": "error",
+   "code": "error.code",
+   "message": "String::new()"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🏷️create-properties/🔺️diff/🦀️.rs",
+   "line": 13,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.child-identity",
+   "message": "message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🕸️create-mesh/🔺️diff/🦀️.rs",
+   "line": 13,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.child-identity",
+   "message": "message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🧱create-brep/🔺️diff/🦀️.rs",
+   "line": 13,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.child-identity",
+   "message": "message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🏗️create-object/🔺️diff/🦀️.rs",
+   "line": 13,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.child-identity",
+   "message": "message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🏛️create-model/🔺️diff/🦀️.rs",
+   "line": 13,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.child-identity",
+   "message": "message"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🏷️create-properties/🔺️diff/🦀️.rs",
+   "line": 13,
+   "kind": "outcome",
+   "method": "fatal",
+   "code": "mutation.child-identity",
+   "message": "message"
+  }
+ ]
+}

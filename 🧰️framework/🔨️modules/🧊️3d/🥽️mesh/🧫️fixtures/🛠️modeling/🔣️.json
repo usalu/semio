@@ -1112,5 +1112,436 @@
       ],
       "cuts": 1
     }
+  ],
+  "bevels": [
+    {
+      "name": "single-box-edge-1",
+      "edges": [
+        [
+          3,
+          2
+        ]
+      ],
+      "amount": 0.1,
+      "segments": 1,
+      "vertices": 10,
+      "faces": 7,
+      "volume": 0.995
+    },
+    {
+      "name": "single-box-edge-2",
+      "edges": [
+        [
+          3,
+          2
+        ]
+      ],
+      "amount": 0.1,
+      "segments": 2,
+      "vertices": 12,
+      "faces": 8,
+      "volume": 0.9970710678118655
+    },
+    {
+      "name": "single-box-edge-4",
+      "edges": [
+        [
+          3,
+          2
+        ]
+      ],
+      "amount": 0.1,
+      "segments": 4,
+      "vertices": 16,
+      "faces": 10,
+      "volume": 0.9976536686473018
+    }
+  ],
+  "dissolutions": [
+    {
+      "name": "planar-four-triangle-fan",
+      "mesh": {
+        "vertices": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0.5,
+            0.5,
+            0
+          ]
+        ],
+        "faces": [
+          [
+            0,
+            1,
+            4
+          ],
+          [
+            1,
+            2,
+            4
+          ],
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            3,
+            0,
+            4
+          ]
+        ]
+      },
+      "selection": [
+        4
+      ],
+      "vertices": 4,
+      "faces": 1,
+      "area": 1
+    }
+  ],
+  "merges": [
+    {
+      "name": "adjacent-quad-corners",
+      "mesh": {
+        "vertices": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "faces": [
+          [
+            0,
+            1,
+            2,
+            3
+          ]
+        ]
+      },
+      "selection": [
+        0,
+        1
+      ],
+      "mode": "first",
+      "threshold": 0,
+      "vertices": 3,
+      "faces": 1,
+      "area": 0.5
+    },
+    {
+      "name": "distance-chain",
+      "mesh": {
+        "vertices": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0.1,
+            0,
+            0
+          ],
+          [
+            0.2,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "faces": [
+          [
+            0,
+            1,
+            2,
+            3,
+            4
+          ]
+        ]
+      },
+      "selection": [
+        0,
+        1,
+        2
+      ],
+      "mode": "distance",
+      "threshold": 0.11,
+      "vertices": 3,
+      "faces": 1,
+      "area": 0.5
+    }
+  ],
+  "proportional": {
+    "mesh": {
+      "vertices": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0.5,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          1,
+          2,
+          3
+        ]
+      ]
+    },
+    "selection": [
+      0,
+      0
+    ],
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "delta": [
+      0,
+      0,
+      1
+    ],
+    "radius": 1,
+    "expected": [
+      [
+        0,
+        0,
+        1
+      ],
+      [
+        0.5,
+        0,
+        0.5
+      ],
+      [
+        2,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ]
+    ]
+  },
+  "snapping": {
+    "mesh": {
+      "vertices": [
+        [
+          0.1,
+          0.1,
+          0.1
+        ],
+        [
+          1.1,
+          0.1,
+          0.6
+        ],
+        [
+          0.1,
+          1.1,
+          0.1
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          1,
+          2
+        ]
+      ]
+    },
+    "selection": [
+      0,
+      1,
+      2,
+      1
+    ],
+    "grid": 1,
+    "expected": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        0,
+        1,
+        0
+      ]
+    ]
+  },
+  "mirrors": [
+    {
+      "name": "half-box-seam",
+      "axis": "x",
+      "translation": [
+        0.5,
+        0,
+        0
+      ],
+      "threshold": 0.0001,
+      "vertices": 12,
+      "faces": 10,
+      "area": 10,
+      "volume": 2
+    }
+  ],
+  "decimations": [
+    {
+      "name": "closed-box",
+      "ratio": 0.75,
+      "maximumVertices": 6,
+      "minimumVolume": 0.1
+    }
+  ],
+  "normals": {
+    "mesh": {
+      "vertices": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          0,
+          2,
+          3
+        ],
+        [
+          0,
+          3,
+          1
+        ]
+      ]
+    },
+    "smoothFaces": [
+      0,
+      1
+    ],
+    "vertex": 0,
+    "expected": [
+      0.7071067811865476,
+      0,
+      0.7071067811865476
+    ]
+  },
+  "jobs": [
+    {
+      "name": "segmented-bevel-sliced",
+      "operation": "bevel",
+      "amount": 0.1,
+      "segments": 4,
+      "edges": [
+        0
+      ],
+      "budgets": [
+        0,
+        1,
+        3
+      ],
+      "minimumSteps": 12
+    },
+    {
+      "name": "decimation-candidates-sliced",
+      "operation": "decimate",
+      "ratio": 0.5,
+      "budgets": [
+        0,
+        1,
+        3
+      ],
+      "minimumSteps": 3
+    }
   ]
 }

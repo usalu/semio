@@ -1,3 +1,5 @@
+import { BROWSER_MEDIA_CAPACITY, mediaSlotAuthorityKey, parsePresentedMediaSlots, type BrowserMediaCommand, type BrowserMediaOperation, type BrowserMediaResult, type BrowserMediaRelease, type BrowserMediaValue, type PresentedMediaSlot } from "../../../🎬️media/🌐️browser/🟦️.ts";
+import type { MediaTransportPort } from "../../../🎬️media/🚚️lifecycle/🟦️.ts";
 // #region 🔖️Protocol
 /** 🧵️ Browser UI-to-frame-Worker protocol with bounded lossless and latest-wins lanes. */
 
@@ -318,7 +320,7 @@ export type BrowserFrameHostIoResult = { readonly kind: "host-io-result"; readon
 
 export type BrowserFrameImageDecodeResult = { readonly kind: "image-decode-result"; readonly lifecycle: number; readonly requestId: number; readonly bitmap: ImageBitmap | null; readonly detail?: string };
 
-export type BrowserFrameUiMessage = BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | BrowserFrameShardPort | BrowserFrameHostIoResult | BrowserFrameImageDecodeResult | BrowserFrameHostAppearance | BrowserFrameHostStorage | BrowserFrameHostAgentBridge | { readonly kind: "close"; readonly lifecycle: number };
+export type BrowserFrameUiMessage = BrowserMediaRelease | BrowserMediaCommand | BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | BrowserFrameShardPort | BrowserFrameHostIoResult | BrowserFrameImageDecodeResult | BrowserFrameHostAppearance | BrowserFrameHostStorage | BrowserFrameHostAgentBridge | { readonly kind: "close"; readonly lifecycle: number };
 
 /** 🧵️ The frame Worker's own step ledger, as the UI isolate sees it. The Worker prices its steps
  * against `WORKER_STEP_BUDGET_MS` with the same executing-span law the UI isolate uses for its turns
@@ -332,6 +334,7 @@ export type BrowserFrameWorkerStepReport = {
 };
 
 export type BrowserFrameWorkerMessage =
+  | BrowserMediaResult
   | { readonly kind: "boot-progress"; readonly lifecycle: number; readonly stage: string; readonly progress: number; readonly worker: BrowserFrameWorkerStepReport }
   | { readonly kind: "boot-liveness"; readonly lifecycle: number }
   /** 🧭️ The Worker DECLARING that it is about to block on one browser-owned phase, posted while its
@@ -345,6 +348,7 @@ export type BrowserFrameWorkerMessage =
   | { readonly kind: "batch-accepted"; readonly lifecycle: number; readonly inputSequence: number; readonly generation: number }
   | {
       readonly kind: "frame";
+      readonly mediaSlots: readonly PresentedMediaSlot[];
       readonly lifecycle: number;
       readonly frameSequence: number;
       readonly generation: number;
@@ -385,6 +389,7 @@ export interface BrowserFrameWorkerPort {
 }
 
 export type BrowserFrameDirectives = {
+  readonly mediaSlots: readonly PresentedMediaSlot[];
   readonly cursor: string;
   readonly fullscreen: boolean | null;
   readonly generation: number;
@@ -469,6 +474,9 @@ export class BrowserFrameTransport {
   private acceptedFrameSequence = 0;
   private inFlight = false;
   private frameRequested = false;
+  private mediaSlots = new Map<string, PresentedMediaSlot>();
+  private mediaRequestId = 0;
+  private readonly mediaPending = new Map<number, { readonly token: string; readonly resolve: (value: BrowserMediaValue) => void; readonly reject: (error: Error) => void; readonly timer: number }>();
   private rafHandle: number | undefined;
   private deadlineTimer: number | undefined;
   private bootTimer: number | undefined;
@@ -593,6 +601,54 @@ export class BrowserFrameTransport {
     this.generation++;
     this.requestFrame();
     return true;
+  }
+
+  /** 🎬️ Creates the serial runner's bounded port for an accepted resource token. */
+  mediaPort(slotToken: string): MediaTransportPort {
+    const send = (instanceId: number, operation: BrowserMediaOperation): Promise<BrowserMediaValue> => {
+      const slot = this.mediaSlots.get(slotToken);
+      if (this.status !== "ready" || !slot || slot.appInstanceId !== instanceId) return Promise.reject(new Error("browser-media.retired"));
+      if ([...this.mediaPending.values()].some((pending) => pending.token === slotToken)) return Promise.reject(new Error("browser-media.in-flight"));
+      if (this.mediaPending.size >= BROWSER_MEDIA_CAPACITY.slots) return Promise.reject(new Error("browser-media.capacity"));
+      const requestId = ++this.mediaRequestId;
+      return new Promise((resolve, reject) => {
+        const timer = this.setTimer(() => {
+          this.mediaPending.delete(requestId);
+          this.mediaSlots.delete(slotToken);
+          try { this.worker.postMessage({ kind: "media-release", lifecycle: this.lifecycle, slotToken }); } catch {}
+          reject(new Error("browser-media.timeout"));
+        }, BROWSER_MEDIA_CAPACITY.commandTimeoutMs);
+        this.mediaPending.set(requestId, { token: slotToken, resolve, reject, timer });
+        try { this.worker.postMessage({ kind: "media-command", lifecycle: this.lifecycle, requestId, slotToken, ...operation }); }
+        catch (error) { this.mediaPending.delete(requestId); this.clearTimer(timer); reject(error instanceof Error ? error : new Error(String(error))); }
+      });
+    };
+    return {
+      submitMediaExport: async (instanceId, port, parentDocumentId, revision) => {
+        const slot = this.mediaSlots.get(slotToken);
+        if (!slot?.props.resource || port !== slot.props.resource.outputPort || parentDocumentId !== slot.parentDocumentId || revision !== BigInt(slot.props.revision)) throw new Error("browser-media.owner");
+        return await send(instanceId, { operation: "submit" }) as Awaited<ReturnType<MediaTransportPort["submitMediaExport"]>>;
+      },
+      pollMediaExport: async (instanceId, handle) => await send(instanceId, { operation: "poll", handle }) as Awaited<ReturnType<MediaTransportPort["pollMediaExport"]>>,
+      cancelMediaExport: async (instanceId, handle) => { await send(instanceId, { operation: "cancel", handle }); },
+      takeMediaExportChunk: async (instanceId, handle) => await send(instanceId, { operation: "take", handle }) as Awaited<ReturnType<MediaTransportPort["takeMediaExportChunk"]>>,
+    };
+  }
+
+  private acceptMediaSlots(value: unknown): readonly PresentedMediaSlot[] {
+    const slots = parsePresentedMediaSlots(value);
+    const next = new Map(slots.map((slot) => [slot.token, slot]));
+    for (const [requestId, pending] of this.mediaPending) {
+      const before = this.mediaSlots.get(pending.token);
+      const after = next.get(pending.token);
+      if (!before || !after || mediaSlotAuthorityKey(before) !== mediaSlotAuthorityKey(after)) {
+        this.mediaPending.delete(requestId);
+        this.clearTimer(pending.timer);
+        pending.reject(new Error("browser-media.retired"));
+      }
+    }
+    this.mediaSlots = next;
+    return slots;
   }
 
   /** 🎞️ Coalesces frame requests and schedules at most one UI rAF directive turn. */
@@ -922,6 +978,16 @@ export class BrowserFrameTransport {
       this.imageDecodes.get(message.requestId)?.abort();
       return;
     }
+    if (message.kind === "media-result") {
+      const pending = this.mediaPending.get(message.requestId);
+      if (!pending || pending.token !== message.slotToken) return;
+      this.mediaPending.delete(message.requestId);
+      this.clearTimer(pending.timer);
+      if (message.fault !== undefined) pending.reject(new Error(message.fault));
+      else if (message.result !== undefined) pending.resolve(message.result);
+      else pending.reject(new Error("browser-media.missing-result"));
+      return;
+    }
     if (message.kind === "introspection") {
       const pending = this.introspections.get(message.requestId);
       if (!pending) return;
@@ -1006,7 +1072,10 @@ export class BrowserFrameTransport {
       return;
     }
     if (message.generation === this.generation) {
-      if (!this.runUiHook("directive-hook", () => this.onDirectives?.({ cursor: message.cursor, fullscreen: message.fullscreen, generation: message.generation, workerDurationMs: message.workerDurationMs }))) return;
+      let mediaSlots: readonly PresentedMediaSlot[];
+      try { mediaSlots = this.acceptMediaSlots(message.mediaSlots); }
+      catch (error) { this.fail("protocol-violation", error instanceof Error ? error.message : String(error)); return; }
+      if (!this.runUiHook("directive-hook", () => this.onDirectives?.({ mediaSlots, cursor: message.cursor, fullscreen: message.fullscreen, generation: message.generation, workerDurationMs: message.workerDurationMs }))) return;
     }
     if (message.requestFrame || this.frameRequested || message.generation < this.generation) this.requestFrame();
     else if (message.generation === this.generation) this.replaceDeadlineTimer(message.nextDeadlineDelayMs);
@@ -1071,6 +1140,9 @@ export class BrowserFrameTransport {
   }
 
   private clearQueues(): void {
+    for (const pending of this.mediaPending.values()) { this.clearTimer(pending.timer); pending.reject(new Error("browser-media.closed")); }
+    this.mediaPending.clear();
+    this.mediaSlots.clear();
     this.clearDeadlineTimer();
     for (const controller of this.imageDecodes.values()) controller.abort();
     this.imageDecodes.clear();

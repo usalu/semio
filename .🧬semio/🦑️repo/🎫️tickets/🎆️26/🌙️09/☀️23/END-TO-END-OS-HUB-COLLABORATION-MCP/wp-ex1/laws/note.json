@@ -1,0 +1,22 @@
+{
+ "plugin": "note",
+ "dir": "🗒️note",
+ "apps": [
+  {
+   "app": "s.note.note@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "crate::editor::note::NotePlayApp",
+   "create": "crate::editor::note::create_note_app",
+   "app": "s.note.note@1/*#editor"
+  }
+ ]
+}

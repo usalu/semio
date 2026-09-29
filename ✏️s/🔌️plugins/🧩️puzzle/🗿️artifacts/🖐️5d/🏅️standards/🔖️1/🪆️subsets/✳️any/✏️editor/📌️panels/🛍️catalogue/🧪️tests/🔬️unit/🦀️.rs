@@ -79,10 +79,18 @@ fn the_catalogue_stamps_every_section_and_never_pages() {
     drain_retired_ui_owners();
 }
 
+/// 🎯️ The verb a row activates — its ONE target's activation.
+fn activation_of(row: &BuiltNode) -> Option<String> {
+    match &row.component {
+        semio_framework_ui_contract::Component::TreeItem(props) => props.target.as_ref().and_then(|target| target.activation.as_ref()).map(|activation| activation.as_str().to_string()),
+        _ => None,
+    }
+}
+
 /// 🪟️ (c) A host window materialises exactly `[offset, offset + rows)`; every part row keeps its own
-/// `addPartKind` binding, because a catalogue row is not a pick target.
+/// `addPartKind` activation, because a catalogue row is not a pick target.
 #[test]
-fn a_catalogue_window_materialises_its_slice_with_row_bindings_intact() {
+fn a_catalogue_window_materialises_its_slice_with_row_activations_intact() {
     drain_retired_ui_owners();
     let scene = scaled_scene(SCALE_KINDS);
     let (offset, rows) = (70u32, 8u32);
@@ -98,7 +106,7 @@ fn a_catalogue_window_materialises_its_slice_with_row_bindings_intact() {
     let keys: Vec<String> = parts.children.iter().map(|child| child.key.as_str().to_string()).collect();
     assert_eq!(keys, (offset..offset + rows).map(|index| format!("{PARTS_SECTION}.{index}.kind-{index}")).collect::<Vec<_>>());
     for row in parts.children.iter() {
-        assert_eq!(row.bindings.len(), 1, "catalogue row {} keeps its own addPartKind binding", row.key.as_str());
+        assert_eq!(activation_of(row).as_deref(), Some("addPartKind"), "catalogue row {} keeps its own addPartKind activation", row.key.as_str());
     }
     drop(tree);
     drain_retired_ui_owners();
@@ -132,7 +140,7 @@ fn a_catalogue_less_document_offers_the_kinds_it_already_names() {
     assert_eq!(window_of(parts).expect("the parts section stamps its window").total, 2, "two distinct part kinds, not three parts");
     assert_eq!(parts.children.len(), 2);
     for row in parts.children.iter() {
-        assert_eq!(row.bindings.len(), 1, "an inferred part row keeps its own addPartKind binding: {}", row.key.as_str());
+        assert_eq!(activation_of(row).as_deref(), Some("addPartKind"), "an inferred part row keeps its own addPartKind activation: {}", row.key.as_str());
     }
     let grips = child_of(&tree, GRIPS_SECTION);
     assert_eq!(window_of(grips).expect("the grips section stamps its window").total, 1, "one distinct grip kind");

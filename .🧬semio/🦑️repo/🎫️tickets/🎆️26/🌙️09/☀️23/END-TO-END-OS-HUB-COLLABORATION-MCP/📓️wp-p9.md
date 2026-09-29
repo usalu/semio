@@ -7,6 +7,36 @@ precondition. G12 owns the MCP host + battery, S19 norm, LB2 stdio snapshot sche
 serves 6680–6689. Scripts + patches `wp-p9/`; captures `wp-p9/generated/` (expendable); binaries
 `CARGO_TARGET_DIR=wp-p9/target`; overlay + durable logs `.🧬semio/🌐hub/s14-p9-*`.
 
+## Session 15
+
+Successor P9 agent, 2026-09-29 from 19:3x (predecessor died ~18:45 without handover; GUEST FREEZE on until "WINDOW 5 OPEN").
+
+| # | Item | Status |
+|---|---|---|
+| 0 | Reconcile (rule 30): orphan `overlay-t7-1`, tree hunks, prepared set | **done 19:3x**: `overlay-t7-1` ran 18:59–19:02 **EXIT 101** (compile red, 12 × E0277 in the job's own unit tests — `JackQueryWork::new(…, "editor".into(), "results".into(), …)` ×6 call sites; the set changed both ids to `Option<String>` but did not stage that test file). Tree carries no P9 T7 text (law 0×; dry-run clean); stage `--status`: all 3 files `tree=base` (no drift) |
+| 1 | T7c `p9-jack-headless-query` fixed + re-proven | **set fixed, dry-run clean on live 19:3x (22 hunks / 4 files)**; overlay `overlay-t7-2` QUEUED 19:35:52 (4th: c13 holding, sh2, u6, c12) |
+| 2 | Trinity agent path over the semio MCP (G12 battery rows jack/rewriting) | **runbook ready** `wp-p9/p9-trinity-mcp.sh <tag> [hub]` (G12's hub-lane coverage with `S_OS_MCP_COVERAGE_PLUGINS=trinity,rewriting`, G12 gateway s15b/codecpage, user1 env); waits "T6 HUB READY" relay. Baseline p33-3: rewriting PASS (setParameter 0→1, undo/redo, export), jack ✗mutate (patchNodes INPUT_INVALID, loadExampleQuery/runQuery INTERNAL window capture = T7c, setActiveExample uncarried, deleteSelection no-change) |
+| 3 | jack-LSP module removal | **HELD** (human decision on the bundle `AGENTS.md`) — not touched |
+
+Log 15:
+
+- 19:3x read preambles 15/14, `📓️fleet-15-agents.md` (no WINDOW 5 OPEN), T7c row. Orphan capture
+  `.🧬semio/🌐hub/s14-p9-logs/overlay-t7-1.txt` (QUEUED 18:26:09, START 18:59:32, EXIT 101 19:02:39): the only errors are the 12
+  `Option<String>: From<&str>` in `🎮️commands/▶️run-query/🧵️job/🧪️tests/🔬️unit/🦀️.rs` l.11–32 (jack lib itself compiled).
+- 19:3x fix: staged that file (`p9-stage.py`), wrapped the 6 call sites' window ids in `Some(…)` and added the job law
+  `query_checkpoint_restores_a_headless_run_and_refuses_a_half_named_window_pair` (headless `None/None` restores; a half-named pair
+  is refused — the restore rule the set introduced). `p9-regen-t7.sh` lists the file; doc updated. Regenerated
+  `patches/p9-jack-headless-query.py`: **22 hunks / 4 files, dry run clean on the live tree**. No other Rust user of the jack
+  command's `results_window_id` in `✏️s`/`🧰️framework` (generation3d's is its own); the TS window-config fixture names shell pairs
+  only (unchanged). `p9-fmtcheck.py`: 95 added lines, 19 flagged = the job test file's pre-existing top-level 4-space layout
+  (whole file) + the 3 known editor-test lines — both follow the files' existing layout.
+- 19:35 overlay refreshed (`p9-overlay.py`: 71 re-cloned; log `s14-p9-logs/overlay-refresh-t7-2.txt`), set written INTO THE
+  OVERLAY ONLY (4 files == stage, cmp); tree untouched. `overlay-t7-2` queued (pid 17148, capture
+  `.🧬semio/🌐hub/s14-p9-logs/overlay-t7-2.txt`): jack `--lib` filters `query an_agent patch_nodes agent_lane`, private
+  build-dir `s14-p9-build` / target `s14-p9-target` (delete both after the proof is recorded).
+- 19:4x `wp-p9/p9-trinity-mcp.sh` written (not run: waits T6 HUB READY). Overlay lane: c13 holding since 19:27, then sh2, u6,
+  c12, p9. Turn ended waiting (rule 32); main messaged.
+
 ## Session 14
 
 | # | Item | Status |
@@ -245,6 +275,31 @@ twins green, overlay law proof queued.
   `Refused app.command.no-effect`).
 - 12:19 `overlay-t6-4` queued (11th; lanes busy): same crates + `semio-framework-os-mcp` (`a_verb_whose_lane`, `map_fault`),
   confirms the puzzle/wires pins and the host mapping. Set 30 hunks / 14 files, dry run clean.
+- 13:19–13:30 **`overlay-t6-4` EXIT 0** (capture `.🧬semio/🌐hub/s14-p9-logs/overlay-t6-4.txt`): SDK 4/4, os-mcp 1/1
+  (no-effect mapping), flow 3/3, puzzle 2d/3d/5d 1/1 each (pins confirmed), wires 1/1 (inline interaction verb = selection),
+  jack 5/5, writer 1/1, architect 1/1. Relayed L1. The set landed in T6 round 1 (tree carries it; the carriage fixture has
+  `carriedOps`, `presentation`, `interactionVerbs`, 15 cases).
+
+#### 14c — 2026-09-29 18:2x: T7c set `p9-jack-headless-query` (trinity query verbs need no window)
+
+**T7 set: p9-jack-headless-query** — `wp-p9/patches/p9-jack-headless-query.py` (stage `.🧬semio/🌐hub/s14-p9-stage-t7`, regen
+`wp-p9/p9-regen-t7.sh`) — **crates:** semio-s-artifact-trinity-jack. Status: prepared, dry run clean (19 hunks / 3 files).
+
+- Root cause (G12 §14c: `loadExampleQuery` "targeted window transient capture requires an attached window instance"):
+  `RunQuery`/`LoadExampleQuery` carried a REQUIRED `results_window_id`; `retained_window_transient_target` made the SDK capture that
+  window's transient and `build_job` required the editor+results window pair and its transient snapshot BEFORE any document
+  work — so the document effect (adopt the query = `set_query`, C12's T6 row 13; CREATE/SET/DELETE graph mutations) needed
+  window state a headless agent never has. C12's row 13 (query in the document) did not change that requirement.
+- Fix: `results_window_id: Option<String>` (declared arg optional; en + de descriptions: the graph change always, the matches
+  only in a named results window); the SDK capture/`build_job` window checks only for a named results window; the job publishes
+  the results-window transient only then; headless checkpoint restore allowed (editor and results window both named or both
+  absent). Shell path unchanged. Descriptor regenerates at the chain's describe step (already stale vs source).
+- Law (jack AgentLaneLaws): `an_agent_runs_jack_queries_whose_document_effect_needs_no_window` — `probe_agent_lane` over
+  `loadExampleQuery` (Set Label example) + `runQuery` (`CREATE (n:Piece)`): both write the document on the agent AND the shell lane,
+  no divergence. Unit tests: 7 command literals → `Some(window)`. rustfmt: changed job statements in rustfmt form; 3 test lines
+  keep the file's pre-existing (non-rustfmt) layout.
+- 18:26 overlay refreshed (1 191 files incl. the T6 landing), set applied (== stage); `overlay-t7-1` queued: jack `--lib` filters
+  `query an_agent patch_nodes agent_lane`. Row T7c in `📓️t6-queue.md`; relayed the coordinator.
 
 ### Log
 

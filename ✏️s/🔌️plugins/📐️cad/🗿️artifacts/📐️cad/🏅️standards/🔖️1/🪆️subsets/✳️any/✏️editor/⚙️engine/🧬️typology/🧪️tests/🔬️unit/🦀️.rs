@@ -30,6 +30,31 @@ fn every_attribute_definition_asset_parses() {
     assert_eq!(material.targets, vec!["edge", "wire", "face", "solid"]);
     assert_eq!(material.geometry_selector.as_ref().map(|selector| selector.kinds.clone()), Some(vec!["edge".to_string(), "wire".to_string(), "face".to_string(), "solid".to_string()]));
 }
+/// 🗂️ LAW: every typology folder on disk (`<model definition>/🗂️typologies/<typology>/`) holds exactly the fixed
+/// `🔣️typology.json` — the filename the TS runtime glob and the artifact projection golden
+/// (`📚️library/🧫️fixtures/📐️cad-draw-path-projection`, `fixedSourceFilename`) declare — and this registry embeds every one
+/// of them byte for byte. A renamed asset used to vanish from the TS registry silently while this one still embedded it.
+#[test]
+fn every_typology_folder_holds_the_fixed_filename_and_is_embedded() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions");
+    let mut on_disk = Vec::new();
+    for model_definition in std::fs::read_dir(&root).expect("model definitions root") {
+        let Ok(folders) = std::fs::read_dir(model_definition.expect("model definition").path().join("🗂️typologies")) else {
+            continue;
+        };
+        for folder in folders {
+            let folder = folder.expect("typology folder").path();
+            let names: Vec<String> = std::fs::read_dir(&folder).expect("typology folder entries").map(|entry| entry.expect("typology entry").file_name().to_string_lossy().into_owned()).collect();
+            assert_eq!(names, vec!["🔣️typology.json".to_string()], "{} must hold exactly the fixed 🔣️typology.json", folder.display());
+            on_disk.push(std::fs::read_to_string(folder.join("🔣️typology.json")).expect("typology asset"));
+        }
+    }
+    assert_eq!(on_disk.len(), RAW_TYPOLOGY_ASSETS.len(), "typology folders on disk vs embedded typology assets");
+    for raw in &on_disk {
+        assert!(RAW_TYPOLOGY_ASSETS.iter().any(|(_, embedded)| embedded == raw), "a typology on disk is not embedded: {}", &raw[..raw.len().min(160)]);
+    }
+}
+
 //#endregion 🔖️Assets
 
 //#region 🔖️Catalog

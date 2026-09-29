@@ -12,11 +12,11 @@
 use crate::editor::lowpoly::engine::LowpolyDocument;
 use crate::editor::lowpoly::terminology::LowpolyLabels;
 use crate::editor::lowpoly::view::{document_object_row_id, document_target_row_id, resolve_active_object_id, LowpolyView, MESH_GRANULARITY_OBJECT, MESH_INTERACTION_DOMAIN};
-use crate::editor::lowpoly::{lowpoly_action, ui_label, ui_value_list, ui_value_map, ui_value_number, LOWPOLY_PLAY_CONTROLLER_ID};
+use crate::editor::lowpoly::{ui_label, ui_value_list, ui_value_map, ui_value_number, LOWPOLY_PLAY_CONTROLLER_ID};
 use crate::LowpolyObject;
-use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Buildable, BuiltNode, HasBase, RowAction, RowActionPlacement, Trigger};
+use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, RowActionPlacement};
 use semio_framework_plugin::{
-    tree_window_item, LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
+    row_action, row_target, tree_window_item, LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
 };
 use semio_framework_ui_contract as ui;
 
@@ -77,18 +77,12 @@ fn component_groups(object: &LowpolyObject, doc: &LowpolyDocument, labels: &Lowp
     ]
 }
 
-/// 🔁️ A face row keeps its own `flipFaces` menu action — a row action is not a pick, so it survives
-/// the domain migration untouched.
+/// 🔁️ A face row keeps its own `flipFaces` menu action on the row's ONE target `{faceIds}` — a row action is not a pick,
+/// so it survives the domain migration untouched.
 fn with_flip_normal(item: ui::TreeItemBuilder, id: u32, labels: &LowpolyLabels) -> UiAssemblyResult<ui::TreeItemBuilder> {
     let face_ids = ui_value_list([ui_value_number(f64::from(id))])?;
-    let (action, args) = lowpoly_action("flipFaces", Some(ui_value_map([("faceIds", face_ids)])?))?;
-    item.try_row_action(RowAction {
-        icon: ui_key("flip-vertical", "lowpoly face action icon admission failed")?,
-        label: Some(ui_label(labels.flip_normal.as_str())?),
-        action: ActionBinding { trigger: Trigger::Activate, action, args, capability: None },
-        placement: RowActionPlacement::Menu,
-    })
-    .map_err(|_| admission("lowpoly face row action admission failed"))
+    let target = row_target(LOWPOLY_PLAY_CONTROLLER_ID, Some(ui_value_map([("faceIds", face_ids)])?), None)?;
+    item.target(target).try_row_action(row_action("flip-vertical", labels.flip_normal.as_str(), "flipFaces", RowActionPlacement::Menu)?).map_err(|_| admission("lowpoly face row action admission failed"))
 }
 
 fn element_row(object_id: &str, group: &ComponentGroup, id: u32, labels: &LowpolyLabels) -> UiAssemblyResult<BuiltNode> {

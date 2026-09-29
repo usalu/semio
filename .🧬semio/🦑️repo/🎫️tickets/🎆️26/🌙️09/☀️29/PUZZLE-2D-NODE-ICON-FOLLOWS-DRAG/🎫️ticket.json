@@ -1,0 +1,11 @@
+{
+  "title": "Puzzle 2d Node Icon Follows Drag",
+  "emoji": "🗺️",
+  "status": "closed",
+  "description": "When a puzzle 2d node is dragged, the icon inside the node stays frozen at its previous position while the node body moves. The icon must stay centered in the node for the whole drag and after release.",
+  "summary": "Node icons stay on the node during a drag. The icon cache keeps one span per node and, while the previous icon scene is still retiring, draws that span at the node's live center. A stationary neighbor stays put. Covered by dragged_node_icon_stays_on_the_node_while_icon_cache_retirement_is_pending.",
+  "goal": "🎯runningpuzzle2d",
+  "sessions": [
+    "⚪fa5195af522a42aea835be4d4e2a6619"
+  ]
+}

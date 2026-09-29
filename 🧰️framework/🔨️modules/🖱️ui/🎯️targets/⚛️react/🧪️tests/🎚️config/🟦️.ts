@@ -22,6 +22,7 @@ export default defineConfig({
     name: "@semio-tech/ui-react",
     environment: "jsdom",
     include: [
+      "../../../../🧱️elements/🎨️Canvas/🧪️tests/🎯️stack-drop-destination/🟦️.tsx",
       "../../../../🧱️elements/☑️Checkbox/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/💡️ChromeControlHint/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/🐚️ShellScope/🧪️tests/🧩️component/🟦️.tsx",

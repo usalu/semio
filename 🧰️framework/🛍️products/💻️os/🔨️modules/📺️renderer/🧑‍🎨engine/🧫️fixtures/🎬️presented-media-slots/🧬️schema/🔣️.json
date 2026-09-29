@@ -1,0 +1,308 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Presented Media Slot Laws",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "slotCapacity",
+    "descriptorBytes",
+    "cases",
+    "occlusionCases",
+    "tokenIdentity",
+    "token",
+    "identityTransitions"
+  ],
+  "properties": {
+    "slotCapacity": {
+      "const": 32
+    },
+    "descriptorBytes": {
+      "const": 65536
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "localRect",
+          "body",
+          "expectedCount",
+          "expectedOccluded"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "localRect": {
+            "$ref": "#/$defs/rect"
+          },
+          "parentRect": {
+            "$ref": "#/$defs/rect"
+          },
+          "scrollOffset": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "x",
+              "y"
+            ],
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              }
+            }
+          },
+          "body": {
+            "$ref": "#/$defs/rect"
+          },
+          "expectedCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "expectedOccluded": {
+            "type": "boolean"
+          },
+          "expectedRect": {
+            "$ref": "#/$defs/rect"
+          },
+          "expectedClip": {
+            "$ref": "#/$defs/rect"
+          },
+          "resourceOverride": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "controllerId": {
+                "type": "string"
+              },
+              "appInstanceId": {
+                "type": "integer"
+              },
+              "parentDocumentId": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "expectedCount": {
+                  "const": 1
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "expectedRect",
+                "expectedClip"
+              ],
+              "properties": {
+                "expectedRect": {
+                  "$ref": "#/$defs/rect"
+                },
+                "expectedClip": {
+                  "$ref": "#/$defs/rect"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "occlusionCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "media",
+          "body",
+          "frames",
+          "occluded"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "media": {
+            "$ref": "#/$defs/rect"
+          },
+          "body": {
+            "$ref": "#/$defs/rect"
+          },
+          "frames": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/rect"
+            }
+          },
+          "occluded": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "tokenIdentity": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8
+    },
+    "token": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "identityTransitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operation",
+          "document"
+        ],
+        "properties": {
+          "operation": {
+            "enum": [
+              "begin",
+              "accept",
+              "retire"
+            ]
+          },
+          "request": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "instance": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "replyDocument": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "document": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 512
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "operation": {
+                  "const": "begin"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "request"
+              ],
+              "properties": {
+                "request": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "operation": {
+                  "const": "accept"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "request",
+                "instance",
+                "replyDocument",
+                "accepted"
+              ],
+              "properties": {
+                "request": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                },
+                "instance": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4294967295
+                },
+                "replyDocument": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "minLength": 1,
+                  "maxLength": 512
+                },
+                "accepted": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "rect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number",
+          "minimum": 0
+        },
+        "height": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

@@ -9,8 +9,16 @@
       "declaredOn": "plugin",
       "execution": "isolated",
       "targets": [
-        { "role": "editor", "surfaceId": "s.fixture.document@1/*#editor", "write": true },
-        { "role": "viewer", "surfaceId": "s.fixture.document@1/*#viewer", "write": false }
+        {
+          "role": "editor",
+          "surfaceId": "s.fixture.document@1/*#editor",
+          "write": true
+        },
+        {
+          "role": "viewer",
+          "surfaceId": "s.fixture.document@1/*#viewer",
+          "write": false
+        }
       ]
     },
     {
@@ -19,8 +27,16 @@
       "declaredOn": "plugin-and-editor",
       "execution": "isolated",
       "targets": [
-        { "role": "editor", "surfaceId": "s.fixture.document@1/*#editor", "write": true },
-        { "role": "viewer", "surfaceId": "s.fixture.document@1/*#viewer", "write": false }
+        {
+          "role": "editor",
+          "surfaceId": "s.fixture.document@1/*#editor",
+          "write": true
+        },
+        {
+          "role": "viewer",
+          "surfaceId": "s.fixture.document@1/*#viewer",
+          "write": false
+        }
       ]
     },
     {
@@ -43,8 +59,16 @@
       "declaredOn": "editor",
       "execution": "isolated",
       "targets": [
-        { "role": "editor", "surfaceId": "s.fixture.document@1/*#editor", "write": true },
-        { "role": "viewer", "surfaceId": "s.fixture.document@1/*#viewer", "write": false }
+        {
+          "role": "editor",
+          "surfaceId": "s.fixture.document@1/*#editor",
+          "write": true
+        },
+        {
+          "role": "viewer",
+          "surfaceId": "s.fixture.document@1/*#viewer",
+          "write": false
+        }
       ]
     },
     {
@@ -52,6 +76,49 @@
       "kindId": "s.fixture.document",
       "declaredOn": "plugin",
       "execution": "linked",
+      "targets": []
+    },
+    {
+      "name": "hosted-kind-named-by-the-host-dialect",
+      "kindId": "s.fixture.document",
+      "declaredOn": "hosted",
+      "execution": "isolated",
+      "targets": [
+        {
+          "role": "editor",
+          "surfaceId": "s.fixture.document@1/*#editor",
+          "write": true
+        },
+        {
+          "role": "viewer",
+          "surfaceId": "s.fixture.document@1/*#viewer",
+          "write": false
+        }
+      ]
+    },
+    {
+      "name": "hosted-kind-presented-by-the-host-editor",
+      "kindId": "3d.fixture",
+      "declaredOn": "hosted-presented",
+      "execution": "isolated",
+      "targets": [
+        {
+          "role": "editor",
+          "surfaceId": "s.fixture.document@1/*#editor",
+          "write": true
+        },
+        {
+          "role": "viewer",
+          "surfaceId": "s.fixture.document@1/*#viewer",
+          "write": false
+        }
+      ]
+    },
+    {
+      "name": "hosted-kind-neither-named-nor-presented",
+      "kindId": "3d.fixture",
+      "declaredOn": "hosted",
+      "execution": "isolated",
       "targets": []
     }
   ]

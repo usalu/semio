@@ -743,6 +743,7 @@ opt-level = 2
 # (5 957 823 B over), of which the `name` section is 149 945 913 B (54.6 %) and code 110 488 426 B;
 # its wasm-release component ships 53 681 326 B without that section. Same trade, stdio-only.
 # Its `🧿️semio` family package (38 editors, 2026-09-29) crossed it again: 330 MiB core wasm at describe. Same trade.
+# `🌍️gis` crossed it on 2026-09-29: 281 477 448 B raw component at describe (the chain's t6 rebuild-all). Same trade.
 [profile.wasm-dev.package.semio-s-plugin-norm]
 strip = "symbols"
 
@@ -750,6 +751,9 @@ strip = "symbols"
 strip = "symbols"
 
 [profile.wasm-dev.package.semio-s-plugin-stdio-semio]
+strip = "symbols"
+
+[profile.wasm-dev.package.semio-s-plugin-gis]
 strip = "symbols"
 
 # 🚀️ Ship profile for native binaries (`cargo build --release`, os-run in CI).

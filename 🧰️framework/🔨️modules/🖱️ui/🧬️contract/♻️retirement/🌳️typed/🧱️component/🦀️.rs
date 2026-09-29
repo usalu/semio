@@ -183,6 +183,12 @@ impl UiTypedRetire for UiValue {
     }
 }
 
+impl UiTypedRetire for UiMap {
+    fn retire_typed(&mut self, path: &mut [u8], value: &mut Option<UiValueRetirement>, bytes: usize) -> Result<UiValueRetirementStep, &'static str> {
+        UiValue::Map(std::mem::take(self)).retire_typed(path, value, bytes)
+    }
+}
+
 impl<T: UiTypedRetire> UiTypedRetire for Option<T> {
     const DEPTH: usize = 1 + T::DEPTH;
     fn retire_typed(&mut self, path: &mut [u8], value: &mut Option<UiValueRetirement>, bytes: usize) -> Result<UiValueRetirementStep, &'static str> {

@@ -8,7 +8,7 @@ use protocol::{DiffAlgebra, Mutation};
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetSnapshot {
-    pub snapshot: GltfSnapshot,
+    pub snapshot: Box<GltfSnapshot>,
 }
 
 impl protocol::MutationKind<GltfSnapshot, GltfMutation> for SetSnapshot {
@@ -17,7 +17,7 @@ impl protocol::MutationKind<GltfSnapshot, GltfMutation> for SetSnapshot {
         protocol::MutationOutcome::new(<GltfDiff as DiffAlgebra<GltfSnapshot>>::between(base, &self.snapshot))
     }
     fn inverse(&self, base: &GltfSnapshot) -> Vec<GltfMutation> {
-        vec![GltfMutation::SetSnapshot(Self { snapshot: base.clone() })]
+        vec![GltfMutation::SetSnapshot(Self { snapshot: Box::new(base.clone()) })]
     }
     fn label(&self) -> protocol::LocalizedLabel { protocol::LocalizedLabel::native("Set snapshot", "Momentaufnahme setzen") }
     fn target(&self) -> Vec<String> { Vec::new() }

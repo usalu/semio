@@ -56,6 +56,7 @@ dsl_derive = { path = "../../🔨️modules/🗣️dsl/✨️derive/📦️packa
 semio-framework-value-derive = { path = "../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-pack = { workspace = true }
 semio-framework-replication = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
 semio-framework-ui-viewport = { workspace = true }
 # 🪪️ `OperationContext`/`CancelToken`/`ScopeHandle` vocabulary (ticket
 # 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME) — pure, zero-tokio, wasm32-safe, so this is an

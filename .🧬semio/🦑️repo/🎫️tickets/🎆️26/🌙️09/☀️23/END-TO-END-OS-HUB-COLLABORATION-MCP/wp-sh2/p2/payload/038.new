@@ -1,0 +1,428 @@
+use super::*;
+use protocol::Mutation as _;
+use store::os_directory::{
+    ArtifactFrontier, ArtifactHash, DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceVisibility, DocumentDescriptor, DocumentFrontier, DocumentIndexEntryV1, DocumentOwner, DocumentScope, Hlc,
+    PublishedArtifactBlob, PublishedArtifactCheckpoint,
+};
+
+//#region 🧹️Registered
+/// 🧹️ A registered Space surface bound to live instance `1` (the instance `artifact_app_laws::meta` stamps on every
+/// dispatch) that retires through the bounded close protocol when it is dropped — every registry-backed app owns stores
+/// that must close before drop (the store drop witness). A test that panics leaves the witness alone, so its first
+/// failure stays the one reported.
+pub(crate) struct Registered<A: semio_framework_plugin::PluginApp>(A);
+
+impl<A: semio_framework_plugin::PluginApp> Registered<A> {
+    /// 🧷️ Binds `app` to live instance `1` and takes over its close.
+    pub(crate) async fn bound(mut app: A) -> Self {
+        app.bind_instance_id(1).await;
+        Self(app)
+    }
+}
+
+impl<A: semio_framework_plugin::PluginApp> std::ops::Deref for Registered<A> {
+    type Target = A;
+
+    fn deref(&self) -> &A {
+        &self.0
+    }
+}
+
+impl<A: semio_framework_plugin::PluginApp> std::ops::DerefMut for Registered<A> {
+    fn deref_mut(&mut self) -> &mut A {
+        &mut self.0
+    }
+}
+
+impl<A: semio_framework_plugin::PluginApp> Drop for Registered<A> {
+    fn drop(&mut self) {
+        if !std::thread::panicking() {
+            semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0);
+        }
+    }
+}
+
+/// 🫧️ Whether a settled Space feed published its transient item and nothing but that item's render refresh and terminal
+/// marker — never a document, draft, config, window, presence or child lane.
+pub(crate) fn publishes_only_transient_state(lanes: &[semio_framework_plugin::app::TypedOperationResultLane]) -> bool {
+    use semio_framework_plugin::app::TypedOperationResultLane::{Terminal, Transient, Ui};
+    lanes.iter().any(|lane| matches!(lane, Transient)) && lanes.iter().all(|lane| matches!(lane, Transient | Ui | Terminal))
+}
+//#endregion 🧹️Registered
+
+//#region 🧫️Batches
+/// 🪪️ The one space every fixture here indexes.
+pub(crate) const SPACE: &str = "space-1";
+const DOCUMENT: &str = "artifact-0123456789abcdef0123456789abcdef";
+const T0: i64 = 1_800_000_000_000;
+
+/// 🕰️ The recorded instant of fixture event `seq`: one minute per sequence from 2027-01-15 08:00 UTC.
+pub(crate) const fn recorded_at_ms(seq: u64) -> i64 {
+    T0 + seq as i64 * 60_000
+}
+
+fn event(seq: u64, actor: &str, body: DirectoryEventBody) -> DirectoryEvent {
+    let kind = if actor.starts_with("user:") { DirectoryActorKind::User } else { DirectoryActorKind::System };
+    DirectoryEvent { seq, id: format!("evt-{seq}"), hlc: Hlc { physical_ms: recorded_at_ms(seq), logical: 0 }, actor: DirectoryActor { kind, id: actor.into() }, space_id: Some(SPACE.into()), user_id: None, body, recorded_at_ms: recorded_at_ms(seq) }
+}
+
+/// 📄️ One document joining the space: its announcement at `seq` and its indexing (by `u-1`) at `seq + 1`, named `name`.
+pub(crate) fn document_of(seq: u64, document_id: &str, name: &str) -> [DirectoryEvent; 2] {
+    let descriptor = DocumentDescriptor {
+        space_id: SPACE.into(),
+        document_id: document_id.into(),
+        artifact_kind: "s.draw.draw".into(),
+        artifact_schema: "s.draw.draw".into(),
+        owner: DocumentOwner { plugin_id: "draw".into(), package_id: "draw".into(), version: "1".into(), package_hash: "a".repeat(64) },
+        pack_schema_hash: "b".repeat(64),
+        bootstrap_version: 1,
+        bootstrap_frontier: DocumentFrontier { head_seq: 1, commit_seq: 1, epoch: 1 },
+        bootstrap_snapshot_hash: "c".repeat(64),
+    };
+    let mut indexed = event(
+        seq + 1,
+        "system:hub",
+        DirectoryEventBody::DocumentIndexed {
+            scope: DocumentScope { space_id: SPACE.into(), document_id: document_id.into() },
+            descriptor_digest_v1: ArtifactHash([7; 32]),
+            entry: DocumentIndexEntryV1 { name: name.into(), dialect: semio_framework_plugin::ArtifactDialect { artifact_kind: "s.draw.draw".into(), standard: "1".into(), subset: "*".into() } },
+        },
+    );
+    indexed.user_id = Some("u-1".into());
+    [event(seq, "system:hub", DirectoryEventBody::DocumentAnnounced { descriptor }), indexed]
+}
+
+/// 🌱️ The origin of the space (sequences 1–4): created, a second author, one announced and indexed document `document_id`
+/// named "First".
+pub(crate) fn origin_of(document_id: &str) -> Vec<DirectoryEvent> {
+    let mut events = vec![
+        event(1, "user:u-1#s1", DirectoryEventBody::SpaceCreated { space_id: SPACE.into(), name: "Werkstatt".into(), space_kind: DirectorySpaceKind::Studio, visibility: DirectorySpaceVisibility::Private, owner_user_id: "u-1".into() }),
+        event(2, "user:u-1#s1", DirectoryEventBody::MemberUpserted { space_id: SPACE.into(), user_id: "u-2".into(), role: store::os_directory::DirectorySpaceRole::Author }),
+    ];
+    events.extend(document_of(3, document_id, "First"));
+    events
+}
+
+fn origin() -> Vec<DirectoryEvent> {
+    origin_of(DOCUMENT)
+}
+
+fn check_in(seq: u64, user: &str) -> DirectoryEvent {
+    check_in_of(seq, user, DOCUMENT)
+}
+
+/// ✅️ `user`'s check-in of `document_id` at sequence `seq`: the checkpoint publication the hub fans out to every member.
+pub(crate) fn check_in_of(seq: u64, user: &str, document_id: &str) -> DirectoryEvent {
+    let hash = |byte: u8| ArtifactHash([byte; 32]);
+    event(
+        seq,
+        &format!("user:{user}#s1"),
+        DirectoryEventBody::ArtifactCheckpointPublished {
+            checkpoint: PublishedArtifactCheckpoint {
+                scope: DocumentScope { space_id: SPACE.into(), document_id: document_id.into() },
+                checkpoint_id: hash((seq % 251) as u8),
+                parent_checkpoint_id: Some(hash(((seq + 1) % 251) as u8)),
+                descriptor_digest_v1: hash(7),
+                baseline_frontier: ArtifactFrontier { document_id: document_id.into(), head_edit_ordinal: seq, head_edit_id: format!("edit:{seq}"), last_commit_seq: seq, chain_hash: hash(2) },
+                pack: PublishedArtifactBlob { sha256: hash(3), byte_length: 2 },
+                spr: PublishedArtifactBlob { sha256: hash(4), byte_length: 15 },
+                aggregate_sha256: hash(5),
+                published_at_ms: seq,
+            },
+        },
+    )
+}
+
+/// 📥️ The host's batch of `events` of the space, continuing `after_seq_exclusive`.
+pub(crate) fn batch(after_seq_exclusive: u64, events: &[DirectoryEvent]) -> SpaceIndexTransientMutation {
+    ApplyDirectoryEvents { space_id: SPACE.into(), after_seq_exclusive, events_json: pack::to_json_string(&events.to_vec()) }.into()
+}
+
+/// 📦️ Splits `events` into the host's bounded batches: at most one hub page of rows and of bytes each, each continuing the
+/// previous one's frontier (`🏛️ShellHost/📇️space-directory`'s `spaceDirectoryBatchesV1` is the TypeScript twin).
+fn batches(after_seq_exclusive: u64, events: &[DirectoryEvent]) -> Vec<SpaceIndexTransientMutation> {
+    let mut out = Vec::new();
+    let (mut after, mut chunk) = (after_seq_exclusive, Vec::<DirectoryEvent>::new());
+    for next in events {
+        let mut candidate = chunk.clone();
+        candidate.push(next.clone());
+        if !chunk.is_empty() && (candidate.len() > SPACE_INDEX_DIRECTORY_BATCH_EVENTS || pack::to_json_string(&candidate).len() > SPACE_INDEX_DIRECTORY_BATCH_BYTES) {
+            out.push(batch(after, &chunk));
+            after = chunk.last().expect("non-empty batch").seq;
+            chunk = vec![next.clone()];
+        } else {
+            chunk = candidate;
+        }
+    }
+    if !chunk.is_empty() {
+        out.push(batch(after, &chunk));
+    }
+    out
+}
+
+fn applied(base: &SpaceIndexTransient, item: &SpaceIndexTransientMutation) -> SpaceIndexTransient {
+    item.judge(base).expect("an admissible item").expect("an item that changes the transient")
+}
+
+/// 📬️ Publishes one item through the PRODUCTION transient preparation (the bounded one-item factory both Space surfaces
+/// install), exactly as the transient store does: preflight, begin over the captured root, advance with the pump's grant.
+fn publish(root: &Arc<SpaceIndexTransient>, mutation: SpaceIndexTransientMutation) -> (Arc<SpaceIndexTransient>, store::ArtifactStoreOneItemFootprint) {
+    let factory = semio_framework_plugin::bounded_transient_preparation_factory::<SpaceIndexTransient, SpaceIndexTransientMutation>();
+    let footprint = factory.preflight(&mutation).expect("one batch is one admissible item");
+    assert!(footprint.is_admissible());
+    let request = store::ArtifactEphemeralOneItemPreparationRequest {
+        operation: semio_framework_job::OperationId(1),
+        generation: semio_framework_job::Generation(0),
+        base: store::ArtifactEphemeralBaseRead(store::ArtifactEphemeralBaseOwner::Transient(root.clone())),
+        mutation,
+    };
+    let Ok(mut preparation) = factory.begin(request) else { panic!("the bounded factory begins every admitted batch") };
+    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: semio_framework_plugin::app::TYPED_OPERATION_RESULT_PAGE_BYTES };
+    assert!(matches!(preparation.advance(grant).expect("the batch folds"), store::ArtifactStoreOneItemPreparationStep::Prepared(_)));
+    let prepared = preparation.take_prepared().expect("prepared root");
+    (prepared.next_root, footprint)
+}
+//#endregion 🧫️Batches
+
+//#region 🔖️Fold
+/// 🕒️ The row a check-in moves: the origin lists the indexed document with "Updated" = its indexing; ONE later batch
+/// carrying a human's checkpoint publication moves "Updated" and "Updated By" to that publication.
+#[test]
+fn a_check_in_moves_the_rows_updated_time_within_the_one_batch_that_carries_it() {
+    let listed = applied(&SpaceIndexTransient::default(), &batch(0, &origin()));
+    let [row] = listed.directory().rows(SPACE).try_into().expect("one indexed row");
+    assert_eq!((row.id.as_str(), row.name.as_str(), row.updated_at_ms, row.updated_by.as_str()), (DOCUMENT, "First", (T0 + 4 * 60_000) as u64, "u-1"));
+    let checked_in = applied(&listed, &batch(4, &[check_in(5, "u-2")]));
+    let [row] = checked_in.directory().rows(SPACE).try_into().expect("one indexed row");
+    assert_eq!((row.created_at_ms, row.updated_at_ms, row.updated_by.as_str()), ((T0 + 4 * 60_000) as u64, (T0 + 5 * 60_000) as u64, "u-2"));
+    assert_eq!(checked_in.directory().row("", DOCUMENT), Some(row), "a genesis index without its own id reads the one space its batches name");
+    assert_eq!(checked_in.directory().row("space-other", DOCUMENT), None, "an index of another space reads none of these rows");
+}
+
+/// 🧮️ The projection is the canonical kernel fold of exactly the space's events, however the host splits them.
+#[test]
+fn the_projection_is_the_kernel_fold_of_the_spaces_events_however_they_are_batched() {
+    let mut history = origin();
+    history.extend((5..40).map(|seq| check_in(seq, if seq % 2 == 0 { "u-1" } else { "u-2" })));
+    let kernel = history.iter().fold(store::os_directory::DirectoryReadModel::default(), store::os_directory::fold);
+    let whole = applied(&SpaceIndexTransient::default(), &batch(0, &history));
+    let mut split = SpaceIndexTransient::default();
+    for item in history.chunks(3).scan(0, |after, chunk| {
+        let item = batch(*after, chunk);
+        *after = chunk.last().expect("non-empty chunk").seq;
+        Some(item)
+    }) {
+        split = applied(&split, &item);
+    }
+    assert_eq!(whole.directory().space(SPACE), kernel.spaces.get(SPACE));
+    assert_eq!(split, whole);
+}
+
+/// 🚦️ A batch that does not continue the held frontier of the held space, or is not one admissible page of the space's
+/// ascending events, is refused by name and changes nothing.
+#[test]
+fn an_inadmissible_batch_is_refused_by_name() {
+    let listed = applied(&SpaceIndexTransient::default(), &batch(0, &origin()));
+    let refused = |item: SpaceIndexTransientMutation| item.judge(&listed).expect_err("inadmissible").code.0;
+    assert_eq!(refused(batch(2, &[check_in(5, "u-2")])), "s.space.directory-events-frontier-race");
+    assert_eq!(refused(ApplyDirectoryEvents { space_id: "space-other".into(), after_seq_exclusive: 4, events_json: pack::to_json_string(&vec![check_in(5, "u-2")]) }.into()), "s.space.directory-events-invalid");
+    assert_eq!(refused(batch(4, &[check_in(6, "u-2"), check_in(5, "u-2")])), "s.space.directory-events-invalid");
+    assert_eq!(refused(batch(4, &[])), "s.space.directory-events-invalid");
+    assert_eq!(refused(ApplyDirectoryEvents { space_id: SPACE.into(), after_seq_exclusive: 4, events_json: "{".into() }.into()), "s.space.directory-events-invalid");
+    assert_eq!(refused(ApplyDirectoryEvents { space_id: SPACE.into(), after_seq_exclusive: 4, events_json: " ".repeat(SPACE_INDEX_DIRECTORY_BATCH_BYTES + 1) }.into()), "s.space.directory-events-invalid");
+    let refused_outcome = batch(2, &[check_in(5, "u-2")]).diff(&listed);
+    assert!(refused_outcome.messages().iter().any(|message| format!("{message:?}").contains("s.space.directory-events-frontier-race")));
+    assert_eq!(refused_outcome.diff(), &listed);
+}
+
+/// ♻️ The host restarts from the origin after a remount or a refusal: an origin batch rebuilds from nothing, and replaying
+/// exactly the history the projection holds changes nothing.
+#[test]
+fn an_origin_replay_rebuilds_and_replaying_the_held_history_changes_nothing() {
+    let listed = applied(&SpaceIndexTransient::default(), &batch(0, &origin()));
+    let checked_in = applied(&listed, &batch(4, &[check_in(5, "u-2")]));
+    assert_eq!(batch(0, &origin()).judge(&listed).expect("an origin replay is admissible"), None);
+    assert_eq!(applied(&checked_in, &batch(0, &origin())), listed, "an origin batch rebuilds from nothing");
+    let outcome = batch(0, &origin()).diff(&listed);
+    assert!(outcome.messages().iter().any(|message| format!("{message:?}").contains("mutation.no-op")));
+}
+//#endregion 🔖️Fold
+
+//#region 🔖️Bounds
+/// 📏️ The SH2 P2 law (b): 1 000 check-ins in one space fold through the host's bounded batches, every batch ONE admissible
+/// item whose bytes are its own page — never the history's — the projection stays the size of the space (its documents
+/// and members), not of its history, and the table stays live: the last check-in is the row's "Updated".
+#[test]
+fn a_thousand_check_ins_fold_in_bounded_batches_and_keep_the_table_live() {
+    const CHECK_INS: u64 = 1_000;
+    let origin_items = batches(0, &origin());
+    let mut root = Arc::new(SpaceIndexTransient::default());
+    for item in origin_items {
+        root = publish(&root, item).0;
+    }
+    let history: Vec<_> = (5..5 + CHECK_INS).map(|seq| check_in(seq, if seq % 2 == 0 { "u-1" } else { "u-2" })).collect();
+    let items = batches(4, &history);
+    assert!(items.len() > 1, "a thousand check-ins never travel as one batch");
+    let mut retained_after_first = None;
+    for item in items {
+        let bytes = item.wire_bytes();
+        assert!(bytes <= SPACE_INDEX_DIRECTORY_BATCH_BYTES + SPACE_INDEX_IDENTIFIER_BYTES + 8, "one batch is at most one page");
+        let (next, footprint) = publish(&root, item);
+        assert!(footprint.is_admissible());
+        root = next;
+        retained_after_first.get_or_insert(root.retained_bytes());
+    }
+    assert_eq!(Some(root.retained_bytes()), retained_after_first, "the projection grows with the space, never with its check-ins");
+    assert_eq!(root.directory().cursor(), 4 + CHECK_INS);
+    let row = root.directory().row(SPACE, DOCUMENT).expect("the indexed row stays listed");
+    assert_eq!((row.updated_at_ms, row.updated_by.as_str()), ((T0 + (4 + CHECK_INS) as i64 * 60_000) as u64, if (4 + CHECK_INS) % 2 == 0 { "u-1" } else { "u-2" }));
+}
+
+/// 📚️ The S18 sweep's shape (the config-lane fold stalled at ~28 documents): a space of 1 000 documents and 1 000
+/// check-ins folds through the host's bounded batches — every batch ONE admissible item priced by its own page — and lists
+/// every document, the newest arriving in the one batch that carries it; the table stamps the whole extent, en and de,
+/// and the check-in moves its row's "Updated".
+#[test]
+fn a_thousand_documents_and_a_thousand_check_ins_fold_within_bounds_and_list_every_document() {
+    const DOCUMENTS: u64 = 1_000;
+    let mut history = origin();
+    history.extend((0..DOCUMENTS).flat_map(|index| document_of(5 + 2 * index, &format!("artifact-{index:04}"), &format!("Plan {index}"))));
+    let mut seq = 5 + 2 * DOCUMENTS;
+    history.extend((0..DOCUMENTS).map(|index| {
+        let event = check_in_of(seq, "u-2", &format!("artifact-{index:04}"));
+        seq += 1;
+        event
+    }));
+    let items = batches(0, &history);
+    assert!(items.len() > 2, "two thousand documents and check-ins never travel as one batch");
+    let mut root = Arc::new(SpaceIndexTransient::default());
+    for item in items {
+        assert!(item.wire_bytes() <= SPACE_INDEX_DIRECTORY_BATCH_BYTES + SPACE_INDEX_IDENTIFIER_BYTES + 8, "one batch is at most one page");
+        root = publish(&root, item).0;
+    }
+    assert_eq!(root.directory().rows(SPACE).len(), 1 + DOCUMENTS as usize, "every document is listed");
+    let newest = document_of(seq, "artifact-newest", "Neuestes");
+    let (listed, footprint) = publish(&root, batch(seq - 1, &newest));
+    assert!(footprint.is_admissible());
+    let rows = listed.directory().rows(SPACE);
+    assert_eq!(rows.len(), 2 + DOCUMENTS as usize);
+    assert_eq!(rows.last().map(|row| row.name.as_str()), Some("Neuestes"), "the newest document lists in the one batch that carries it");
+    let checked = listed.directory().row(SPACE, "artifact-0999").expect("the last checked-in document");
+    assert_eq!((checked.updated_at_ms, checked.updated_by.as_str()), (recorded_at_ms(seq - 1) as u64, "u-2"));
+    let document = crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot::default();
+    for (locale, updated) in [(semio_framework_plugin::Locale::En, "Updated"), (semio_framework_plugin::Locale::De, "Aktualisiert")] {
+        let view = semio_framework_plugin::ViewModel { locale, ..Default::default() };
+        let node = crate::viewer::space_index::modes::view::windows::main::render(&document, &listed, &view).expect("the table renders a thousand rows");
+        let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("table projection");
+        assert!(json.contains(&format!("\"total\":{}", 2 + DOCUMENTS)), "the table stamps its whole extent ({locale:?}): {}", &json[..json.len().min(400)]);
+        assert!(json.contains(&format!("\"{updated}\"")), "the table heads its columns in the viewer's language ({locale:?})");
+    }
+}
+//#endregion 🔖️Bounds
+
+//#region 🔖️Presence
+/// 👥️ A presence row replaces the artifact's own row, an equal row changes nothing, and an unbounded row is refused.
+#[test]
+fn a_presence_row_replaces_the_artifacts_row_and_an_equal_row_changes_nothing() {
+    let first: SpaceIndexTransientMutation = SetArtifactPresence { artifact_id: DOCUMENT.into(), actors_csv: "user:u-1#s1,user:u-2#s1".into() }.into();
+    let shown = applied(&SpaceIndexTransient::default(), &first);
+    assert_eq!(shown.presence_for(DOCUMENT), vec!["user:u-1#s1", "user:u-2#s1"]);
+    let replaced = applied(&shown, &SetArtifactPresence { artifact_id: DOCUMENT.into(), actors_csv: "user:u-2#s1".into() }.into());
+    assert_eq!((replaced.presence().len(), replaced.presence_for(DOCUMENT)), (1, vec!["user:u-2#s1"]));
+    assert_eq!(first.judge(&shown).expect("admissible"), None);
+    let unbounded: SpaceIndexTransientMutation = SetArtifactPresence { artifact_id: DOCUMENT.into(), actors_csv: "x".repeat(SPACE_INDEX_PRESENCE_ACTORS_BYTES + 1) }.into();
+    assert_eq!(unbounded.judge(&shown).expect_err("unbounded").code.0, "s.space.artifact-presence-invalid");
+}
+//#endregion 🔖️Presence
+
+//#region 🔖️Vectors
+/// 🧫️ The committed (before, mutation, after, diff, outcome) vectors of both verbs hold through the production bridge.
+#[test]
+fn the_committed_vectors_hold_through_the_production_bridge() {
+    macro_rules! vector {
+        ($verb:literal, $name:literal) => {
+            (
+                $name,
+                include_str!(concat!("../../🧫️fixtures/", $verb, "/", $name, "/📸️snapshot/⬅️before/🔣️.json")),
+                include_str!(concat!("../../🧫️fixtures/", $verb, "/", $name, "/🦠️mutation/🔣️.json")),
+                include_str!(concat!("../../🧫️fixtures/", $verb, "/", $name, "/📸️snapshot/➡️after/🔣️.json")),
+                include_str!(concat!("../../🧫️fixtures/", $verb, "/", $name, "/🔺️diff/🔣️.json")),
+                include_str!(concat!("../../🧫️fixtures/", $verb, "/", $name, "/🎯️outcome/🔣️.json")),
+            )
+        };
+    }
+    for (name, before, mutation, after, diff, outcome) in [
+        vector!("📥️apply-directory-events", "✅️apply-directory-events-applied"),
+        vector!("📥️apply-directory-events", "🟰️apply-directory-events-no-op"),
+        vector!("📥️apply-directory-events", "🚫️apply-directory-events-rejected"),
+        vector!("👥️set-artifact-presence", "✅️set-artifact-presence-applied"),
+        vector!("👥️set-artifact-presence", "🟰️set-artifact-presence-no-op"),
+        vector!("👥️set-artifact-presence", "🚫️set-artifact-presence-rejected"),
+    ] {
+        let report = pack::parse_json(&space_index_transient_mutation_report_json(before, mutation, after).unwrap_or_else(|error| panic!("{name}: {error}"))).expect("report JSON");
+        let outcome = pack::parse_json(outcome).expect("outcome JSON");
+        assert_eq!(report["snapshot"], report["expectedSnapshot"], "{name}: the applied snapshot is the committed after-snapshot");
+        assert_eq!(report["diff"], pack::parse_json(diff).expect("diff JSON"), "{name}: the delta is the committed diff");
+        let codes = |messages: &pack::JsonValue| messages.as_array().expect("messages").iter().map(|message| message["code"].as_str().expect("code").to_owned()).collect::<Vec<_>>();
+        assert_eq!(codes(&report["messages"]), codes(&outcome["messages"]), "{name}: the diagnostics are the declared outcome's");
+        assert_eq!(report["snapshot"] != report["base"], outcome["status"] == "applied", "{name}: only an applied vector moves the snapshot");
+        assert!(report["inverseSteps"].as_array().expect("inverse steps").is_empty(), "{name}: a derived projection is never undone");
+    }
+}
+//#endregion 🔖️Vectors
+
+//#region 🔖️Codec
+/// 🔁️ The wire round-trips a folded projection with presence, and every corruption is refused rather than defaulted.
+#[test]
+fn the_wire_round_trips_the_projection_and_refuses_corruption() {
+    let folded = applied(&applied(&SpaceIndexTransient::default(), &batch(0, &origin())), &batch(4, &[check_in(5, "u-2")]));
+    let transient = applied(&folded, &SetArtifactPresence { artifact_id: DOCUMENT.into(), actors_csv: "user:u-2#s1".into() }.into());
+    let json = pack::to_json_string(&transient);
+    assert_eq!(pack::from_json_str::<SpaceIndexTransient>(&json).expect("round trip"), transient);
+    store::os_store::test_support::assert_dsl_round_trip(&transient);
+    let bytes = store::ArtifactPack::encode_pack(&transient);
+    assert_eq!(<SpaceIndexTransient as store::ArtifactPack>::decode_pack(&bytes).expect("pack round trip"), transient);
+    let corrupt = |from: &str, to: &str| {
+        let text = json.replacen(from, to, 1);
+        assert_ne!(text, json, "the corruption {to} applies");
+        pack::from_json_str::<SpaceIndexTransient>(&text).is_err()
+    };
+    assert!(corrupt(&format!("\"spaceId\":\"{SPACE}\""), "\"spaceId\":\"space-other\""));
+    assert!(corrupt(&format!("\"spaceId\":\"{SPACE}\""), "\"spaceId\":\"\""));
+    assert!(corrupt(&format!("\"documentActivity\":[{{\"documentId\":\"{DOCUMENT}\""), "\"documentActivity\":[{\"documentId\":\"artifact-unannounced\""));
+    assert!(corrupt("\"presence\":[", &format!("\"presence\":[{{\"artifactId\":\"{DOCUMENT}\",\"actorsCsv\":\"\"}},")));
+    assert!(corrupt("\"presence\":[", "\"unknown\":true,\"presence\":["));
+}
+
+/// 🔤️ Both verbs round-trip their text line and binary op, and neither is ever undone.
+#[test]
+fn both_verbs_round_trip_text_and_binary_and_are_never_undone() {
+    for verb in [batch(4, &[check_in(5, "u-2")]), SetArtifactPresence { artifact_id: DOCUMENT.into(), actors_csv: "user:u-2#s1".into() }.into()] {
+        store::os_store::test_support::assert_op_line_round_trip(&verb);
+        let bytes = protocol::OpBinary::encode_op(&verb).expect("binary op");
+        assert_eq!(<SpaceIndexTransientMutation as protocol::OpBinary>::decode_op(&bytes).expect("binary round trip"), verb);
+        assert!(verb.inverse(&SpaceIndexTransient::default()).is_empty(), "a derived projection is never undone");
+    }
+}
+
+/// 🧹️ A displaced root retires in byte grants of its own estimate, never by encoding it.
+#[test]
+fn a_displaced_root_retires_in_byte_grants() {
+    let root = Arc::new(applied(&SpaceIndexTransient::default(), &batch(0, &origin())));
+    let bytes = root.retained_bytes();
+    let mut retirement = store::SnapshotRetirementFactory::retire(&SpaceIndexTransientRetirementFactory, root);
+    let mut released = 0;
+    loop {
+        match retirement.close_step(1, 256).expect("retirement step") {
+            store::SnapshotRetirementStep::Pending { released_bytes, .. } => {
+                assert!(released_bytes <= 256);
+                released += released_bytes;
+            }
+            store::SnapshotRetirementStep::Complete => break,
+            store::SnapshotRetirementStep::Blocked => panic!("a transient root never blocks its own retirement"),
+        }
+    }
+    assert_eq!(released, bytes);
+    assert!(retirement.terminal_is_empty());
+}
+//#endregion 🔖️Codec

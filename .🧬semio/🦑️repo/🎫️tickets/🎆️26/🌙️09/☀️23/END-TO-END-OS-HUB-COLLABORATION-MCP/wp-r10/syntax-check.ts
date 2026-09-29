@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import ts from "/Users/ueli/Documents/semio/node_modules/typescript/lib/typescript.js";
 const root = "/Users/ueli/Documents/semio";
-const SCRATCH = "/private/tmp/claude-501/-Users-ueli-Documents-semio/9bb2d328-ac37-4388-a429-b069582cbcf9/scratchpad";
+const SCRATCH = "/private/tmp/claude-501/-Users-ueli-Documents-semio/3b40a11d-a81f-4174-a4c3-c8e3aff5f164/scratchpad";
 const files = readFileSync(process.argv[2]!, "utf8").split("\n").filter(Boolean);
 let bad = 0;
 for (const path of files) {

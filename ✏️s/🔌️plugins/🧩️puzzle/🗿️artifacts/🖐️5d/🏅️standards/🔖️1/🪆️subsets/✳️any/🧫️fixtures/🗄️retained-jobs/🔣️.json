@@ -8,6 +8,8 @@
     "deleteTargetVolume",
     "relocateTargetVolume",
     "setTargetVolumeFlag",
+    "setTargetVolumeHidden",
+    "setTargetVolumeLocked",
     "setVoxelDims",
     "canvasPointerDown",
     "cycleBrushCandidate",
@@ -27,6 +29,8 @@
     "selectSameKindSelection",
     "setFillCount",
     "setSelectionFlag",
+    "setSelectionHidden",
+    "setSelectionLocked",
     "targetBrushSuggestions",
     "openVortexSuggestions",
     "closeVortexSuggestions",
@@ -142,11 +146,15 @@
     "setProximityRadius",
     "setSelectableKind",
     "setSelectionFlag",
+    "setSelectionHidden",
+    "setSelectionLocked",
     "setSuggestionOffset",
     "setSunAzimuth",
     "setSunElevation",
     "setSunIntensity",
     "setTargetVolumeFlag",
+    "setTargetVolumeHidden",
+    "setTargetVolumeLocked",
     "setTransformGumballFlag",
     "setVoxelDims",
     "targetBrushSuggestions",
@@ -555,6 +563,16 @@
       "closeOwner"
     ],
     "setTargetVolumeFlag": [
+      "volumeScan",
+      "flagMutation",
+      "closeOwner"
+    ],
+    "setTargetVolumeHidden": [
+      "volumeScan",
+      "flagMutation",
+      "closeOwner"
+    ],
+    "setTargetVolumeLocked": [
       "volumeScan",
       "flagMutation",
       "closeOwner"
@@ -2298,6 +2316,28 @@
         "id": "target-volume-1",
         "flag": "hidden",
         "value": true
+      },
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "setTargetVolumeHiddenExact",
+      "toolId": "setTargetVolumeHidden",
+      "input": {
+        "id": "target-volume-1",
+        "hidden": true
+      },
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "setTargetVolumeLockedExact",
+      "toolId": "setTargetVolumeLocked",
+      "input": {
+        "id": "target-volume-1",
+        "locked": true
       },
       "control": "pollAckClose",
       "expected": "terminalEmpty",

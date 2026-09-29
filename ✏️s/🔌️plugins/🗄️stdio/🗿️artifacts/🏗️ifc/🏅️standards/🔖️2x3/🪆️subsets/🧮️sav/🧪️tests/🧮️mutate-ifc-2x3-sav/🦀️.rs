@@ -3,7 +3,7 @@
 //! identity round trip. `ruststep` 0.4 can only READ Part-21 text, so the oracle dispatcher
 //! (`../../🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/🦀️oracle.rs`) performs every kind against a
 //! `ruststep`-parsed document and re-serializes through the standard-level from-scratch writer,
-//! independent of this repository's own `step::engine::part21` codec; the subject fully parses into
+//! independent of this repository's own `semio_s_artifact_stdio_contract::part21` codec; the subject fully parses into
 //! `Ifc2x3Snapshot` and re-serializes from it alone (no byte pass-through). Both results are read
 //! back by the INDEPENDENT `ruststep` reader (`project_ifc_2x3_sav`) before `semantic-ifc-v1`
 //! compares them — real third-party evidence about structure, never a byte-level differential claim.
@@ -192,7 +192,7 @@ mod subject {
     use semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::io::{decode_ifc2x3, encode_ifc2x3};
     use semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
     use semio_s_artifact_stdio_ifc::standards::v2x3::subsets::sav::schema::mutations::{apply_ifc2x3_sav_mutation, Ifc2x3SavMutation, SavAnalysisModel, SavGroupAssignment, SavLoadGroup};
-    use semio_s_artifact_stdio_ifc::engine::part21::Part21Value;
+    use semio_s_artifact_stdio_contract::part21::Part21Value;
     use semio_s_plugin_stdio_test_oracle::artifacts::ifc::standards::v2x3::subsets::sav::project_ifc_2x3_sav;
 
     //#region 🔖️SpecReading

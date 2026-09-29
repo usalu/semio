@@ -54,7 +54,20 @@ pub const BMP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bmp", standar
 /// 🗂️ This artifact's `ArtifactKindSpec`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    semio_s_artifact_stdio_contract::definition_only_assembly("bmp", definition()?)
+    semio_s_artifact_stdio_contract::runtime_assembly("bmp", definition()?, declaration)
+}
+
+/// 🧾️ The runtime `bmp` declares: its schema, format, inference descriptor, composers and document codec.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = formats()?;
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
+        .schema(schema::bmp_artifact_schema_descriptor())
+        .formats(formats)
+        .inferences([standards::v_v3::subsets::any::schema::inferences::bmp_artifact_inference_descriptor()])
+        .composers(standards::v_v3::subsets::any::io::io_registry::entries())
+        .document_codec_bare::<BmpSnapshot, BmpMutation>(STDIO_BMP_DOCUMENT_SCHEMA)
+        .try_build()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

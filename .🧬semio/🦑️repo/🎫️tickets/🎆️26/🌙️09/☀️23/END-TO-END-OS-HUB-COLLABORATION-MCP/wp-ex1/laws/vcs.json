@@ -1,0 +1,22 @@
+{
+ "plugin": "vcs",
+ "dir": "🌿️vcs",
+ "apps": [
+  {
+   "app": "s.vcs.vcs@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "crate::editor::vcs::VcsPlayApp",
+   "create": "crate::editor::vcs::create_vcs_app",
+   "app": "s.vcs.vcs@1/*#editor"
+  }
+ ]
+}

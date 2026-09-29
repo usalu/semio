@@ -37,7 +37,7 @@ use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const PROCESS_3D_PLAY_APP_ID: &str = "process3d-play";
-const PROCESS_3D_PLAY_CONTROLLER_ID: &str = "process3d-play";
+pub(crate) const PROCESS_3D_PLAY_CONTROLLER_ID: &str = "process3d-play";
 /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): the app's sole interaction domain — the
 /// stock, every process step, and every installed workshop machine share the "object" granularity
 /// (as their raw ids / `"machine:{id}"`), the processed mesh's picked faces use "face" (u32 ids
@@ -1666,7 +1666,10 @@ impl ArtifactEditor for Process3dPlayApp {
                 let step_json = string_field("stepJson").or_else(|| string_field("step_json")).or_else(|| field("step").map(semio_framework_os_kernel::json::to_json_string)).unwrap_or_default();
                 Ok(Process3dCommand::UpdateStep(update_step::UpdateStep { step_json }))
             }
-            "setStepEnabled" => Ok(Process3dCommand::SetStepEnabled(set_step_enabled::SetStepEnabled { id: string_field("id").unwrap_or_default(), enabled: field("enabled").and_then(DslValue::as_bool).unwrap_or(true) })),
+            "setStepEnabled" => Ok(Process3dCommand::SetStepEnabled(set_step_enabled::SetStepEnabled {
+                id: string_field("id").unwrap_or_default(),
+                enabled: field("enabled").and_then(DslValue::as_bool).ok_or_else(|| process3d_action_fault(action, "requires the boolean 'enabled' it sets"))?,
+            })),
             "setStock" => Ok(Process3dCommand::SetStock(set_stock::SetStock { kind: string_field("kind").or_else(|| string_field("value")).unwrap_or_else(|| "box".into()) })),
             "patchInspector" => Ok(Process3dCommand::PatchInspector(patch_inspector::PatchInspector {
                 target: string_field("target").unwrap_or_default(),
@@ -1876,6 +1879,10 @@ pub fn create_process3d_app() -> AppDefinition {
                     ActionArgOption::new("attach", LocalizedLabel::native("Attach", "Anbau")),
                 ]).default_value(&"cut"),
             ])
+            .action_args("setStepEnabled", vec![
+                ActionArgDef::text("id", LocalizedLabel::native("Step", "Schritt")).required(),
+                ActionArgDef::toggle("enabled", LocalizedLabel::native("Enabled", "Aktiviert")).required(),
+            ])
             .action_args("setStock", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
                     ActionArgOption::new("box", LocalizedLabel::native("Box", "Quader")),
@@ -1947,7 +1954,7 @@ pub fn create_process3d_app() -> AppDefinition {
             .action_describe("removeStep", LocalizedLabel::native("Removes one process step by id from the timeline.", "Entfernt einen Prozessschritt anhand seiner Id aus der Zeitleiste."))
             .action_describe("moveStep", LocalizedLabel::native("Moves one process step to a new position (index) in the timeline, changing the order in which it is applied.", "Verschiebt einen Prozessschritt an eine neue Position (Index) der Zeitleiste und ändert damit die Reihenfolge seiner Anwendung."))
             .action_describe("updateStep", LocalizedLabel::native("Updates one process step to the supplied definition, changing only the fields that differ.", "Aktualisiert einen Prozessschritt auf die übergebene Definition und ändert nur die abweichenden Felder."))
-            .action_describe("setStepEnabled", LocalizedLabel::native("Turns one process step on or off; a disabled step stays in the timeline but is not applied to the stock.", "Schaltet einen Prozessschritt ein oder aus; ein deaktivierter Schritt bleibt in der Zeitleiste, wird aber nicht auf das Rohteil angewendet."))
+            .action_describe("setStepEnabled", LocalizedLabel::native("Sets one process step on or off, to exactly the value passed, so repeating it changes nothing; a disabled step stays in the timeline but is not applied to the stock.", "Schaltet einen Prozessschritt genau nach dem übergebenen Wert ein oder aus, sodass eine Wiederholung nichts ändert; ein deaktivierter Schritt bleibt in der Zeitleiste, wird aber nicht auf das Rohteil angewendet."))
             .action_describe("patchInspector", LocalizedLabel::native("Edits one inspector field of the stock or a workshop machine (a label, a stock position or a capability parameter) with a number or text value.", "Bearbeitet ein Inspektorfeld des Rohteils oder einer Werkstattmaschine (Bezeichnung, Rohteilposition oder Fähigkeitsparameter) mit einem Zahlen- oder Textwert."))
             .action_describe("setCursor", LocalizedLabel::native("Sets how many process steps the timeline cursor has applied, which the 3D view shows the stock after.", "Legt fest, wie viele Prozessschritte der Zeitleisten-Cursor angewendet hat, wonach die 3D-Ansicht das Rohteil zeigt."))
             .action_describe("stepCursor", LocalizedLabel::native("Moves the timeline cursor by the given number of steps forward or back (never below zero).", "Bewegt den Zeitleisten-Cursor um die angegebene Zahl von Schritten vor oder zurück (nie unter null)."))

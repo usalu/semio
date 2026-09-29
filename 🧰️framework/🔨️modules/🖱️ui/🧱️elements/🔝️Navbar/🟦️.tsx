@@ -70,11 +70,15 @@ export function navbarFreeBandV1(width: number, occupied: readonly NavbarSpanV1[
 /** 🎯️ Left offset of a centered item: the bar's own centre whenever the item fits there without
  * crossing {@link navbarFreeBandV1}'s edges, and otherwise the nearest position inside the band. An item
  * wider than the band starts at the band's left edge — its own `max-width` is what makes it fit, so this
- * is a fixed point rather than a step that re-measures into a different answer. */
+ * is a fixed point rather than a step that re-measures into a different answer. The offset snaps to the
+ * nearest whole pixel INSIDE the band, so a sub-pixel band edge is never crossed (the unrounded position
+ * when no whole pixel fits). */
 export function navbarCenteredLeftV1(width: number, band: NavbarSpanV1, contentWidth: number): number {
   const latest = band.right - contentWidth;
   if (latest <= band.left) return band.left;
-  return Math.round(Math.min(Math.max((width - contentWidth) / 2, band.left), latest));
+  const [first, last] = [Math.ceil(band.left), Math.floor(latest)];
+  const left = Math.min(Math.max((width - contentWidth) / 2, band.left), latest);
+  return first > last ? left : Math.min(Math.max(Math.round(left), first), last);
 }
 
 /** 🔌️ The trailing chrome a host parks at the navbar's end — the fullscreen toggle and whatever sits just before it. */

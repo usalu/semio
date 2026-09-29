@@ -55,6 +55,8 @@ pub struct PluginBuilder<State, PA: PluginApp = crate::app::NoPluginApp> {
     label: Option<String>,
     version: Option<String>,
     artifacts: Vec<ArtifactDeclaration>,
+    /// 🏠️ Declarations of kinds another package owns, hosted in this plugin's guest — see [`Self::host_artifact`].
+    hosted_artifacts: Vec<ArtifactDeclaration>,
     artifact_definitions: Vec<crate::app::ArtifactDefinition>,
     capabilities: Vec<CapabilityRequirement>,
     commands: Vec<(CommandDefinition, PluginCommandHandler)>,
@@ -114,6 +116,7 @@ impl<PA: PluginApp> PluginBuilder<NeedsLabel, PA> {
             label: None,
             version: None,
             artifacts: Vec::new(),
+            hosted_artifacts: Vec::new(),
             artifact_definitions: Vec::new(),
             capabilities: Vec::new(),
             commands: Vec::new(),
@@ -149,6 +152,7 @@ impl<PA: PluginApp> PluginBuilder<NeedsLabel, PA> {
             label: Some(label.into()),
             version: None,
             artifacts: self.artifacts,
+            hosted_artifacts: self.hosted_artifacts,
             artifact_definitions: self.artifact_definitions,
             capabilities: self.capabilities,
             commands: self.commands,
@@ -186,6 +190,7 @@ impl<PA: PluginApp> PluginBuilder<NeedsVersion, PA> {
             label: self.label,
             version: Some(version.into()),
             artifacts: self.artifacts,
+            hosted_artifacts: self.hosted_artifacts,
             artifact_definitions: self.artifact_definitions,
             capabilities: self.capabilities,
             commands: self.commands,
@@ -226,6 +231,19 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// declares — see `ArtifactDeclaration::preflight`.
     pub fn artifact(mut self, declaration: ArtifactDeclaration) -> Self {
         self.artifacts.push(declaration);
+        self
+    }
+
+    /// 🏠️ Hosts the runtime of one artifact kind another package owns, so this package's own guest opens, edits,
+    /// imports and exports it: the owner's document schemas, inference descriptors, document codecs, composers, formats,
+    /// subset validators and dialect migrations commit into this guest's registries exactly as the owner's assembly
+    /// commits them (identical rows are tolerated, a conflicting row is fatal). Hosting is not owning: the kind's owner is a
+    /// direct dependency, its definition is never registered here, its inference services stay listed by the owner alone, and
+    /// `describe` lists composers only for kinds this plugin's id owns and codec rows only for kinds this plugin's apps open
+    /// — no descriptor or hub catalog row moves. Repeatable, once per kind. See ticket
+    /// `26/09/23/END-TO-END-OS-HUB-COLLABORATION-MCP` `📓️wp-lb2.md` (p9).
+    pub fn host_artifact(mut self, declaration: ArtifactDeclaration) -> Self {
+        self.hosted_artifacts.push(declaration);
         self
     }
 
@@ -597,6 +615,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
             label,
             version,
             artifacts,
+            hosted_artifacts,
             artifact_definitions,
             mut capabilities,
             commands,
@@ -648,6 +667,13 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         for declaration in &artifacts {
             declaration.preflight(&plugin_id, &mut definitions)?;
         }
+        let mut hosted_kinds = BTreeSet::new();
+        for declaration in &hosted_artifacts {
+            declaration.preflight_hosted(&plugin_id, &dependencies)?;
+            if !hosted_kinds.insert(declaration.definition().identity().as_str()) {
+                return Err(PluginAssemblyError::new("plugin-assembly.hosted-artifact-repeated", format!("plugin {plugin_id:?} hosts {:?} twice", declaration.definition().identity().as_str())));
+            }
+        }
         let mut declared_media_kinds = BTreeMap::new();
         for spec in artifact_kinds.iter().chain(app_defs.iter().flat_map(|(app, _)| app.definition.artifact_kinds.iter())) {
             if spec.id.trim().is_empty() || spec.schema.trim().is_empty() {
@@ -677,7 +703,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
                 app_schemas.push(descriptor);
             }
         }
-        let plan = crate::app::ArtifactRegistrationPlan::from_declarations(&artifacts, app_schemas, &foreign_document_codecs, &plugin_id, host_media_handlers, flow_extensions, routed_inferences);
+        let plan = crate::app::ArtifactRegistrationPlan::from_declarations(&artifacts, &hosted_artifacts, app_schemas, &foreign_document_codecs, &plugin_id, host_media_handlers, flow_extensions, routed_inferences);
         let (mut runtime, registry_plan) = plan.into_runtime(definitions)?;
 
         let mut contribution_descriptors = Vec::with_capacity(contributions.len());
@@ -699,7 +725,11 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         plugin.manifest.dependencies = dependencies;
         plugin.manifest.contributions = contribution_descriptors;
         plugin.manifest.topic_contributions = topic_contributions;
-        for declaration in artifacts {
+        for declaration in &hosted_artifacts {
+            let rows = declaration.hosted_kinds()?;
+            plugin.manifest.hosted_artifact_kinds.extend(rows);
+        }
+        for declaration in artifacts.into_iter().chain(hosted_artifacts) {
             plugin = declaration.apply_to(plugin);
         }
         for capability in capabilities {
@@ -720,6 +750,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         if let Some(breach) = crate::app::surface_dependency_breaches(&plugin.manifest).into_iter().next() {
             return Err(PluginAssemblyError::new("plugin-assembly.surface-dependency-gate", breach));
         }
+        crate::app::host_foreign_surface_kinds(&mut plugin.manifest);
         let assembly = store::begin_artifact_assembly().map_err(|error| PluginAssemblyError::new("plugin-assembly.unavailable", error.to_string()))?;
         crate::app::commit_artifact_registration_plan(&assembly, registry_plan)?;
         Ok(plugin.with_descriptor_extras(crate::plugin_runtime::PluginDescriptorExtras { package_id, activation_events, capability_requests, extension_points, execution, quotas, assets }))

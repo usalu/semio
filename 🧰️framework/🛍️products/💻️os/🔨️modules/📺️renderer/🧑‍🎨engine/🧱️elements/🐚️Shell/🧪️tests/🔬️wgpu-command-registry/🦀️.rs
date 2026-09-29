@@ -753,6 +753,7 @@ fn native_document_admission_is_bound_to_verified_package_app_window_and_rendere
         topic_contributions: vec![],
         commands: vec![],
         artifact_kinds: vec![],
+        hosted_artifact_kinds: Vec::new(),
         dependencies: vec![],
         contributions: vec![],
     };
@@ -811,6 +812,7 @@ fn resolve_commands_tags_every_source() {
         topic_contributions: vec![],
         commands: vec![CommandDefinition::bounded_catalog("doThing", LocalizedLabel::data("Do Thing"), "plugin", ActionKind::Shell)],
         artifact_kinds: vec![],
+        hosted_artifact_kinds: Vec::new(),
         dependencies: vec![],
         contributions: vec![],
     };
@@ -842,6 +844,7 @@ fn identical_local_command_ids_have_collision_free_owner_keys() {
         topic_contributions: vec![],
         commands: vec![CommandDefinition::bounded_catalog(local_id, LocalizedLabel::data("Refresh Plugin"), "plugin", ActionKind::View)],
         artifact_kinds: vec![],
+        hosted_artifact_kinds: Vec::new(),
         dependencies: vec![],
         contributions: vec![],
     };

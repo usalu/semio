@@ -56,7 +56,7 @@ pub use derived_composition::*;
 // together here (not dead: `register()` is reached by stdio's protected imperative
 // `crate::engine::register()` plugin-root call, via that artifact-level shim's
 // own explicit override that calls both 87a's AND 89a's `register()`).
-// `empty_gif_snapshot`/`demo_gif_snapshot` moved to `../🧬️schema`.
+// `blank_gif_snapshot`/`demo_gif_snapshot` moved to `../🧬️schema`.
 use crate::standards::v87a::engine as codec;
 use crate::standards::v89a::subsets::any::schema::mutations::GifMutation;
 use crate::standards::v89a::subsets::any::schema::snapshot::{GifAppExtension, GifColorTable, GifDisposal, GifFrame, GifPlainText, GifRgb, GifSnapshot, STDIO_GIF89A_DOCUMENT_SCHEMA};

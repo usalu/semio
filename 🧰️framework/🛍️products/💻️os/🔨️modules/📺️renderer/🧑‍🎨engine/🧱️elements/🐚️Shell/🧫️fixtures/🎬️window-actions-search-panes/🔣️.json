@@ -21,7 +21,7 @@
       "executeId": "framework.window.{windowSegment}.action.{actionId}.execute",
       "resetId": "framework.window.{windowSegment}.action.{actionId}.reset"
     },
-    "reservedActionIds": ["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint", "copy", "cut", "paste", "revertToCommand", "setHistoryCommandFilter", "noteShellCommand", "recordTutorial", "startIntroduction", "startTutorial", "setActiveUtility", "setActiveTool"]
+    "reservedActionIds": ["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint", "copy", "cut", "paste", "revertToCommand", "setHistoryCommandFilter", "noteShellCommand", "recordTutorial", "startIntroduction", "startTutorial", "setActiveUtility", "setActiveTool", "exportArtifactDocument", "importArtifactDocument"]
   },
   "engagementControls": {
     "_": "🎛️ React's `<Engagement/>` body, top to bottom: the session's `engagement-step` status as a heading, the primary `control`, every `controls` row, the remaining status lines, then the quick-action `ButtonGroup` (🖱️ui/🎯️targets/⚛️react/🟦️.tsx:11004-11045). `EngagementControlView` (:10648) renders each control under `control.id` when the guest names one and under the per-kind fallback below when it does not; a toggle group's and a ring's OPTION rows carry the option's own id, and a numeric control with a unit reads `Label (unit)`.",

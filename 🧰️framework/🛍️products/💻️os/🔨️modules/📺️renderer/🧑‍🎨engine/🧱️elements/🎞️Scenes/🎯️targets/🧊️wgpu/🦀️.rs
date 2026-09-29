@@ -70,8 +70,8 @@ pub struct AdmittedSurfaceMap<T> {
     order_len: usize,
     external_reservations: usize,
     fault: Option<&'static str>,
-    rejected: Option<AdmittedSurfaceRejected<T>>,
-    retired: Option<AdmittedSurfaceCloseOwner<T>>,
+    rejected: Option<Box<AdmittedSurfaceRejected<T>>>,
+    retired: Option<Box<AdmittedSurfaceCloseOwner<T>>>,
     closing: bool,
 }
 
@@ -119,7 +119,7 @@ impl<T> AdmittedSurfaceMap<T> {
             self.epochs[slot] = self.epochs[slot].wrapping_add(1).max(1);
             entry.epoch = self.epochs[slot];
             let previous = std::mem::replace(&mut entry.value, value);
-            self.retired = Some(AdmittedSurfaceCloseOwner { id, value: previous });
+            self.retired = Some(Box::new(AdmittedSurfaceCloseOwner { id, value: previous }));
             return Ok(AdmittedSurfaceToken { slot: slot as u16, epoch: entry.epoch });
         }
         self.epochs[slot] = self.epochs[slot].wrapping_add(1).max(1);
@@ -131,13 +131,13 @@ impl<T> AdmittedSurfaceMap<T> {
         if self.rejected.is_some() {
             return Err(AdmittedSurfaceRejected { fault: AdmittedSurfaceFault::RejectedPending, ..rejected });
         }
-        self.rejected = Some(rejected);
+        self.rejected = Some(Box::new(rejected));
         Ok(())
     }
 
     pub fn retain_first_rejected(&mut self, rejected: AdmittedSurfaceRejected<T>) {
         assert!(self.rejected.is_none(), "surface producer must stop while one exact rejected owner is retained");
-        self.rejected = Some(rejected);
+        self.rejected = Some(Box::new(rejected));
     }
 
     pub fn admission_blocked(&self) -> bool {
@@ -285,7 +285,7 @@ impl<T> AdmittedSurfaceMap<T> {
             return Some(AdmittedSurfaceCloseOwner { id: rejected.id, value: rejected.value });
         }
         if let Some(retired) = self.retired.take() {
-            return Some(retired);
+            return Some(*retired);
         }
         if self.order_len == 0 {
             return None;
@@ -610,6 +610,8 @@ struct SceneSurfaceState {
     block_list_accessibility: SceneAccessibilityPresentation<BlockListAccessibilityControl>,
     event_feed_accessibility: SceneAccessibilityPresentation<EventFeedAccessibilityControl>,
     graph_timeline_accessibility: SceneAccessibilityPresentation<GraphTimelineAccessibilityControl>,
+    /// 📏️ The label track this surface's last GraphTimeline paint measured — the one geometry its hit test reads.
+    graph_timeline_label_track: f32,
     last_pointer_pos: (f32, f32),
     /// 🕒️ Controller for the mounted surface's settled camera publication.
     camera_dispatch_controller_id: Option<String>,
@@ -1137,6 +1139,17 @@ const RASTER_SURFACE_CAPACITY: usize = 256;
 const RASTER_UPLOADS_PER_SURFACE_CAPACITY: usize = 16;
 const RASTER_UPLOAD_KEY_BYTE_CAPACITY: usize = 256;
 const RASTER_UPLOAD_BYTE_CAPACITY: usize = 1024 * 1024;
+/// 🖼️ Per-image refusals one surface parks for silent retirement between two upload-cursor passes; admission keeps room for one.
+const RASTER_REFUSALS_PER_SURFACE: usize = 4;
+
+/// 🖼️ Why one image was not queued for upload ([`queue_canvas_image_upload_with`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum RasterUploadRefusal {
+    /// ⏳️ Back-pressure — no free slot, the process ledger at capacity, an owner still retiring; offer the source again later.
+    Busy,
+    /// 🚫️ The source's own refusal (undecodable, oversized) — a per-image outcome to keep, never to re-offer.
+    Invalid(&'static str),
+}
 
 struct PendingRasterQueue {
     slots: Box<[Option<PreparedRasterProducer>; RASTER_UPLOADS_PER_SURFACE_CAPACITY]>,
@@ -1233,6 +1246,37 @@ struct PendingRasterSurface {
     rejected: Option<PreparedRasterRejected>,
     retiring: Option<PreparedRasterRejected>,
     closing: Option<PreparedRasterProducer>,
+    /// 🖼️ Per-image refusals awaiting silent bounded retirement ([`PendingRasterSurface::park_refusal`]).
+    refused: [Option<PreparedRasterRejected>; RASTER_REFUSALS_PER_SURFACE],
+}
+
+impl PendingRasterSurface {
+    /// 🚦️ Whether one more image may be admitted: a free FIFO slot, no admission in flight, no authority owner retained or
+    /// retiring, and room in the refusal ring for the refusal the admission could end in.
+    fn admits_upload(&self) -> bool {
+        !self.queue.is_full() && self.admission.is_none() && self.rejected.is_none() && self.retiring.is_none() && self.closing.is_none() && self.refused.iter().any(Option::is_none)
+    }
+
+    /// 🖼️ Parks one refused owner for silent retirement and answers the typed outcome; admission reserved the ring slot (a full
+    /// ring falls back to the authority slot).
+    fn park_refusal(&mut self, refusal: PreparedRasterRejected) -> RasterUploadRefusal {
+        let outcome = if refusal.is_content_refusal() { RasterUploadRefusal::Invalid(refusal.fault()) } else { RasterUploadRefusal::Busy };
+        match self.refused.iter_mut().find(|slot| slot.is_none()) {
+            Some(slot) => *slot = Some(refusal),
+            None => self.rejected = Some(refusal),
+        }
+        outcome
+    }
+
+    /// 🖼️ One bounded retirement step of the first parked refusal; `false` when the ring is empty.
+    fn retire_refusal_step(&mut self) -> bool {
+        let Some(slot) = self.refused.iter_mut().find(|slot| slot.is_some()) else { return false };
+        if slot.as_mut().is_some_and(PreparedRasterRejected::close_step) {
+            debug_assert!(slot.as_ref().is_some_and(PreparedRasterRejected::terminal_is_empty), "a retired refusal is terminal-empty");
+            *slot = None;
+        }
+        true
+    }
 }
 
 pub enum PendingRasterUploadStep {
@@ -1295,6 +1339,9 @@ impl PendingRasterUploadCursor {
             let Some(state) = states.get_mut(&surface_id) else { return PendingRasterUploadStep::Fault("raster surface order lost ownership") };
             if let Some(reservation) = state.admission.take() {
                 state.rejected = Some(reservation.reject("raster reservation was abandoned before publication", Vec::new()));
+                return PendingRasterUploadStep::Pending;
+            }
+            if state.retire_refusal_step() {
                 return PendingRasterUploadStep::Pending;
             }
             if let Some(retiring) = state.retiring.as_mut() {
@@ -1382,6 +1429,9 @@ impl PendingRasterSurfaceRetirement {
             self.surface.retiring = Some(reservation.reject("realm closed pending raster reservation", Vec::new()));
             return false;
         }
+        if self.surface.retire_refusal_step() {
+            return false;
+        }
         if let Some(rejected) = self.surface.rejected.as_mut() {
             if !rejected.close_step() {
                 return false;
@@ -1430,6 +1480,7 @@ impl PendingRasterSurfaceRetirement {
             && self.surface.retiring.is_none()
             && self.surface.admission.is_none()
             && self.surface.rejected.is_none()
+            && self.surface.refused.iter().all(Option::is_none)
             && self.surface.closing.is_none()
             && self.surface.queue.len == 0
             && self.surface.queue.checked_out.is_none()
@@ -6086,32 +6137,49 @@ struct GraphTimelineLayout {
     avatar_overlap: f32,
 }
 
-fn graph_timeline_label_text_width(text: &str, theme: &Theme) -> f32 {
-    text.chars().count() as f32 * theme.font_size_small * 0.43
+/// 🏷️ React's checkpoint chips, their `checkpoint` placeholder and the mutation badge are `text-2xs` (`🕰️HistoryTable/🟦️.tsx`).
+const GRAPH_TIMELINE_CHIP_FONT_PX: f32 = ui_styling::metrics::typography::TEXT2XS_PX as f32;
+
+/// 📏️ One chip label's width in the face the painter pens it with.
+fn graph_timeline_chip_text_width(atlas: &mut ui_wgpu::wgpu::FontAtlas, text: &str) -> f32 {
+    atlas.measure_text(text, GRAPH_TIMELINE_CHIP_FONT_PX).0
 }
 
-fn graph_timeline_label_track_width(columns: &[HistoryColumnJson], theme: &Theme) -> f32 {
+/// 📏️ The label track React's `auto` grid column resolves to: the widest row's chips (each `px-1.5` around its measured label,
+/// `gap-1` apart) or its `checkpoint` placeholder, inside the row's `px-single` padding.
+fn graph_timeline_label_track_width(columns: &[HistoryColumnJson], theme: &Theme, atlas: &mut ui_wgpu::wgpu::FontAtlas) -> f32 {
     let chip_padding = theme.root_rem_pixels * 0.375;
     let chip_gap = theme.root_rem_pixels * 0.25;
     columns
         .iter()
         .map(|column| {
             let content = if column.labels.is_empty() {
-                graph_timeline_label_text_width("checkpoint", theme)
+                graph_timeline_chip_text_width(atlas, "checkpoint")
             } else {
-                column.labels.iter().map(|label| graph_timeline_label_text_width(label, theme) + chip_padding * 2.0).sum::<f32>() + chip_gap * column.labels.len().saturating_sub(1) as f32
+                column.labels.iter().map(|label| graph_timeline_chip_text_width(atlas, label) + chip_padding * 2.0).sum::<f32>() + chip_gap * column.labels.len().saturating_sub(1) as f32
             };
             content + theme.padding_standard * 2.0
         })
         .fold(0.0, f32::max)
 }
 
+/// 📏️ [`graph_timeline_label_track_width`] of one scene's own columns.
+pub(crate) fn graph_timeline_scene_label_track(scene: &UiComponentSceneNode, theme: &Theme, atlas: &mut ui_wgpu::wgpu::FontAtlas) -> f32 {
+    let columns: Vec<HistoryColumnJson> = scene.graph_timeline.as_ref().and_then(|history| serde_json::from_str(&history.columns_json).ok()).unwrap_or_default();
+    graph_timeline_label_track_width(&columns, theme, atlas)
+}
+
+/// 📏️ The label track `host_id`'s last paint measured (`0` before its first paint).
+fn graph_timeline_painted_label_track(host_id: &str) -> f32 {
+    SCENE_STATE.with(|cell| cell.borrow().get(host_id).map_or(0.0, |state| state.graph_timeline_label_track))
+}
+
 /// 📐️ One accepted geometry authority shared by GraphTimeline paint, pointer, scrolling and AT.
-fn graph_timeline_layout(bounds: Rect, columns: &[HistoryColumnJson], theme: &Theme) -> GraphTimelineLayout {
+fn graph_timeline_layout(bounds: Rect, columns: &[HistoryColumnJson], theme: &Theme, label_track: f32) -> GraphTimelineLayout {
     let inner = bounds.inset(theme.padding_standard);
     let graph_width = history_graph_width(history_lane_count(columns));
     let graph_column_width = graph_width + HISTORY_AUTHOR_SLOT;
-    let label_track_width = graph_timeline_label_track_width(columns, theme).min((inner.w - graph_column_width).max(0.0));
+    let label_track_width = label_track.min((inner.w - graph_column_width).max(0.0));
     GraphTimelineLayout {
         inner,
         row_height: theme.tree_row_height,
@@ -6138,10 +6206,10 @@ fn graph_timeline_accessible_name(column: &HistoryColumnJson) -> String {
     if column.labels.is_empty() { column.checkpoint_id.clone() } else { column.labels.join(", ") }
 }
 
-pub(crate) fn graph_timeline_accessibility_controls(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme) -> Vec<GraphTimelineAccessibilityControl> {
+pub(crate) fn graph_timeline_accessibility_controls(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme, label_track: f32) -> Vec<GraphTimelineAccessibilityControl> {
     let Some(history) = scene.graph_timeline.as_ref() else { return Vec::new() };
     let Ok(columns) = serde_json::from_str::<Vec<HistoryColumnJson>>(&history.columns_json) else { return Vec::new() };
-    let layout = graph_timeline_layout(bounds, &columns, theme);
+    let layout = graph_timeline_layout(bounds, &columns, theme, label_track);
     let inner = layout.inner;
     let scroll = scroll_offset(&scene.host_id, "history");
     columns
@@ -6189,12 +6257,14 @@ pub(crate) fn graph_timeline_accessibility_activate(
 /// previously read as visibly heavier than React's thin, faded rail.
 fn render_graph_timeline(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
-    stage_graph_timeline_accessibility_controls(&scene.host_id, graph_timeline_accessibility_controls(scene, bounds, theme));
-    let Some(history) = &scene.graph_timeline else {
+    let columns: Vec<HistoryColumnJson> = scene.graph_timeline.as_ref().and_then(|history| serde_json::from_str(&history.columns_json).ok()).unwrap_or_default();
+    let label_track = graph_timeline_label_track_width(&columns, theme, ctx.atlas);
+    mutate_scene_state(&scene.host_id, |state| state.graph_timeline_label_track = label_track);
+    stage_graph_timeline_accessibility_controls(&scene.host_id, graph_timeline_accessibility_controls(scene, bounds, theme, label_track));
+    if scene.graph_timeline.is_none() {
         return render_placeholder("graph-timeline", bounds, ctx);
-    };
-    let columns: Vec<HistoryColumnJson> = serde_json::from_str(&history.columns_json).unwrap_or_default();
-    let layout = graph_timeline_layout(bounds, &columns, theme);
+    }
+    let layout = graph_timeline_layout(bounds, &columns, theme, label_track);
     let inner = layout.inner;
     let row_h = layout.row_height;
     let pad = theme.padding_standard;
@@ -6234,16 +6304,16 @@ fn render_graph_timeline(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut F
 
         let mut label_x = inner.x + pad;
         if column.labels.is_empty() {
-            draw_text(ctx, "checkpoint", label_x, y + row_h * 0.65, theme.font_size_small, foreground_on_fill(theme, theme.text_muted, false, hovered));
+            draw_text(ctx, "checkpoint", label_x, y + row_h * 0.5 + GRAPH_TIMELINE_CHIP_FONT_PX * 0.35, GRAPH_TIMELINE_CHIP_FONT_PX, foreground_on_fill(theme, theme.text_muted, false, hovered));
         } else {
             for label in &column.labels {
-                let chip_w = (graph_timeline_label_text_width(label, theme) + theme.root_rem_pixels * 0.75).min((inner.x + labels_col_w - pad - label_x).max(0.0));
+                let chip_w = (graph_timeline_chip_text_width(ctx.atlas, label) + theme.root_rem_pixels * 0.75).min((inner.x + labels_col_w - pad - label_x).max(0.0));
                 if chip_w <= 0.0 {
                     break;
                 }
                 let chip_h = theme.control_height_small;
                 ctx.draw.push_rounded([label_x, y + (row_h - chip_h) * 0.5, chip_w, chip_h], theme.accent, theme.border_radius);
-                draw_text(ctx, label, label_x + theme.root_rem_pixels * 0.375, y + row_h * 0.5 + theme.font_size_small * 0.35, theme.font_size_small, theme.active_foreground);
+                draw_text(ctx, label, label_x + theme.root_rem_pixels * 0.375, y + row_h * 0.5 + GRAPH_TIMELINE_CHIP_FONT_PX * 0.35, GRAPH_TIMELINE_CHIP_FONT_PX, theme.active_foreground);
                 label_x += chip_w + theme.root_rem_pixels * 0.25;
             }
         }
@@ -6290,10 +6360,10 @@ fn render_graph_timeline(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut F
         let mut description_x = desc_x + pad;
         if let Some((level, (fill, text))) = column.mutation_level.as_deref().and_then(|level| graph_timeline_mutation_tone(level, theme).map(|tone| (level, tone))) {
             let label = level.to_uppercase();
-            let badge_w = graph_timeline_label_text_width(&label, theme) + theme.root_rem_pixels * 0.75;
+            let badge_w = graph_timeline_chip_text_width(ctx.atlas, &label) + theme.root_rem_pixels * 0.75;
             let badge_h = layout.avatar_size;
             ctx.draw.push_rounded([description_x, y + (row_h - badge_h) * 0.5, badge_w, badge_h], fill, theme.border_radius);
-            draw_text(ctx, &label, description_x + theme.root_rem_pixels * 0.375, y + row_h * 0.5 + theme.font_size_small * 0.35, theme.font_size_small, text);
+            draw_text(ctx, &label, description_x + theme.root_rem_pixels * 0.375, y + row_h * 0.5 + GRAPH_TIMELINE_CHIP_FONT_PX * 0.35, GRAPH_TIMELINE_CHIP_FONT_PX, text);
             description_x += badge_w + theme.root_rem_pixels * 0.25;
         }
         if let Some(description) = &column.description {
@@ -6315,7 +6385,7 @@ fn render_graph_timeline(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut F
 fn graph_timeline_hit(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, theme: &Theme) -> Option<SceneListHit> {
     let history = scene.graph_timeline.as_ref()?;
     let columns: Vec<HistoryColumnJson> = serde_json::from_str(&history.columns_json).unwrap_or_default();
-    let layout = graph_timeline_layout(bounds, &columns, theme);
+    let layout = graph_timeline_layout(bounds, &columns, theme, graph_timeline_painted_label_track(&scene.host_id));
     let inner = layout.inner;
     if x < inner.x || x >= inner.x + layout.selectable_width || y < inner.y || y >= inner.y + inner.h {
         return None;
@@ -6519,7 +6589,7 @@ fn decode_canvas_image_bytes(bytes: &[u8]) -> Option<(Vec<u8>, u32, u32)> {
     Some((rgba.into_raw(), width, height))
 }
 
-pub(crate) fn queue_canvas_image_upload_sized(surface_id: &str, layer_id: &str, data_url: &str) -> (Option<String>, Option<(u32, u32)>) {
+pub(crate) fn queue_canvas_image_upload_sized(surface_id: &str, layer_id: &str, data_url: &str) -> (Result<String, RasterUploadRefusal>, Option<(u32, u32)>) {
     let dimensions = std::cell::Cell::new(None);
     let key = queue_canvas_image_upload_with(
         surface_id,
@@ -6540,7 +6610,7 @@ pub(crate) fn queue_canvas_image_upload_sized(surface_id: &str, layer_id: &str, 
 }
 
 pub(crate) fn queue_canvas_image_upload(surface_id: &str, layer_id: &str, data_url: &str) -> Option<String> {
-    queue_canvas_image_upload_sized(surface_id, layer_id, data_url).0
+    queue_canvas_image_upload_sized(surface_id, layer_id, data_url).0.ok()
 }
 
 fn draw_checkerboard(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &Viewport, inner: Rect, theme: &Theme, extent: f32) {
@@ -6964,7 +7034,8 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
             if let Some(text) = layer.text.as_ref().and_then(|text| text.content.as_deref()) {
                 let size = layer.text.as_ref().and_then(|text| text.size).unwrap_or(14.0) as f32;
                 let (sx, sy) = viewport.world_to_screen(layer.x as f32, layer.y as f32, inner);
-                draw_text(ctx, text, sx, sy + size.max(8.0), size.max(8.0), theme.text);
+                let color = layer.fill.as_ref().and_then(|fill| fill.color.as_deref()).map(|channels| canvas_color_channels(channels, opacity)).unwrap_or(theme.text);
+                draw_text(ctx, text, sx, sy + size.max(8.0), size.max(8.0), color);
             }
             continue;
         }
@@ -7063,9 +7134,7 @@ pub(crate) fn queue_decoded_raster_upload(surface_id: &str, key: String, width: 
     pixels.shrink_to_fit();
     let ready = PENDING_RASTER_STATE.with(|cell| {
         let mut surfaces = cell.borrow_mut();
-        surfaces
-            .get_or_insert_with(surface_id.to_string(), PendingRasterSurface::default)
-            .is_some_and(|surface| !surface.queue.is_full() && surface.admission.is_none() && surface.rejected.is_none() && surface.retiring.is_none() && surface.closing.is_none())
+        surfaces.get_or_insert_with(surface_id.to_string(), PendingRasterSurface::default).is_some_and(|surface| surface.admits_upload())
     });
     if !ready {
         return None;
@@ -7129,89 +7198,65 @@ pub(crate) fn queue_decoded_raster_upload(surface_id: &str, key: String, width: 
     accepted.then_some(published_key)
 }
 
-pub(crate) fn queue_canvas_image_upload_with(surface_id: &str, layer_id: &str, source_identity: &[u8], dimensions: impl FnOnce() -> Result<(u32, u32, Vec<u8>), Vec<u8>>, decode: impl FnOnce(&[u8]) -> Option<Vec<u8>>) -> Option<String> {
+/// 🖼️ Reserves first, then measures, decodes and queues ONE encoded image backing under `canvas-image:<surface>:<layer>`. The
+/// answer is typed ([`RasterUploadRefusal`]): `Busy` is back-pressure (no free slot, the process ledger at capacity, an owner still
+/// retiring) and the caller offers the source again later; `Invalid` is the SOURCE's own refusal (undecodable, oversized) — a
+/// per-image outcome the caller keeps instead of re-offering. Every refused owner is parked in the surface's refusal ring and retired
+/// by the upload cursor without faulting the frame, so one bad image never blocks the next image on the same surface.
+pub(crate) fn queue_canvas_image_upload_with(
+    surface_id: &str,
+    layer_id: &str,
+    source_identity: &[u8],
+    dimensions: impl FnOnce() -> Result<(u32, u32, Vec<u8>), Vec<u8>>,
+    decode: impl FnOnce(&[u8]) -> Option<Vec<u8>>,
+) -> Result<String, RasterUploadRefusal> {
     if scene_host_retiring(surface_id) {
-        return None;
+        return Err(RasterUploadRefusal::Busy);
     }
-    if surface_id.len().saturating_add(layer_id.len()).saturating_add(32) > RASTER_UPLOAD_KEY_BYTE_CAPACITY || source_identity.len() > RASTER_UPLOAD_BYTE_CAPACITY.saturating_mul(2) {
-        return None;
+    if surface_id.len().saturating_add(layer_id.len()).saturating_add(32) > RASTER_UPLOAD_KEY_BYTE_CAPACITY {
+        return Err(RasterUploadRefusal::Invalid("raster key exceeded its fixed credits"));
+    }
+    if source_identity.len() > RASTER_UPLOAD_BYTE_CAPACITY.saturating_mul(2) {
+        return Err(RasterUploadRefusal::Invalid("raster source exceeded Canvas upload credits"));
     }
     let key = format!("canvas-image:{surface_id}:{layer_id}");
-    let ready = PENDING_RASTER_STATE.with(|cell| {
-        let mut surfaces = cell.borrow_mut();
-        surfaces
-            .get_or_insert_with(surface_id.to_string(), PendingRasterSurface::default)
-            .is_some_and(|surface| !surface.queue.is_full() && surface.admission.is_none() && surface.rejected.is_none() && surface.retiring.is_none() && surface.closing.is_none())
-    });
+    let ready = PENDING_RASTER_STATE.with(|cell| cell.borrow_mut().get_or_insert_with(surface_id.to_string(), PendingRasterSurface::default).is_some_and(|surface| surface.admits_upload()));
     if !ready {
-        return None;
+        return Err(RasterUploadRefusal::Busy);
     }
-    let reserved = PENDING_RASTER_STATE.with(|cell| {
+    PENDING_RASTER_STATE.with(|cell| {
         let mut surfaces = cell.borrow_mut();
-        let surface = surfaces.get_mut(surface_id)?;
+        let surface = surfaces.get_mut(surface_id).ok_or(RasterUploadRefusal::Busy)?;
         match PreparedRasterReservation::try_reserve_source(key, source_identity.len()) {
             Ok(reservation) => {
                 surface.admission = Some(reservation);
-                Some(true)
+                Ok(())
             }
-            Err(rejected) => {
-                surface.rejected = Some(rejected);
-                None
-            }
+            Err(rejected) => Err(surface.park_refusal(rejected)),
         }
-    });
-    if reserved != Some(true) {
-        return None;
-    }
+    })?;
     let (width, height, retained_source) = match dimensions() {
         Ok(dimensions) => dimensions,
-        Err(retained_source) => {
-            PENDING_RASTER_STATE.with(|cell| {
-                let mut surfaces = cell.borrow_mut();
-                let Some(surface) = surfaces.get_mut(surface_id) else { return };
-                let Some(reservation) = surface.admission.take() else { return };
-                surface.rejected = Some(reservation.reject_with_retained("raster source dimensions failed", Vec::new(), retained_source));
-            });
-            return None;
-        }
+        Err(retained_source) => return Err(refuse_raster_admission(surface_id, |reservation| reservation.reject_with_retained("raster source dimensions failed", Vec::new(), retained_source).into_content_refusal())),
     };
-    let claimed = PENDING_RASTER_STATE.with(|cell| {
+    let retained_source = PENDING_RASTER_STATE.with(|cell| {
         let mut surfaces = cell.borrow_mut();
-        let surface = surfaces.get_mut(surface_id)?;
-        let reservation = surface.admission.take()?;
+        let surface = surfaces.get_mut(surface_id).ok_or(RasterUploadRefusal::Busy)?;
+        let reservation = surface.admission.take().ok_or(RasterUploadRefusal::Busy)?;
         match reservation.claim_with_retained(width, height, retained_source) {
             Ok((reservation, retained_source)) => {
                 surface.admission = Some(reservation);
-                Some(retained_source)
+                Ok(retained_source)
             }
-            Err(rejected) => {
-                surface.rejected = Some(rejected);
-                None
-            }
+            Err(rejected) => Err(surface.park_refusal(rejected.into_content_refusal())),
         }
-    });
-    let Some(retained_source) = claimed else { return None };
-    let pixels = match decode(&retained_source) {
-        Some(decoded) => decoded,
-        None => {
-            PENDING_RASTER_STATE.with(|cell| {
-                let mut surfaces = cell.borrow_mut();
-                let Some(surface) = surfaces.get_mut(surface_id) else { return };
-                let Some(reservation) = surface.admission.take() else { return };
-                surface.rejected = Some(reservation.reject_with_retained("raster source decode failed", Vec::new(), retained_source));
-            });
-            return None;
-        }
+    })?;
+    let Some(pixels) = decode(&retained_source) else {
+        return Err(refuse_raster_admission(surface_id, |reservation| reservation.reject_with_retained("raster source decode failed", Vec::new(), retained_source).into_content_refusal()));
     };
     let expected = (width as usize).saturating_mul(height as usize).saturating_mul(4);
     if expected > RASTER_UPLOAD_BYTE_CAPACITY || pixels.len() != expected {
-        PENDING_RASTER_STATE.with(|cell| {
-            let mut surfaces = cell.borrow_mut();
-            let Some(surface) = surfaces.get_mut(surface_id) else { return };
-            let Some(reservation) = surface.admission.take() else { return };
-            surface.rejected = Some(reservation.reject_with_retained("decoded raster exceeded Canvas upload credits", pixels, retained_source));
-        });
-        return None;
+        return Err(refuse_raster_admission(surface_id, |reservation| reservation.reject_with_retained("decoded raster exceeded Canvas upload credits", pixels, retained_source).into_content_refusal()));
     }
     let admitted = PENDING_RASTER_STATE.with(|cell| cell.borrow_mut().get_mut(surface_id).and_then(|surface| surface.admission.take()).map(|reservation| reservation.finalize(pixels, retained_source, width, height)));
     let (producer, published_key) = match admitted {
@@ -7222,9 +7267,9 @@ pub(crate) fn queue_canvas_image_upload_with(surface_id: &str, layer_id: &str, s
                     surface.rejected = Some(rejected);
                 }
             });
-            return None;
+            return Err(RasterUploadRefusal::Busy);
         }
-        None => return None,
+        None => return Err(RasterUploadRefusal::Busy),
     };
     let accepted = PENDING_RASTER_STATE.with(|cell| {
         let mut surfaces = cell.borrow_mut();
@@ -7239,12 +7284,21 @@ pub(crate) fn queue_canvas_image_upload_with(surface_id: &str, layer_id: &str, s
         }
     });
     if !accepted {
-        return None;
+        return Err(RasterUploadRefusal::Busy);
     }
-    Some(published_key)
+    Ok(published_key)
 }
 
-/** 🖼️ Reserves first, then decodes one encoded Canvas image backing exactly once. */
+/// 🖼️ Parks `surface_id`'s in-flight admission as the refusal `reject` turns it into, answering the typed outcome.
+fn refuse_raster_admission(surface_id: &str, reject: impl FnOnce(PreparedRasterReservation) -> PreparedRasterRejected) -> RasterUploadRefusal {
+    PENDING_RASTER_STATE.with(|cell| {
+        let mut surfaces = cell.borrow_mut();
+        let Some(surface) = surfaces.get_mut(surface_id) else { return RasterUploadRefusal::Busy };
+        let Some(reservation) = surface.admission.take() else { return RasterUploadRefusal::Busy };
+        surface.park_refusal(reject(reservation))
+    })
+}
+
 
 /** Clamps checkerboard cell iteration to the world-space rect actually visible through `inner`
  * (intersected with the full `±extent/2` grid) instead of always walking the whole grid — a

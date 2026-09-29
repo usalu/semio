@@ -60,7 +60,7 @@ fn production_action_ingress_has_no_legacy_queue_and_text_vec_helpers_are_test_o
     }
     assert!(!SCENES_SOURCE.contains(concat!("mem::", "forget")));
     for function in ["text_editor_apply_key", "text_editor_pointer_down", "text_editor_pointer_move", "text_editor_pointer_up", "text_editor_select_span_at_screen", "text_editor_set_selection", "text_editor_apply_completion"] {
-        assert!(ENGINE_CANVAS_STANDALONE.contains(&format!("#[cfg(test)]\npub fn {function}")), "{function} must not remain production-capable");
+        assert!(!ENGINE_CANVAS_SOURCE.contains(&format!("pub fn {function}(")) && !ENGINE_CANVAS_STANDALONE.contains(&format!("pub fn {function}(")), "{function} must not remain production-capable");
         assert!(!ENGINE_CANVAS_SOURCE.contains(&format!("pub fn {function}(")), "{function} must not be reachable from the production ⚙️EngineCanvas target");
     }
     for function in ["node_graph_wheel", "node_graph_pointer_down", "node_graph_pointer_move", "node_graph_pointer_up", "tiled_map_wheel", "puzzle_board_pointer_move", "puzzle_board_pointer_up", "puzzle_board_pointer_leave", "puzzle_board_wheel"] {

@@ -133,7 +133,14 @@ semio_framework_plugin::app_labels! {
         thread_next: native_en "Next Frame", native_de "Nächster Rahmen", reuse_en "Next Frame", reuse_de "Nächster Rahmen";
         thread_none: native_en "None", native_de "Keiner", reuse_en "None", reuse_de "Keiner";
         group_layer: native_en "Layer", native_de "Ebene", reuse_en "Layer", reuse_de "Ebene";
+        add_layer: native_en "Add Layer", native_de "Ebene hinzufügen", reuse_en "Add Layer", reuse_de "Ebene hinzufügen";
+        open_source: native_en "Open", native_de "Öffnen", reuse_en "Open", reuse_de "Öffnen";
+        drawing_text: native_en "Drawing Text", native_de "Zeichnungstext", reuse_en "Drawing Text", reuse_de "Zeichnungstext";
+        bring_forward: native_en "Bring Forward", native_de "Nach vorn holen", reuse_en "Bring Forward", reuse_de "Nach vorn holen";
+        send_backward: native_en "Send Backward", native_de "Nach hinten stellen", reuse_en "Send Backward", reuse_de "Nach hinten stellen";
         character_style: native_en "Character Style", native_de "Zeichenformat", reuse_en "Character Style", reuse_de "Zeichenformat";
+        style_start: native_en "Style Start", native_de "Stilbeginn", reuse_en "Style Start", reuse_de "Stilbeginn";
+        style_end: native_en "Style End", native_de "Stilende", reuse_en "Style End", reuse_de "Stilende";
         add_character_style: native_en "Add Character Style", native_de "Zeichenformat hinzufügen", reuse_en "Add Character Style", reuse_de "Zeichenformat hinzufügen";
         delete_character_style: native_en "Delete Character Style", native_de "Zeichenformat löschen", reuse_en "Delete Character Style", reuse_de "Zeichenformat löschen";
         italic: native_en "Italic", native_de "Kursiv", reuse_en "Italic", reuse_de "Kursiv";

@@ -400,7 +400,12 @@
         "set-page-parent",
         "set-page-guides",
         "set-story-runs",
-        "update-link"
+        "update-link",
+        "set-page-overrides",
+        "create-layer",
+        "set-frame-layer",
+        "set-drawing-text",
+        "reorder-frame"
       ]
     }
   ],

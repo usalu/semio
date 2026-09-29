@@ -359,6 +359,10 @@ fn every_world_color_cursor_uses_the_encoded_composite_attachment() {
         "world3d_standard_translucent_pipeline",
         "world3d_painted_pipeline",
         "world3d_painted_pipeline_translucent",
+        "world3d_authored_front_pipeline",
+        "world3d_authored_double_translucent_pipeline",
+        "world3d_authored_painted_front_pipeline",
+        "world3d_authored_painted_front_translucent_pipeline",
         "world3d_celebration_pipeline",
         "world3d_celebration_pipeline_translucent",
         "world3d_textured_pipeline",
@@ -371,7 +375,7 @@ fn every_world_color_cursor_uses_the_encoded_composite_attachment() {
     assert_eq!(
         draw_source.matches("format: world_encoded_format, blend:").count(),
         encoded_world_pipelines.len(),
-        "standard, translucent, painted, celebration, line, textured, procedural-grid and curvilinear pipelines all target the encoded UNORM view exactly once"
+        "standard, translucent, painted, authored (GLB), celebration, line, textured, procedural-grid and post-process pipelines all target the encoded UNORM view exactly once"
     );
     assert!(draw_source.contains("if pass.render_profile == SceneRenderProfile3d::SvgFlatLit { 1.0 } else { 0.0 }"), "the WGPU producer carries the explicit SVG face-lighting profile");
     assert!(draw_source.contains("if pass.shadow.enabled { 1.0 } else { 0.0 }") && draw_source.contains("0.0,\n                1.0,"), "the WGPU producer declares that its World attachment expects encoded output");

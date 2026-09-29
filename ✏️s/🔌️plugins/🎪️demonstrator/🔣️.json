@@ -14708,48 +14708,7 @@
         "dialogs": [],
         "mediaInputs": [],
         "mediaOutputs": [],
-        "artifactKinds": [
-          {
-            "id": "3d.generation",
-            "label": {
-              "native": {
-                "en": "3D Generation",
-                "de": "3D-Generierung"
-              },
-              "reuse": {
-                "en": "3D Generation",
-                "de": "3D-Generierung"
-              }
-            },
-            "sourceFormat": "generation.3d",
-            "componentKind": "generation3d",
-            "dimension": "3d",
-            "mediaCapability": "meshOnly",
-            "mediaType": {
-              "class": "threeD",
-              "form": "flow"
-            },
-            "schema": "generation.3d",
-            "exportFormats": [],
-            "importFormats": [],
-            "exportStdioKinds": [
-              "stdio.dwg",
-              "stdio.gltf",
-              "stdio.las",
-              "stdio.obj",
-              "stdio.ply",
-              "stdio.stl"
-            ],
-            "importStdioKinds": [
-              "stdio.dwg",
-              "stdio.gltf",
-              "stdio.json",
-              "stdio.obj",
-              "stdio.ply",
-              "stdio.stl"
-            ]
-          }
-        ],
+        "artifactKinds": [],
         "config": {
           "fields": []
         },
@@ -18607,6 +18566,218 @@
             }
           },
           {
+            "id": "setReferenceHidden",
+            "label": {
+              "native": {
+                "en": "Set Reference Hidden",
+                "de": "Referenz verborgen festlegen"
+              },
+              "reuse": {
+                "en": "Set Reference Hidden",
+                "de": "Referenz verborgen festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "modelDefinitionId",
+                "label": {
+                  "native": {
+                    "en": "Model Definition",
+                    "de": "Modelldefinition"
+                  },
+                  "reuse": {
+                    "en": "Model Definition",
+                    "de": "Modelldefinition"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "referenceId",
+                "label": {
+                  "native": {
+                    "en": "Reference",
+                    "de": "Referenz"
+                  },
+                  "reuse": {
+                    "en": "Reference",
+                    "de": "Referenz"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "hidden",
+                "label": {
+                  "native": {
+                    "en": "Hidden",
+                    "de": "Verborgen"
+                  },
+                  "reuse": {
+                    "en": "Hidden",
+                    "de": "Verborgen"
+                  }
+                },
+                "schema": {
+                  "kind": "boolean"
+                },
+                "required": true
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one reference overlay hidden or shown, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Verbirgt eine Referenzüberlagerung oder zeigt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."
+                },
+                "reuse": {
+                  "en": "Sets one reference overlay hidden or shown, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Verbirgt eine Referenzüberlagerung oder zeigt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."
+                }
+              }
+            }
+          },
+          {
+            "id": "setReferenceLocked",
+            "label": {
+              "native": {
+                "en": "Set Reference Locked",
+                "de": "Referenz gesperrt festlegen"
+              },
+              "reuse": {
+                "en": "Set Reference Locked",
+                "de": "Referenz gesperrt festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "modelDefinitionId",
+                "label": {
+                  "native": {
+                    "en": "Model Definition",
+                    "de": "Modelldefinition"
+                  },
+                  "reuse": {
+                    "en": "Model Definition",
+                    "de": "Modelldefinition"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "referenceId",
+                "label": {
+                  "native": {
+                    "en": "Reference",
+                    "de": "Referenz"
+                  },
+                  "reuse": {
+                    "en": "Reference",
+                    "de": "Referenz"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "locked",
+                "label": {
+                  "native": {
+                    "en": "Locked",
+                    "de": "Gesperrt"
+                  },
+                  "reuse": {
+                    "en": "Locked",
+                    "de": "Gesperrt"
+                  }
+                },
+                "schema": {
+                  "kind": "boolean"
+                },
+                "required": true
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one reference overlay locked or unlocked, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Sperrt eine Referenzüberlagerung oder entsperrt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."
+                },
+                "reuse": {
+                  "en": "Sets one reference overlay locked or unlocked, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Sperrt eine Referenzüberlagerung oder entsperrt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."
+                }
+              }
+            }
+          },
+          {
             "id": "engagementSubmit",
             "label": {
               "native": {
@@ -21267,54 +21438,7 @@
         "dialogs": [],
         "mediaInputs": [],
         "mediaOutputs": [],
-        "artifactKinds": [
-          {
-            "id": "3d.cad",
-            "label": {
-              "native": {
-                "en": "3D CAD",
-                "de": "3D-CAD"
-              },
-              "reuse": {
-                "en": "3D CAD",
-                "de": "3D-CAD"
-              }
-            },
-            "sourceFormat": "cad.scene",
-            "componentKind": "cad",
-            "dimension": "3d",
-            "mediaCapability": "brep",
-            "mediaType": {
-              "class": "threeD",
-              "form": "brep"
-            },
-            "schema": "cad.scene",
-            "exportFormats": [],
-            "importFormats": [],
-            "exportStdioKinds": [
-              "dwg",
-              "glb",
-              "gltf",
-              "ifc",
-              "json",
-              "obj",
-              "png",
-              "step",
-              "stl"
-            ],
-            "importStdioKinds": [
-              "dwg",
-              "glb",
-              "gltf",
-              "ifc",
-              "json",
-              "obj",
-              "png",
-              "step",
-              "stl"
-            ]
-          }
-        ],
+        "artifactKinds": [],
         "config": {
           "fields": []
         },
@@ -23766,6 +23890,226 @@
                 "reuse": {
                   "en": "Sets one flag (such as hidden or locked) on the given or selected objects.",
                   "de": "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen oder ausgewählten Objekte."
+                }
+              }
+            }
+          },
+          {
+            "id": "setSelectionHidden",
+            "label": {
+              "native": {
+                "en": "Set Hidden",
+                "de": "Verborgen festlegen"
+              },
+              "reuse": {
+                "en": "Set Hidden",
+                "de": "Verborgen festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "entity",
+                "label": {
+                  "native": {
+                    "en": "Entity",
+                    "de": "Entität"
+                  },
+                  "reuse": {
+                    "en": "Entity",
+                    "de": "Entität"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              },
+              {
+                "id": "ids",
+                "label": {
+                  "native": {
+                    "en": "Ids",
+                    "de": "IDs"
+                  },
+                  "reuse": {
+                    "en": "Ids",
+                    "de": "IDs"
+                  }
+                },
+                "schema": {
+                  "kind": "array",
+                  "items": {
+                    "kind": "string"
+                  }
+                },
+                "required": false
+              },
+              {
+                "id": "hidden",
+                "label": {
+                  "native": {
+                    "en": "Hidden",
+                    "de": "Verborgen"
+                  },
+                  "reuse": {
+                    "en": "Hidden",
+                    "de": "Verborgen"
+                  }
+                },
+                "schema": {
+                  "kind": "boolean"
+                },
+                "required": true
+              }
+            ],
+            "inPalette": false,
+            "category": "hand",
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the given or selected objects hidden or shown, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Verbirgt die angegebenen oder ausgewählten Objekte oder zeigt sie, genau auf den übergebenen Wert; eine Wiederholung ändert nichts."
+                },
+                "reuse": {
+                  "en": "Sets the given or selected objects hidden or shown, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Verbirgt die angegebenen oder ausgewählten Objekte oder zeigt sie, genau auf den übergebenen Wert; eine Wiederholung ändert nichts."
+                }
+              }
+            }
+          },
+          {
+            "id": "setSelectionLocked",
+            "label": {
+              "native": {
+                "en": "Set Locked",
+                "de": "Gesperrt festlegen"
+              },
+              "reuse": {
+                "en": "Set Locked",
+                "de": "Gesperrt festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "entity",
+                "label": {
+                  "native": {
+                    "en": "Entity",
+                    "de": "Entität"
+                  },
+                  "reuse": {
+                    "en": "Entity",
+                    "de": "Entität"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              },
+              {
+                "id": "ids",
+                "label": {
+                  "native": {
+                    "en": "Ids",
+                    "de": "IDs"
+                  },
+                  "reuse": {
+                    "en": "Ids",
+                    "de": "IDs"
+                  }
+                },
+                "schema": {
+                  "kind": "array",
+                  "items": {
+                    "kind": "string"
+                  }
+                },
+                "required": false
+              },
+              {
+                "id": "locked",
+                "label": {
+                  "native": {
+                    "en": "Locked",
+                    "de": "Gesperrt"
+                  },
+                  "reuse": {
+                    "en": "Locked",
+                    "de": "Gesperrt"
+                  }
+                },
+                "schema": {
+                  "kind": "boolean"
+                },
+                "required": true
+              }
+            ],
+            "inPalette": false,
+            "category": "hand",
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the given or selected objects locked or unlocked, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Sperrt die angegebenen oder ausgewählten Objekte oder entsperrt sie, genau auf den übergebenen Wert; eine Wiederholung ändert nichts."
+                },
+                "reuse": {
+                  "en": "Sets the given or selected objects locked or unlocked, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Sperrt die angegebenen oder ausgewählten Objekte oder entsperrt sie, genau auf den übergebenen Wert; eine Wiederholung ändert nichts."
                 }
               }
             }
@@ -29218,38 +29562,7 @@
         ],
         "mediaInputs": [],
         "mediaOutputs": [],
-        "artifactKinds": [
-          {
-            "id": "3d.puzzle",
-            "label": {
-              "native": {
-                "en": "3D Puzzle",
-                "de": "3D-Puzzle"
-              },
-              "reuse": {
-                "en": "3D Puzzle",
-                "de": "3D-Puzzle"
-              }
-            },
-            "sourceFormat": "puzzle.3d",
-            "componentKind": "puzzle3d",
-            "dimension": "3d",
-            "mediaCapability": "meshOnly",
-            "mediaType": {
-              "class": "threeD",
-              "form": "design"
-            },
-            "schema": "puzzle.3d",
-            "exportFormats": [],
-            "importFormats": [],
-            "exportStdioKinds": [
-              "stdio.json"
-            ],
-            "importStdioKinds": [
-              "stdio.json"
-            ]
-          }
-        ],
+        "artifactKinds": [],
         "config": {
           "fields": []
         },
@@ -34442,92 +34755,7 @@
         "dialogs": [],
         "mediaInputs": [],
         "mediaOutputs": [],
-        "artifactKinds": [
-          {
-            "id": "catalogue.sourcing",
-            "label": {
-              "native": {
-                "en": "Sourcing Curation",
-                "de": "Beschaffungskuratierung"
-              },
-              "reuse": {
-                "en": "Sourcing Curation",
-                "de": "Beschaffungskuratierung"
-              }
-            },
-            "sourceFormat": "sourcing.curation",
-            "componentKind": "catalogue",
-            "dimension": "data",
-            "mediaCapability": "meshOnly",
-            "mediaType": {
-              "class": "kit",
-              "form": "kit"
-            },
-            "schema": "sourcing.curation/v1",
-            "exportFormats": [],
-            "importFormats": [],
-            "exportStdioKinds": [
-              "stdio.json",
-              "stdio.zip"
-            ],
-            "importStdioKinds": [
-              "stdio.json",
-              "stdio.zip"
-            ]
-          },
-          {
-            "id": "catalogue.kinds",
-            "label": {
-              "native": {
-                "en": "Kind Catalogue",
-                "de": "Typenkatalog"
-              },
-              "reuse": {
-                "en": "Kind Catalogue",
-                "de": "Typenkatalog"
-              }
-            },
-            "sourceFormat": "catalogue.kinds",
-            "componentKind": "catalogue",
-            "dimension": "data",
-            "mediaCapability": "meshOnly",
-            "mediaType": {
-              "class": "kit",
-              "form": "type"
-            },
-            "schema": "catalogue.kinds",
-            "exportFormats": [],
-            "importFormats": [],
-            "exportStdioKinds": [],
-            "importStdioKinds": []
-          },
-          {
-            "id": "kit.catalog",
-            "label": {
-              "native": {
-                "en": "Kit Catalogue",
-                "de": "Bausatzkatalog"
-              },
-              "reuse": {
-                "en": "Kit Catalogue",
-                "de": "Bausatzkatalog"
-              }
-            },
-            "sourceFormat": "kit.catalog",
-            "componentKind": "catalogue",
-            "dimension": "data",
-            "mediaCapability": "meshOnly",
-            "mediaType": {
-              "class": "kit",
-              "form": "type"
-            },
-            "schema": "kit.catalog",
-            "exportFormats": [],
-            "importFormats": [],
-            "exportStdioKinds": [],
-            "importStdioKinds": []
-          }
-        ],
+        "artifactKinds": [],
         "config": {
           "fields": []
         },
@@ -37112,7 +37340,42 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "id",
+                "label": {
+                  "native": {
+                    "en": "Step",
+                    "de": "Schritt"
+                  },
+                  "reuse": {
+                    "en": "Step",
+                    "de": "Schritt"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "enabled",
+                "label": {
+                  "native": {
+                    "en": "Enabled",
+                    "de": "Aktiviert"
+                  },
+                  "reuse": {
+                    "en": "Enabled",
+                    "de": "Aktiviert"
+                  }
+                },
+                "schema": {
+                  "kind": "boolean"
+                },
+                "required": true
+              }
+            ],
             "inPalette": false,
             "semantics": {
               "effects": {
@@ -37142,12 +37405,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Turns one process step on or off; a disabled step stays in the timeline but is not applied to the stock.",
-                  "de": "Schaltet einen Prozessschritt ein oder aus; ein deaktivierter Schritt bleibt in der Zeitleiste, wird aber nicht auf das Rohteil angewendet."
+                  "en": "Sets one process step on or off, to exactly the value passed, so repeating it changes nothing; a disabled step stays in the timeline but is not applied to the stock.",
+                  "de": "Schaltet einen Prozessschritt genau nach dem übergebenen Wert ein oder aus, sodass eine Wiederholung nichts ändert; ein deaktivierter Schritt bleibt in der Zeitleiste, wird aber nicht auf das Rohteil angewendet."
                 },
                 "reuse": {
-                  "en": "Turns one process step on or off; a disabled step stays in the timeline but is not applied to the stock.",
-                  "de": "Schaltet einen Prozessschritt ein oder aus; ein deaktivierter Schritt bleibt in der Zeitleiste, wird aber nicht auf das Rohteil angewendet."
+                  "en": "Sets one process step on or off, to exactly the value passed, so repeating it changes nothing; a disabled step stays in the timeline but is not applied to the stock.",
+                  "de": "Schaltet einen Prozessschritt genau nach dem übergebenen Wert ein oder aus, sodass eine Wiederholung nichts ändert; ein deaktivierter Schritt bleibt in der Zeitleiste, wird aber nicht auf das Rohteil angewendet."
                 }
               }
             }
@@ -39323,43 +39586,7 @@
         "dialogs": [],
         "mediaInputs": [],
         "mediaOutputs": [],
-        "artifactKinds": [
-          {
-            "id": "3d.process",
-            "label": {
-              "native": {
-                "en": "3D Process",
-                "de": "3D-Prozess"
-              },
-              "reuse": {
-                "en": "3D Process",
-                "de": "3D-Prozess"
-              }
-            },
-            "sourceFormat": "process.3d",
-            "componentKind": "process3d",
-            "dimension": "3d",
-            "mediaCapability": "brep",
-            "mediaType": {
-              "class": "threeD",
-              "form": "brep"
-            },
-            "schema": "process.3d",
-            "exportFormats": [],
-            "importFormats": [],
-            "exportStdioKinds": [
-              "stdio.step",
-              "stdio.obj",
-              "stdio.stl",
-              "stdio.gltf"
-            ],
-            "importStdioKinds": [
-              "stdio.step",
-              "stdio.obj",
-              "stdio.stl"
-            ]
-          }
-        ],
+        "artifactKinds": [],
         "config": {
           "fields": []
         },
@@ -44133,47 +44360,7 @@
             "multiplicity": "many"
           }
         ],
-        "artifactKinds": [
-          {
-            "id": "s.gis.gismap",
-            "label": {
-              "native": {
-                "en": "2D Map",
-                "de": "2D-Karte"
-              },
-              "reuse": {
-                "en": "2D Map",
-                "de": "2D-Karte"
-              }
-            },
-            "sourceFormat": "gis.map",
-            "componentKind": "gismap",
-            "dimension": "2d",
-            "mediaCapability": "meshOnly",
-            "mediaType": {
-              "class": "twoD",
-              "form": "vector"
-            },
-            "schema": "gis.map",
-            "exportFormats": [],
-            "importFormats": [],
-            "exportStdioKinds": [
-              "stdio.dwg",
-              "stdio.dxf",
-              "stdio.json",
-              "stdio.pdf",
-              "stdio.png",
-              "stdio.svg",
-              "stdio.txt"
-            ],
-            "importStdioKinds": [
-              "stdio.dwg",
-              "stdio.dxf",
-              "stdio.json",
-              "stdio.txt"
-            ]
-          }
-        ],
+        "artifactKinds": [],
         "config": {
           "fields": []
         },
@@ -44519,6 +44706,48 @@
     "topicContributions": [],
     "commands": [],
     "artifactKinds": [],
+    "hostedArtifactKinds": [
+      {
+        "id": "3d.generation",
+        "schema": "generation.3d",
+        "owner": "procedural"
+      },
+      {
+        "id": "3d.cad",
+        "schema": "cad.scene",
+        "owner": "cad"
+      },
+      {
+        "id": "3d.puzzle",
+        "schema": "puzzle.3d",
+        "owner": "puzzle"
+      },
+      {
+        "id": "catalogue.sourcing",
+        "schema": "sourcing.curation/v1",
+        "owner": "sourcing"
+      },
+      {
+        "id": "catalogue.kinds",
+        "schema": "catalogue.kinds",
+        "owner": "sourcing"
+      },
+      {
+        "id": "kit.catalog",
+        "schema": "kit.catalog",
+        "owner": "sourcing"
+      },
+      {
+        "id": "3d.process",
+        "schema": "process.3d",
+        "owner": "process"
+      },
+      {
+        "id": "s.gis.gismap",
+        "schema": "gis.map",
+        "owner": "gis"
+      }
+    ],
     "dependencies": [
       {
         "pluginId": "cad",
@@ -45174,8 +45403,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "72f85163bbd8c1ebaafa54fd4b849e9bad7127cb330c9ec29f270e9000a773b5",
-    "coreWasmSha256": "2771c2a25bc7ef64dfc840f9c0982623c0ef9d0d2ceab72ec178e8a50f072e13",
-    "descriptorSha256": "23452f45d2052b7abdd7f1208855c1170361f6d594e3bf3e58a46fc7266365cc"
+    "wasmSha256": "5a295c1c541273c29aadd7501c61d899ebb90faa54278257b2521fad73e3c07e",
+    "coreWasmSha256": "402f859232cdbb1bfceb896547c7d96ade12c756f79abff3f0d64ee5ec1d297c",
+    "descriptorSha256": "65d2cf98a529bbb9b5eb29651720bfd4b7f4354372e4b03aad65006355247448"
   }
 }

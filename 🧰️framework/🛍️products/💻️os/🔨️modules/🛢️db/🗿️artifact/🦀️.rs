@@ -300,6 +300,13 @@ async fn grade_conflict_record(record: &db_conflict::ConflictRecord) -> protocol
 /// the decision's edit so a later write can say it observed it, and it is never itself graded.
 const DURABLE_GROUP_TOUCH_KIND: &str = "db.durable-group";
 
+/// 🪪️ The code of the refusal the event log answers a `Revert`/`Reinstate` naming an operation another actor authored
+/// (`ArtifactEngine::submit`); a client localizes the refusal by this code, never by the message prose.
+pub const FOREIGN_HISTORY_TRANSITION_CODE: &str = "history.foreign-transition";
+
+/// 🗣️ The message of that refusal (developer detail; the UI text is the localized label of its code).
+pub const FOREIGN_HISTORY_TRANSITION_MESSAGE: &str = "an undo or redo may only name operations its own author wrote";
+
 /// 🧷️ The recent-window marker of one committed durable group decision (see [`DURABLE_GROUP_TOUCH_KIND`]).
 fn durable_group_touch(edit_id: &str) -> db_conflict::CommandTouch {
     db_conflict::CommandTouch::new(protocol::MutationId(edit_id.to_string()), protocol::ActorId(String::new()), db_conflict::CommandKind::from(DURABLE_GROUP_TOUCH_KIND), protocol::HybridLogicalTimestamp::new(0, 0))
@@ -1297,8 +1304,8 @@ impl DocumentState {
     /// ✍️ Applies one planned envelope's entries ([`Self::plan_entries`]): every value, already encoded, set at
     /// its path, every `None` a deletion, and `mutation_id` recorded as each path's last writer.
     async fn apply_entries(&mut self, mutation_id: &protocol::MutationId, entries: Vec<(String, Option<Vec<u8>>)>) -> Result<(), DbError> {
+        while artifact_state_retirement_maintenance_step()? {}
         if entries.is_empty() {
-            while artifact_state_retirement_maintenance_step()? {}
             return Ok(());
         }
         let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
@@ -1319,10 +1326,12 @@ impl DocumentState {
                     Ok(entry) => staged[index] = Some(entry),
                     Err(rejected) => {
                         let error = format!("retained state admission failed: {}", rejected.error());
+                        let error = if matches!(rejected.error(), DbError::Unavailable(_)) { DbError::Unavailable(error) } else { DbError::InvalidArgument(error) };
                         let retirement = retirements[index].take().ok_or_else(|| DbError::Internal("retained state refusal lost retirement preflight".to_string()))?;
                         release_artifact_state_retirements(&mut retirements);
                         install_reserved_artifact_state_owner(ArtifactStateRetirementCursor::rejected(retirement, rejected, staged));
-                        return Err(DbError::InvalidArgument(error));
+                        while artifact_state_retirement_maintenance_step()? {}
+                        return Err(error);
                     }
                 }
             }
@@ -1683,6 +1692,12 @@ impl ArtifactEngine {
         self.wal.has_pending()
     }
 
+    /// 🅿️ The engine rests between turns: its WAL parks the document's writer (unless a group commit still waits), so a
+    /// backend with more open documents than writers lends it to whichever document writes next.
+    fn park_writer(&self) {
+        self.wal.park_writer();
+    }
+
     async fn close_flush(&mut self) -> Result<(), DbError> {
         let wal_facet = self.storage.wal().await;
         self.wal.close_flush(&wal_facet).await
@@ -1981,6 +1996,19 @@ impl ArtifactEngine {
         Ok(())
     }
 
+    /// 🪪️ An undo belongs to its author — the event log's twin of `protocol::fold_history`'s rule, so the log never holds an
+    /// operation every replica refuses: a `Revert` or `Reinstate` naming an operation this document's log (or an earlier
+    /// envelope of the same batch) records under another actor is refused before the WAL, whatever the merge policy, with the
+    /// one [`FOREIGN_HISTORY_TRANSITION_CODE`] message. An operation the log does not know belongs to anyone (the replicas'
+    /// fold says the same), and a transition that does not decode is left to the replicas' own decoder.
+    fn foreign_history_transition_refusal(&self, envelope: &protocol::MutationEnvelope, batch: &[protocol::MutationEnvelope]) -> Option<protocol::MutationMessage> {
+        let (protocol::HistoryTransition::Revert { mutation_ids } | protocol::HistoryTransition::Reinstate { mutation_ids }) = protocol::history_transition_from_envelope(envelope).ok()?? else {
+            return None;
+        };
+        let author = |id: &protocol::MutationId| self.applied.get(&id.0).map(|applied| &applied.actor).or_else(|| batch.iter().find(|earlier| &earlier.mutation_id == id).map(|earlier| &earlier.actor));
+        mutation_ids.iter().any(|id| author(id).is_some_and(|actor| actor != &envelope.actor)).then(|| protocol::MutationMessage::error(FOREIGN_HISTORY_TRANSITION_CODE, FOREIGN_HISTORY_TRANSITION_MESSAGE))
+    }
+
     /// 👁️ Whether `dependency` names an operation a committed durable group decision folded: the
     /// decision's edit itself, or `<edit>#<position>`.
     fn names_durable_group_operation(&self, dependency: &str) -> bool {
@@ -2055,6 +2083,9 @@ impl ArtifactEngine {
             // envelope (content-checked above) skipped it: it is an idempotent resend.
             let principal = db_security::Principal::new(envelope.actor.clone(), db_security::TenantId::from("default"), vec!["member".to_string()]);
             self.config.security.admit_commands(&principal, &db_security::TenantId::from("default"), &envelope.document_id, &envelope.diff.schema.0, &[(&envelope.actor, &envelope.mutation_id)], now_ms).await?;
+            if let Some(refusal) = self.foreign_history_transition_refusal(envelope, &batch.envelopes) {
+                return Err(DbError::Rejected { policy: options.policy, worst: protocol::Severity::Error, messages: vec![refusal] });
+            }
 
             // 🎯️ W5: `WalRecord::Command`'s bytes are `protocol::encode_envelope`'s binary record now
             // (M-C's "storage AND communication both binary") — `db_sync::replay_sync_state` reads
@@ -2104,6 +2135,9 @@ impl ArtifactEngine {
         let _ = records.push(db_wal::WalRecord::Frontier(Frontier { document: self.document.clone(), head_seq, commit_seq: self.frontier.commit_seq + 1, chain_hash: [0; 32], epoch: self.frontier.epoch }));
         self.wal.preflight_submit(&commands, &records)?;
         let _ = records.close_step()?;
+        let wal_facet = self.storage.wal().await;
+        self.wal.begin_write(&wal_facet).await?;
+        drop(wal_facet);
 
         let mut touched_all = db_state::TouchedSet::new();
         let mut conflicts_all: Vec<ConflictRecord> = Vec::new();
@@ -4925,8 +4959,36 @@ impl ArtifactRunnerHandoff {
     }
 }
 
+/// 📏️ Live document authorities one process holds at once: each reserves a retirement slot when it spawns, so dropping
+/// it can always hand its runner to a retirement cursor. A slot is a fixed cell, never a pool maintenance hook — the pool
+/// has a few dozen of those in all, and every authority used to take one, which capped a hub at about 60 open documents.
 #[cfg(not(target_arch = "wasm32"))]
-const ARTIFACT_RUNNER_RETIREMENT_SLOTS: usize = 64;
+const ARTIFACT_RUNNER_RETIREMENT_SLOTS: usize = 4_096;
+
+/// 🪝️ Worker pools that retire artifact runners at once: each gets ONE maintenance hook, shared by every retirement slot
+/// reserved on it, installed with its first reservation and retired with its last.
+#[cfg(not(target_arch = "wasm32"))]
+const ARTIFACT_RUNNER_RETIREMENT_POOLS: usize = 256;
+
+/// 🔑️ One pool's shared retirement hook: its row, the row's generation and the pool's maintenance ticket.
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Clone, Copy)]
+struct ArtifactRunnerRetirementHookKey {
+    row: usize,
+    generation: u64,
+    ticket: semio_framework_async::WorkerMaintenanceTicket,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct ArtifactRunnerRetirementHook {
+    generation: u64,
+    pool: Arc<semio_framework_async::WorkerPool>,
+    ticket: semio_framework_async::WorkerMaintenanceTicket,
+    slots: usize,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+static ARTIFACT_RUNNER_RETIREMENT_HOOKS: std::sync::Mutex<[Option<ArtifactRunnerRetirementHook>; ARTIFACT_RUNNER_RETIREMENT_POOLS]> = std::sync::Mutex::new([const { None }; ARTIFACT_RUNNER_RETIREMENT_POOLS]);
 
 #[cfg(not(target_arch = "wasm32"))]
 struct ArtifactRunnerRetirementCursor {
@@ -4935,7 +4997,7 @@ struct ArtifactRunnerRetirementCursor {
     handoff: Arc<ArtifactRunnerHandoff>,
     pool: Arc<semio_framework_async::WorkerPool>,
     _pool_use: Arc<semio_framework_async::WorkerPoolUse>,
-    ticket: semio_framework_async::WorkerMaintenanceTicket,
+    hook: ArtifactRunnerRetirementHookKey,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -5014,21 +5076,87 @@ struct ArtifactRunnerRetirementReservation {
     index: usize,
     generation: u64,
     pool: Arc<semio_framework_async::WorkerPool>,
-    ticket: Option<semio_framework_async::WorkerMaintenanceTicket>,
+    hook: Option<ArtifactRunnerRetirementHookKey>,
 }
 
-/// 🧹️ One retirement turn for the cursor in slot `index`. A reservation whose cursor is not committed
-/// yet sleeps (`Idle`) — its commit requests the turn again — so an early wake can never retire the
-/// hook and strand the cursor; only a generation that no longer owns the slot retires it.
+/// 🪝️ Joins `pool`'s shared retirement hook, installing it for the pool's first reservation.
 #[cfg(not(target_arch = "wasm32"))]
-fn artifact_runner_retirement_step([index, generation]: [u64; 2]) -> semio_framework_async::WorkerMaintenanceStep {
-    let Ok(index) = usize::try_from(index) else { return semio_framework_async::WorkerMaintenanceStep::Retire };
-    let Some(slot) = ARTIFACT_RUNNER_RETIREMENTS.get(index) else { return semio_framework_async::WorkerMaintenanceStep::Retire };
+fn artifact_runner_retirement_hook_join(pool: &Arc<semio_framework_async::WorkerPool>, generation: u64) -> Result<ArtifactRunnerRetirementHookKey, DbError> {
+    let mut hooks = ARTIFACT_RUNNER_RETIREMENT_HOOKS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    if let Some((row, hook)) = hooks.iter_mut().enumerate().find_map(|(row, hook)| hook.as_mut().filter(|hook| Arc::ptr_eq(&hook.pool, pool)).map(|hook| (row, hook))) {
+        hook.slots += 1;
+        return Ok(ArtifactRunnerRetirementHookKey { row, generation: hook.generation, ticket: hook.ticket });
+    }
+    let row = hooks.iter().position(Option::is_none).ok_or_else(|| DbError::Unavailable("artifact runner retirement pool capacity exhausted".to_string()))?;
+    let ticket = pool
+        .install_maintenance_hook(semio_framework_async::Lane::UserVisible, artifact_runner_retirement_step, [row as u64, generation])
+        .map_err(|error| DbError::Unavailable(format!("artifact runner retirement maintenance admission: {error:?}")))?;
+    hooks[row] = Some(ArtifactRunnerRetirementHook { generation, pool: pool.clone(), ticket, slots: 1 });
+    Ok(ArtifactRunnerRetirementHookKey { row, generation, ticket })
+}
+
+/// 🪝️ One retirement slot of the hook's pool was released: the pool's last one removes the hook's row (the hook itself
+/// retires on its next turn, or at once when it is not running).
+#[cfg(not(target_arch = "wasm32"))]
+fn artifact_runner_retirement_hook_leave(key: ArtifactRunnerRetirementHookKey) {
+    let mut hooks = ARTIFACT_RUNNER_RETIREMENT_HOOKS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(hook) = hooks[key.row].as_mut().filter(|hook| hook.generation == key.generation) else { return };
+    hook.slots -= 1;
+    if hook.slots != 0 {
+        return;
+    }
+    let retired = hooks[key.row].take().expect("checked artifact runner retirement hook");
+    drop(hooks);
+    let _ = retired.pool.remove_maintenance_hook(retired.ticket);
+}
+
+/// 🚥️ How one retirement slot's turn ended.
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ArtifactRunnerRetirementTurn {
+    Absent,
+    Waiting,
+    Faulted,
+    Retired,
+}
+
+/// 🧹️ One turn of a pool's shared retirement hook: every slot of that pool whose authority was dropped before its runner
+/// went terminal advances one close step. A reservation whose cursor is not committed yet is skipped — its commit requests
+/// the hook again — so an early turn can never strand a cursor; the hook retires once its pool's last slot is released.
+#[cfg(not(target_arch = "wasm32"))]
+fn artifact_runner_retirement_step([row, generation]: [u64; 2]) -> semio_framework_async::WorkerMaintenanceStep {
+    let Ok(row) = usize::try_from(row) else { return semio_framework_async::WorkerMaintenanceStep::Retire };
+    let pool = {
+        let hooks = ARTIFACT_RUNNER_RETIREMENT_HOOKS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        match hooks.get(row).and_then(Option::as_ref) {
+            Some(hook) if hook.generation == generation => hook.pool.clone(),
+            _ => return semio_framework_async::WorkerMaintenanceStep::Retire,
+        }
+    };
+    let mut faulted = false;
+    for index in 0..ARTIFACT_RUNNER_RETIREMENT_SLOTS {
+        if ARTIFACT_RUNNER_RETIREMENT_GENERATIONS[index].load(std::sync::atomic::Ordering::Acquire) == 0 {
+            continue;
+        }
+        faulted |= artifact_runner_retirement_slot_turn(index, &pool) == ArtifactRunnerRetirementTurn::Faulted;
+    }
+    let hooks = ARTIFACT_RUNNER_RETIREMENT_HOOKS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    match hooks.get(row).and_then(Option::as_ref) {
+        Some(hook) if hook.generation == generation && faulted => semio_framework_async::WorkerMaintenanceStep::Fault,
+        Some(hook) if hook.generation == generation => semio_framework_async::WorkerMaintenanceStep::Idle,
+        _ => semio_framework_async::WorkerMaintenanceStep::Retire,
+    }
+}
+
+/// 🧹️ One close step of the cursor in slot `index` when it retires on `pool`: `Absent` for a free, uncommitted or
+/// foreign slot, `Waiting` while the runner still closes, `Faulted` for a panicking or blocked close (the exact cursor
+/// stays), `Retired` once terminal — the slot and its share of the pool's hook are released.
+#[cfg(not(target_arch = "wasm32"))]
+fn artifact_runner_retirement_slot_turn(index: usize, pool: &Arc<semio_framework_async::WorkerPool>) -> ArtifactRunnerRetirementTurn {
+    let slot = &ARTIFACT_RUNNER_RETIREMENTS[index];
     let mut row = slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-    match row.as_ref() {
-        Some(owner) if owner.generation == generation => {}
-        None if ARTIFACT_RUNNER_RETIREMENT_GENERATIONS[index].load(std::sync::atomic::Ordering::Acquire) == generation => return semio_framework_async::WorkerMaintenanceStep::Idle,
-        _ => return semio_framework_async::WorkerMaintenanceStep::Retire,
+    if !row.as_ref().is_some_and(|owner| Arc::ptr_eq(&owner.pool, pool)) {
+        return ArtifactRunnerRetirementTurn::Absent;
     }
     let mut cursor = row.take();
     drop(row);
@@ -5039,19 +5167,21 @@ fn artifact_runner_retirement_step([index, generation]: [u64; 2]) -> semio_frame
         Ok(terminal) => terminal,
         Err(_) => {
             *slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = cursor;
-            return semio_framework_async::WorkerMaintenanceStep::Fault;
+            return ArtifactRunnerRetirementTurn::Faulted;
         }
     };
     if !terminal {
         let blocked = owner.handoff.close_retry_progress().is_some_and(|progress| progress.is_blocked());
         *slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = cursor;
-        return if blocked { semio_framework_async::WorkerMaintenanceStep::Fault } else { semio_framework_async::WorkerMaintenanceStep::Idle };
+        return if blocked { ArtifactRunnerRetirementTurn::Faulted } else { ArtifactRunnerRetirementTurn::Waiting };
     }
     owner.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
     owner.handoff.retirement_maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+    let hook = owner.hook;
     drop(cursor);
     ARTIFACT_RUNNER_RETIREMENT_GENERATIONS[index].store(0, std::sync::atomic::Ordering::Release);
-    semio_framework_async::WorkerMaintenanceStep::Retire
+    artifact_runner_retirement_hook_leave(hook);
+    ArtifactRunnerRetirementTurn::Retired
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -5064,32 +5194,32 @@ impl ArtifactRunnerRetirementReservation {
             if slot.compare_exchange(0, generation, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
                 continue;
             }
-            let ticket = match pool.install_maintenance_hook(semio_framework_async::Lane::UserVisible, artifact_runner_retirement_step, [index as u64, generation]) {
-                Ok(ticket) => ticket,
+            let hook = match artifact_runner_retirement_hook_join(&pool, generation) {
+                Ok(hook) => hook,
                 Err(error) => {
                     slot.store(0, std::sync::atomic::Ordering::Release);
-                    return Err(DbError::Unavailable(format!("artifact runner retirement maintenance admission: {error:?}")));
+                    return Err(error);
                 }
             };
-            return Ok(Self { index, generation, pool, ticket: Some(ticket) });
+            return Ok(Self { index, generation, pool, hook: Some(hook) });
         }
         Err(DbError::Unavailable("artifact runner retirement capacity exhausted".to_string()))
     }
 
     fn commit(mut self, close: Arc<dyn Fn() -> bool + Send + Sync>, handoff: Arc<ArtifactRunnerHandoff>, pool_use: Arc<semio_framework_async::WorkerPoolUse>) {
-        let ticket = self.ticket.take().expect("artifact runner retirement reservation lost maintenance ticket");
-        *ARTIFACT_RUNNER_RETIREMENTS[self.index].lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ArtifactRunnerRetirementCursor { generation: self.generation, close, handoff: handoff.clone(), pool: self.pool.clone(), _pool_use: pool_use, ticket });
-        *handoff.retirement_maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((self.pool.clone(), ticket));
-        let _ = self.pool.request_maintenance(ticket);
+        let hook = self.hook.take().expect("artifact runner retirement reservation lost its hook");
+        *ARTIFACT_RUNNER_RETIREMENTS[self.index].lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ArtifactRunnerRetirementCursor { generation: self.generation, close, handoff: handoff.clone(), pool: self.pool.clone(), _pool_use: pool_use, hook });
+        *handoff.retirement_maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((self.pool.clone(), hook.ticket));
+        let _ = self.pool.request_maintenance(hook.ticket);
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl Drop for ArtifactRunnerRetirementReservation {
     fn drop(&mut self) {
-        let Some(ticket) = self.ticket.take() else { return };
-        let _ = self.pool.remove_maintenance_hook(ticket);
+        let Some(hook) = self.hook.take() else { return };
         ARTIFACT_RUNNER_RETIREMENT_GENERATIONS[self.index].store(0, std::sync::atomic::Ordering::Release);
+        artifact_runner_retirement_hook_leave(hook);
     }
 }
 
@@ -5493,6 +5623,7 @@ impl ArtifactRunner {
             ArtifactMessage::Submit { batch, options, now_ms, reply } => ArtifactTurn::Future(Box::pin(async move {
                 let mut engine = engine;
                 reply.send(engine.submit(batch, options, now_ms).await);
+                engine.park_writer();
                 let _ = engine.maintain_index().await;
                 engine
             })),
@@ -5581,6 +5712,7 @@ impl ArtifactRunner {
                 Ok(std::task::Poll::Ready(Ok(engine))) => {
                     builder.take();
                     drop(builder);
+                    engine.park_writer();
                     *self.engine.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(engine);
                     if let Some(ready) = self.ready.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
                         ready.send(Ok(()));
@@ -5625,6 +5757,7 @@ impl ArtifactRunner {
                     Ok(std::task::Poll::Ready(engine)) => {
                         turn.take();
                         drop(turn);
+                        engine.park_writer();
                         *self.engine.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(engine);
                         if self.cancelled.load(Ordering::Acquire) || self.address.is_idle_and_closed() {
                             self.finish();

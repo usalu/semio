@@ -92,6 +92,9 @@ pub mod engine_canvas;
 #[path = "../../../🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs"]
 pub mod interpreter;
 
+#[path = "../🎬️media-slots/🦀️.rs"]
+pub mod media_slots;
+
 #[path = "../../../🧱️elements/🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs"]
 pub mod program_bridge;
 
@@ -8753,20 +8756,17 @@ pub(crate) mod kernel_runtime {
             let worker = handoff.clone();
             let runtime = self.guest_runtime.clone();
             let key = package.clone();
-            crate::renderer_worker_pool().submit(
-                semio_framework_async::Lane::Background,
-                Box::new(move || {
-                    let result = semio_framework_async::block_on(runtime.compile(&key, &bytes)).map_err(|error| error.to_string());
-                    let waker = {
-                        let mut slot = worker.lock().expect("compile handoff lock");
-                        slot.0 = Some(result);
-                        slot.1.take()
-                    };
-                    if let Some(waker) = waker {
-                        waker.wake();
-                    }
-                }),
-            );
+            let _ = KernelPoolFuture::spawn(crate::renderer_worker_pool(), semio_framework_async::Lane::Background, async move {
+                let result = runtime.compile(&key, &bytes).await.map_err(|error| error.to_string());
+                let waker = {
+                    let mut slot = worker.lock().expect("compile handoff lock");
+                    slot.0 = Some(result);
+                    slot.1.take()
+                };
+                if let Some(waker) = waker {
+                    waker.wake();
+                }
+            });
             loop {
                 let gap = std::future::poll_fn(|cx| {
                     let mut slot = handoff.lock().expect("compile handoff lock");
@@ -16440,6 +16440,7 @@ impl AppPresentPhase {
 }
 
 struct AppPresentCursor {
+    media_slots: Vec<crate::media_slots::PresentedMediaSlot>,
     has_animated_primitives: bool,
     frame: AppFramePresentation,
     phase: AppPresentPhase,
@@ -16490,6 +16491,7 @@ pub(crate) enum AppPresentStep {
         retained_control_deadline: Option<f64>,
         shell_clock_deadline: Option<f64>,
         has_animated_primitives: bool,
+        media_slots: Vec<crate::media_slots::PresentedMediaSlot>,
     },
 }
 
@@ -16902,6 +16904,7 @@ impl AppPresenter {
         let frame = produce()?;
         let cursor = frame.cursor;
         self.pending = Some(AppPresentCursor {
+            media_slots: Vec::new(),
             has_animated_primitives: false,
             frame,
             phase: AppPresentPhase::BeginGpu,
@@ -17375,6 +17378,7 @@ impl AppPresenter {
                 if !shell.acknowledge_presented_input(input, input_candidate) {
                     return Ok(AppPresentStep::Pending);
                 }
+                cursor.media_slots = shell.presented_media_slots();
                 cursor.has_animated_primitives = packet.has_animated_primitives();
                 cursor.retained_control_deadline = shell.presented_retained_clock_deadline();
                 if let Some(now_us) = semio_framework_job::default_now_us() {
@@ -17419,6 +17423,7 @@ impl AppPresenter {
                 let retained_control_deadline = completed.retained_control_deadline;
                 let shell_clock_deadline = completed.shell_clock_deadline;
                 let has_animated_primitives = completed.has_animated_primitives;
+                let media_slots = std::mem::take(&mut completed.media_slots);
                 let retirement = self.retirement.get_or_insert_with(|| AppPresentedRetirement::new(None));
                 if retirement.completed_frame.is_some() {
                     completed.frame.cursor_wake = cursor_wake;
@@ -17426,7 +17431,7 @@ impl AppPresenter {
                     return Err("completed presentation retirement capacity exhausted".to_string());
                 }
                 retirement.completed_frame = Some(completed.frame);
-                Ok(AppPresentStep::Complete { generation: accepted_generation, cursor: accepted_cursor, theme_dark: accepted_theme_dark, fullscreen, cursor_wake, retained_control_deadline, shell_clock_deadline, has_animated_primitives })
+                Ok(AppPresentStep::Complete { generation: accepted_generation, cursor: accepted_cursor, theme_dark: accepted_theme_dark, fullscreen, cursor_wake, retained_control_deadline, shell_clock_deadline, has_animated_primitives, media_slots })
             }
         }
     }

@@ -182,7 +182,7 @@ impl ArtifactEditor for TiffBaselineEditor {
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> { tiffBaselineEditor_command_from_action(action, args) }
 
     fn initial_snapshot() -> Self::Snapshot {
-        TiffSnapshot::default()
+        crate::standards::v6_0::subsets::document::schema::blank_tiff_snapshot()
     }
 
     fn handle(

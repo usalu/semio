@@ -78,48 +78,23 @@
             {
               "icon": "settings",
               "label": "Settings",
-              "action": {
-                "trigger": "activate",
-                "action": {
-                  "scope": "framework.home",
-                  "name": "open-space-settings",
-                  "version": 1
-                },
-                "args": {
-                  "space": "alpha"
-                }
-              }
+              "verb": "open-space-settings"
             },
             {
               "icon": "trash-2",
               "label": "Delete",
-              "action": {
-                "trigger": "activate",
-                "action": {
-                  "scope": "framework.home",
-                  "name": "delete-space",
-                  "version": 1
-                },
-                "args": {
-                  "space": "alpha"
-                }
-              }
+              "verb": "delete-space"
             }
-          ]
-        },
-        "bindings": [
-          {
-            "trigger": "activate",
-            "action": {
-              "scope": "framework.home",
-              "name": "open-space",
-              "version": 1
-            },
+          ],
+          "target": {
+            "scope": "framework.home",
+            "version": 1,
             "args": {
               "space": "alpha"
-            }
+            },
+            "activation": "open-space"
           }
-        ],
+        },
         "layout": {
           "kind": "leaf",
           "width": "hug",
@@ -142,33 +117,18 @@
             {
               "icon": "trash-2",
               "label": "Delete",
-              "action": {
-                "trigger": "activate",
-                "action": {
-                  "scope": "framework.home",
-                  "name": "delete-space",
-                  "version": 1
-                },
-                "args": {
-                  "space": "beta"
-                }
-              }
+              "verb": "delete-space"
             }
-          ]
-        },
-        "bindings": [
-          {
-            "trigger": "activate",
-            "action": {
-              "scope": "framework.home",
-              "name": "open-space",
-              "version": 1
-            },
+          ],
+          "target": {
+            "scope": "framework.home",
+            "version": 1,
             "args": {
               "space": "beta"
-            }
+            },
+            "activation": "open-space"
           }
-        ],
+        },
         "layout": {
           "kind": "leaf",
           "width": "hug",

@@ -385,3 +385,32 @@ fn canonical_authority_final_unicode_strings_retire_under_single_byte_grants() {
     }
     panic!("final authority strings did not retire");
 }
+
+/// 🔗️ LAW (ticket 26/09/23 C12): the revision digest rule — a single-operation edit hashes its canonical JSON, an edit grown
+/// past one operation hashes its header fields and one running chain per operation list — matches the language-neutral
+/// vectors (derived by a third implementation, replayed by the TS oracle too), and extending the chains of a grown edit by the
+/// operations an amend appended equals its from-scratch digest.
+#[test]
+fn edit_digest_chains_match_the_neutral_vectors_and_extend_incrementally() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️edit-digest-chains.json")).unwrap();
+    let edit_of = |case: &serde_json::Value| match case.get("edit") {
+        Some(edit) => Edit::<DslValue>::from_value(edit.clone().into()).unwrap(),
+        None => {
+            let mut header = case["header"].clone();
+            let count = case["generatedOperations"].as_u64().unwrap();
+            header["forwards"] = (0..count).map(|index| serde_json::json!({ "SetN": { "n": index + 1 } })).collect();
+            header["inverse"] = (0..count).map(|index| serde_json::json!({ "SetN": { "n": index } })).collect();
+            Edit::<DslValue>::from_value(header.into()).unwrap()
+        }
+    };
+    for case in fixture["cases"].as_array().unwrap() {
+        let digest = super::super::CursorRevisionAccumulator::edit_digest(&edit_of(case));
+        assert_eq!(semio_framework_hash::hex_lower(&digest), case["expectedDigest"].as_str().unwrap(), "edit digest vector {}", case["name"]);
+    }
+    let mut grown = edit_of(&fixture["cases"][1]);
+    let (_, chains) = super::super::CursorRevisionAccumulator::edit_digest_extending(&grown, None);
+    grown.forwards.push(serde_json::json!({ "SetN": { "n": 3 } }).into());
+    grown.inverse.push(serde_json::json!({ "SetN": { "n": 2 } }).into());
+    let (extended, _) = super::super::CursorRevisionAccumulator::edit_digest_extending(&grown, chains);
+    assert_eq!(extended, super::super::CursorRevisionAccumulator::edit_digest(&grown), "an amend's incremental digest equals the from-scratch digest");
+}

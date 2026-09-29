@@ -17,9 +17,9 @@ use crate::editor::puzzle3d::{
     puzzle3d_object_display_label, puzzle3d_vortex_full_id, ui_label, Puzzle3dAttraction, Puzzle3dFixture, Puzzle3dObject, Puzzle3dReference, Puzzle3dTargetVolume, Puzzle3dVortex, PUZZLE3D_GRANULARITY_ATTRACTION,
     PUZZLE3D_GRANULARITY_OBJECT, PUZZLE3D_GRANULARITY_REFERENCE, PUZZLE3D_GRANULARITY_TARGET_VOLUME, PUZZLE3D_GRANULARITY_VORTEX, PUZZLE3D_INTERACTION_DOMAIN, PUZZLE3D_PLAY_CONTROLLER_ID,
 };
-use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Buildable, BuiltNode, HasBase, RowAction, RowActionPlacement, Trigger};
+use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, RowActionPlacement};
 use semio_framework_plugin::{
-    tree_window_item, ActionFactory, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiText, UiValue, FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
+    row_action, row_target, tree_window_item, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiText, UiValue, FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
     FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
 };
 use semio_framework_ui_contract as ui;
@@ -42,10 +42,6 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Rows
-fn action(action: &str, args: Option<UiValue>) -> UiAssemblyResult<(ui::ActionId, Option<UiValue>)> {
-    ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action(action, args)
-}
-
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
 pub fn ui_value_text(value: impl AsRef<str>) -> UiAssemblyResult<UiValue> {
     UiText::try_from_str(value.as_ref()).map(UiValue::Text).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
@@ -86,34 +82,18 @@ fn pick_item(id: impl AsRef<str>, label: impl AsRef<str>, icon: &str, granularit
         .granularity(UiText::try_from_str(granularity).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d document granularity admission failed"))?))
 }
 
-fn binding(action: UiAssemblyResult<(ui::ActionId, Option<UiValue>)>) -> UiAssemblyResult<ActionBinding> {
-    let (action, args) = action?;
-    Ok(ActionBinding { trigger: Trigger::Activate, action, args, capability: None })
+/// 🎯️ A flag row's ONE target: the entity and its id, plus the flag state each inline toggle ASKS FOR — always the inverse
+/// of the row's current one, stated as a value (`setSelectionHidden{hidden}`/`setSelectionLocked{locked}`), so a stale view
+/// sets a value and never flips one. A hardcoded `true` here once made "Show"/"Unlock" re-apply the state the row was
+/// already in, so an outliner-hidden object could never be un-hidden from the row that hid it.
+fn flag_target(entity: &str, id: &str, hidden: bool, locked: bool) -> UiAssemblyResult<ui::RowTarget> {
+    row_target(PUZZLE3D_PLAY_CONTROLLER_ID, Some(ui_value_map([("entity", ui_value_text(entity)?), ("hidden", ui_value_bool(!hidden)), ("ids", ui_value_list([ui_value_text(id)?])?), ("locked", ui_value_bool(!locked))])?), None)
 }
 
-/// 🔁️ One inline row toggle's `setSelectionFlag` args. `value` is the flag state the click ASKS FOR —
-/// always the inverse of the row's current one, the same negation the context menu (`!all_hidden`) and
-/// the inspection panel (`!pressed`) already carry. A hardcoded `true` here made "Show"/"Unlock"
-/// re-apply the state the row was already in, so an outliner-hidden object could never be un-hidden
-/// from the row that hid it.
-fn flag_args(entity: &str, id: &str, flag: &str, value: bool) -> UiAssemblyResult<UiValue> {
-    ui_value_map([("entity", ui_value_text(entity)?), ("flag", ui_value_text(flag)?), ("ids", ui_value_list([ui_value_text(id)?])?), ("value", ui_value_bool(value))])
-}
-
-fn hide_lock_actions(hidden: bool, locked: bool, labels: &Puzzle3dLabels, entity: &str, id: &str) -> UiAssemblyResult<[RowAction; 2]> {
+fn hide_lock_actions(hidden: bool, locked: bool, labels: &Puzzle3dLabels) -> UiAssemblyResult<[ui::RowAction; 2]> {
     Ok([
-        RowAction {
-            icon: UiText::try_from_str(if hidden { "eye-off" } else { "eye" }).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d visibility icon admission failed"))?,
-            label: Some(ui_label(if hidden { labels.show.as_str() } else { labels.hide.as_str() })?),
-            action: binding(action("setSelectionFlag", Some(flag_args(entity, id, "hidden", !hidden)?)))?,
-            placement: RowActionPlacement::Row,
-        },
-        RowAction {
-            icon: UiText::try_from_str(if locked { "lock" } else { "lock-open" }).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d lock icon admission failed"))?,
-            label: Some(ui_label(if locked { labels.unlock.as_str() } else { labels.lock.as_str() })?),
-            action: binding(action("setSelectionFlag", Some(flag_args(entity, id, "locked", !locked)?)))?,
-            placement: RowActionPlacement::Row,
-        },
+        row_action(if hidden { "eye-off" } else { "eye" }, if hidden { labels.show.as_str() } else { labels.hide.as_str() }, "setSelectionHidden", RowActionPlacement::Row)?,
+        row_action(if locked { "lock" } else { "lock-open" }, if locked { labels.unlock.as_str() } else { labels.lock.as_str() }, "setSelectionLocked", RowActionPlacement::Row)?,
     ])
 }
 
@@ -127,10 +107,10 @@ fn hide_lock_actions(hidden: bool, locked: bool, labels: &Puzzle3dLabels, entity
 /// (26/09/02/PUZZLE-3D-END-TO-END wave B44 §6.2). A row without its toggles is still a pick target and
 /// still names its entity; a row that was never materialised is neither.
 fn with_hide_lock_actions(item: ui::TreeItemBuilder, hidden: bool, locked: bool, labels: &Puzzle3dLabels, entity: &str, id: &str) -> ui::TreeItemBuilder {
-    let Ok(actions) = hide_lock_actions(hidden, locked, labels, entity, id) else {
+    let (Ok(target), Ok(actions)) = (flag_target(entity, id, hidden, locked), hide_lock_actions(hidden, locked, labels)) else {
         return item;
     };
-    let mut item = item;
+    let mut item = item.target(target);
     for row_action in actions {
         match item.try_row_action(row_action) {
             Ok(next) => item = next,

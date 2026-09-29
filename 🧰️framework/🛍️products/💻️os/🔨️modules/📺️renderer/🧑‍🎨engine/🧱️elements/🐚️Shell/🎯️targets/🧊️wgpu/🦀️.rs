@@ -181,6 +181,10 @@ const FRAMEWORK_SETTINGS_DEFAULT_APPS_TAB_ID: &str = "framework.settings.default
 const FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID: &str = "framework.settings.conflicts";
 /// 🛍️ Byte-identical to React's `FRAMEWORK_MARKETPLACE_TAB_ID` — the bottom-right Marketplace leaf.
 const FRAMEWORK_MARKETPLACE_TAB_ID: &str = "framework.marketplace";
+/// 🛍️ The Marketplace's windowed roster section — React's `framework.marketplace.source.<sourceId>` for this renderer's one source.
+const MARKETPLACE_LOCAL_SECTION_ID: &str = "framework.marketplace.source.local";
+/// 🛍️ The node ledger one Marketplace window may materialise — the body-wide tree window budget less the windowed section itself.
+const MARKETPLACE_WINDOW_NODE_BUDGET: usize = ui_contract::TREE_WINDOW_BODY_NODE_BUDGET - 1;
 /// 🛠️ One mode tool's leaf id under the Tool branch — React's `tool.<id>` (`🛠️ShellHelpers/🟦️.tsx`'s
 /// `buildToolTabs`/`toolIdFromPanelTabId`). The leaf tab IS the activation control.
 const FRAMEWORK_TOOL_PANEL_TAB_PREFIX: &str = "tool.";
@@ -1734,6 +1738,9 @@ fn assert_shell_chrome_build_state_is_send() {
 #[path = "📤️icon-export/🦀️.rs"]
 mod icon_export;
 
+#[path = "🪟️tree-windows/🦀️.rs"]
+mod tree_windows;
+
 //#region 🧵️ShellDetached
 /// 🧵️ One request the shell hands off and never waits on: the future owns everything it touches and
 /// runs on the shared pool (native) or the page's executor (browser), and the frame pump only asks,
@@ -3081,76 +3088,6 @@ const MAX_PENDING_DIRECTORY_COMMANDS: usize = 64;
 const MAX_DIRECTORY_COMMAND_RESULTS: usize = 64;
 /// ⏳️ Finite per-command deadline; a hung hub can never retain a command turn forever.
 const DIRECTORY_COMMAND_DEADLINE_MS: u64 = 5_000;
-/// ⏳️ The credential sign-in's own deadline (the mint and the `me` read that follows it). A mint spends a
-/// password hash on the hub, which the directory command deadline does not fit: measured 6.8 s and 13.6 s on
-/// hub 7800 under load ~40, so every native sign-in answered `Unreachable` while React's (no request
-/// deadline, cancellable) signed in (ticket 26/09/23 slice WG8, session 12). Still finite.
-const HUB_SIGN_IN_DEADLINE_MS: u64 = 30_000;
-
-/// 🔐️ What one spawned sign-in answers: the mint's refusal, a mint the hub's own `me` read would not confirm, or the
-/// verified session.
-enum ShellHubSignInAnswer {
-    Failed { code: HubSignInErrorCode, retry_after_seconds: Option<u64> },
-    Unverified,
-    Verified { origin: String, user_id: String, credential: std::sync::Arc<LocalHubCredential>, client: std::sync::Arc<ShellDirectoryClient>, authority: DirectorySessionAuthorityV1 },
-}
-
-/// 🏘️ What one spawned spaces read answers: the rows, or `Err` when the list could not be read (the rows on screen stay).
-type ShellHubSpacesAnswer = Result<Vec<crate::space_browser::SpaceRow>, ()>;
-
-/// 🔐️ One hub workspace request whose network legs run on a spawned task and never on the frame's interaction state:
-/// the frame keeps taking input while the hub answers, the chrome shows the phase, and `cancel` ends the request. A
-/// slow hub froze every input of the browser shell for 60–106 s while these legs were awaited inside the action
-/// (ticket 26/09/23 session 12, runs s12g/s12h on hub 7800).
-struct ShellHubTask<T> {
-    receiver: std::sync::mpsc::Receiver<T>,
-    cancel: CancelToken,
-    #[cfg(not(target_arch = "wasm32"))]
-    task: Option<std::sync::Arc<ShellPoolFuture>>,
-}
-
-impl<T: 'static> ShellHubTask<T> {
-    /// 🚀️ Runs `leg` on the shared pool's I/O lane; the pump reads its answer.
-    #[cfg(not(target_arch = "wasm32"))]
-    fn spawn(cancel: CancelToken, leg: impl std::future::Future<Output = T> + Send + 'static) -> Self
-    where
-        T: Send,
-    {
-        let (sender, receiver) = std::sync::mpsc::channel();
-        let task = ShellPoolFuture::spawn(crate::renderer_worker_pool(), Lane::Io, async move {
-            let _ = sender.send(leg.await);
-        });
-        Self { receiver, cancel, task: Some(task) }
-    }
-
-    /// 🚀️ Runs `leg` on the page's own microtask queue; the pump reads its answer.
-    #[cfg(target_arch = "wasm32")]
-    fn spawn(cancel: CancelToken, leg: impl std::future::Future<Output = T> + 'static) -> Self {
-        let (sender, receiver) = std::sync::mpsc::channel();
-        crate::spawn_app_task(async move {
-            let _ = sender.send(leg.await);
-        });
-        Self { receiver, cancel }
-    }
-
-    /// 📬️ `Some(Ok)` once answered, `Some(Err)` when the task ended without an answer, `None` while it runs.
-    fn answer(&self) -> Option<Result<T, ()>> {
-        match self.receiver.try_recv() {
-            Ok(answer) => Some(Ok(answer)),
-            Err(std::sync::mpsc::TryRecvError::Empty) => None,
-            Err(std::sync::mpsc::TryRecvError::Disconnected) => Some(Err(())),
-        }
-    }
-
-    /// 🛑️ Ends the request: its transport sees the cancellation, and no answer is read any more.
-    fn cancel(self) {
-        self.cancel.cancel_now();
-        #[cfg(not(target_arch = "wasm32"))]
-        if let Some(task) = self.task {
-            task.cancel();
-        }
-    }
-}
 /// ⏳️ Browser identity retry floor: a hub that refuses `/auth/sessions/me` must not be re-asked on
 /// every 100 ms frame pump. Native needs no twin — its bootstrap is a one-shot pool future.
 #[cfg(target_arch = "wasm32")]
@@ -3247,6 +3184,79 @@ impl ShellDirectoryCommandQueueV1 {
     }
 }
 //#endregion 🎮️DirectoryCommandQueue
+
+//#region 🔐️HubWorkspaceTask
+/// ⏳️ The credential sign-in's own deadline (the mint and the `me` read that follows it). A mint spends a
+/// password hash on the hub, which the directory command deadline does not fit: measured 6.8 s and 13.6 s on
+/// hub 7800 under load ~40, so every native sign-in answered `Unreachable` while React's (no request
+/// deadline, cancellable) signed in (ticket 26/09/23 slice WG8, session 12). Still finite.
+const HUB_SIGN_IN_DEADLINE_MS: u64 = 30_000;
+
+/// 🔐️ What one spawned sign-in answers: the mint's refusal, a mint the hub's own `me` read would not confirm, or the
+/// verified session.
+enum ShellHubSignInAnswer {
+    Failed { code: HubSignInErrorCode, retry_after_seconds: Option<u64> },
+    Unverified,
+    Verified { origin: String, user_id: String, credential: std::sync::Arc<LocalHubCredential>, client: std::sync::Arc<ShellDirectoryClient>, authority: DirectorySessionAuthorityV1 },
+}
+
+/// 🏘️ What one spawned spaces read answers: the rows, or `Err` when the list could not be read (the rows on screen stay).
+type ShellHubSpacesAnswer = Result<Vec<crate::space_browser::SpaceRow>, ()>;
+
+/// 🔐️ One hub workspace request whose network legs run on a spawned task and never on the frame's interaction state:
+/// the frame keeps taking input while the hub answers, the chrome shows the phase, and `cancel` ends the request. A
+/// slow hub froze every input of the browser shell for 60–106 s while these legs were awaited inside the action
+/// (ticket 26/09/23 session 12, runs s12g/s12h on hub 7800).
+struct ShellHubTask<T> {
+    receiver: std::sync::mpsc::Receiver<T>,
+    cancel: CancelToken,
+    #[cfg(not(target_arch = "wasm32"))]
+    task: Option<std::sync::Arc<ShellPoolFuture>>,
+}
+
+impl<T: 'static> ShellHubTask<T> {
+    /// 🚀️ Runs `leg` on the shared pool's I/O lane; the pump reads its answer.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn spawn(cancel: CancelToken, leg: impl std::future::Future<Output = T> + Send + 'static) -> Self
+    where
+        T: Send,
+    {
+        let (sender, receiver) = std::sync::mpsc::channel();
+        let task = ShellPoolFuture::spawn(crate::renderer_worker_pool(), Lane::Io, async move {
+            let _ = sender.send(leg.await);
+        });
+        Self { receiver, cancel, task: Some(task) }
+    }
+
+    /// 🚀️ Runs `leg` on the page's own microtask queue; the pump reads its answer.
+    #[cfg(target_arch = "wasm32")]
+    fn spawn(cancel: CancelToken, leg: impl std::future::Future<Output = T> + 'static) -> Self {
+        let (sender, receiver) = std::sync::mpsc::channel();
+        crate::spawn_app_task(async move {
+            let _ = sender.send(leg.await);
+        });
+        Self { receiver, cancel }
+    }
+
+    /// 📬️ `Some(Ok)` once answered, `Some(Err)` when the task ended without an answer, `None` while it runs.
+    fn answer(&self) -> Option<Result<T, ()>> {
+        match self.receiver.try_recv() {
+            Ok(answer) => Some(Ok(answer)),
+            Err(std::sync::mpsc::TryRecvError::Empty) => None,
+            Err(std::sync::mpsc::TryRecvError::Disconnected) => Some(Err(())),
+        }
+    }
+
+    /// 🛑️ Ends the request: its transport sees the cancellation, and no answer is read any more.
+    fn cancel(self) {
+        self.cancel.cancel_now();
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(task) = self.task {
+            task.cancel();
+        }
+    }
+}
+//#endregion 🔐️HubWorkspaceTask
 
 //#region 🧯️BootProgramSelection
 /// 🧯 One plugin whose boot activation faulted, kept as data so the shell can show WHICH plugin is
@@ -3358,6 +3368,16 @@ const WINDOW_TOPOLOGY_PUBLICATION_ATTEMPTS: u8 = 3;
 /// this shell renders and finite so one stalled body cannot hold the frame — and with it the navbar,
 /// the panels and the GPU present — forever.
 const SHELL_WINDOW_PAINT_OPPORTUNITIES: usize = 1 << 20;
+
+/// ⏱️ Spends one of a retained document's paint opportunities — only when the step was the document's OWN work
+/// (`UiDocumentFrameCursor::last_step_was_own_work`: waiting on the layout worker pool or on another surface's layout costs
+/// nothing) — and answers whether the document may keep stepping under `budget`.
+fn document_opportunity_remains(cursor: &mut ShellChromeChildCursor, budget: usize) -> bool {
+    if cursor.document.last_step_was_own_work() {
+        cursor.scalar = cursor.scalar.saturating_add(1);
+    }
+    !cursor.document.terminal_is_fault() && cursor.scalar < budget
+}
 
 /// 📏️ Pump steps ONE live producer may publish the same progress reading for before the pump stops
 /// believing the guest will arm another hop and drives that run to a terminal state.
@@ -3613,6 +3633,9 @@ impl PointerCapture {
 pub(crate) struct PresentedInputCandidateWitness(u64);
 
 struct PresentedInputGeometry {
+    retained_body_rects: Vec<(String, Rect)>,
+    media_owners: Vec<(String, Option<crate::media_slots::PresentedMediaOwner>)>,
+    media_blocked: bool,
     retained_surfaces: Vec<(String, ui_wgpu::wgpu::UiSurfaceToken)>,
     dock_canvas_bounds: Rect,
     dock_axis_separator: f32,
@@ -3628,6 +3651,9 @@ struct PresentedInputGeometry {
 impl Default for PresentedInputGeometry {
     fn default() -> Self {
         Self {
+            retained_body_rects: Vec::new(),
+            media_owners: Vec::new(),
+            media_blocked: false,
             retained_surfaces: Vec::new(),
             dock_canvas_bounds: Rect::new(0.0, 0.0, 0.0, 0.0),
             dock_axis_separator: 0.0,
@@ -3733,6 +3759,8 @@ pub struct ShellState {
     pub panel_documents: HashMap<String, UiDocumentLease>,
     tool_run_panel_runs: std::collections::BTreeSet<u64>,
     pub spawned_ui: Option<UiDocumentLease>,
+    pub spawned_session: Option<ActiveSession>,
+    app_document_identities: crate::media_slots::DocumentIdentityRegistry,
     closing_documents: ShellDocumentRetirementRegistry,
     pub active_window_id: Option<String>,
     /// 🪟️ The active window the guest's command history was last told about, so a REAL activation is
@@ -3797,7 +3825,7 @@ pub struct ShellState {
     /// 🪦 Closed World3d owners, detached from input immediately and drained one bounded step per
     /// frame before Drop. Keys include a shell epoch so reopening the same window id is independent.
     pub retired_world3d_states: VecDeque<(String, World3dState)>,
-    component_world3d_retirement: Option<crate::scenes::AdmittedSurfaceCloseOwner<World3dState>>,
+    component_world3d_retirement: Option<Box<crate::scenes::AdmittedSurfaceCloseOwner<World3dState>>>,
     world3d_retirement_epoch: u64,
     world3d_retirement_sequence: u64,
     /// 🛑️ Per-World3d-surface compute status, mirrored out of the scene by the same per-frame attach
@@ -3870,6 +3898,10 @@ pub struct ShellState {
     dock_instance_owner: Option<(String, u32, String)>,
     /// 🪟️ Effective incoming layout and ordered window IDs last accepted by the dock.
     dock_input_identity: Option<DockInputIdentity>,
+    /// 🪟️ Host-owned tree windows of every body this shell paints — what crosses as `ViewModel.tree_windows`.
+    tree_windows: tree_windows::TreeWindowScheduler,
+    /// 🧠️ Per body, what the observer learned from the guest's answers (`TreeWindowServedMemoryV1`).
+    tree_window_served: HashMap<String, Vec<(String, ui_wgpu::wgpu::tree_window::TreeWindowServedMemory)>>,
     pub dock_canvas_bounds: Rect,
     /// 📐️ Separator metric captured with this frame's dock plan so later pointer resize math uses
     /// the same themed physical geometry that paint, drop targets and body publication used.
@@ -4220,6 +4252,7 @@ pub struct ShellState {
     presented_input_candidate: Option<PresentedInputCandidateWitness>,
     presented_input_geometry: PresentedInputGeometry,
     presented_input_geometry_staging: PresentedInputGeometry,
+    retained_body_rects_staging: Vec<(String, Rect)>,
     presented_chrome_accessibility: Vec<ui_contract::AccessibilityProjectionNode>,
     /// ♿️ The presented epoch at which `presented_chrome_accessibility` last CHANGED — the generation the
     /// ARIA mirror addresses the chrome by. It advances with the projection, not with every presented
@@ -5157,6 +5190,7 @@ fn measure_tree_item(label: ui_contract::Label, default_open: Option<bool>) -> u
         inline_toolbar: None,
         detail: None,
         row_actions: Default::default(),
+        target: None,
     })
 }
 
@@ -5198,6 +5232,18 @@ fn measure_binding(trigger: ui_contract::Trigger, action: &ActionDescriptor, ext
     };
     let action_id = ui_contract::ActionId::try_v1(&action.controller_id, &action.action).ok_or_else(|| format!("measure action '{}' exceeds the retained contract", action.action))?;
     Ok(ui_contract::ActionBinding { trigger, action: action_id, args, capability: None })
+}
+
+/// 🎯️ A measured row's click as its contract [`ui_contract::RowTarget`]: the descriptor's controller and version, its argument
+/// map, and its action as the target's activation verb.
+fn measure_row_target(action: &ActionDescriptor) -> Result<ui_contract::RowTarget, String> {
+    let binding = measure_binding(ui_contract::Trigger::Activate, action, None)?;
+    let args = match binding.args {
+        Some(ui_contract::UiValue::Map(args)) => Some(args),
+        None => None,
+        Some(_) => return Err(format!("measure row action '{}' args are not an argument map", action.action)),
+    };
+    Ok(ui_contract::RowTarget { scope: binding.action.scope, version: binding.action.version, args, activation: Some(binding.action.name) })
 }
 
 fn measure_bindings(trigger: ui_contract::Trigger, action: &ActionDescriptor, extra: Option<(&str, DslValue)>) -> Result<ui_contract::UiNodeBindings, String> {
@@ -5383,10 +5429,9 @@ impl ShellState {
         };
         self.window_measures_documents.insert(window_id.to_string(), document);
         if complete {
-            self.clear_document_paint_fault(&surface);
+            self.note_retained_body_painted(&surface);
         } else {
-            cursor.scalar = cursor.scalar.saturating_add(1);
-            if !cursor.document.terminal_is_fault() && cursor.scalar < SHELL_WINDOW_PAINT_OPPORTUNITIES {
+            if document_opportunity_remains(cursor, SHELL_WINDOW_PAINT_OPPORTUNITIES) {
                 return false;
             }
             self.record_document_paint_fault(&surface);
@@ -5890,8 +5935,8 @@ impl PanelProjection<'_> {
         )
     }
 
-    /// 🌿️ One `UiTreeItemNode` as its `Component::TreeItem` record. The row's own click is a
-    /// `Trigger::Activate` binding (React's `TreeDataItem.onClick`), and nested rows are ordinary
+    /// 🌿️ One `UiTreeItemNode` as its `Component::TreeItem` record. The row's own click is its target's
+    /// activation verb (React's `TreeDataItem.onClick`), and nested rows are ordinary
     /// children — except a homogeneous strip of action-only leaves, which is React's inline
     /// resolution toolbar (`ContainerRole::Toolbar` of `Button`s), never more `TreeItem`s.
     ///
@@ -5926,10 +5971,7 @@ impl PanelProjection<'_> {
             }
             None
         };
-        let bindings = match item.action.as_ref() {
-            Some(action) => measure_bindings(ui_contract::Trigger::Activate, action, None)?,
-            None => ui_contract::UiNodeBindings::default(),
-        };
+        let (row_actions, target) = self.tree_item_row_target(item)?;
         let props = ui_contract::TreeItemProps {
             label: measure_label(item.label.as_str()),
             description: item.description.as_deref().map(UiText::clipped),
@@ -5951,18 +5993,46 @@ impl PanelProjection<'_> {
             granularity: None,
             inline_toolbar,
             detail,
-            row_actions: Default::default(),
+            row_actions,
+            target,
         };
         self.place(
             id,
             key,
             ui_contract::Component::TreeItem(props),
             Self::stack_layout(ui_contract::Axis::Vertical, ui_contract::SpaceToken::None),
-            PanelRecord { children, bindings, disabled: matches!(item.presence.state, ui_wgpu::wgpu::component::ui::UiState::Disabled), ..PanelRecord::default() },
+            PanelRecord { children, disabled: matches!(item.presence.state, ui_wgpu::wgpu::component::ui::UiState::Disabled), ..PanelRecord::default() },
         )
     }
 
-    /// 🎛️ Accept/Discard (and Marketplace Install/Reload/Uninstall) leaves authored as nested
+    /// 🎯️ A row's trailing actions as the contract's ONE target plus verbs (U6's row model): the target is the row's own click — its
+    /// activation — or, for an action-only row, its first action's controller and argument map; every action must fire on that
+    /// same controller and map and names only its verb, so N actions cost N verbs, never N argument maps.
+    #[allow(clippy::type_complexity, reason = "the two halves of one row's projected action model")]
+    fn tree_item_row_target(&self, item: &UiTreeItemNode) -> Result<(ui_contract::UiFixedList<ui_contract::RowAction>, Option<ui_contract::RowTarget>), String> {
+        let actions = item.actions.as_deref().unwrap_or_default();
+        let Some(anchor) = item.action.as_ref().or_else(|| actions.first().map(|action| &action.action)) else { return Ok((ui_contract::UiFixedList::default(), None)) };
+        let mut target = measure_row_target(anchor)?;
+        if item.action.is_none() {
+            target.activation = None;
+        }
+        let mut row_actions = ui_contract::UiFixedList::default();
+        for action in actions {
+            if action.action.controller_id != anchor.controller_id || action.action.args != anchor.args {
+                return Err(format!("panel '{}' tree row '{}' action '{}' fires outside the row's one target", self.surface_id, item.id, action.action.action));
+            }
+            let verb = UiText::try_from_str(&action.action.action).ok_or_else(|| format!("panel '{}' tree row '{}' verb exceeds the retained contract", self.surface_id, item.id))?;
+            let placement = match action.placement() {
+                ui_wgpu::wgpu::component::ui::UiTreeActionPlacement::Row => ui_contract::RowActionPlacement::Row,
+                ui_wgpu::wgpu::component::ui::UiTreeActionPlacement::Menu => ui_contract::RowActionPlacement::Menu,
+            };
+            let row_action = ui_contract::RowAction { icon: UiText::clipped(action.icon_id.as_str()), label: action.label.as_ref().map(|label| measure_label(label.as_str())), verb, placement, disabled: action.disabled };
+            row_actions.try_push(row_action).map_err(|_| format!("panel '{}' tree row '{}' packs more row actions than one record admits", self.surface_id, item.id))?;
+        }
+        Ok((row_actions, Some(target)))
+    }
+
+    /// 🎛️ Accept/Discard leaves authored as nested
     /// `UiTreeItemNode`s with only an Activate action — React's inline control slot — become one
     /// horizontal `Toolbar` of real `Button` records so schema `rowCount` stays the parent alone.
     fn tree_item_inline_action_toolbar(&mut self, parent_id: &str, verbs: &[&UiTreeItemNode]) -> Result<ui_contract::UiNodeId, String> {
@@ -6016,6 +6086,16 @@ fn control_ui_node(control: &ui_wgpu::wgpu::component::ui::UiControlNode) -> UiN
 
 /// 🖥️ One Display leaf's body: a single `Tree` under a stack the panel can address — the shape
 /// every other shell-owned leaf publishes, so the two Display leaves need no new paint path.
+/// 🪟️ Whether a shell-owned body streams a windowed Tree section — such a body IS its scroll viewport (the window streams against
+/// it, its spacers give it the whole extent), so it publishes as a scroll root (`panel_ui_scroll_records`).
+fn ui_node_is_windowed(node: &UiNode) -> bool {
+    match node {
+        UiNode::Tree(tree) => tree.sections.iter().any(|section| section.window.is_some()),
+        UiNode::Stack(stack) => stack.children.iter().any(ui_node_is_windowed),
+        _ => false,
+    }
+}
+
 fn display_panel_body(panel_id: &str, sections: Vec<UiTreeSectionNode>) -> UiNode {
     UiNode::Stack(UiStackNode {
         direction: "column".into(),
@@ -6048,9 +6128,9 @@ fn display_unavailable_section(id: &str, is_de: bool) -> UiTreeSectionNode {
 }
 
 /// 🔄️ The `createWorldProjectionTemplates` taxonomy as nested Display rows, reconstructed from
-/// [`WORLD_PROJECTION_TEMPLATES`]' own `depth` column: a row's id is its parent's id plus its
-/// template id, which is byte-identical to React's growing `idPrefix`
-/// (`framework.display.windows.<kind>.projection.parallel.axonometric.axonometric-isometric`).
+/// [`WORLD_PROJECTION_TEMPLATES`]' own `depth` column: a row's id is its parent's id plus its template
+/// id, composed through the element-id grammar exactly as React's `childElementId` composes it
+/// (`framework.display.windows.puzzle3dMain.projection.parallel.axonometric.axonometricIsometric`).
 /// `cursor` walks the flat table once; `depth` is the level this call materialises.
 /// Each level is pre-reversed for the bottom-anchored Display tree's up-flow layout.
 ///
@@ -6066,7 +6146,7 @@ fn world_projection_template_rows(prefix: &str, window_kind_id: &str, depth: u8,
             *cursor += 1;
             continue;
         }
-        let id = format!("{prefix}.{}", semio_framework::element_id_segment(template.id));
+        let id = semio_framework::child_element_id(prefix, &[template.id]);
         *cursor += 1;
         let children = world_projection_template_rows(&id, window_kind_id, depth + 1, cursor);
         rows.push(UiTreeItemNode {
@@ -6792,6 +6872,8 @@ impl ShellState {
             panel_documents: HashMap::new(),
             tool_run_panel_runs: std::collections::BTreeSet::new(),
             spawned_ui: None,
+            spawned_session: None,
+            app_document_identities: crate::media_slots::DocumentIdentityRegistry::default(),
             closing_documents: ShellDocumentRetirementRegistry::default(),
             active_window_id: None,
             noted_active_window: None,
@@ -6872,6 +6954,8 @@ impl ShellState {
             dock_view: DockState::default(),
             dock_instance_owner: None,
             dock_input_identity: None,
+            tree_windows: tree_windows::TreeWindowScheduler::default(),
+            tree_window_served: HashMap::new(),
             dock_canvas_bounds: Rect::new(0.0, 0.0, 0.0, 0.0),
             dock_axis_separator: 0.0,
             dock_drop_tab_bars: Vec::new(),
@@ -7011,6 +7095,7 @@ impl ShellState {
             presented_input_candidate: None,
             presented_input_geometry: PresentedInputGeometry::default(),
             presented_input_geometry_staging: PresentedInputGeometry::default(),
+            retained_body_rects_staging: Vec::new(),
             presented_chrome_accessibility: Vec::new(),
             presented_chrome_accessibility_generation: 0,
             pane_overlay_hits: Vec::new(),
@@ -7066,6 +7151,62 @@ impl ShellState {
     /// framework panel painted before the guest opened).
     fn document_controller_id(&self) -> String {
         self.session.as_ref().map(|session| session.app.controller_id.clone()).or_else(|| self.host_controller_id()).unwrap_or_default()
+    }
+
+    /// 🪟️ The session whose exact retained document occupies this dock body.
+    fn window_document_session(&self, window_id: &str) -> Option<&ActiveSession> {
+        if window_id == "spawned" { self.spawned_session.as_ref().filter(|_| self.space_mode) } else { self.session.as_ref() }
+    }
+
+    /// 🎯️ The app instance addressed by a retained action's controller and surface.
+    fn action_session(&self, action: &ActionDescriptor) -> Option<&ActiveSession> {
+        let requested = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(DslValue::as_str);
+        let spawned = self.spawned_session.as_ref().filter(|_| self.space_mode);
+        if requested == Some("spawned") || spawned.is_some_and(|session| requested.is_some_and(|id| session.view_state.window_instances.iter().any(|window| window.id == id))) {
+            return spawned.filter(|session| session.app.controller_id == action.controller_id);
+        }
+        if let Some(spawned) = spawned.filter(|session| session.app.controller_id == action.controller_id && self.session.as_ref().is_none_or(|host| host.app.controller_id != action.controller_id)) {
+            return Some(spawned);
+        }
+        self.session.as_ref().filter(|session| session.app.controller_id == action.controller_id)
+    }
+
+    /// 📨️ Commands select the declared plugin and app among the mounted sessions.
+    fn command_session(&self, owner: &semio_framework::manifest::CommandOwnerAddress, window_id: Option<&str>) -> Option<&ActiveSession> {
+        use semio_framework::manifest::CommandOwnerAddress;
+        let matches = |session: &&ActiveSession| match owner {
+            CommandOwnerAddress::Os => false,
+            CommandOwnerAddress::Plugin { plugin_id } => &session.plugin_id == plugin_id,
+            CommandOwnerAddress::App { plugin_id, app_id } | CommandOwnerAddress::Mode { plugin_id, app_id, .. } => &session.plugin_id == plugin_id && &session.app.id == app_id,
+        };
+        let spawned = self.spawned_session.as_ref().filter(|_| self.space_mode).filter(matches);
+        if let Some(session) = spawned.filter(|session| window_id.is_some_and(|id| id == "spawned" || session.view_state.window_instances.iter().any(|window| window.id == id))) {
+            return Some(session);
+        }
+        self.session.as_ref().filter(matches).or(spawned)
+    }
+
+    /// 🪪️ Session equality follows the plugin's exact instance and declared app.
+    fn same_session(left: &ActiveSession, right: &ActiveSession) -> bool {
+        left.plugin_id == right.plugin_id && left.instance_id == right.instance_id && left.app.id == right.app.id
+    }
+
+    /// 🧭️ A shell surface alias resolves to its owner's concrete guest window address.
+    fn session_action_invocation(&self, session: &ActiveSession, action: &ActionDescriptor, view: &ViewModel) -> Result<semio_framework::manifest::ActionInvocation, String> {
+        let supplied_window = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(DslValue::as_str);
+        let requested_window = if supplied_window == Some("spawned") { session.view_state.window_id.as_deref() } else { supplied_window };
+        let panel_leaves: Vec<&str> = Self::flatten_panel_tab_leaves(&session.app.panel_tabs).into_iter().map(|tab| tab.id()).collect();
+        let window_instance_id = action_window_instance_id(requested_window, &panel_leaves, session.view_state.window_id.as_deref(), view.focused_window_id.as_deref(), &session.app.window_kinds.first().id);
+        let window_kind_id = view.window_instances.iter().find(|instance| instance.id == window_instance_id).map(|instance| instance.window_kind_id.clone()).or_else(|| session.app.window_kinds.iter().find(|kind| kind.id == window_instance_id).map(|kind| kind.id.clone())).ok_or_else(|| format!("action window instance {window_instance_id} has no declared kind"))?;
+        let panel_origin = requested_window.is_some_and(|id| panel_leaves.contains(&id));
+        let mut arguments: std::collections::BTreeMap<String, DslValue> = action.args.as_ref().and_then(DslValue::as_object).map(|entries| entries.iter().filter(|(key, _)| !(panel_origin && key == "windowId")).cloned().collect()).unwrap_or_default();
+        if supplied_window == Some("spawned") {
+            arguments.insert("windowId".into(), DslValue::from(serde_json::json!(window_instance_id)));
+        }
+        Ok(semio_framework::manifest::ActionInvocation {
+            address: semio_framework::manifest::ActionAddress { plugin_id: session.plugin_id.clone(), app_id: session.app.id.clone(), mode_id: session.view_state.active_mode_id.clone().unwrap_or_else(|| session.app.default_mode_id.clone()), window_kind_id, window_instance_id, action_id: action.action.clone() },
+            arguments,
+        })
     }
 
     fn host_catalogue_tab_id(&self) -> Option<String> {
@@ -7225,11 +7366,14 @@ impl ShellState {
         self.record_surface_fault(surface_id, &body_key, "retained document ingress reached its terminal fault".to_string());
     }
 
-    fn clear_document_paint_fault(&mut self, surface_id: &str) {
+    /// 🪟️ One retained body finished a paint: its paint fault (if any) clears, and its windowed tree containers are measured and
+    /// reported ([`Self::observe_tree_windows`]).
+    fn note_retained_body_painted(&mut self, surface_id: &str) {
         if self.surface_faults.iter().any(|fault| fault.surface_id == surface_id) {
             self.surface_faults.retain(|fault| fault.surface_id != surface_id);
             self.error = self.fault_status();
         }
+        self.observe_tree_windows(surface_id);
     }
 
     fn document_body_key(&self, surface_id: &str) -> Option<String> {
@@ -7800,25 +7944,25 @@ impl ShellState {
         instances
     }
 
-    /// 🪟️ The host-owned fields every refresh restamps onto the session's view state.
-    ///
-    /// ⚠️ GAP (ticket 26/09/16/ARTIFACT-TREE-VIRTUALISED-STREAMING §2.4, §5): `tree_windows` and
-    /// `tree_viewport_rows` are NOT stamped here, because this shell mounts no tree viewport
-    /// observer. React's `🗣️Interpreter` reports one `TreeWindowRequest` per open container through
-    /// `TreeWindowHostV1::viewStateFields` (`🛠️ShellHelpers/🟦️.tsx`); until a wgpu scroll/open
-    /// observer feeds the same pair, every construction site sends what React sends before its first
-    /// report — no requests and no measured viewport — so a guest paints its own first-paint window
-    /// and scrolling into a spacer band reveals pitch rather than streamed rows.
+    /// 🪟️ The host-owned fields every refresh restamps onto the session's view state — including the tree windows this shell's
+    /// observer measured (`tree_windows`/`tree_viewport_rows`, [`tree_windows::TreeWindowScheduler::view_state_fields`]), the
+    /// same pair React's `TreeWindowHostV1::viewStateFields` stamps (`🛠️ShellHelpers/🟦️.tsx`).
     fn live_view_state(&self, session: &ActiveSession) -> ViewModel {
         let mut view_state = session.view_state.clone();
         view_state.locale = self.active_locale();
         view_state.terminology = self.active_terminology();
-        view_state.window_instances = Self::session_window_instances(session, &self.dock);
+        let spawned = self.spawned_session.as_ref().is_some_and(|owner| Self::same_session(owner, session));
+        if !spawned {
+            view_state.window_instances = Self::session_window_instances(session, &self.dock);
+        }
         view_state.active_utility_by_window_id = self.active_utility_by_window.clone();
         view_state.tool_run_trace_cursor_by_window_id = infinite_world::world::world3d_tool_run_trace_cursors(self.world3d_states.values());
         view_state.tool_run_trace_cursor_by_window_id.extend(crate::engine_canvas::board2d_tool_run_trace_cursors());
-        view_state.focused_window_id = self.active_window_id.clone();
+        if !spawned {
+            view_state.focused_window_id = self.active_window_id.clone();
+        }
         view_state.session_identity = self.session_identity_view();
+        (view_state.tree_windows, view_state.tree_viewport_rows) = self.tree_windows.view_state_fields();
         view_state
     }
 
@@ -8133,6 +8277,9 @@ impl ShellState {
             }
         }
         let program = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id).cloned().ok_or("session program missing")?;
+        if let Err(error) = self.refresh_app_document_identity(&program, session.instance_id).await {
+            faults.push(("document-identity".into(), "document-identity".into(), error));
+        }
         let panel_view = view_state.for_panel();
         let panel_leaves: Vec<(String, String)> = Self::flatten_panel_tab_leaves(&session.app.panel_tabs).into_iter().filter_map(|tab| tab.body_key.as_deref().map(|body_key| (tab.id().to_string(), body_key.to_string()))).collect();
         let shell_leaves: Vec<String> = self.shell_owned_panel_leaves();
@@ -8198,14 +8345,25 @@ impl ShellState {
             visited.push(semio_framework::UiRefreshSection::Tools.body_key().to_string());
             self.refresh_tool_measures(&program, session.instance_id, &view_state, read_ahead.tools.take(), &mut faults).await?;
         }
+        let previous_spawned_session = self.spawned_session.clone();
+        if let Some(document) = self.spawned_ui.take() {
+            if let Err(document) = self.retain_document_for_close(document) {
+                self.spawned_ui = Some(document);
+                return Err("shell: spawned document retirement registry refused the exact prior owner".to_string());
+            }
+        }
+        self.spawned_session = None;
         if self.space_mode {
             if let Some(panel) = Self::panel_state_from_view(&session.view_state)? {
                 if let Some(spawned) = panel.active_spawned_id.as_ref().and_then(|id| panel.spawned_apps.iter().find(|app| &app.id == id)) {
                     if let Some(spawn_plugin) = self.plugins.iter().find(|p| p.plugin_id == spawned.plugin_id).cloned() {
                         let spawned_app = spawn_plugin.manifest.apps.iter().find(|app| app.id == spawned.app_id).cloned();
                         if let Some(app) = spawned_app {
+                            if let Err(error) = self.refresh_app_document_identity(&spawn_plugin, spawned.instance_id).await {
+                                faults.push((spawned.id.clone(), "document-identity".into(), error));
+                            }
                             let body_key = app.window_kinds.first().body_key.clone();
-                            let view_state = ViewModel {
+                            let fresh_view = ViewModel {
                                 active_mode_id: Some(app.default_mode_id.clone()),
                                 active_window_kind_id: Some(app.window_kinds.first().id.clone()),
                                 active_utility_id: None,
@@ -8223,24 +8381,18 @@ impl ShellState {
                                 tree_windows: Vec::new(),
                                 tree_viewport_rows: None,
                             };
-                            if let Some(document) = self.spawned_ui.take() {
-                                if let Err(document) = self.retain_document_for_close(document) {
-                                    self.spawned_ui = Some(document);
-                                    return Err("shell: spawned document retirement registry refused the exact prior owner".to_string());
-                                }
-                            }
+                            let mut view_state = previous_spawned_session.as_ref().filter(|owner| owner.plugin_id == spawned.plugin_id && owner.instance_id == spawned.instance_id && owner.app.id == app.id).map(|owner| owner.view_state.clone()).unwrap_or(fresh_view);
+                            view_state.locale = self.active_locale();
+                            view_state.terminology = self.active_terminology();
+                            view_state.session_identity = self.session_identity_view();
                             visited.push(spawned.id.clone());
                             match spawn_plugin.render(spawned.instance_id, &spawned.id, &body_key, &view_state).await {
-                                Ok(document) => self.spawned_ui = Some(document),
+                                Ok(document) => {
+                                    self.spawned_ui = Some(document);
+                                    self.spawned_session = Some(ActiveSession { plugin_id: spawned.plugin_id.clone(), instance_id: spawned.instance_id, app, view_state });
+                                }
                                 Err(error) => faults.push((spawned.id.clone(), body_key.clone(), error)),
                             }
-                        }
-                    }
-                } else {
-                    if let Some(document) = self.spawned_ui.take() {
-                        if let Err(document) = self.retain_document_for_close(document) {
-                            self.spawned_ui = Some(document);
-                            return Err("shell: spawned document retirement registry refused the exact prior owner".to_string());
                         }
                     }
                 }
@@ -9154,19 +9306,27 @@ impl ShellState {
         for kind in session.app.window_kinds.iter() {
             let label = kind.label.resolve(terminology, locale).to_string();
             let mut items = if kind.surface_kind == ui_wgpu::wgpu::SurfaceKind::World3d {
-                world_projection_template_rows(&format!("framework.display.windows.{}.projection", kind.id), &kind.id, 0, &mut 0)
+                world_projection_template_rows(&semio_framework::child_element_id(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, &[kind.id.as_str(), "projection"]), &kind.id, 0, &mut 0)
             } else {
                 Vec::new()
             };
             items.push(UiTreeItemNode {
-                id: format!("framework.display.windows.{}.kind", kind.id),
+                id: semio_framework::child_element_id(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, &[kind.id.as_str(), "kind"]),
                 label: Label::data(label.clone()),
                 icon_id: Some(kind.icon_id.clone()),
                 draggable: Some(true),
                 drag_data: Some(window_template_drag_data(&kind.id, None)),
                 ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
             });
-            sections.push(UiTreeSectionNode { header_toolbar: None, id: format!("framework.display.windows.{}", kind.id), label: Some(Label::data(label)), default_open: Some(false), presence: UiPresence::default(), items, window: None });
+            sections.push(UiTreeSectionNode {
+                header_toolbar: None,
+                id: semio_framework::child_element_id(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, &[kind.id.as_str()]),
+                label: Some(Label::data(label)),
+                default_open: Some(false),
+                presence: UiPresence::default(),
+                items,
+                window: None,
+            });
         }
         display_panel_body("framework.display.windows.panel", sections)
     }
@@ -9328,19 +9488,11 @@ impl ShellState {
         )
     }
 
-    /// 🛍️ The `framework.marketplace` leaf's body — the wgpu twin of React's `buildMarketplaceTree`:
-    /// one section per plugin SOURCE, a `label · version · status` row per plugin, and this renderer's
-    /// own install/reload/uninstall lane.
-    ///
-    /// 🔌️ The roster is the union of the plugins this shell HOLDS (`loaded`) and every plugin id the
-    /// generated activation catalogue claims (`available`) — the same table
-    /// [`ShellState::install_plugin`]'s lazy install already reads, which is what makes `Install` a
-    /// real verb here rather than a decoration. React's `canUninstall` is the session's own plugin:
-    /// a shell may not uninstall the program it is running. Store-owned extensions remain nested
-    /// under their declared host, including failed loads, so install failures never erase inventory.
-    pub(crate) fn build_marketplace_ui(&self) -> UiNode {
-        let is_de = self.locale_id == "de";
-        let session_plugin = self.session.as_ref().map(|session| session.plugin_id.clone());
+    /// 🛍️ Every plugin id the `framework.marketplace` leaf lists, in its row order: the plugins this shell HOLDS (`loaded`,
+    /// extensions excluded — they nest under their host) and every plugin id the generated activation catalogue claims
+    /// (`available`) — the same table [`ShellState::install_plugin`]'s lazy install reads, which is what makes `Install` a real
+    /// verb rather than a decoration. Sorted and unique.
+    pub(crate) fn marketplace_roster(&self) -> Vec<String> {
         let extension_ids: Vec<&str> = self.extensions.iter().map(|entry| entry.record.extension_id.as_str()).collect();
         let mut ids: Vec<String> = self.plugins.iter().filter(|entry| !extension_ids.contains(&entry.plugin_id.as_str())).map(|entry| entry.plugin_id.clone()).collect();
         for (_, plugin_id) in crate::program_bridge::PLUGIN_ARTIFACT_KIND_ACTIVATIONS.iter() {
@@ -9350,78 +9502,103 @@ impl ShellState {
         }
         ids.sort();
         ids.dedup();
-        let host_ids = ids.clone();
+        ids
+    }
+
+    /// 🛍️ The `framework.marketplace` leaf's body — the wgpu twin of React's `buildMarketplaceTree`: one section per plugin
+    /// SOURCE, a `label · version · status` row per plugin, and this renderer's own install/reload/uninstall lane.
+    ///
+    /// 🎯️ Every row carries its verbs as ROW ACTIONS on ONE target (U6's row model): a plugin row targets
+    /// `framework` with `{ pluginId }` and names `installPlugin` or `reloadPlugin`/`uninstallPlugin`; an extension row targets
+    /// `{ extensionId, enabled: !enabled }` and names `setExtensionEnabled`/`uninstallExtension`. A verb the row cannot run
+    /// paints and announces DISABLED (React's `disabled` buttons) instead of disappearing — the session's own program is never
+    /// uninstallable (React's `canUninstall`), a plugin mid-install offers nothing, a failed extension cannot be enabled.
+    ///
+    /// 🪟️ The roster is ONE windowed Tree section (`framework.marketplace.source.local`): the rows the tree window observer
+    /// reported for it ([`tree_windows::TreeWindowScheduler::window_of`]) — one viewport of rows before the first report —
+    /// materialise inside [`MARKETPLACE_WINDOW_NODE_BUDGET`], and the retained layout pitches the rest as spacers, so a roster of
+    /// any length stays inside the retained node ceiling and scrolls to its last row. Store-owned extensions stay nested under
+    /// their declared host, including failed loads, so install failures never erase inventory.
+    pub(crate) fn build_marketplace_ui(&self) -> UiNode {
+        let is_de = self.locale_id == "de";
+        let session_plugin = self.session.as_ref().map(|session| session.plugin_id.clone());
+        let ids = self.marketplace_roster();
         let installing = self.plugin_install.as_ref().map(|install| install.plugin_id.clone());
+        let verb = |action: &str, args: Option<DslValue>, icon: IconName, label_key: &'static str, disabled: bool| ui_wgpu::wgpu::component::ui::UiTreeItemAction {
+            icon_id: icon,
+            label: Some(Label::data(shell_chrome_string(label_key, is_de))),
+            action: ActionDescriptor { controller_id: "framework".into(), action: action.into(), args },
+            placement: None,
+            disabled,
+        };
         let extension_item = |entry: &ShellExtensionProjection| {
             let extension_id = entry.record.extension_id.clone();
             let can_toggle = matches!(entry.load_status, ShellExtensionLoadStatus::Available | ShellExtensionLoadStatus::Loaded);
-            let toggle = UiTreeItemNode {
-                id: format!("framework.marketplace.extension.{extension_id}.enable"),
-                label: Label::data(shell_chrome_string(if entry.enabled { "plugins.extension.disable" } else { "plugins.extension.enable" }, is_de)),
-                icon_id: Some(if entry.enabled { IconName::EyeOff } else { IconName::Eye }),
-                presence: UiPresence { state: if can_toggle { ui_wgpu::wgpu::component::ui::UiState::Normal } else { ui_wgpu::wgpu::component::ui::UiState::Disabled }, ..UiPresence::default() },
-                action: can_toggle.then(|| ActionDescriptor { controller_id: "framework".into(), action: "setExtensionEnabled".into(), args: crate::action_args_json!({ "extensionId": extension_id.clone(), "enabled": !entry.enabled }) }),
-                ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
-            };
-            let uninstall = UiTreeItemNode {
-                id: format!("framework.marketplace.extension.{extension_id}.uninstall"),
-                label: Label::data(shell_chrome_string("plugins.action.uninstall", is_de)),
-                icon_id: Some(IconName::Trash2),
-                action: Some(ActionDescriptor { controller_id: "framework".into(), action: "uninstallExtension".into(), args: crate::action_args_json!({ "extensionId": extension_id.clone() }) }),
-                ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
-            };
+            let target = crate::action_args_json!({ "extensionId": extension_id.clone(), "enabled": !entry.enabled });
             UiTreeItemNode {
                 id: format!("framework.marketplace.plugin.{}.extension.{extension_id}", entry.record.extends_host),
                 label: Label::data(format!("{} · {} · {}", entry.record.label, entry.record.version, shell_chrome_string(if entry.enabled { "plugins.extension.enabled" } else { "plugins.extension.disabled" }, is_de))),
-                default_open: Some(false),
-                items: Some(vec![toggle, uninstall]),
+                actions: Some(vec![
+                    verb("setExtensionEnabled", target.clone(), if entry.enabled { IconName::EyeOff } else { IconName::Eye }, if entry.enabled { "plugins.extension.disable" } else { "plugins.extension.enable" }, !can_toggle),
+                    verb("uninstallExtension", target, IconName::Trash2, "plugins.action.uninstall", false),
+                ]),
                 ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
             }
         };
-        let items: Vec<UiTreeItemNode> = ids
-            .into_iter()
-            .map(|plugin_id| {
-                let resident = self.plugins.iter().find(|entry| entry.plugin_id == plugin_id);
-                let in_flight = installing.as_deref() == Some(plugin_id.as_str());
-                let status_key = if in_flight {
-                    "plugins.status.installing"
-                } else if resident.is_some() {
-                    "plugins.status.loaded"
-                } else {
-                    "plugins.status.available"
-                };
-                let label = resident.map(|entry| entry.manifest.label.clone()).unwrap_or_else(|| plugin_id.clone());
-                let version = resident.map(|entry| entry.manifest.version.clone()).unwrap_or_default();
-                let head = if version.is_empty() { format!("{label} \u{b7} {}", shell_chrome_string(status_key, is_de)) } else { format!("{label} \u{b7} {version} \u{b7} {}", shell_chrome_string(status_key, is_de)) };
-                let row_id = format!("framework.marketplace.plugin.{plugin_id}");
-                let verb = |suffix: &str, label_key: &'static str, icon: IconName, action: &str, enabled: bool| UiTreeItemNode {
-                    id: format!("{row_id}.{suffix}"),
-                    label: Label::data(shell_chrome_string(label_key, is_de)),
-                    icon_id: Some(icon),
-                    presence: UiPresence { state: if enabled { ui_wgpu::wgpu::component::ui::UiState::Normal } else { ui_wgpu::wgpu::component::ui::UiState::Disabled }, ..UiPresence::default() },
-                    action: enabled.then(|| ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: crate::action_args_json!({ "pluginId": plugin_id.clone() }) }),
-                    ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
-                };
-                let can_uninstall = resident.is_some() && session_plugin.as_deref() != Some(plugin_id.as_str());
-                let mut verbs = if resident.is_some() {
-                    vec![verb("reload", "plugins.action.reload", IconName::RotateCcw, "reloadPlugin", !in_flight), verb("uninstall", "plugins.action.uninstall", IconName::Trash2, "uninstallPlugin", can_uninstall && !in_flight)]
-                } else {
-                    vec![verb("install", "plugins.action.install", IconName::Download, "installPlugin", !in_flight)]
-                };
-                let has_extensions = self.extensions.iter().any(|entry| entry.record.extends_host == plugin_id);
-                verbs.extend(self.extensions.iter().filter(|entry| entry.record.extends_host == plugin_id).map(&extension_item));
-                UiTreeItemNode {
-                    id: row_id.clone(),
-                    label: Label::data(head),
-                    default_open: Some(has_extensions),
-                    presence: UiPresence { status: if in_flight { ui_wgpu::wgpu::component::ui::UiStatus::Loading } else { ui_wgpu::wgpu::component::ui::UiStatus::Idle }, ..UiPresence::default() },
-                    items: Some(verbs),
-                    ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
-                }
+        let plugin_item = |plugin_id: &str| {
+            let resident = self.plugins.iter().find(|entry| entry.plugin_id == plugin_id);
+            let in_flight = installing.as_deref() == Some(plugin_id);
+            let status_key = if in_flight {
+                "plugins.status.installing"
+            } else if resident.is_some() {
+                "plugins.status.loaded"
+            } else {
+                "plugins.status.available"
+            };
+            let label = resident.map(|entry| entry.manifest.label.clone()).unwrap_or_else(|| plugin_id.to_string());
+            let version = resident.map(|entry| entry.manifest.version.clone()).unwrap_or_default();
+            let head = if version.is_empty() { format!("{label} \u{b7} {}", shell_chrome_string(status_key, is_de)) } else { format!("{label} \u{b7} {version} \u{b7} {}", shell_chrome_string(status_key, is_de)) };
+            let target = crate::action_args_json!({ "pluginId": plugin_id });
+            let can_uninstall = resident.is_some() && session_plugin.as_deref() != Some(plugin_id);
+            let actions = if resident.is_some() {
+                vec![verb("reloadPlugin", target.clone(), IconName::RotateCcw, "plugins.action.reload", in_flight), verb("uninstallPlugin", target, IconName::Trash2, "plugins.action.uninstall", !can_uninstall || in_flight)]
+            } else {
+                vec![verb("installPlugin", target, IconName::Download, "plugins.action.install", in_flight)]
+            };
+            let extensions: Vec<UiTreeItemNode> = self.extensions.iter().filter(|entry| entry.record.extends_host == plugin_id).map(&extension_item).collect();
+            UiTreeItemNode {
+                id: format!("framework.marketplace.plugin.{plugin_id}"),
+                label: Label::data(head),
+                default_open: Some(!extensions.is_empty()),
+                presence: UiPresence { status: if in_flight { ui_wgpu::wgpu::component::ui::UiStatus::Loading } else { ui_wgpu::wgpu::component::ui::UiStatus::Idle }, ..UiPresence::default() },
+                actions: Some(actions),
+                items: (!extensions.is_empty()).then_some(extensions),
+                ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
+            }
+        };
+        let section_key = format!("{FRAMEWORK_MARKETPLACE_TAB_ID}/{MARKETPLACE_LOCAL_SECTION_ID}");
+        let (offset, rows) = self.tree_windows.window_of(FRAMEWORK_MARKETPLACE_TAB_ID, &section_key).unwrap_or((0, self.tree_windows.viewport_rows_or_default()));
+        let offset = (offset as usize).min(ids.len().saturating_sub(1));
+        let mut credit = MARKETPLACE_WINDOW_NODE_BUDGET;
+        let materialised: Vec<UiTreeItemNode> = ids
+            .iter()
+            .skip(offset)
+            .take(rows as usize)
+            .map(|plugin_id| plugin_item(plugin_id))
+            .map_while(|item| {
+                let cost = 1 + item.items.as_ref().map_or(0, Vec::len);
+                (cost <= credit).then(|| {
+                    credit -= cost;
+                    item
+                })
             })
             .collect();
-        let items = if items.is_empty() { vec![UiTreeItemNode::base("framework.marketplace.empty", Label::data(shell_chrome_string("marketplace.unavailable", is_de)))] } else { items };
-        let mut missing_hosts: Vec<&str> = self.extensions.iter().map(|entry| entry.record.extends_host.as_str()).filter(|host| !host_ids.iter().any(|id| id.as_str() == *host)).collect();
+        let (items, window) = if ids.is_empty() {
+            (vec![UiTreeItemNode::base("framework.marketplace.empty", Label::data(shell_chrome_string("marketplace.unavailable", is_de)))], None)
+        } else {
+            (materialised, Some(UiTreeWindow { row_extent: UiTreeWindowRowExtent::Standard, total: ids.len() as u32, offset: offset as u32 }))
+        };
+        let mut missing_hosts: Vec<&str> = self.extensions.iter().map(|entry| entry.record.extends_host.as_str()).filter(|host| !ids.iter().any(|id| id.as_str() == *host)).collect();
         missing_hosts.sort();
         missing_hosts.dedup();
         let install_file = UiTreeItemNode {
@@ -9450,12 +9627,12 @@ impl ShellState {
             },
             UiTreeSectionNode {
                 header_toolbar: None,
-                id: "framework.marketplace.source.local".into(),
+                id: MARKETPLACE_LOCAL_SECTION_ID.into(),
                 label: Some(Label::data(format!("{}: local", shell_chrome_string("plugins.source", is_de)))),
                 default_open: Some(true),
                 presence: UiPresence::default(),
                 items,
-                window: None,
+                window,
             },
         ];
         sections.extend(missing_hosts.into_iter().map(|host| UiTreeSectionNode {
@@ -11486,14 +11663,17 @@ impl ShellState {
                 return result;
             }
             if !record_tutorial_after_acceptance && action.controller_id != "framework" {
-                if let Some(session) = self.session.clone() {
+                if let Some(session) = self.action_session(&action).cloned() {
                     if Self::app_owns_command(&session.app, &action.action) {
+                        if action.args.as_ref().and_then(|args| args.get("windowId")).and_then(DslValue::as_str) == Some("spawned") {
+                            if let Some(id) = session.view_state.window_id.as_deref() { scope_action_to_window(&mut action, id); }
+                        }
                         let arguments = action.args.as_ref().and_then(DslValue::as_object).map(|entries| entries.iter().cloned().collect()).unwrap_or_default();
                         return self
-                            .dispatch_command(semio_framework::manifest::CommandInvocation {
+                            .dispatch_session_command(semio_framework::manifest::CommandInvocation {
                                 address: semio_framework::manifest::CommandAddress { owner: semio_framework::manifest::CommandOwnerAddress::App { plugin_id: session.plugin_id.clone(), app_id: session.app.id.clone() }, command_id: action.action.clone() },
                                 arguments,
-                            })
+                            }, session)
                             .await;
                     }
                 }
@@ -12035,28 +12215,12 @@ impl ShellState {
                     }
                 }
             }
-            let Some(session) = self.session.clone() else {
-                return Ok(());
+            let Some(session) = self.action_session(&action).cloned() else {
+                return Err("action has no mounted app owner".into());
             };
-            let program = self.plugins.iter().find(|p| p.manifest.apps.iter().any(|app| app.controller_id == action.controller_id)).or_else(|| self.plugins.iter().find(|p| p.plugin_id == session.plugin_id)).ok_or("action program missing")?;
-            let requested_window_id = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(DslValue::as_str);
-            let panel_leaves: Vec<&str> = Self::flatten_panel_tab_leaves(&session.app.panel_tabs).into_iter().map(|tab| tab.id()).collect();
-            let window_instance_id = action_window_instance_id(requested_window_id, &panel_leaves, session.view_state.window_id.as_deref(), self.active_window_id.as_deref(), &session.app.window_kinds.first().id);
+            let program = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id).ok_or("action program missing")?;
             let live_view_state = self.live_view_state(&session);
-            let window_kind_id = live_view_state
-                .window_instances
-                .iter()
-                .find(|instance| instance.id == window_instance_id)
-                .map(|instance| instance.window_kind_id.clone())
-                .or_else(|| session.app.window_kinds.iter().find(|kind| kind.id == window_instance_id).map(|kind| kind.id.clone()))
-                .ok_or_else(|| format!("action window instance {window_instance_id} has no declared kind"))?;
-            let mode_id = session.view_state.active_mode_id.clone().unwrap_or_else(|| session.app.default_mode_id.clone());
-            let panel_origin = requested_window_id.is_some_and(|id| panel_leaves.contains(&id));
-            let arguments = action.args.as_ref().and_then(DslValue::as_object).map(|entries| entries.iter().filter(|(key, _)| !(panel_origin && key == "windowId")).cloned().collect()).unwrap_or_default();
-            let invocation = semio_framework::manifest::ActionInvocation {
-                address: semio_framework::manifest::ActionAddress { plugin_id: session.plugin_id.clone(), app_id: session.app.id.clone(), mode_id, window_kind_id, window_instance_id, action_id: action.action.clone() },
-                arguments,
-            };
+            let invocation = self.session_action_invocation(&session, &action, &live_view_state)?;
             let action_json = dsl::os_pack::json::to_json_string(&invocation);
             let mut result = program.handle_action(session.instance_id, &action_json, &live_view_state).await?;
             self.observe_invocation_history(result.history_patch.as_ref()).await;
@@ -12084,7 +12248,7 @@ impl ShellState {
             Self::debug_log(&format!("[TRACE] wgpu-shell dispatch action={} scope={}", action.action, refresh_scope_label(&scope)));
             self.queue_host_effects(&action.controller_id.clone(), queued);
             let operations: Vec<String> = result.mutations.iter().filter_map(|operation| serde_json::to_string(&operation.diff.payload).ok()).collect();
-            self.apply_mutations(&operations, scope).await
+            self.apply_ops_inner(&operations, true, scope, Some(session)).await
 
         })
 
@@ -12116,16 +12280,19 @@ impl ShellState {
             if matches!(invocation.address.owner, semio_framework::manifest::CommandOwnerAddress::Os) {
                 return Err("os commands must be dispatched by the shell".into());
             }
-            let Some(session) = self.session.clone() else {
-                return Ok(());
-            };
+            let window_id = invocation.arguments.get("windowId").and_then(DslValue::as_str);
+            let session = self.command_session(&invocation.address.owner, window_id).cloned().ok_or("command has no mounted app owner")?;
+            self.dispatch_session_command(invocation, session).await
+        })
+    }
+
+    /// 🧵️ A retained command keeps the exact session selected by its source document.
+    fn dispatch_session_command<'a>(&'a mut self, invocation: semio_framework::manifest::CommandInvocation, session: ActiveSession) -> ShellTurn<'a, Result<(), String>> {
+        shell_turn(async move {
             let owner_plugin_id = match &invocation.address.owner {
                 semio_framework::manifest::CommandOwnerAddress::Plugin { plugin_id } | semio_framework::manifest::CommandOwnerAddress::App { plugin_id, .. } | semio_framework::manifest::CommandOwnerAddress::Mode { plugin_id, .. } => plugin_id,
-                semio_framework::manifest::CommandOwnerAddress::Os => unreachable!(),
+                semio_framework::manifest::CommandOwnerAddress::Os => return Err("os commands must be dispatched by the shell".into()),
             };
-            if owner_plugin_id != &session.plugin_id {
-                return Err(format!("command owner plugin {owner_plugin_id} is not active"));
-            }
             let program = self.plugins.iter().find(|entry| entry.plugin_id == *owner_plugin_id).cloned().ok_or("command program missing")?;
             let command_json = dsl::os_pack::json::to_json_string(&invocation);
             let live_view_state = self.live_view_state(&session);
@@ -12150,7 +12317,7 @@ impl ShellState {
             Self::debug_log(&format!("[TRACE] wgpu-shell dispatch command={} scope={}", invocation.address.command_id, refresh_scope_label(&scope)));
             self.queue_host_effects(&session.app.controller_id.clone(), queued);
             let operations: Vec<String> = result.mutations.iter().filter_map(|operation| serde_json::to_string(&operation.diff.payload).ok()).collect();
-            self.apply_mutations(&operations, scope).await
+            self.apply_ops_inner(&operations, true, scope, Some(session)).await
         })
     }
 
@@ -13657,7 +13824,7 @@ impl ShellState {
                         self.verified_session_authority = None;
                         self.bootstrap_identity();
                     }
-                    Err(DirectoryClientError::Transport(TransportError::Io(_)) | DirectoryClientError::Transport(TransportError::DeadlineExceeded) | DirectoryClientError::Http { status: 500..=599, .. }) => {
+                    Err(DirectoryClientError::Transport(TransportError::Io(_) | TransportError::DeadlineExceeded | TransportError::BudgetExhausted) | DirectoryClientError::Http { status: 500..=599, .. }) => {
                         if let Some(home) = self.directory_home.as_mut() {
                             home.retry_at_ms = crate::renderer_worker_pool().now_ms().saturating_add(DirectoryHomeProjection::RETRY_DELAY_MS);
                         }
@@ -13730,7 +13897,7 @@ impl ShellState {
     /// caller that speaks for no guest.
     pub fn apply_mutations<'a>(&'a mut self, operations: &'a [String], scope: UiDirtyScope) -> ShellTurn<'a, Result<(), String>> {
         shell_turn(async move {
-            self.apply_ops_inner(operations, true, scope).await
+            self.apply_ops_inner(operations, true, scope, self.session.clone()).await
         })
     }
 
@@ -13756,9 +13923,9 @@ impl ShellState {
     /// `UiDirtyScope::None` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
     /// `📓️wgpu-dirty-scope-refresh-2026-09-14.md` §3.4) — so a shell that honours the scope must
     /// widen here or an example switch would leave every window painting the previous document.
-    async fn apply_ops_inner(&mut self, operations: &[String], allow_navigate: bool, scope: UiDirtyScope) -> Result<(), String> {
+    async fn apply_ops_inner(&mut self, operations: &[String], allow_navigate: bool, scope: UiDirtyScope, owner: Option<ActiveSession>) -> Result<(), String> {
         let mut pending: Vec<String> = operations.to_vec();
-        let mut view_state = self.session.as_ref().map(|s| s.view_state.clone());
+        let mut view_state = owner.as_ref().map(|s| s.view_state.clone());
         let mut document_changed = false;
         let mut panel_rewritten = false;
         let mut navigate_uri: Option<String> = None;
@@ -13781,7 +13948,7 @@ impl ShellState {
                 if operation.get("operation").and_then(|v| v.as_str()) == Some("requestFileSave") {
                     #[cfg(not(target_arch = "wasm32"))]
                     if let (Some(filename), Some(data), Some(space_id)) = (operation.get("filename").and_then(|v| v.as_str()), operation.get("data").and_then(|v| v.as_str()), operation.get("spaceId").and_then(|v| v.as_str())) {
-                        if let Some(session) = self.session.clone() {
+                        if let Some(session) = owner.clone() {
                             let (filename, data, space_id) = (filename.to_string(), data.to_string(), space_id.to_string());
                             self.submit_shell_io_future(async move {
                                 let Some(path) = request_file_save(&filename).await else { return ShellIoCompletion::Finished };
@@ -13801,7 +13968,7 @@ impl ShellState {
                 if operation.get("operation").and_then(|v| v.as_str()) == Some("requestFolderPick") {
                     #[cfg(not(target_arch = "wasm32"))]
                     if let Some(import_action) = operation.get("importAction").and_then(|v| v.as_str()) {
-                        if let Some(session) = self.session.clone() {
+                        if let Some(session) = owner.clone() {
                             let import_action = import_action.to_string();
                             let mut args = operation.get("args").cloned().unwrap_or_else(|| serde_json::json!({}));
                             self.submit_shell_io_future(async move {
@@ -13837,10 +14004,15 @@ impl ShellState {
             }
         }
         let scope = if panel_rewritten || document_changed { UiDirtyScope::Full } else { scope };
-        if let (Some(mut session), Some(vs)) = (self.session.take(), view_state) {
-            session.view_state = vs;
-            self.session = Some(session);
-            self.sync_session_chrome();
+        if let (Some(owner), Some(vs)) = (owner.as_ref(), view_state) {
+            if let Some(session) = self.session.as_mut().filter(|session| Self::same_session(session, owner)) {
+                session.view_state = vs;
+                self.sync_session_chrome();
+            } else if let Some(session) = self.spawned_session.as_mut().filter(|session| Self::same_session(session, owner)) {
+                session.view_state = vs;
+            } else {
+                return Err("mutation owner is no longer mounted".into());
+            }
             self.refresh_ui(scope).await?;
         } else if document_changed {
             self.sync_session_chrome();
@@ -15236,6 +15408,11 @@ impl ShellState {
     /// panel alike — right after its paint, so the entries land above the window region the chrome
     /// registered before it.
     fn register_retained_body_hits(&mut self, window_id: &str, body: Rect, input: &mut InputState<ActionDescriptor>) {
+        if let Some((_, rect)) = self.retained_body_rects_staging.iter_mut().find(|(id, _)| id == window_id) {
+            *rect = body;
+        } else if self.retained_body_rects_staging.len() < 256 {
+            self.retained_body_rects_staging.push((window_id.to_string(), body));
+        }
         crate::interpreter::note_accessibility_visible_document(window_id);
         for (control_id, scene, rect) in crate::interpreter::register_clipped_retained_hit_targets(window_id, body, input) {
             if let Some(scene) = scene {
@@ -15247,6 +15424,21 @@ impl ShellState {
         }
     }
 
+    /// 🎬️ Publishes accepted media geometry only in the browser host that owns a DOM player.
+    pub(crate) fn presented_media_slots(&self) -> Vec<crate::media_slots::PresentedMediaSlot> {
+        #[cfg(target_arch = "wasm32")]
+        {
+            let geometry = &self.presented_input_geometry;
+            let mut slots = crate::interpreter::presented_media_slots(&geometry.retained_body_rects, &geometry.retained_surfaces, &geometry.media_owners, &geometry.panel_rects, &geometry.dock_window_plan);
+            if geometry.media_blocked {
+                for slot in &mut slots { slot.occluded = true; }
+            }
+            slots
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        Vec::new()
+    }
+
     /// 🧭 Resolves one timer owner from this shell's GPU-accepted retained surface roster.
     pub(crate) fn retained_clock_surface(&self, index: usize) -> Option<(&str, ui_wgpu::wgpu::UiSurfaceToken)> {
         self.presented_input_geometry.retained_surfaces.get(index).map(|(id, surface)| (id.as_str(), *surface))
@@ -15256,10 +15448,48 @@ impl ShellState {
         crate::interpreter::presented_retained_clock_deadline(&self.presented_input_geometry.retained_surfaces)
     }
 
+    /// 🪪️ Refreshes bounded app ownership independently from authored media resources.
+    async fn refresh_app_document_identity(&mut self, program: &ProgramBridgeEntry, instance_id: u32) -> Result<(), String> {
+        let key = (program.plugin_id.clone(), instance_id);
+        let spawned = self.session.as_ref().and_then(|session| Self::panel_state_from_view(&session.view_state).ok().flatten()).map(|panel| panel.spawned_apps).unwrap_or_default();
+        let active = self.session.as_ref().map(|session| (session.plugin_id.clone(), session.instance_id));
+        let mounted = self.spawned_session.as_ref().map(|session| (session.plugin_id.clone(), session.instance_id));
+        self.app_document_identities.retain(|owner| Some(owner) == active.as_ref() || Some(owner) == mounted.as_ref() || *owner == key || spawned.iter().any(|app| app.plugin_id == owner.0 && app.instance_id == owner.1));
+        let request = self.app_document_identities.begin(key.clone()).ok_or_else(|| "app document identity registry request authority unavailable".to_string())?;
+        let identity = match program.read_app_document_identity(instance_id).await {
+            Ok(identity) => identity,
+            Err(error) => {
+                self.app_document_identities.remove(&key);
+                return Err(error);
+            }
+        };
+        if !self.app_document_identities.accept(&key, request, identity.app_instance_id, identity.parent_document_id) {
+            return Err("app document identity reply is stale or foreign".into());
+        }
+        Ok(())
+    }
+
+    fn media_owner_for_session(&self, session: &ActiveSession) -> Option<crate::media_slots::PresentedMediaOwner> {
+        let parent_document_id = self.app_document_identities.document(&(session.plugin_id.clone(), session.instance_id))?.to_string();
+        Some(crate::media_slots::PresentedMediaOwner { plugin_id: session.plugin_id.clone(), controller_id: session.app.controller_id.clone(), app_instance_id: session.instance_id, parent_document_id })
+    }
+
     fn candidate_input_geometry(&self, theme: &Theme) -> PresentedInputGeometry {
         let body = self.body_rect(theme);
         let panel_rects = PanelAnchor::ALL.into_iter().filter(|anchor| self.anchor_open(*anchor)).map(|anchor| self.anchor_rect(anchor, body, theme)).collect();
+        let active_owner = self.session.as_ref().and_then(|session| self.media_owner_for_session(session));
+        let spawned_owner = self.spawned_session.as_ref().and_then(|session| self.media_owner_for_session(session));
+        let spawned = self.session.as_ref().and_then(|session| Self::panel_state_from_view(&session.view_state).ok().flatten()).map(|panel| panel.spawned_apps).unwrap_or_default();
+        let media_owners = self.retained_body_rects_staging.iter().map(|(id, _)| {
+            let owner = if id == "spawned" || spawned.iter().any(|app| &app.id == id) { spawned_owner.clone() } else { active_owner.clone() };
+            (id.clone(), owner)
+        }).collect();
+        let media_blocked = self.candidate_pointer_input_is_modal() || self.overlay_state != OverlayState::None || self.sync_card_kind.is_some() || self.dock_drag.is_some()
+            || self.chrome_build.tooltip_hover.as_ref().is_some_and(|hover| self.chrome_build.tooltip_shows(false) && chrome_tooltip_ready(hover, chrome_now_ms()));
         PresentedInputGeometry {
+            retained_body_rects: self.retained_body_rects_staging.clone(),
+            media_owners,
+            media_blocked,
             retained_surfaces: crate::interpreter::staged_retained_clock_surfaces(),
             dock_canvas_bounds: self.dock_canvas_bounds,
             dock_axis_separator: self.dock_axis_separator,
@@ -15619,7 +15849,8 @@ impl ShellState {
     ///
     /// ⚖️ The topmost hit is the owner: chrome painted over an engine surface takes the pointer from
     /// it, exactly as a DOM element above the `<canvas>` does, and a point that hits nothing is the
-    /// surface's. [`Self::pointer_press_belongs_to_shell_chrome`] is this answer read as a bool.
+    /// surface's. [`Self::pointer_press_belongs_to_shell_chrome`] is this answer read as a bool. A retained pane body's rows are
+    /// keyed `<surface>/<id>` (`PanelProjection::key`), so it is their surface-local id that names them chrome.
     pub fn pointer_hit_owner(hit: Option<&HitTarget<ActionDescriptor>>) -> PointerHitOwner {
         let chrome = hit.is_some_and(|hit| {
             matches!(hit.kind, HitKind::NavbarItem | HitKind::DropdownItem | HitKind::ContextMenu | HitKind::Select | HitKind::DockSplit | HitKind::DockJoinCorner | HitKind::PanelResize | HitKind::PanelTab)
@@ -15630,6 +15861,7 @@ impl ShellState {
                         || id.starts_with("panel.resize.")
                         || id.starts_with(WINDOW_PANE_CHIP_PARENT)
                         || id.starts_with(WORLD_PROJECTION_PANE_PARENT)
+                        || id.split_once('/').is_some_and(|(_, local)| local.starts_with(WORLD_PROJECTION_PANE_PARENT))
                         || id.starts_with(WINDOW_UTILITY_RAIL_PARENT)
                 })
         });
@@ -16631,6 +16863,7 @@ impl ShellState {
     /// console the probes read.
     pub async fn settle_pump_step(&mut self) -> ShellSettleStep {
         self.advance_icon_export();
+        self.pump_tree_windows();
         let step = self.settle_pump_step_inner().await;
         let entering = matches!(step, ShellSettleStep::Wedged | ShellSettleStep::Quiescent) || matches!(self.settle_pump.traced, None | Some(ShellSettleStep::Quiescent));
         if (entering && self.settle_pump.traced != Some(step)) || self.settle_pump.steps % SHELL_SETTLE_HEARTBEAT_STEPS == 0 {
@@ -19165,12 +19398,23 @@ pub(crate) fn shell_chrome_free_band(width: f32, occupied: &[ShellChromeBandSpan
     }
 }
 
-/// 🎯️ Rust twin of `navbarCenteredLeftV1`, including its pixel rounding.
+/// 🎯️ Rust twin of `navbarCenteredLeftV1`, including its pixel rounding — to the nearest whole pixel INSIDE the band, so a
+/// sub-pixel band edge is never crossed (the unrounded clamp when no whole pixel fits).
 pub(crate) fn shell_chrome_centered_band(width: f32, occupied: &[ShellChromeBandSpan], desired_width: f32) -> ShellChromeCenteredBand {
     let free = shell_chrome_free_band(width, occupied);
     let centered_width = desired_width.max(0.0).min(free.width());
     let latest = free.right - centered_width;
-    let left = if latest <= free.left { free.left } else { ((width - centered_width) * 0.5).clamp(free.left, latest).round() };
+    let left = if latest <= free.left {
+        free.left
+    } else {
+        let (first, last) = (free.left.ceil(), latest.floor());
+        let left = ((width - centered_width) * 0.5).clamp(free.left, latest);
+        if first > last {
+            left
+        } else {
+            left.round().clamp(first, last)
+        }
+    };
     ShellChromeCenteredBand { free, centered: ShellChromeBandSpan { left, right: left + centered_width } }
 }
 
@@ -20503,11 +20747,15 @@ pub(crate) const WORLD_PROJECTION_TEMPLATES: &[WorldProjectionTemplate] = &[
 /// shells open on 3-Point.
 pub(crate) const WORLD_PROJECTION_DEFAULT_TEMPLATE_ID: &str = "three-point";
 
-/// ⏱️ The ceiling one unfolded projection body may spend inside the chrome walk — its own paint
-/// opportunities, not the whole walk's. Fifteen rows of at most nine group phases and one glyph
-/// grant per label scalar fit inside it several times over; a body that reaches it has stopped
-/// converging, which is a fault, not a slow frame.
-pub(crate) const WORLD_PROJECTION_PANE_PAINT_OPPORTUNITIES: usize = 1024;
+/// ⏱️ The ceiling one unfolded projection body may spend inside the chrome walk — its own paint opportunities, not the whole
+/// walk's, and only its own WORK (`document_opportunity_remains`): polls of the layout worker pool and steps of other surfaces'
+/// layouts are not the pane's. The pane's content is React's fixed taxonomy (18 retained nodes), and its own work is priced per
+/// grant: two layout passes (the pane re-solves once it hugs its measured content) of ~240 own steps each — every worker job
+/// step costs two opportunities on this thread (its outcome is taken, then applied), plus node collection and session close —
+/// and ~800 paint grants of one glyph or node phase each: 1 405 in WG11's overlay build 7, where a 1 024 ceiling faulted the
+/// converging pane at paint progress 418. Nearly three times that fits; a body that reaches it has stopped converging, which is
+/// a fault, not a slow frame.
+pub(crate) const WORLD_PROJECTION_PANE_PAINT_OPPORTUNITIES: usize = 4096;
 
 const WORLD_PROJECTION_TEMPLATE_PREFIX: &str = "world-projection:";
 
@@ -20568,7 +20816,7 @@ fn world_projection_pane_rows(prefix: &str, window_id: &str, selected_id: &str, 
             *cursor += 1;
             continue;
         }
-        let id = format!("{prefix}.{}", template.id);
+        let id = semio_framework::child_element_id(prefix, &[template.id]);
         *cursor += 1;
         let children = world_projection_pane_rows(prefix, window_id, selected_id, depth + 1, cursor);
         rows.push(UiTreeItemNode {
@@ -21076,10 +21324,9 @@ impl ShellState {
         };
         self.window_projection_documents.insert(window_id.to_string(), document);
         if complete {
-            self.clear_document_paint_fault(&surface);
+            self.note_retained_body_painted(&surface);
         } else {
-            cursor.scalar = cursor.scalar.saturating_add(1);
-            if !cursor.document.terminal_is_fault() && cursor.scalar < WORLD_PROJECTION_PANE_PAINT_OPPORTUNITIES {
+            if document_opportunity_remains(cursor, WORLD_PROJECTION_PANE_PAINT_OPPORTUNITIES) {
                 return false;
             }
             Self::debug_log(&format!(
@@ -21944,10 +22191,9 @@ impl ShellState {
             self.window_actions_documents.insert(window_id.to_string(), document);
         }
         if complete {
-            self.clear_document_paint_fault(&surface);
+            self.note_retained_body_painted(&surface);
         } else {
-            cursor.scalar = cursor.scalar.saturating_add(1);
-            if !cursor.document.terminal_is_fault() && cursor.scalar < SHELL_WINDOW_PAINT_OPPORTUNITIES {
+            if document_opportunity_remains(cursor, SHELL_WINDOW_PAINT_OPPORTUNITIES) {
                 return false;
             }
             self.record_document_paint_fault(&surface);
@@ -22961,7 +23207,7 @@ impl ShellState {
                 None => return Ok(None),
             },
         };
-        let records = panel_ui_records(tab_id, &node)?;
+        let records = if ui_node_is_windowed(&node) { panel_ui_scroll_records(tab_id, &node)? } else { panel_ui_records(tab_id, &node)? };
         self.publish_surface_records(tab_id, records).map(Some)
     }
 
@@ -25467,6 +25713,7 @@ impl ShellState {
                 match cursor.setup {
                     0 => {
                         draw.set_screen_height(h);
+                        self.retained_body_rects_staging.clear();
                         self.retained_hit_windows_staging.clear();
                         self.retained_scene_hits_staging.clear();
                         with_chrome_control_names(|names| names.clear());
@@ -25907,7 +26154,7 @@ impl ShellState {
             self.world3d_status.remove(&target.host_id);
             self.world3d_status_pill_trace.remove(&target.host_id);
             self.settle_pump.watches.remove(&target.host_id);
-            self.component_world3d_retirement = Some(owner);
+            self.component_world3d_retirement = Some(Box::new(owner));
             return Ok(false);
         }
         let owner = self.component_world3d_retirement.as_mut().expect("component World3d retirement owner");
@@ -26477,7 +26724,7 @@ impl ShellState {
                     cursor.phase = 5;
                     return false;
                 };
-                let controller = self.document_controller_id();
+                let controller = self.window_document_session(&window_id).map(|session| session.app.controller_id.clone()).unwrap_or_else(|| if window_id == "spawned" { String::new() } else { self.document_controller_id() });
                 self.apply_initial_world_projection_template(&window_id);
                 let Some(document) = self.take_window_document(&window_id) else {
                     cursor.document = UiDocumentFrameCursor::default();
@@ -26499,8 +26746,7 @@ impl ShellState {
                 };
                 self.restore_window_document(&window_id, document);
                 if !complete {
-                    cursor.scalar = cursor.scalar.saturating_add(1);
-                    if !cursor.document.terminal_is_fault() && cursor.scalar < SHELL_WINDOW_PAINT_OPPORTUNITIES {
+                    if document_opportunity_remains(cursor, SHELL_WINDOW_PAINT_OPPORTUNITIES) {
                         return false;
                     }
                     if cursor.scalar >= SHELL_WINDOW_PAINT_OPPORTUNITIES {
@@ -26508,7 +26754,7 @@ impl ShellState {
                     }
                     self.record_document_paint_fault(&window_id);
                 } else {
-                    self.clear_document_paint_fault(&window_id);
+                    self.note_retained_body_painted(&window_id);
                 }
                 self.register_retained_body_hits(&window_id, window_rect, input);
                 cursor.document = UiDocumentFrameCursor::default();
@@ -26634,7 +26880,7 @@ impl ShellState {
                         cursor.item += 1;
                     }
                     RetainedGlyphStep::Fault => {
-                        self.error = Some("Empty dock notice exceeded the retained glyph boundary".into());
+                        self.error = Some("Shell empty dock notice exceeded the retained glyph boundary".into());
                         cursor.phase = 5;
                     }
                 }
@@ -27032,7 +27278,7 @@ impl ShellState {
                     }
                     self.record_document_paint_fault(window.as_str());
                 } else {
-                    self.clear_document_paint_fault(window.as_str());
+                    self.note_retained_body_painted(window.as_str());
                 }
                 self.register_retained_body_hits(window.as_str(), content, input);
                 cursor.phase = 9;
@@ -27141,7 +27387,7 @@ impl ShellState {
                     }
                     self.record_document_paint_fault(window.as_str());
                 } else {
-                    self.clear_document_paint_fault(window.as_str());
+                    self.note_retained_body_painted(window.as_str());
                 }
                 self.register_retained_body_hits(window.as_str(), content, input);
                 cursor.phase = 3;
@@ -28800,7 +29046,7 @@ impl ShellState {
                     }
                     self.record_document_paint_fault(surface);
                 } else {
-                    self.clear_document_paint_fault(surface);
+                    self.note_retained_body_painted(surface);
                 }
                 self.register_retained_body_hits(surface, content, input);
                 cursor.phase = 3;

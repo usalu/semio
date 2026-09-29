@@ -1130,19 +1130,19 @@
         },
         {
           "source": "🌉️aec.building.structure.classic/🗂️typologies/🏛️ReinforcedConcreteColumn/🔣️typology.json",
-          "live": "🌉️aec.building.structure.classic/🗂️typologies/🏛️ReinforcedConcreteColumn/🔣️typology-20ac89.json"
+          "live": "🌉️aec.building.structure.classic/🗂️typologies/🏛️ReinforcedConcreteColumn/🔣️typology.json"
         },
         {
           "source": "🌉️aec.building.structure.classic/🗂️typologies/🚧️ReinforcedConcreteInternalWall/🔣️typology.json",
-          "live": "🌉️aec.building.structure.classic/🗂️typologies/🚧️ReinforcedConcreteInternalWall/🔣️typology-87a300.json"
+          "live": "🌉️aec.building.structure.classic/🗂️typologies/🚧️ReinforcedConcreteInternalWall/🔣️typology.json"
         },
         {
           "source": "🌉️aec.building.structure.classic/🗂️typologies/🛡️ReinforcedConcreteExternalWall/🔣️typology.json",
-          "live": "🌉️aec.building.structure.classic/🗂️typologies/🛡️ReinforcedConcreteExternalWall/🔣️typology-9f56a1.json"
+          "live": "🌉️aec.building.structure.classic/🗂️typologies/🛡️ReinforcedConcreteExternalWall/🔣️typology.json"
         },
         {
           "source": "🌉️aec.building.structure.classic/🗂️typologies/🧱️OneWayReinforcedConcreteSlab/🔣️typology.json",
-          "live": "🌉️aec.building.structure.classic/🗂️typologies/🧱️OneWayReinforcedConcreteSlab/🔣️typology-6a95a6.json"
+          "live": "🌉️aec.building.structure.classic/🗂️typologies/🧱️OneWayReinforcedConcreteSlab/🔣️typology.json"
         },
         {
           "source": "🏛️aec.building.structure/🏷️attributeDefinitions/🔣️bondable.json",
@@ -1358,7 +1358,7 @@
         },
         {
           "source": "📏️aec.building.structure.fem.line/🗂️typologies/📏️LineElement/🔣️typology.json",
-          "live": "📏️aec.building.structure.fem.line/🗂️typologies/📏️LineElement/🔣️typology-3ad563.json"
+          "live": "📏️aec.building.structure.fem.line/🗂️typologies/📏️LineElement/🔣️typology.json"
         },
         {
           "source": "📐️spatial.shape/🎬️actions/🔣️aabbFromDiagonalCorners.json",
@@ -1906,7 +1906,7 @@
         },
         {
           "source": "🗺️aec.building.structure.fem.surface/🗂️typologies/🗺️SurfaceElement/🔣️typology.json",
-          "live": "🗺️aec.building.structure.fem.surface/🗂️typologies/🗺️SurfaceElement/🔣️typology-b35a36.json"
+          "live": "🗺️aec.building.structure.fem.surface/🗂️typologies/🗺️SurfaceElement/🔣️typology.json"
         },
         {
           "source": "🧊️aec.building.structure.fem.solid/🎬️actions/🔣️constructSolidElementFrom2PointsAndHeight.json",
@@ -1934,7 +1934,7 @@
         },
         {
           "source": "🧊️aec.building.structure.fem.solid/🗂️typologies/🧊️SolidElement/🔣️typology.json",
-          "live": "🧊️aec.building.structure.fem.solid/🗂️typologies/🧊️SolidElement/🔣️typology-4e128f.json"
+          "live": "🧊️aec.building.structure.fem.solid/🗂️typologies/🧊️SolidElement/🔣️typology.json"
         },
         {
           "source": "🧱️aec.building.concrete/🎬️actions/🔣️constructConcreteWallFromBottomAndTop.json",

@@ -1,7 +1,8 @@
 /** 🧩️ The native execution-target module resolution (`📇️directory/🔌️client/🧩️execution-target-module`), replayed from the
  * language-agnostic fixture `🧫️fixtures/📇️directory/🧩️execution-target-module-resolution-v1.json` over the hub's own lease
  * corpus. Ajv and `node:crypto` are the independent oracles: Ajv holds the fixture to its schema, SHA-256 decides every
- * source and refusal from the corpus bytes — the same decision the Rust law asserts the resolver makes. */
+ * source and refusal from the corpus bytes — the same decision the Rust law asserts the resolver makes — and replays the
+ * store's `eviction` corpus through a least-recently-used model of its own. */
 import { describe, expect, it } from "vitest";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
@@ -48,6 +49,44 @@ function oracle(row: Case): Case["expected"] {
   return { outcome: componentStored && descriptorStored ? "store" : "hub", requests, steps };
 }
 
+type EvictionStep = { op: "admit" | "read" | "tamper" | "restart"; component?: string; hit?: boolean; resident: string[] };
+
+/** 🧮️ The oracle's own bounded store: recency order (least recent first), which entries still verify, and the byte total —
+ * admitting or reading an entry uses it, admitting evicts the least recently used others beyond the capacity, a read of an
+ * entry that no longer verifies removes it, and a restart forgets nothing. */
+function evictionOracle(eviction: { componentCapacityBytes: number; components: Record<string, { fill: number; byteLength: number; sha256: string }>; steps: EvictionStep[] }) {
+  const order: string[] = [];
+  const intact = new Map<string, boolean>();
+  const use = (name: string) => {
+    const index = order.indexOf(name);
+    if (index >= 0) order.splice(index, 1);
+    order.push(name);
+  };
+  const bytes = (name: string) => new Uint8Array(eviction.components[name]!.byteLength).fill(eviction.components[name]!.fill);
+  return eviction.steps.map((step) => {
+    let hit: boolean | undefined;
+    if (step.op === "admit") {
+      use(step.component!);
+      intact.set(step.component!, sha256(bytes(step.component!)) === eviction.components[step.component!]!.sha256);
+      let total = order.reduce((sum, name) => sum + eviction.components[name]!.byteLength, 0);
+      for (const name of [...order]) {
+        if (total <= eviction.componentCapacityBytes) break;
+        if (name === step.component) continue;
+        order.splice(order.indexOf(name), 1);
+        total -= eviction.components[name]!.byteLength;
+      }
+    } else if (step.op === "read") {
+      hit = order.includes(step.component!) && intact.get(step.component!) === true;
+      if (hit) use(step.component!);
+      else if (order.includes(step.component!)) order.splice(order.indexOf(step.component!), 1);
+    } else if (step.op === "tamper") {
+      use(step.component!);
+      intact.set(step.component!, sha256(flipped(bytes(step.component!))) === eviction.components[step.component!]!.sha256);
+    }
+    return { op: step.op, ...(step.component === undefined ? {} : { component: step.component }), ...(hit === undefined ? {} : { hit }), resident: [...order].sort() };
+  });
+}
+
 describe("🧩️ execution-target module resolution", () => {
   it("the fixture satisfies its schema", () => {
     const validate = semioSchemaAjvV1({ allErrors: true, strict: true }).compile(schema);
@@ -62,4 +101,14 @@ describe("🧩️ execution-target module resolution", () => {
   for (const row of fixture.cases as Case[]) {
     it(`node:crypto decides ${row.id} as the fixture declares`, () => expect(oracle(row)).toEqual(row.expected));
   }
+
+  it("node:crypto hashes every eviction component to its declared content address", () => {
+    for (const component of Object.values(fixture.eviction.components) as { fill: number; byteLength: number; sha256: string }[]) {
+      expect(sha256(new Uint8Array(component.byteLength).fill(component.fill))).toBe(component.sha256);
+    }
+  });
+
+  it("the bounded store evicts the least recently used component and serves only verified bytes, as the fixture declares", () => {
+    expect(evictionOracle(fixture.eviction)).toEqual(fixture.eviction.steps);
+  });
 });

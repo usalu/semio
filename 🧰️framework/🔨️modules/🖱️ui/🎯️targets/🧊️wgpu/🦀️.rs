@@ -216,6 +216,12 @@ mod icon_selector;
 #[path = "../../🧱️elements/🌳️Tree/🎯️targets/🧊️wgpu/🦀️.rs"]
 mod tree_element;
 
+/// 🪟️ The tree window request rule — the target-neutral Rust twin of React's (`🌳️Tree/🟦️.tsx` region `🪟️TreeWindow` and the
+/// `🗣️Interpreter` observer's body/served rules): one rule, both hosts, the same windows for the same viewport.
+#[cfg(feature = "wgpu")]
+#[path = "../../🧱️elements/🌳️Tree/🪟️window/🦀️.rs"]
+pub mod tree_window;
+
 // 👥️ `PresenceBar` (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 2-F) builds
 // a plain `UiNode` tree via `component::ui`'s declarative types, not a `widgets`/`WidgetContext` chrome
 // renderer like its neighbours above — so it needs only the light `wgpu` feature, never `wgpu-engine`.

@@ -2,8 +2,8 @@
 
 use crate::editor::wav::edit_audio;
 use crate::standards::riff_pcm::subsets::any::schema::snapshot::{WavData, WavSnapshot};
-use semio_framework_plugin::app::{editable_table_window_row, table_row_action, TableWindowKit, WindowKit, WindowedEditableTableCell};
-use semio_framework_plugin::{ActionId, Buildable, BuiltNode, HasBase, HasChildren, Locale, LocalizedLabel, PluginAssemblyError, TreeWindows, Trigger, UiValue, WindowKindDefinition};
+use semio_framework_plugin::app::{editable_table_window_row, row_action, row_target, TableWindowKit, WindowKit, WindowedEditableTableCell};
+use semio_framework_plugin::{ActionId, Buildable, BuiltNode, HasBase, HasChildren, Locale, LocalizedLabel, PluginAssemblyError, RowActionPlacement, TreeWindows, Trigger, UiValue, WindowKindDefinition};
 use semio_framework_ui_contract::{self as ui, Label as UiLabel};
 
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
@@ -124,6 +124,7 @@ fn format_table(document: &WavSnapshot, revision: &str, locale: Locale, windows:
                 locale,
                 [WindowedEditableTableCell::new(document.fmt.sample_rate.to_string(), column, edit_audio::SET_SAMPLE_RATE_ACTION_ID, semio_s_artifact_stdio_contract::window_kit_revision_arguments(revision)?)],
                 Vec::new(),
+                None,
             )
         },
     )
@@ -148,26 +149,29 @@ fn channel_table(channels: usize, revision: &str, locale: Locale, windows: &Tree
         }),
         channels,
         |channel| {
-            let insert = table_row_action(
+            let insert = row_action(
                 "plus",
                 match locale {
                     Locale::De => "Kanal davor einfügen",
                     Locale::En => "Insert channel before",
                 },
-                (action(edit_audio::INSERT_CHANNEL_ACTION_ID)?, Some(semio_s_artifact_stdio_contract::window_kit_indexed_revision_arguments("channel", channel, revision)?)),
+                edit_audio::INSERT_CHANNEL_ACTION_ID,
+                RowActionPlacement::Row,
             )?;
             let mut actions = vec![insert];
             if channels > 1 {
-                actions.push(table_row_action(
+                actions.push(row_action(
                     "trash-2",
                     match locale {
                         Locale::De => "Kanal entfernen",
                         Locale::En => "Remove channel",
                     },
-                    (action(semio_s_artifact_stdio_contract::REMOVE_TABLE_COLUMN_ACTION_ID)?, Some(semio_s_artifact_stdio_contract::window_kit_indexed_revision_arguments("column", channel, revision)?)),
+                    semio_s_artifact_stdio_contract::REMOVE_TABLE_COLUMN_ACTION_ID,
+                    RowActionPlacement::Row,
                 )?);
             }
-            editable_table_window_row(&format!("channel-{channel}"), CONTROLLER_ID, locale, [WindowedEditableTableCell::read_only((channel + 1).to_string(), column)], actions)
+            let target = row_target(CONTROLLER_ID, Some(semio_s_artifact_stdio_contract::window_kit_indexed_revision_arguments("column", channel, revision)?), None)?;
+            editable_table_window_row(&format!("channel-{channel}"), CONTROLLER_ID, locale, [WindowedEditableTableCell::read_only((channel + 1).to_string(), column)], actions, Some(target))
         },
     )
 }
@@ -191,23 +195,26 @@ fn frame_table(frames: usize, revision: &str, locale: Locale, windows: &TreeWind
         }),
         frames,
         |frame| {
-            let insert = table_row_action(
+            let insert = row_action(
                 "plus",
                 match locale {
                     Locale::De => "Frame davor einfügen",
                     Locale::En => "Insert frame before",
                 },
-                (action(edit_audio::INSERT_FRAME_ACTION_ID)?, Some(semio_s_artifact_stdio_contract::window_kit_indexed_revision_arguments("frame", frame, revision)?)),
+                edit_audio::INSERT_FRAME_ACTION_ID,
+                RowActionPlacement::Row,
             )?;
-            let remove = table_row_action(
+            let remove = row_action(
                 "trash-2",
                 match locale {
                     Locale::De => "Frame entfernen",
                     Locale::En => "Remove frame",
                 },
-                (action(semio_s_artifact_stdio_contract::REMOVE_TABLE_ROW_ACTION_ID)?, Some(semio_s_artifact_stdio_contract::window_kit_indexed_revision_arguments("row", frame, revision)?)),
+                semio_s_artifact_stdio_contract::REMOVE_TABLE_ROW_ACTION_ID,
+                RowActionPlacement::Row,
             )?;
-            editable_table_window_row(&format!("frame-control-{frame}"), CONTROLLER_ID, locale, [WindowedEditableTableCell::read_only((frame + 1).to_string(), column)], [insert, remove])
+            let target = row_target(CONTROLLER_ID, Some(semio_s_artifact_stdio_contract::window_kit_indexed_revision_arguments("row", frame, revision)?), None)?;
+            editable_table_window_row(&format!("frame-control-{frame}"), CONTROLLER_ID, locale, [WindowedEditableTableCell::read_only((frame + 1).to_string(), column)], [insert, remove], Some(target))
         },
     )
 }
@@ -242,23 +249,26 @@ fn matrix_table(document: &WavSnapshot, channels: usize, frames: usize, revision
                     Ok(WindowedEditableTableCell::new(value, columns[channel].clone(), edit_audio::SET_SAMPLE_ACTION_ID, arguments))
                 })
                 .collect::<semio_framework_plugin::UiAssemblyResult<Vec<_>>>()?;
-            let insert = table_row_action(
+            let insert = row_action(
                 "plus",
                 match locale {
                     Locale::De => "Frame davor einfügen",
                     Locale::En => "Insert frame before",
                 },
-                (action(edit_audio::INSERT_FRAME_ACTION_ID)?, Some(semio_s_artifact_stdio_contract::window_kit_indexed_revision_arguments("frame", frame, revision)?)),
+                edit_audio::INSERT_FRAME_ACTION_ID,
+                RowActionPlacement::Row,
             )?;
-            let remove = table_row_action(
+            let remove = row_action(
                 "trash-2",
                 match locale {
                     Locale::De => "Frame entfernen",
                     Locale::En => "Remove frame",
                 },
-                (action(semio_s_artifact_stdio_contract::REMOVE_TABLE_ROW_ACTION_ID)?, Some(semio_s_artifact_stdio_contract::window_kit_indexed_revision_arguments("row", frame, revision)?)),
+                semio_s_artifact_stdio_contract::REMOVE_TABLE_ROW_ACTION_ID,
+                RowActionPlacement::Row,
             )?;
-            editable_table_window_row(&format!("frame-{frame}"), CONTROLLER_ID, locale, cells, [insert, remove])
+            let target = row_target(CONTROLLER_ID, Some(semio_s_artifact_stdio_contract::window_kit_indexed_revision_arguments("row", frame, revision)?), None)?;
+            editable_table_window_row(&format!("frame-{frame}"), CONTROLLER_ID, locale, cells, [insert, remove], Some(target))
         },
     )
 }
@@ -297,6 +307,7 @@ fn coordinate_table(document: &WavSnapshot, channels: usize, revision: &str, loc
                     ),
                 ],
                 Vec::new(),
+                None,
             )
         },
     )
@@ -317,7 +328,7 @@ fn raw_table(values: &[u8], locale: Locale, windows: &TreeWindows<'_>) -> semio_
         &columns,
         None,
         values.len(),
-        |row| editable_table_window_row(&format!("raw-{row}"), CONTROLLER_ID, locale, [WindowedEditableTableCell::read_only(values[row].to_string(), columns[0])], Vec::new()),
+        |row| editable_table_window_row(&format!("raw-{row}"), CONTROLLER_ID, locale, [WindowedEditableTableCell::read_only(values[row].to_string(), columns[0])], Vec::new(), None),
     )
 }
 

@@ -1,7 +1,7 @@
 //! 🥽️ Indexed mesh widgets with explicit polygon data and B-Rep preview conversion.
 use super::*;
 use neural_engine::{Atom, FieldSpec, Schema, ValueType};
-use semio_framework_3d::mesh::{EdgeId, FaceId, HalfedgeMesh, MeshKernelError, Vec3 as MeshVector, VertexId};
+use semio_framework_3d::mesh::{EdgeId, FaceId, HalfedgeMesh, MeshKernelError, Vec3 as MeshVector, VertexId, WeldMode, MirrorAxis, MeshModelingJob, MeshModelingStep, MeshModelingProgress};
 use std::collections::{HashMap, HashSet};
 
 const LIMIT: usize = 100_000;
@@ -181,8 +181,62 @@ fn analyze(mesh: &HalfedgeMesh) -> Result<Dictionary, EvalError> {
     Ok(report.insert("minimum", Value::Dictionary(point_dictionary(min.map(f64::from)))).insert("maximum", Value::Dictionary(point_dictionary(max.map(f64::from)))))
 }
 
+fn operator_progress(progress: MeshModelingProgress) -> neural_engine::OperatorProgress {
+    neural_engine::OperatorProgress { units_done: progress.units_done, units_total: progress.units_total, phase: progress.phase }
+}
+
+struct MeshOperatorJob {
+    job: Option<MeshModelingJob>,
+    output: Option<HalfedgeMesh>,
+    progress: neural_engine::OperatorProgress,
+    cancelled: bool,
+}
+
+impl neural_engine::OperatorJob for MeshOperatorJob {
+    fn step(&mut self, budget: usize) -> Result<neural_engine::OperatorJobStep, EvalError> {
+        if self.cancelled { return Ok(neural_engine::OperatorJobStep::Cancelled(self.progress)); }
+        if let Some(mesh) = &self.output { return mesh_output(mesh).map(neural_engine::OperatorJobStep::Done); }
+        let job = self.job.as_mut().ok_or_else(|| invalid("mesh job is missing"))?;
+        match job.step(budget).map_err(mesh_error)? {
+            MeshModelingStep::Working(progress) => {
+                self.progress = operator_progress(progress);
+                Ok(neural_engine::OperatorJobStep::Working(self.progress))
+            }
+            MeshModelingStep::Cancelled(progress) => {
+                self.progress = operator_progress(progress); self.cancelled = true; self.job = None;
+                Ok(neural_engine::OperatorJobStep::Cancelled(self.progress))
+            }
+            MeshModelingStep::Done(mesh) => {
+                self.progress = operator_progress(job.progress());
+                self.job = None; self.output = Some(mesh);
+                mesh_output(self.output.as_ref().unwrap()).map(neural_engine::OperatorJobStep::Done)
+            }
+        }
+    }
+    fn progress(&self) -> neural_engine::OperatorProgress { self.progress }
+    fn cancel(&mut self) {
+        if self.output.is_some() || self.cancelled { return; }
+        if let Some(job) = &mut self.job { job.cancel(); self.progress = operator_progress(job.progress()); }
+        self.cancelled = true; self.job = None;
+    }
+}
+
 struct MeshOperation(&'static str);
 impl Operator for MeshOperation {
+    fn step_plan(&self, input: &Dictionary) -> Result<Option<Box<dyn neural_engine::OperatorJob>>, EvalError> {
+        if !matches!(self.0, "bevel" | "decimate") { return Ok(None); }
+        let mesh = read_mesh(input, "mesh")?;
+        let job = if self.0 == "bevel" {
+            let edges = selection(input, "edges", mesh.halfedge_count())?.into_iter().map(EdgeId).collect::<Vec<_>>();
+            mesh.bevel_job(&edges, positive(input, "amount")?, count(input, "segments", 1, 64)?).map_err(mesh_error)?
+        } else {
+            let ratio = positive(input, "ratio")?;
+            if ratio > 1.0 { return Err(invalid("decimation ratio must be at most one")); }
+            mesh.decimate_job(ratio).map_err(mesh_error)?
+        };
+        let progress = operator_progress(job.progress());
+        Ok(Some(Box::new(MeshOperatorJob { job: Some(job), output: None, progress, cancelled: false })))
+    }
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let mut mesh = match self.0 {
             "construct" => decode_mesh(&read_text(input, "data")?)?,
@@ -228,6 +282,37 @@ impl Operator for MeshOperation {
                 let ids = selection(input, "vertices", mesh.vertex_count())?.into_iter().map(VertexId).collect::<Vec<_>>();
                 mesh.move_vertices(&ids, vector(input, "offset")?).map_err(mesh_error)?;
             }
+            "bevel" | "dissolveEdges" => {
+                let ids = selection(input, "edges", mesh.halfedge_count())?.into_iter().map(EdgeId).collect::<Vec<_>>();
+                if self.0 == "bevel" { mesh.bevel_edges(&ids, positive(input, "amount")?, count(input, "segments", 1, 64)?).map_err(mesh_error)?; }
+                else { mesh.dissolve_edges(&ids).map_err(mesh_error)?; }
+            }
+            "moveProportional" | "snapVertices" | "mergeVertices" | "dissolveVertices" => {
+                let ids = selection(input, "selection", mesh.vertex_count())?.into_iter().map(VertexId).collect::<Vec<_>>();
+                match self.0 {
+                    "moveProportional" => mesh.move_vertices_proportional(&ids, vector(input, "offset")?, vector(input, "center")?, positive(input, "radius")?).map_err(mesh_error)?,
+                    "snapVertices" => mesh.snap_vertices_to_grid(&ids, positive(input, "grid")?).map_err(mesh_error)?,
+                    "dissolveVertices" => mesh.dissolve_vertices(&ids).map_err(mesh_error)?,
+                    _ => {
+                        let mode = match read_text(input, "mode")?.as_str() { "first" => WeldMode::First, "center" => WeldMode::Center, "distance" => WeldMode::ByDistance, _ => return Err(invalid("merge mode must be first, center, or distance")) };
+                        let tolerance = scalar(input, "tolerance")?;
+                        if tolerance < 0.0 { return Err(invalid("merge tolerance must be nonnegative")); }
+                        mesh.merge_vertices(&ids, mode, tolerance).map_err(mesh_error)?;
+                    }
+                }
+            }
+            "mirror" => {
+                let axis = match read_text(input, "axis")?.as_str() { "x" => MirrorAxis::X, "y" => MirrorAxis::Y, "z" => MirrorAxis::Z, _ => return Err(invalid("mirror axis must be x, y, or z")) };
+                let tolerance = scalar(input, "tolerance")?;
+                if tolerance < 0.0 { return Err(invalid("mirror tolerance must be nonnegative")); }
+                mesh.mirror(axis, tolerance).map_err(mesh_error)?;
+            }
+            "decimate" => {
+                let ratio = positive(input, "ratio")?;
+                if ratio > 1.0 { return Err(invalid("decimation ratio must be at most one")); }
+                mesh.decimate(ratio).map_err(mesh_error)?;
+            }
+            "mergeCoplanar" => { mesh.merge_coplanar_faces().map_err(mesh_error)?; }
             "loopCut" => {
                 let ids = selection(input, "edges", mesh.halfedge_count())?.into_iter().map(EdgeId).collect::<Vec<_>>();
                 mesh.loop_cut(&ids, count(input, "cuts", 1, 256)?).map_err(mesh_error)?;
@@ -252,6 +337,31 @@ impl Operator for MeshOperation {
             "weld" => { mesh.weld_coincident_vertices(positive(input, "tolerance")?).map_err(mesh_error)?; }
             "orient" => { mesh.orient_faces_consistently().map_err(mesh_error)?; }
             "fillHoles" => { mesh.fill_holes().map_err(mesh_error)?; }
+            "inspectVertex" => {
+                let id = VertexId(count(input, "index", 0, mesh.vertex_count().saturating_sub(1) as u32)?);
+                return Ok(channel_output("point", point_dictionary(mesh.vertex_position(id).map_err(mesh_error)?.0.map(f64::from))));
+            }
+            "inspectEdge" => {
+                let id = EdgeId(count(input, "index", 0, mesh.halfedge_count().saturating_sub(1) as u32)?);
+                let (a, b) = mesh.edge_endpoints(id).map_err(mesh_error)?;
+                let start = mesh.vertex_position(a).map_err(mesh_error)?.0.map(f64::from);
+                let end = mesh.vertex_position(b).map_err(mesh_error)?.0.map(f64::from);
+                let length = (end[0] - start[0]).hypot(end[1] - start[1]).hypot(end[2] - start[2]);
+                return Ok(Dictionary::new().insert("start", Value::Dictionary(point_dictionary(start))).insert("end", Value::Dictionary(point_dictionary(end))).insert("length", Value::Dictionary(number_dictionary(length))));
+            }
+            "inspectFace" => {
+                let id = FaceId(count(input, "index", 0, mesh.face_count().saturating_sub(1) as u32)?);
+                let ids = mesh.face_vertex_ids(id).map_err(mesh_error)?;
+                let normal = mesh.face_normal(id).map_err(mesh_error)?.0.map(f64::from);
+                if normal.iter().all(|value| *value == 0.0) { return Err(invalid("face normal is degenerate")); }
+                let mut center = [0.0; 3];
+                for &vertex in &ids {
+                    let point = mesh.vertex_position(vertex).map_err(mesh_error)?.0;
+                    for axis in 0..3 { center[axis] += point[axis] as f64 / ids.len() as f64; }
+                }
+                let vertices = pack::json::to_string(&pack::json::array(ids.iter().map(|id| pack::json::Value::from(id.0))));
+                return Ok(Dictionary::new().insert("vertices", Value::Dictionary(text_dictionary(vertices))).insert("normal", Value::Dictionary(vector_dictionary(normal))).insert("center", Value::Dictionary(point_dictionary(center))));
+            }
             "analyze" => return analyze(&mesh),
             "exportObj" => return Ok(channel_output("text", text_dictionary(mesh.to_obj().map_err(mesh_error)?))),
             "exportJson" => return Ok(channel_output("text", text_dictionary(encode_mesh(&mesh)?))),
@@ -284,6 +394,15 @@ pub(super) fn register_mesh(registry: &mut Registry) {
         ("translateComponents", "Move Mesh Components", "Mesh Editing", &[]),
         ("rotateComponents", "Rotate Mesh Components", "Mesh Editing", &[("angle", 0.0)]),
         ("scaleComponents", "Scale Mesh Components", "Mesh Editing", &[]),
+        ("bevel", "Bevel Mesh Edges", "Mesh Editing", &[("amount", 0.1), ("segments", 1.0)]),
+        ("dissolveEdges", "Dissolve Mesh Edges", "Mesh Editing", &[]),
+        ("dissolveVertices", "Dissolve Mesh Vertices", "Mesh Editing", &[]),
+        ("mergeVertices", "Merge Mesh Vertices", "Mesh Editing", &[("tolerance", 0.0001)]),
+        ("moveProportional", "Move Mesh Proportionally", "Mesh Editing", &[("radius", 1.0)]),
+        ("snapVertices", "Snap Mesh Vertices to Grid", "Mesh Editing", &[("grid", 1.0)]),
+        ("mirror", "Mirror Mesh Half", "Mesh Editing", &[("tolerance", 0.0001)]),
+        ("decimate", "Simplify Mesh", "Mesh Editing", &[("ratio", 0.5)]),
+        ("mergeCoplanar", "Merge Coplanar Mesh Faces", "Mesh Repair", &[]),
         ("loopCut", "Cut Mesh Loops", "Mesh Editing", &[("cuts", 1.0)]),
         ("knifeCut", "Knife Cut Mesh Face", "Mesh Editing", &[("face", 0.0)]),
         ("extrude", "Extrude Mesh Faces", "Mesh Editing", &[("distance", 1.0)]),
@@ -295,6 +414,9 @@ pub(super) fn register_mesh(registry: &mut Registry) {
         ("weld", "Weld Mesh Vertices", "Mesh Repair", &[("tolerance", 0.0001)]),
         ("orient", "Orient Mesh Faces", "Mesh Repair", &[]),
         ("fillHoles", "Fill Mesh Holes", "Mesh Repair", &[]),
+        ("inspectVertex", "Inspect Mesh Vertex", "Mesh Analysis", &[("index", 0.0)]),
+        ("inspectEdge", "Inspect Mesh Edge", "Mesh Analysis", &[("index", 0.0)]),
+        ("inspectFace", "Inspect Mesh Face", "Mesh Analysis", &[("index", 0.0)]),
         ("analyze", "Analyze Mesh", "Mesh Analysis", &[]),
         ("exportObj", "Mesh to OBJ", "Mesh Interchange", &[]),
         ("exportJson", "Mesh to JSON", "Mesh Interchange", &[]),
@@ -305,9 +427,15 @@ pub(super) fn register_mesh(registry: &mut Registry) {
         if !matches!(operation, "construct" | "box" | "plane" | "sphere" | "cylinder" | "cone" | "fromBrep") { inputs.push(ChannelSpec::requires("mesh", &[&id]).with_value_types(&["mesh"])); }
         if operation == "construct" { inputs.push(ChannelSpec::requires("data", &[&id]).with_value_types(&["text"])); }
         if operation == "fromBrep" { inputs.push(geometry_channel("geometry", &id)); }
-        if matches!(operation, "extrude" | "inset" | "subdivide" | "flip" | "deleteFaces" | "moveVertices" | "loopCut") {
-            inputs.push(ChannelSpec::requires(match operation { "moveVertices" => "vertices", "loopCut" => "edges", _ => "faces" }, &[&id]).with_value_types(&["text"]).with_default(Value::Dictionary(text_dictionary("[0]"))));
+        if matches!(operation, "extrude" | "inset" | "subdivide" | "flip" | "deleteFaces" | "moveVertices" | "loopCut" | "bevel" | "dissolveEdges") {
+            inputs.push(ChannelSpec::requires(match operation { "moveVertices" => "vertices", "loopCut" | "bevel" | "dissolveEdges" => "edges", _ => "faces" }, &[&id]).with_value_types(&["text"]).with_default(Value::Dictionary(text_dictionary("[0]"))));
         }
+        if matches!(operation, "moveProportional" | "snapVertices" | "mergeVertices" | "dissolveVertices") {
+            inputs.push(ChannelSpec::requires("selection", &[&id]).with_value_types(&["text"]).with_default(Value::Dictionary(text_dictionary(if operation == "mergeVertices" { "[0,1]" } else { "[0]" }))));
+        }
+        if operation == "moveProportional" { inputs.push(vector_channel("center", &id, [0.0; 3])); }
+        if operation == "mergeVertices" { inputs.push(ChannelSpec::requires("mode", &[&id]).with_value_types(&["text"]).with_default(Value::Dictionary(text_dictionary("center")))); }
+        if operation == "mirror" { inputs.push(ChannelSpec::requires("axis", &[&id]).with_value_types(&["text"]).with_default(Value::Dictionary(text_dictionary("x")))); }
         if operation.ends_with("Components") {
             for (key, value) in [("mode", "vertex"), ("selection", "[0]")] { inputs.push(ChannelSpec::requires(key, &[&id]).with_value_types(&["text"]).with_default(Value::Dictionary(text_dictionary(value)))); }
             if operation != "translateComponents" {
@@ -321,7 +449,7 @@ pub(super) fn register_mesh(registry: &mut Registry) {
             }
         }
         match operation {
-            "translate" | "moveVertices" | "translateComponents" => inputs.push(vector_channel("offset", &id, [0.0, 0.0, 1.0])),
+            "translate" | "moveVertices" | "translateComponents" | "moveProportional" => inputs.push(vector_channel("offset", &id, [0.0, 0.0, 1.0])),
             "rotate" | "rotateComponents" => inputs.push(vector_channel("axis", &id, [0.0, 0.0, 1.0])),
             "scale" | "scaleComponents" => inputs.push(vector_channel("factor", &id, [1.0, 1.0, 1.0])),
             _ => {}
@@ -334,6 +462,9 @@ pub(super) fn register_mesh(registry: &mut Registry) {
                 channels.extend([out_point("Minimum"), out_point("Maximum")].into_iter().zip(["minimum", "maximum"]).map(|(mut channel, name)| { channel.name = name.into(); channel }));
                 (channels, vec!["number", "point"])
             }
+            "inspectVertex" => (vec![out_point("VertexPosition")], vec!["point"]),
+            "inspectEdge" => (vec![ChannelSpec::named("S", "Start", "start", "EdgeStart").with_value_types(&["point"]), ChannelSpec::named("E", "End", "end", "EdgeEnd").with_value_types(&["point"]), out_length()], vec!["point", "number"]),
+            "inspectFace" => (vec![ChannelSpec::named("V", "Verts", "vertices", "FaceVertices").with_value_types(&["text"]), out_normal("FaceNormal"), out_center().with_value_types(&["point"])], vec!["text", "vector", "point"]),
             "toBrep" => (vec![out_geometry("FacetedGeometry")], vec!["geometry"]),
             "exportObj" | "exportJson" => (vec![ChannelSpec::named("T", "Text", "text", "MeshText").with_value_types(&["text"])], vec!["text"]),
             _ => (vec![ChannelSpec::named("M", "Mesh", "meshOut", "PolygonMesh").with_value_types(&["mesh"])], vec!["mesh"]),
@@ -354,6 +485,15 @@ pub(super) fn register_mesh(registry: &mut Registry) {
             "translateComponents" => "Move selected vertices, edges, or faces; shared vertices move once.",
             "rotateComponents" => "Rotate selected components about their centroid or a chosen point; angle is in radians.",
             "scaleComponents" => "Scale selected components about their centroid or a chosen point, preserving polygon indices.",
+            "bevel" => "Round selected edges of a closed convex mesh with 1–64 profile segments; reject widths crossing adjacent vertices.",
+            "dissolveEdges" => "Remove selected connecting edges and join their neighboring polygon faces.",
+            "dissolveVertices" => "Join a planar connected vertex neighborhood into one polygon without removing its surface.",
+            "mergeVertices" => "Merge selected vertices at the first position, their mean, or within the distance tolerance; clean collapsed polygon loops.",
+            "moveProportional" => "Move selected vertices fully and surrounding vertices with linear distance falloff from the center within the radius.",
+            "snapVertices" => "Snap selected vertices to an origin-aligned grid with positive spacing.",
+            "mirror" => "Reflect a one-sided mesh across an origin axis plane; weld only matching seam vertices within the tolerance.",
+            "decimate" => "Approximate mesh simplification by shortest-edge collapse with winding and manifold checks; may stop before the target ratio.",
+            "mergeCoplanar" => "Join adjacent coplanar faces without changing their surface.",
             "loopCut" => "Cut connected quad strips through selected preview edges; 1–256 cuts share vertices and crossing strips form grids.",
             "knifeCut" => "Split one face along the projected line through two points, sharing new boundary vertices with its neighbors.",
             "extrude" => "Extrude selected faces along their normals and connect the boundary with side faces.",
@@ -365,6 +505,9 @@ pub(super) fn register_mesh(registry: &mut Registry) {
             "weld" => "Merge vertices within the tolerance and remove collapsed faces.",
             "orient" => "Make adjacent face winding consistent across connected components.",
             "fillHoles" => "Cap open boundary loops with polygon faces.",
+            "inspectVertex" => "Read the position of a zero-based vertex without changing mesh data.",
+            "inspectEdge" => "Read endpoints and length of a preview halfedge index without changing mesh data.",
+            "inspectFace" => "Read polygon corner indices, unit normal, and the arithmetic mean of corner positions.",
             "analyze" => "Measure surface area, bounds, and topology; volume is available for closed, consistently oriented meshes.",
             "exportObj" => "Serialize mesh vertices and polygon faces as OBJ text.",
             "exportJson" => "Serialize editable indexed vertices and polygon faces as JSON text.",

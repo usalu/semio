@@ -1,0 +1,532 @@
+[
+  {
+    "id": "a",
+    "en": "A",
+    "de": "A"
+  },
+  {
+    "id": "b",
+    "en": "B",
+    "de": "B"
+  },
+  {
+    "id": "amount",
+    "en": "Amount",
+    "de": "Betrag"
+  },
+  {
+    "id": "angle",
+    "en": "Angle",
+    "de": "Winkel"
+  },
+  {
+    "id": "axis",
+    "en": "Axis",
+    "de": "Achse"
+  },
+  {
+    "id": "axisDirection",
+    "en": "Axis Direction",
+    "de": "Achsenrichtung"
+  },
+  {
+    "id": "axisOrigin",
+    "en": "Axis Origin",
+    "de": "Achsenursprung"
+  },
+  {
+    "id": "brep",
+    "en": "BRep",
+    "de": "BRep"
+  },
+  {
+    "id": "center",
+    "en": "Center",
+    "de": "Mittelpunkt"
+  },
+  {
+    "id": "compound",
+    "en": "Compound",
+    "de": "Verbund"
+  },
+  {
+    "id": "controlPoints",
+    "en": "Control Points",
+    "de": "Kontrollpunkte"
+  },
+  {
+    "id": "count",
+    "en": "Count",
+    "de": "Anzahl"
+  },
+  {
+    "id": "countX",
+    "en": "X Count",
+    "de": "Anzahl in X"
+  },
+  {
+    "id": "countY",
+    "en": "Y Count",
+    "de": "Anzahl in Y"
+  },
+  {
+    "id": "curve",
+    "en": "Curve",
+    "de": "Kurve"
+  },
+  {
+    "id": "curves",
+    "en": "Curves",
+    "de": "Kurven"
+  },
+  {
+    "id": "cuts",
+    "en": "Cuts",
+    "de": "Schnitte"
+  },
+  {
+    "id": "d1",
+    "en": "First Distance",
+    "de": "Erster Abstand"
+  },
+  {
+    "id": "d2",
+    "en": "Second Distance",
+    "de": "Zweiter Abstand"
+  },
+  {
+    "id": "data",
+    "en": "Data",
+    "de": "Daten"
+  },
+  {
+    "id": "deflection",
+    "en": "Deflection",
+    "de": "Abweichung"
+  },
+  {
+    "id": "degree",
+    "en": "Degree",
+    "de": "Grad"
+  },
+  {
+    "id": "degreeU",
+    "en": "U Degree",
+    "de": "Grad in U"
+  },
+  {
+    "id": "degreeV",
+    "en": "V Degree",
+    "de": "Grad in V"
+  },
+  {
+    "id": "depth",
+    "en": "Depth",
+    "de": "Tiefe"
+  },
+  {
+    "id": "dirX",
+    "en": "X Direction",
+    "de": "X-Richtung"
+  },
+  {
+    "id": "dirY",
+    "en": "Y Direction",
+    "de": "Y-Richtung"
+  },
+  {
+    "id": "direction",
+    "en": "Direction",
+    "de": "Richtung"
+  },
+  {
+    "id": "distance",
+    "en": "Distance",
+    "de": "Abstand"
+  },
+  {
+    "id": "edge",
+    "en": "Edge",
+    "de": "Kante"
+  },
+  {
+    "id": "edges",
+    "en": "Edges",
+    "de": "Kanten"
+  },
+  {
+    "id": "end",
+    "en": "End",
+    "de": "Ende"
+  },
+  {
+    "id": "endAngle",
+    "en": "End Angle",
+    "de": "Endwinkel"
+  },
+  {
+    "id": "face",
+    "en": "Face",
+    "de": "Fläche"
+  },
+  {
+    "id": "faces",
+    "en": "Faces",
+    "de": "Flächen"
+  },
+  {
+    "id": "factor",
+    "en": "Factor",
+    "de": "Faktor"
+  },
+  {
+    "id": "geometry",
+    "en": "Geometry",
+    "de": "Geometrie"
+  },
+  {
+    "id": "guide",
+    "en": "Guide",
+    "de": "Führung"
+  },
+  {
+    "id": "handle",
+    "en": "Handle",
+    "de": "Referenz"
+  },
+  {
+    "id": "height",
+    "en": "Height",
+    "de": "Höhe"
+  },
+  {
+    "id": "index",
+    "en": "Index",
+    "de": "Index"
+  },
+  {
+    "id": "kind",
+    "en": "Kind",
+    "de": "Art"
+  },
+  {
+    "id": "major",
+    "en": "Major Radius",
+    "de": "Großer Radius"
+  },
+  {
+    "id": "mesh",
+    "en": "Mesh",
+    "de": "Mesh"
+  },
+  {
+    "id": "minor",
+    "en": "Minor Radius",
+    "de": "Kleiner Radius"
+  },
+  {
+    "id": "mode",
+    "en": "Mode",
+    "de": "Modus"
+  },
+  {
+    "id": "neutralPoint",
+    "en": "Neutral Point",
+    "de": "Neutralpunkt"
+  },
+  {
+    "id": "normal",
+    "en": "Normal",
+    "de": "Normale"
+  },
+  {
+    "id": "offset",
+    "en": "Offset",
+    "de": "Versatz"
+  },
+  {
+    "id": "openFaces",
+    "en": "Open Faces",
+    "de": "Offene Flächen"
+  },
+  {
+    "id": "origin",
+    "en": "Origin",
+    "de": "Ursprung"
+  },
+  {
+    "id": "parameter",
+    "en": "Parameter",
+    "de": "Parameter"
+  },
+  {
+    "id": "path",
+    "en": "Path",
+    "de": "Pfad"
+  },
+  {
+    "id": "pitch",
+    "en": "Pitch",
+    "de": "Steigung"
+  },
+  {
+    "id": "pivot",
+    "en": "Pivot",
+    "de": "Drehpunkt"
+  },
+  {
+    "id": "planeNormal",
+    "en": "Plane Normal",
+    "de": "Ebenennormale"
+  },
+  {
+    "id": "planeOrigin",
+    "en": "Plane Origin",
+    "de": "Ebenenursprung"
+  },
+  {
+    "id": "point",
+    "en": "Point",
+    "de": "Punkt"
+  },
+  {
+    "id": "points",
+    "en": "Points",
+    "de": "Punkte"
+  },
+  {
+    "id": "preview",
+    "en": "Preview",
+    "de": "Vorschau"
+  },
+  {
+    "id": "profile",
+    "en": "Profile",
+    "de": "Profil"
+  },
+  {
+    "id": "profiles",
+    "en": "Profiles",
+    "de": "Profile"
+  },
+  {
+    "id": "pullDirection",
+    "en": "Pull Direction",
+    "de": "Zugrichtung"
+  },
+  {
+    "id": "radius",
+    "en": "Radius",
+    "de": "Radius"
+  },
+  {
+    "id": "radiusEnd",
+    "en": "End Radius",
+    "de": "Endradius"
+  },
+  {
+    "id": "radiusStart",
+    "en": "Start Radius",
+    "de": "Anfangsradius"
+  },
+  {
+    "id": "rows",
+    "en": "Rows",
+    "de": "Zeilen"
+  },
+  {
+    "id": "segments",
+    "en": "Segments",
+    "de": "Segmente"
+  },
+  {
+    "id": "selection",
+    "en": "Selection",
+    "de": "Auswahl"
+  },
+  {
+    "id": "semiMajor",
+    "en": "Major Semiaxis",
+    "de": "Große Halbachse"
+  },
+  {
+    "id": "semiMinor",
+    "en": "Minor Semiaxis",
+    "de": "Kleine Halbachse"
+  },
+  {
+    "id": "sides",
+    "en": "Sides",
+    "de": "Seiten"
+  },
+  {
+    "id": "smooth",
+    "en": "Smooth",
+    "de": "Glätten"
+  },
+  {
+    "id": "solid",
+    "en": "Solid",
+    "de": "Körper"
+  },
+  {
+    "id": "solids",
+    "en": "Solids",
+    "de": "Körper"
+  },
+  {
+    "id": "spacing",
+    "en": "Spacing",
+    "de": "Teilung"
+  },
+  {
+    "id": "spacingX",
+    "en": "X Spacing",
+    "de": "Teilung in X"
+  },
+  {
+    "id": "spacingY",
+    "en": "Y Spacing",
+    "de": "Teilung in Y"
+  },
+  {
+    "id": "start",
+    "en": "Start",
+    "de": "Anfang"
+  },
+  {
+    "id": "startAngle",
+    "en": "Start Angle",
+    "de": "Anfangswinkel"
+  },
+  {
+    "id": "subdivisions",
+    "en": "Subdivisions",
+    "de": "Unterteilungen"
+  },
+  {
+    "id": "surface",
+    "en": "Surface",
+    "de": "Oberfläche"
+  },
+  {
+    "id": "target",
+    "en": "Target",
+    "de": "Ziel"
+  },
+  {
+    "id": "text",
+    "en": "Text",
+    "de": "Text"
+  },
+  {
+    "id": "thickness",
+    "en": "Thickness",
+    "de": "Dicke"
+  },
+  {
+    "id": "tolerance",
+    "en": "Tolerance",
+    "de": "Toleranz"
+  },
+  {
+    "id": "tools",
+    "en": "Tools",
+    "de": "Werkzeuge"
+  },
+  {
+    "id": "turns",
+    "en": "Turns",
+    "de": "Windungen"
+  },
+  {
+    "id": "u",
+    "en": "U",
+    "de": "U"
+  },
+  {
+    "id": "v",
+    "en": "V",
+    "de": "V"
+  },
+  {
+    "id": "value",
+    "en": "Value",
+    "de": "Wert"
+  },
+  {
+    "id": "vector",
+    "en": "Vector",
+    "de": "Vektor"
+  },
+  {
+    "id": "vertex",
+    "en": "Vertex",
+    "de": "Punkt"
+  },
+  {
+    "id": "vertices",
+    "en": "Vertices",
+    "de": "Punkte"
+  },
+  {
+    "id": "width",
+    "en": "Width",
+    "de": "Breite"
+  },
+  {
+    "id": "wire",
+    "en": "Wire",
+    "de": "Linienzug"
+  },
+  {
+    "id": "grid",
+    "en": "Grid",
+    "de": "Raster"
+  },
+  {
+    "id": "ratio",
+    "en": "Ratio",
+    "de": "Verhältnis"
+  },
+  {
+    "id": "components",
+    "en": "Components",
+    "de": "Komponenten"
+  },
+  {
+    "id": "granularity",
+    "en": "Element Type",
+    "de": "Elementart"
+  },
+  {
+    "id": "x",
+    "en": "X",
+    "de": "X"
+  },
+  {
+    "id": "y",
+    "en": "Y",
+    "de": "Y"
+  },
+  {
+    "id": "z",
+    "en": "Z",
+    "de": "Z"
+  },
+  {
+    "id": "number",
+    "en": "Number",
+    "de": "Zahl"
+  },
+  {
+    "id": "numbers",
+    "en": "Numbers",
+    "de": "Zahlen"
+  },
+  {
+    "id": "axisName",
+    "en": "Axis",
+    "de": "Achse"
+  }
+]

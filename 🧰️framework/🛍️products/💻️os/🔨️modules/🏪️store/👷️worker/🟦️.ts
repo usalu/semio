@@ -107,11 +107,12 @@ import { driveSpawnedJob, spawnedJobCompletedEvent, typedOperationPageAnswerV1, 
 import { actorInstanceCapturedReceiptMatches, actorInstanceCloseReceiptMatches, actorInstanceLifetimeEquals, type ActorInstanceCloseRequest, type ActorInstanceLifecycleReceipt, type ActorInstanceLifetime, type ActorInstanceOpenRequest } from "../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
 import { encodeActorUiPatchReceipt, type ActorUiPatchReceipt } from "../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";
 import { BROWSER_ACTOR_UI_PATCH_SURFACE_MAXIMUM, browserActorUiPatchOwnerMatchesV1, captureBrowserActorUiPatchV1, type BrowserActorUiPatchOfferV1, type BrowserActorUiPatchResultV1 } from "../../🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts";
-import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION, BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM, browserActorGuestRefusalReasonV1, parseBrowserActorActionRequestV1, parseBrowserActorHistoryPatchBytesV1, parseBrowserActorHostEffectBytesV1, type BrowserActorActionRequestV1, type BrowserActorActionResultV1 } from "../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
+import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION, BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM, browserActorAdmissionRefusalReasonV1, browserActorGuestRefusalReasonV1, parseBrowserActorActionRequestV1, parseBrowserActorHistoryPatchBytesV1, parseBrowserActorHostEffectBytesV1, type BrowserActorActionRequestV1, type BrowserActorActionResultV1 } from "../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
 import { decodeBrowserActorCommandPublicationV1, decodeBrowserActorIntentPublicationV1, decodeBrowserActorUnsolicitedPublicationV1, encodeBrowserActorHostEffectV1, requireBrowserActorCommandBackboneProjectionV1, type BrowserActorCommandBackboneEnvelopeV1, type BrowserActorCommandPublicationV1, type BrowserActorEphemeralSnapshotV1 } from "../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts";
 import { ActorDocumentBindingV1, documentBackboneEffectV1, encodeDocumentBackboneControlV1 } from "../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
 import { parseBrowserActorViewStateRequest } from "../../🔌️plugin/🌐️browser-bundle/🪟️view-context/🟦️.ts";
-import { panelTabKindId, panelViewContext, windowViewContext, type PanelTabKind, type ResolvedPluginViewState } from "../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+import { panelTabKindId, panelViewContext, sectionViewContext, windowViewContext, type PanelTabKind, type ResolvedPluginViewState } from "../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+import { BROWSER_ACTOR_VISIBLE_SURFACES_V1, browserActorVisibleSurfacesV1, type BrowserActorVisibleTurnV1 } from "./🪟️visible-surfaces/🟦️.ts";
 import type {
   DirectoryCommandErrorCodeV1,
   DirectoryCommandOutcomeV1,
@@ -1542,6 +1543,7 @@ function parseVerifiedPackageDescriptorV1(bytes: Uint8Array, fields: DocumentExe
   const hashes = record(descriptor.hashes);
   const apps = Array.isArray(manifest.apps) ? (manifest.apps as readonly PackValue[]).map(record) : [];
   const artifactKinds = Array.isArray(manifest.artifactKinds) ? (manifest.artifactKinds as readonly PackValue[]).map(record) : [];
+  const hostedArtifactKinds = Array.isArray(manifest.hostedArtifactKinds) ? (manifest.hostedArtifactKinds as readonly PackValue[]).map(record) : [];
   const app = apps.find((entry) => entry.id === fields.surface.appId);
   const dialect = app === undefined ? undefined : record(app.dialect);
   const windowKinds = app !== undefined && Array.isArray(app.windowKinds) ? (app.windowKinds as readonly PackValue[]).map(record) : [];
@@ -1552,7 +1554,12 @@ function parseVerifiedPackageDescriptorV1(bytes: Uint8Array, fields: DocumentExe
     if (coordinate === null || typeof coordinate !== "object" || Array.isArray(coordinate) || coordinate instanceof Uint8Array || isPackInteger(coordinate)) return null;
     const { artifactKind, standard, subset } = coordinate as Readonly<Record<string, PackValue>>;
     if ((entry.role !== "editor" && entry.role !== "viewer") || typeof artifactKind !== "string" || typeof standard !== "string" || typeof subset !== "string") return null;
-    return { role: entry.role, dialect: { artifactKind, standard, subset }, artifactKinds: kindPairs(Array.isArray(entry.artifactKinds) ? (entry.artifactKinds as readonly PackValue[]).map(record) : []) };
+    const packRecord = (value: PackValue | undefined): Readonly<Record<string, PackValue>> | null => (value === undefined || value === null || typeof value !== "object" || Array.isArray(value) || value instanceof Uint8Array || isPackInteger(value) ? null : (value as Readonly<Record<string, PackValue>>));
+    const io = packRecord(entry.io);
+    const presentedId = packRecord(io?.artifact)?.id;
+    const presentedSchema = io?.artifactSchema;
+    const presents = typeof presentedId === "string" && presentedId !== "" && typeof presentedSchema === "string" ? { id: presentedId, schema: presentedSchema } : null;
+    return { role: entry.role, dialect: { artifactKind, standard, subset }, artifactKinds: kindPairs(Array.isArray(entry.artifactKinds) ? (entry.artifactKinds as readonly PackValue[]).map(record) : []), presents };
   };
   const openingApp = app === undefined ? null : surfaceApp(app);
   if (
@@ -1574,7 +1581,7 @@ function parseVerifiedPackageDescriptorV1(bytes: Uint8Array, fields: DocumentExe
     dialect.subset !== fields.parentDialect.subset ||
     window === undefined ||
     openingApp === null ||
-    !surfaceOpensArtifactKindV1(kindPairs(artifactKinds), apps.flatMap((entry) => surfaceApp(entry) ?? []), openingApp, fields.artifact)
+    !surfaceOpensArtifactKindV1(kindPairs(artifactKinds), kindPairs(hostedArtifactKinds), apps.flatMap((entry) => surfaceApp(entry) ?? []), openingApp, fields.artifact)
   )
     throw new Error("document execution target: descriptor mismatch");
   const windows = verifiedWindowSurfacesV1(windowKinds);
@@ -2438,7 +2445,7 @@ class DocumentBrowserActorReservation {
   /** ⏳️ Resolves once no patch offer awaits the main thread and no host view refresh is outstanding — poll-free, by
    * wrapping the promises those two already own. It MUST run outside the turn lane: `refreshHostView` settles by
    * running its own turn on that lane, so a turn that awaited `viewRefresh` from inside would wait on the turn
-   * queued behind itself. A patch deadline rejects through here (the action falls to `action-refused`). */
+   * queued behind itself. A patch deadline rejects through here (the action falls to `action-refused: <why>`). */
   private async awaitUiQuiescence(): Promise<void> {
     while (this.pendingUiPatch !== null || this.viewRefresh !== null) {
       if (this.pendingUiPatch !== null) await this.pendingUiPatch.settled;
@@ -2528,7 +2535,7 @@ class DocumentBrowserActorReservation {
         this.close();
         requestDocumentActorRecoveryV1(this.state, "action-unconfirmed");
       }
-      const reason = explicitRefusal ? browserActorGuestRefusalReasonV1(error.detail) : error instanceof Error && /^(action-owner-mismatch|action-catching-up|action-child-unavailable)$/u.test(error.message) ? error.message : invoked ? "action-state-unconfirmed" : "action-refused";
+      const reason = explicitRefusal ? browserActorGuestRefusalReasonV1(error.detail) : error instanceof Error && /^(action-owner-mismatch|action-catching-up|action-child-unavailable)$/u.test(error.message) ? error.message : invoked ? "action-state-unconfirmed" : browserActorAdmissionRefusalReasonV1(error instanceof Error ? error.message : String(error));
       return browserActorActionDisposition(request, "rejected", 0, [], reason);
     }
   }
@@ -2577,7 +2584,7 @@ class DocumentBrowserActorReservation {
     this.scope = Object.freeze({ ...fields.scope });
     this.windowKindId = fields.surface.windowKindId;
     this.windowKeys = new Set(lease.renderSurfaces().windows.map(({ key }) => key));
-    this.surfaceKeys = new Set([...this.windowKeys, ...lease.renderSurfaces().panels.map(({ key }) => key)]);
+    this.surfaceKeys = new Set([...this.windowKeys, ...lease.renderSurfaces().panels.map(({ key }) => key), ...BROWSER_ACTOR_VISIBLE_SURFACES_V1.sections.map(({ bodyKey }) => bodyKey)]);
     this.generation = ++documentBrowserActorGeneration;
     // ⏳️ A LIVE browser actor is bounded by its socket and its lease, never by the calendar the
     // admission plan was minted with. `grant.retireAtMs` is `plan.expiresAtUnixMs`, whose TTL is at
@@ -2775,17 +2782,19 @@ class DocumentBrowserActorReservation {
     return this.coldTransfer;
   }
 
-  /** 🖼️ Makes every verified window (each in its own window context) and every verified panel body (panel context)
-   * visible to the child, exactly as the local refresh binds them, and reconciles the turn's patches until the render
-   * settles. Rendering the panels here is what keeps an actor-bound document's inspector live (G-P1-4); rendering every
-   * window is what lets a second window of the document show and command the live document. */
+  /** 🖼️ Makes every verified window (each in its own window context), every verified panel body (panel context) and every
+   * reserved refresh section (section context; the static catalogue on the lifetime's first paint only) visible to the
+   * child, exactly as the local refresh binds them, and reconciles the turn's patches until the render settles. Rendering
+   * the panels here is what keeps an actor-bound document's inspector live (G-P1-4); rendering every window is what lets a
+   * second window of the document show and command the live document; rendering the sections is what keeps its window
+   * chrome and tool measures live (C13 P1). */
   private async renderSurface(child: DocumentBrowserActorChild, assertCurrent: () => void): Promise<void> {
     const lifetime = this.lifetime;
     if (lifetime === null) throw new Error("document browser actor: missing render lifetime");
     assertCurrent();
     const hostView = this.state.browserActorViewState;
     if (hostView === null) throw new Error("document browser actor: missing host view context");
-    const visible: BrowserActorChildValue[] = [...this.windowVisibleEvents(lifetime, hostView), ...this.panelVisibleEvents(lifetime, hostView)];
+    const visible = this.visibleEvents(lifetime, hostView, this.renderedViewState === null ? "mount" : "repaint");
     for (let turn = 0; turn < DOCUMENT_BROWSER_ACTOR_RENDER_TURN_LIMIT; turn += 1) {
       assertCurrent();
       let result: BrowserActorChildValue | null = await this.invokePoll(child, turn === 0 ? visible : [{ tag: "wake" }], null, assertCurrent);
@@ -2806,35 +2815,32 @@ class DocumentBrowserActorReservation {
     throw new Error("document browser actor: render turn limit");
   }
 
-  /** 🪟️ One `surface-visible` per verified window, each in its own window context of `hostView`. */
-  private windowVisibleEvents(lifetime: ActorInstanceLifetime, hostView: ResolvedPluginViewState): BrowserActorChildValue[] {
-    return this.lease.renderSurfaces().windows.map((window): BrowserActorChildValue => {
-      const viewState = windowViewContext(hostView, window.key);
-      if (!viewState || viewState.activeWindowKindId !== window.key) throw new Error("document browser actor: unknown host window instance");
-      return { tag: "surface-visible", val: { surface: { instance: lifetime.instanceId, surface: window.key }, bodyKey: window.bodyKey, viewState: encodePackValue(viewState) } };
+  /** 🪟️ One `surface-visible` per surface `turn` announces (`🪟️visible-surfaces`): a window in its own window context of
+   * `hostView`, a panel in its panel context, a reserved refresh section in its section context — a fresh encoding per
+   * event (one buffer shared by two events is a `value alias` the child boundary refuses). */
+  private visibleEvents(lifetime: ActorInstanceLifetime, hostView: ResolvedPluginViewState, turn: BrowserActorVisibleTurnV1): BrowserActorChildValue[] {
+    return browserActorVisibleSurfacesV1(this.lease.renderSurfaces(), turn).map(({ surface, bodyKey, context }): BrowserActorChildValue => {
+      if (context === "window") {
+        const viewState = windowViewContext(hostView, surface);
+        if (!viewState || viewState.activeWindowKindId !== surface) throw new Error("document browser actor: unknown host window instance");
+        return { tag: "surface-visible", val: { surface: { instance: lifetime.instanceId, surface }, bodyKey, viewState: encodePackValue(viewState) } };
+      }
+      return { tag: "surface-visible", val: { surface: { instance: lifetime.instanceId, surface }, bodyKey, viewState: encodePackValue(context === "panel" ? panelViewContext(hostView) : sectionViewContext(hostView)) } };
     });
   }
 
-  /** 🗂️ One `surface-visible` per verified panel body, each in the panel context of `hostView` (a fresh encoding per
-   * event: one buffer shared by two events is a `value alias` the child boundary refuses). */
-  private panelVisibleEvents(lifetime: ActorInstanceLifetime, hostView: ResolvedPluginViewState): BrowserActorChildValue[] {
-    const panelView = panelViewContext(hostView);
-    return this.lease.renderSurfaces().panels.map((panel) => ({ tag: "surface-visible", val: { surface: { instance: lifetime.instanceId, surface: panel.key }, bodyKey: panel.bodyKey, viewState: encodePackValue(panelView) } }));
-  }
-
   /** 🗂️ Re-projects the document's rendered surfaces after a turn that may have changed the document — the actor lane's
-   * twin of the Shell's refresh, which re-takes every window and panel after each local action. Every verified panel
-   * body always (on a document change the guest re-renders only its mounted WINDOW: without this an open inspector
-   * stayed at its last projection, ticket 26/09/23 C10 run `c10gp14e`); every verified window too when `windows` —
-   * after an app command or a mutating action, whose turn does not re-render the author's own window: the author saw
-   * its own edit only on its next action (~20 s later, C11 `c11self4`) while the peer saw it at once from the relay.
-   * Unchanged surfaces answer no patch. */
+   * twin of the Shell's refresh, which re-takes every window, panel and section after each local action. Every verified
+   * panel body and every live section always (on a document change the guest re-renders only its mounted WINDOW: without
+   * this an open inspector stayed at its last projection, ticket 26/09/23 C10 run `c10gp14e`, and draw's "N layers"
+   * engagement stayed at the opening's count, C13 P1); every verified window too when `windows` — after an app command or
+   * a mutating action, whose turn does not re-render the author's own window: the author saw its own edit only on its next
+   * action (~20 s later, C11 `c11self4`) while the peer saw it at once from the relay. Unchanged surfaces answer no patch. */
   private async refreshDocumentSurfaces(child: DocumentBrowserActorChild, assertCurrent: () => void, windows: boolean): Promise<void> {
     const lifetime = this.lifetime,
       hostView = this.renderedViewState;
     if (lifetime === null || hostView === null) return;
-    const events = [...(windows ? this.windowVisibleEvents(lifetime, hostView) : []), ...this.panelVisibleEvents(lifetime, hostView)];
-    if (events.length === 0) return;
+    const events = this.visibleEvents(lifetime, hostView, windows ? "repaint" : "refresh");
     const result = await this.invokePoll(child, events, null, assertCurrent);
     if (browserActorColdStatus(result).kind !== "idle") {
       wipeBrowserActorValue(result);

@@ -1121,11 +1121,13 @@ impl ThemePropagationCursor {
 
 const LANE_WHEEL: [SurfaceLane; 6] = [SurfaceLane::Interactive, SurfaceLane::Interactive, SurfaceLane::UserVisible, SurfaceLane::Interactive, SurfaceLane::UserVisible, SurfaceLane::Background];
 
-/// 🧭️Observable result of exactly one bounded surface-layout scheduling call.
+/// 🧭️Observable result of exactly one bounded surface-layout scheduling call. `Awaiting`: `window_id`'s layout step runs on a
+/// pool worker and has not answered yet — nothing ran on this thread.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum UiLayoutStep {
     Idle,
     Yielded { window_id: SurfaceId, lane: SurfaceLane, stage: &'static str, nodes: usize, glyphs: usize },
+    Awaiting { window_id: SurfaceId, lane: SurfaceLane },
     Ready { window_id: SurfaceId, lane: SurfaceLane },
     Cancelled { window_id: SurfaceId, lane: SurfaceLane },
 }
@@ -2137,12 +2139,10 @@ impl Ui {
             }
             let poll = session.pump_one(pool, worker_lane(lane));
             self.enqueue_layout(window_id.as_ref());
-            return UiLayoutStep::Yielded {
-                window_id,
-                lane,
-                stage: if matches!(poll, Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal)) { "Layout.WorkerTake" } else { "Layout.WorkerPool.UserVisible" },
-                nodes: 0,
-                glyphs: 0,
+            return match poll {
+                Ok(semio_framework_job::WorkerJobPoll::Submitted) => UiLayoutStep::Awaiting { window_id, lane },
+                Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) => UiLayoutStep::Yielded { window_id, lane, stage: "Layout.WorkerTake", nodes: 0, glyphs: 0 },
+                _ => UiLayoutStep::Yielded { window_id, lane, stage: "Layout.WorkerPool.UserVisible", nodes: 0, glyphs: 0 },
             };
         }
         if let Some(job) = window.layout_job.as_mut() {
@@ -3568,9 +3568,34 @@ impl Ui {
         self.windows.get(window_id).map(|window| window.viewport)
     }
 
+    /// 🪟️ Every windowed Tree container `window_id` presents, measured against the scroll viewport it paints in — the host half
+    /// of the tree window observer (`mounted_layout::tree_window_measures`, the twin of React's `treeWindowContainersUnder`):
+    /// `(viewport height, containers)`, or `None` when the surface presents no windowed container.
+    pub fn tree_window_measures(&self, window_id: &str) -> Option<(f64, Vec<crate::wgpu::tree_window::TreeWindowContainerMeasure>)> {
+        let window = self.windows.get(window_id).filter(|window| window.closing.is_none())?;
+        let tree = if window.presented_ready { &window.presented_tree } else { &window.tree };
+        crate::wgpu::mounted_layout::tree_window_measures(tree, &self.theme, window.viewport, window.router.flow().block == ui_contract::FlowBlock::Up)
+    }
+
     /// 🌲️ Read-only access to `window_id`'s retained tree (root + `Node` arena) for a caller to walk.
     pub fn tree(&self, window_id: &str) -> Option<&UiTree> {
         self.windows.get(window_id).map(|window| if window.presented_ready { &window.presented_tree } else { &window.tree })
+    }
+
+    /// 🥞️ Reports accepted floating content that must remain above browser external hosts.
+    pub fn presented_has_overlay(&self, window_id: &str, surface: UiSurfaceToken) -> bool {
+        if self.windows.id(surface).is_none_or(|id| id.as_ref() != window_id) {
+            return true;
+        }
+        self.windows.get_token(surface).is_none_or(|window| !window.presented_ready || !window.presented_router.open_overlays().is_empty() || window.presented_tooltip.is_some())
+    }
+
+    /// 🎬️ Exposes only the tree whose surface identity was acknowledged by GPU presentation.
+    pub fn presented_tree(&self, window_id: &str, surface: UiSurfaceToken) -> Option<&UiTree> {
+        if self.windows.id(surface).is_none_or(|id| id.as_ref() != window_id) {
+            return None;
+        }
+        self.windows.get_token(surface).filter(|window| window.closing.is_none() && window.presented_ready).map(|window| &window.presented_tree)
     }
 
     /// 🎨️ Read-only candidate tree for the paint/hit-registration owner before presentation.

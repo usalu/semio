@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://json.schemas.assets.semio-tech.com/framework/plugin/table/row-capacity.fixture.json",
   "title": "TableRowCapacityFixture",
-  "description": "A Home-shaped windowed table row (cells, labelled row actions and a row activation, each binding carrying its own argument map), and the host's default window; a window serves as many such rows as the body's item budget admits. Row actions travel only as RowAction props, never as child records.",
+  "description": "A Home-shaped windowed table row (cells, labelled row actions and a row activation — verbs on the row's ONE target, whose one argument map every verb inherits), the host's default window, the reconcile items one such row may cost and the rows one window of them must serve inside the body's item budget. Row actions travel only as RowAction props, never as child records.",
   "type": "object",
   "additionalProperties": false,
   "required": ["$schema", "controller", "tableLabel", "columns", "actionsLabel", "row", "window", "expect"],
@@ -29,11 +29,11 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["icon", "label", "action"],
+            "required": ["icon", "label", "verb"],
             "properties": {
               "icon": { "type": "string", "minLength": 1 },
               "label": { "type": "string", "minLength": 1 },
-              "action": { "type": "string", "minLength": 1 }
+              "verb": { "type": "string", "minLength": 1 }
             }
           }
         }
@@ -51,9 +51,11 @@
     "expect": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["rowChildren"],
+      "required": ["rowChildren", "minRowsPerWindow", "maxRowItems"],
       "properties": {
-        "rowChildren": { "const": 0, "description": "A plain row has no child records: cells and row actions are props." }
+        "rowChildren": { "const": 0, "description": "A plain row has no child records: cells and row actions are props." },
+        "minRowsPerWindow": { "type": "integer", "minimum": 1, "description": "Rows of this shape one default window must serve inside the body item budget." },
+        "maxRowItems": { "type": "integer", "minimum": 1, "description": "Surface reconcile items (census) one row of this shape may cost: the body item budget over minRowsPerWindow." }
       }
     }
   }

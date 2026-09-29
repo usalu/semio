@@ -79,7 +79,71 @@
       "fixtures": []
     }
   ],
-  "runtime_capabilities": [],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.binary.composer.dialect-s-stdio-binary-raw.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.binary@raw/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.binary@raw/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.binary.inference.schema-s-stdio-binary-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.binary.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.binary.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.binary.schema.schema-s-stdio-binary.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.binary",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.binary"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.binary.standard.raw.codec.codec-stdio-binary-extension-bin.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:12:stdio.binary:bin|codec:stdio.binary",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.binary"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "12:stdio.binary:bin"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.binary.standard.raw.representation.mime-application-octet-stream-extension-bin",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:application/octet-stream|extension:.bin",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "application/octet-stream"
+        },
+        {
+          "namespace": "extension",
+          "value": ".bin"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

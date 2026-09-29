@@ -9,7 +9,7 @@ async fn invalid_instance_order_is_rejected_before_mutation() {
     assert_eq!(error.target, vec!["instanceOrder", "1"]);
     assert_eq!(base, Ifc2x3Snapshot::default());
 }
-use semio_s_artifact_stdio_step::engine::part21::Part21Value;
+use semio_s_artifact_stdio_contract::part21::Part21Value;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn inst(id: u64, name: &str) -> Part21Instance {
@@ -18,7 +18,7 @@ fn inst(id: u64, name: &str) -> Part21Instance {
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn snap(schema: &str, header: Part21Header, instances: Vec<Part21Instance>) -> Ifc2x3Snapshot {
-    let document = semio_s_artifact_stdio_step::engine::part21::Part21Document { header, instances };
+    let document = semio_s_artifact_stdio_contract::part21::Part21Document { header, instances };
     Ifc2x3Snapshot { schema: schema.into(), document, edm_preamble: None }
 }
 

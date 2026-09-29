@@ -1,12 +1,12 @@
 //! 🏛️ IFC4 spatial structure + placement matrices + property sets — analyzer view derived from
-//! the shared generic Part-21 graph (`step::engine::part21`, reused verbatim: IFC is STEP syntax
+//! the shared generic Part-21 graph (`semio_s_artifact_stdio_contract::part21`, reused verbatim: IFC is STEP syntax
 //! + a different EXPRESS schema). Walks `IfcRelAggregates`/`IfcRelContainedInSpatialStructure`
 //! for the spatial tree, composes `IfcLocalPlacement`→`IfcAxis2Placement3D` chains into real 4x4
 //! world matrices, and `IfcRelDefinesByProperties`→`IfcPropertySet`→`IfcPropertySingleValue` for
 //! property sets. Matrix composition order was pre-verified via a standalone scratch binary per
 //! this session's own convention (ticket `26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION`).
 
-use semio_s_artifact_stdio_step::engine::part21::{Part21Document, Part21Value};
+use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Value};
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️Model

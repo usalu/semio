@@ -1,2 +1,0 @@
-input SetJackEditorWindowQuery { value: String! }
-input JackEditorWindowConfigMutation @oneOf { setQuery: SetJackEditorWindowQuery }

@@ -62,13 +62,15 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 
 /// 🔌️ Builds the `stdio-semio` bundle: every semio subset's editor and viewer (with the owner-mutation roster where
 /// the subset's mutation enum derives one), one activation per artifact kind it opens read live from that kind's own
-/// `artifact_kind().id`, and the exact-pin runtime dependency on `stdio`, which owns those kinds and their codecs.
+/// `artifact_kind().id`, the exact-pin runtime dependency on `stdio`, which owns those kinds and their codecs, and the hosted runtime of
+/// each of them (`host_artifact`: schemas, inferences, document codecs, composers, formats, subset validators) in this component.
 pub fn plugin() -> Result<Plugin<StdioSemioApps>, PluginAssemblyError> {
     Plugin::<StdioSemioApps>::builder("stdio-semio")
         .label("Stdio Semio")
         .version(env!("CARGO_PKG_VERSION"))
         .package_id("semio:stdio-semio")
         .depends_on("stdio", semio_framework::tree_pin!())
+        .host_artifact(semio_s_artifact_stdio_semio::declaration(semio_s_artifact_stdio_semio::definition()?).map_err(PluginAssemblyError::definition)?)
         .editor::<semio_s_artifact_stdio_semio::editor::semio_brep::SemioBrepEditor>(semio_s_artifact_stdio_semio::editor::semio_brep::create_semio_brep_editor())
         .editor_mutation_roster::<semio_s_artifact_stdio_semio::editor::semio_brep::SemioBrepEditor>()
         .viewer::<semio_s_artifact_stdio_semio::viewer::semio_brep::SemioBrepViewer>(semio_s_artifact_stdio_semio::viewer::semio_brep::create_semio_brep_viewer())

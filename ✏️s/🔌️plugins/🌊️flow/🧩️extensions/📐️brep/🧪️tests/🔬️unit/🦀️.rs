@@ -561,3 +561,51 @@ async fn every_kernel_operation_is_either_a_node_or_explicitly_unexposed() {
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[path = "../🔬️evaluate-budget/🦀️.rs"]
 mod evaluate_budget;
+
+#[semio_framework_async_macros::async_test]
+async fn every_brep_port_has_explicit_types_and_distinct_identifiers() {
+    let registry = neural_engine::ColdOwner::new(module_registry().await);
+    for info in registry.operator_infos() {
+        for (direction, channels) in [("inputs", &info.inputs), ("outputs", &info.outputs)] {
+            let mut codes = std::collections::HashSet::new();
+            let mut abbreviations = std::collections::HashSet::new();
+            let mut names = std::collections::HashSet::new();
+            let mut full_names = std::collections::HashSet::new();
+            for channel in channels {
+                assert!(!channel.value_types.is_empty(), "{} {direction} {} has no value types", info.id, channel.name);
+                assert!(codes.insert(&channel.code), "{} {direction} repeats code {}", info.id, channel.code);
+                assert!(abbreviations.insert(&channel.abbreviation), "{} {direction} repeats abbreviation {}", info.id, channel.abbreviation);
+                assert!(names.insert(&channel.name), "{} {direction} repeats name {}", info.id, channel.name);
+                assert!(full_names.insert(&channel.full_name), "{} {direction} repeats full name {}", info.id, channel.full_name);
+            }
+        }
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn packaged_widget_descriptor_matches_live_registration() {
+    let descriptor = pack::json::parse(include_str!("../../🔣️.json")).unwrap();
+    let manifest = pack::json::parse(&extension_manifest_json().await).unwrap();
+    println!("[DEBUG] widget-manifest {}", pack::json::to_string(&manifest));
+    for topic in descriptor.get("manifest").unwrap().get("topicContributions").unwrap().as_array().unwrap() {
+        let packaged = pack::json::parse(topic.get("payload").unwrap().get("manifestJson").unwrap().as_str().unwrap()).unwrap();
+        assert_eq!(packaged, manifest);
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn portable_channel_identity_fixtures_match_live_widgets() {
+    let registry = neural_engine::ColdOwner::new(module_registry().await);
+    let fixtures = pack::json::parse(include_str!("../../🧫️fixtures/🪪️channels/🔣️.json")).unwrap();
+    for fixture in fixtures.get("cases").unwrap().as_array().unwrap() {
+        let info = registry.operator_info(fixture.get("operator").unwrap().as_str().unwrap()).unwrap();
+        let channels = if fixture.get("direction").unwrap().as_str() == Some("inputs") { &info.inputs } else { &info.outputs };
+        for (name, fields) in fixture.get("expected").unwrap().as_object().unwrap() {
+            let channel = channels.iter().find(|channel| channel.name == *name).unwrap();
+            if let Some(code) = fields.get("code") { assert_eq!(channel.code, code.as_str().unwrap()); }
+            if let Some(abbreviation) = fields.get("abbreviation") { assert_eq!(channel.abbreviation, abbreviation.as_str().unwrap()); }
+            let types: Vec<_> = fields.get("valueTypes").unwrap().as_array().unwrap().iter().map(|value| value.as_str().unwrap().to_string()).collect();
+            assert_eq!(channel.value_types, types);
+        }
+    }
+}

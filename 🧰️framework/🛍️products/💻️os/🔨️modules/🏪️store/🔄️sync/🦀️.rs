@@ -2158,8 +2158,6 @@ mod native_actor {
         hub_surface: Option<String>,
         socket_actor: Option<String>,
         socket_actor_confirmed: bool,
-        socket_authority: Option<crate::os_directory::client::DocumentSocketAuthorityV1>,
-        socket_authority_deadline: Option<Instant>,
         /// 🎨️ This connection's hub-assigned session color (`ServerFrame::Session.color`) —
         /// `None` until the hub sends it (or for a folder-only document, which never connects to a
         /// hub). Stamped onto every outbound `PresenceHeartbeat` via {@link stamp_session}.
@@ -2272,8 +2270,6 @@ mod native_actor {
                 hub_surface,
                 socket_actor: None,
                 socket_actor_confirmed: false,
-                socket_authority: None,
-                socket_authority_deadline: None,
                 session_color: None,
                 semio_hub: None,
                 connect_future: None,
@@ -2495,10 +2491,6 @@ mod native_actor {
                 }
                 ArtifactDrivePhase::Status => {
                     self.tick_link().await;
-                    if self.socket_authority_deadline.is_some_and(|deadline| deadline <= Instant::now()) {
-                        self.invalidate_socket_authority().await;
-                        return ArtifactDrive::MoreWork;
-                    }
                     self.emit_status_if_changed().await;
                     if self.cmd_rx.close_handle().has_pending() {
                         return ArtifactDrive::MoreWork;
@@ -2507,7 +2499,7 @@ mod native_actor {
                         self.drive_phase = ArtifactDrivePhase::Backbone;
                         return ArtifactDrive::MoreWork;
                     }
-                    return ArtifactDrive::Idle { deadline: [self.reconnect_at, self.link_expires_at, self.fs_deadline, self.socket_authority_deadline].into_iter().flatten().min() };
+                    return ArtifactDrive::Idle { deadline: [self.reconnect_at, self.link_expires_at, self.fs_deadline].into_iter().flatten().min() };
                 }
             }
             ArtifactDrive::MoreWork
@@ -2810,19 +2802,7 @@ mod native_actor {
         fn clear_socket_epoch(&mut self) {
             self.socket_actor = None;
             self.socket_actor_confirmed = false;
-            self.socket_authority = None;
-            self.socket_authority_deadline = None;
             self.session_color = None;
-        }
-
-        async fn invalidate_socket_authority(&mut self) {
-            self.abort_artifact_bootstrap();
-            self.requeue_pending_batches();
-            if let Some(mut connection) = self.semio_hub.take() {
-                let _ = tokio::time::timeout(Duration::from_millis(4), connection.write.close()).await;
-            }
-            self.clear_socket_epoch();
-            self.schedule_reconnect().await;
         }
 
         async fn fail_artifact_bootstrap(&mut self, detail: impl Into<String>) {
@@ -2972,8 +2952,6 @@ mod native_actor {
                     self.socket_actor = Some(socket_actor);
                     self.socket_actor_confirmed = false;
                     self.hub_surface = Some(authority.surface.surface_id.clone());
-                    self.socket_authority_deadline = Some(Instant::now() + Duration::from_millis(authority.expires_at_unix_ms.saturating_sub(now)));
-                    self.socket_authority = Some(authority);
                     self.session_color = None;
                     let hello = ClientFrame::SocketHelloV1 { wire_version: 1, protocol_version: 1, schema: self.schema.clone(), pack_schema_hash, resume_token: self.resume_token.clone(), frontier: self.server_frontier.clone() };
                     self.send_client_frame(hello, Lane::Command).await;
@@ -3035,10 +3013,6 @@ mod native_actor {
         }
 
         async fn on_hub_message(&mut self, message: Option<Result<Message, tokio_tungstenite::tungstenite::Error>>) {
-            if self.socket_authority_deadline.is_some_and(|deadline| deadline <= Instant::now()) {
-                self.invalidate_socket_authority().await;
-                return;
-            }
             match message {
                 Some(Ok(Message::Binary(bytes))) => match decode_server_frame(&bytes).await {
                     Ok((_lane, frame)) => self.on_hub_frame(frame).await,
@@ -3213,11 +3187,6 @@ mod native_actor {
         #[cfg(test)]
         pub(super) fn socket_epoch_test_state(&self) -> (Option<String>, bool, usize, Vec<String>) {
             (self.socket_actor.clone(), self.socket_actor_confirmed, self.pending_batches.len(), self.outbox.iter().map(|envelope| envelope.actor.0.clone()).collect())
-        }
-
-        #[cfg(test)]
-        pub(super) fn expire_test_socket_authority(&mut self) {
-            self.socket_authority_deadline = Some(Instant::now());
         }
 
         #[cfg(test)]
@@ -3456,11 +3425,6 @@ mod native_actor {
                 return;
             }
             note_authored_envelopes(&mut self.applied_op_ids, envelopes);
-            if self.socket_authority_deadline.is_some_and(|deadline| deadline <= Instant::now()) {
-                self.queue_outbox(envelopes.iter().cloned());
-                self.invalidate_socket_authority().await;
-                return;
-            }
             let Some(socket_actor) = self.socket_actor.clone() else {
                 self.queue_outbox(envelopes.iter().cloned());
                 return;
@@ -3487,10 +3451,6 @@ mod native_actor {
         }
 
         async fn send_raw(&mut self, message: Message) {
-            if self.socket_authority_deadline.is_some_and(|deadline| deadline <= Instant::now()) {
-                self.invalidate_socket_authority().await;
-                return;
-            }
             let mut failed = false;
             if let Some(conn) = self.semio_hub.as_mut() {
                 if conn.write.send(message).await.is_err() {
@@ -4323,7 +4283,6 @@ mod wasm_actor {
         hello: Option<ClientFrame>,
         socket_actor: Option<String>,
         socket_actor_confirmed: bool,
-        socket_authority: Option<crate::os_directory::client::DocumentSocketAuthorityV1>,
         /// 🎨️ See the native actor's matching field — same role, browser side.
         session_color: Option<u8>,
         server_frontier: Option<RuntimeFrontierSummary>,
@@ -4438,7 +4397,6 @@ mod wasm_actor {
             self.socket_actor_confirmed = false;
             self.hub_surface = Some(authority.surface.surface_id.clone());
             self.hello = Some(document_socket_hello(&self.schema, pack_schema_hash, self.resume_token.clone(), self.server_frontier.clone()));
-            self.socket_authority = Some(authority);
             self.session_color = None;
         }
 
@@ -4476,7 +4434,6 @@ mod wasm_actor {
         fn clear_socket_epoch(&mut self) {
             self.socket_actor = None;
             self.socket_actor_confirmed = false;
-            self.socket_authority = None;
             self.session_color = None;
             self.hello = None;
         }
@@ -4509,12 +4466,10 @@ mod wasm_actor {
         }
 
         /// 📥️ One socket turn: greet the hub once the page reports the socket open, then hand at most one
-        /// page of frames to the protocol. An expired authority, a close or any lost frame reconnects.
+        /// page of frames to the protocol. A close or any lost frame reconnects; the admission plan's
+        /// expiry bounds when its grant may be exchanged, never the live socket (the hub re-proves the
+        /// socket's authority every second).
         async fn pump_socket(&mut self) {
-            if self.socket_authority.as_ref().is_some_and(|authority| authority.expires_at_unix_ms <= wall_ms()) {
-                self.disconnect();
-                return;
-            }
             let Some(socket) = self.socket.as_mut() else { return };
             if self.hello.is_some() && socket.is_open() {
                 let hello = self.hello.take().expect("hello was just observed");
@@ -5050,7 +5005,6 @@ mod wasm_actor {
             hello: None,
             socket_actor: None,
             socket_actor_confirmed: false,
-            socket_authority: None,
             session_color: None,
             server_frontier: hub.seed.as_ref().map(|pair| canonical_pair_baseline(&pair.baseline_frontier)),
             resume_token: None,

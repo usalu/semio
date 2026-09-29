@@ -1,0 +1,36 @@
+{
+ "plugin": "gis",
+ "dir": "🌍️gis",
+ "apps": [
+  {
+   "app": "s.gis.gismap@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    }
+   ]
+  },
+  {
+   "app": "s.gis.gisterrain@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp",
+   "create": "semio_s_artifact_gis_gismap::editor::gis2d::create_gis2d_app",
+   "app": "s.gis.gismap@1/*#editor"
+  },
+  {
+   "editor": "semio_s_artifact_gis_gisterrain::editor::gis3d::Gis3dPlayApp",
+   "create": "semio_s_artifact_gis_gisterrain::editor::gis3d::create_gis3d_app",
+   "app": "s.gis.gisterrain@1/*#editor"
+  }
+ ]
+}

@@ -42,13 +42,19 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 
 /// 🔌️ Builds the `stdio-office` bundle: every docx/pptx/xlsx subset's editor and viewer (with the owner-mutation roster where
 /// the subset's mutation enum derives one), one activation per artifact kind it opens read live from that kind's own
-/// `artifact_kind().id`, and the exact-pin runtime dependency on `stdio`, which owns those kinds and their codecs.
+/// `artifact_kind().id`, the exact-pin runtime dependency on `stdio`, which owns those kinds and their codecs, and the hosted runtime of
+/// each of them (`host_artifact`: schemas, inferences, document codecs, composers, formats, subset validators) in this component — plus `xml`, whose schema documents
+/// their snapshot contracts compose (`$ref`).
 pub fn plugin() -> Result<Plugin<StdioOfficeApps>, PluginAssemblyError> {
     Plugin::<StdioOfficeApps>::builder("stdio-office")
         .label("Stdio Office")
         .version(env!("CARGO_PKG_VERSION"))
         .package_id("semio:stdio-office")
         .depends_on("stdio", semio_framework::tree_pin!())
+        .host_artifact(semio_s_artifact_stdio_docx::declaration(semio_s_artifact_stdio_docx::definition()?).map_err(PluginAssemblyError::definition)?)
+        .host_artifact(semio_s_artifact_stdio_pptx::declaration(semio_s_artifact_stdio_pptx::definition()?).map_err(PluginAssemblyError::definition)?)
+        .host_artifact(semio_s_artifact_stdio_xlsx::declaration(semio_s_artifact_stdio_xlsx::definition()?).map_err(PluginAssemblyError::definition)?)
+        .host_artifact(semio_s_artifact_stdio_xml::declaration(semio_s_artifact_stdio_xml::definition()?).map_err(PluginAssemblyError::definition)?)
         .editor::<semio_s_artifact_stdio_docx::editor::docx::standards::v_ecma_376::subsets::base::DocxEditor>(semio_s_artifact_stdio_docx::editor::docx::standards::v_ecma_376::subsets::base::create_docx_editor())
         .viewer::<semio_s_artifact_stdio_docx::viewer::docx::standards::v_ecma_376::subsets::base::DocxViewer>(semio_s_artifact_stdio_docx::viewer::docx::standards::v_ecma_376::subsets::base::create_docx_viewer())
         .editor::<semio_s_artifact_stdio_docx::editor::docx::standards::v_ecma_376::subsets::strict::DocxStrictEditor>(semio_s_artifact_stdio_docx::editor::docx::standards::v_ecma_376::subsets::strict::create_docx_strict_editor())

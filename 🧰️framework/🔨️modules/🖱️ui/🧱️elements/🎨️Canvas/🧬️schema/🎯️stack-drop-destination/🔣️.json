@@ -1,0 +1,188 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.ui.stack-drop-destination.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.ui.stack-drop-destination.v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/case"
+      }
+    }
+  },
+  "definitions": {
+    "path": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "windows": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "stack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "windows",
+        "active"
+      ],
+      "properties": {
+        "windows": {
+          "$ref": "#/definitions/windows"
+        },
+        "active": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "windows",
+        "path"
+      ],
+      "properties": {
+        "windows": {
+          "$ref": "#/definitions/windows"
+        },
+        "path": {
+          "$ref": "#/definitions/path"
+        }
+      }
+    },
+    "zone": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "path",
+            "corner",
+            "index"
+          ],
+          "properties": {
+            "kind": {
+              "const": "tab"
+            },
+            "path": {
+              "$ref": "#/definitions/path"
+            },
+            "corner": {
+              "enum": [
+                "topLeft",
+                "topRight",
+                "bottomLeft",
+                "bottomRight"
+              ]
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "path",
+            "side"
+          ],
+          "properties": {
+            "kind": {
+              "const": "split"
+            },
+            "path": {
+              "$ref": "#/definitions/path"
+            },
+            "side": {
+              "enum": [
+                "left",
+                "right",
+                "top",
+                "bottom"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "axis",
+        "initialStacks",
+        "sourceIndex",
+        "zone",
+        "accepted",
+        "expectedStacks",
+        "dragKind"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "axis": {
+          "enum": [
+            "row",
+            "column"
+          ]
+        },
+        "initialStacks": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "$ref": "#/definitions/stack"
+          }
+        },
+        "sourceIndex": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone": {
+          "$ref": "#/definitions/zone"
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "expectedStacks": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/expected"
+          }
+        },
+        "dragKind": {
+          "enum": [
+            "tab",
+            "stack"
+          ]
+        }
+      }
+    }
+  }
+}

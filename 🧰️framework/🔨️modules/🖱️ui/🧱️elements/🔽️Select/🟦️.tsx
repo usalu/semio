@@ -263,6 +263,53 @@ export function resolveSelectPlacement(
   const top = resolvedSide === "bottom" ? trigger.bottom + sideOffset : trigger.top - Math.min(content.height, availableHeight) - sideOffset;
   return { side: resolvedSide, left, top: Math.max(collisionPadding, top), availableHeight, triggerWidth: trigger.width, triggerHeight: trigger.height, transformOrigin: resolvedSide === "bottom" ? "center top" : "center bottom" };
 }
+
+/** 📍️ Where a portaled listbox's `left`/`top` are measured from. */
+export interface SelectFrame {
+  readonly position: "absolute" | "fixed";
+  readonly originLeft: number;
+  readonly originTop: number;
+  readonly viewportWidth: number;
+  readonly viewportHeight: number;
+}
+
+/** 📍️ A shell portal inside a transformed ancestor (the play grid's `translate`) makes `position: fixed`
+ * relative to that ancestor, not the viewport. Coordinates measured from the viewport then paint the
+ * list thousands of pixels off the trigger. A positioned portal host inside that ancestor is the
+ * anchor: absolute `left`/`top` are host-local and travel with the pane. A dialog isolation root
+ * stays the anchor it already was. A page with no transform keeps viewport-fixed coordinates. */
+export function resolveSelectFrame(input: {
+  readonly isolation: { readonly left: number; readonly top: number; readonly width: number; readonly height: number } | null;
+  readonly host: { readonly left: number; readonly top: number; readonly width: number; readonly height: number; readonly positioned: boolean; readonly transformed: boolean } | null;
+  readonly viewport: { readonly width: number; readonly height: number };
+}): SelectFrame {
+  if (input.isolation) return { position: "absolute", originLeft: input.isolation.left, originTop: input.isolation.top, viewportWidth: input.isolation.width, viewportHeight: input.isolation.height };
+  if (input.host?.positioned && input.host.transformed) return { position: "absolute", originLeft: input.host.left, originTop: input.host.top, viewportWidth: input.host.width, viewportHeight: input.host.height };
+  return { position: "fixed", originLeft: 0, originTop: 0, viewportWidth: input.viewport.width, viewportHeight: input.viewport.height };
+}
+
+/** 🧭️ `position: fixed` is trapped by transform, translate, perspective, filter, or paint containment. */
+function createsFixedContainingBlock(style: CSSStyleDeclaration): boolean {
+  const declared = (name: string) => {
+    const value = (style as unknown as Record<string, string>)[name];
+    return !!value && value !== "none";
+  };
+  if (declared("transform") || declared("translate") || declared("scale") || declared("rotate") || declared("perspective") || declared("filter") || declared("backdropFilter")) return true;
+  const contain = style.contain ?? "";
+  if (contain === "strict" || contain.split(/\s+/).includes("paint")) return true;
+  return style.willChange.split(",").some((part) => ["transform", "translate", "scale", "rotate", "perspective", "filter"].includes(part.trim()));
+}
+
+/** 🧭️ Whether `host` or an ancestor is the containing block `position: fixed` would use. */
+function hostInsideFixedContainingBlock(host: HTMLElement): boolean {
+  let node: HTMLElement | null = host;
+  while (node) {
+    if (createsFixedContainingBlock(getComputedStyle(node))) return true;
+    if (node === document.documentElement) break;
+    node = node.parentElement;
+  }
+  return false;
+}
 // #endregion 📐️Contract
 
 // #region 🎛️Root
@@ -491,6 +538,7 @@ const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(funct
 ) {
   const context = useSelectContext();
   const [placement, setPlacement] = React.useState<SelectPlacement>();
+  const [framePosition, setFramePosition] = React.useState<SelectFrame["position"]>("fixed");
   const modalLayer = useDialogLayer(context.open, context.contentRef);
   const floatingHost = useShellFloatingSurfaceHost();
   const typeaheadRef = React.useRef("");
@@ -507,11 +555,17 @@ const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(funct
     if (!context.open || !content || !trigger) return;
     const measure = () => {
       const triggerRect = trigger.getBoundingClientRect();
-      const isolationRect = modalLayer.isolationRoot?.getBoundingClientRect();
-      const relativeTrigger = isolationRect
-        ? { top: triggerRect.top - isolationRect.top, right: triggerRect.right - isolationRect.left, bottom: triggerRect.bottom - isolationRect.top, left: triggerRect.left - isolationRect.left, width: triggerRect.width, height: triggerRect.height }
-        : triggerRect;
-      setPlacement(resolveSelectPlacement(relativeTrigger, content.getBoundingClientRect(), isolationRect ? { width: isolationRect.width, height: isolationRect.height } : { width: window.innerWidth, height: window.innerHeight }, side, align, sideOffset, Math.max(0, collisionPadding), context.direction === "rtl"));
+      const portalHost = (modalLayer.container ?? container ?? floatingHost) instanceof HTMLElement ? (modalLayer.container ?? container ?? floatingHost) as HTMLElement : null;
+      const isolationRect = modalLayer.isolationRoot?.getBoundingClientRect() ?? null;
+      const hostRect = portalHost?.getBoundingClientRect();
+      const frame = resolveSelectFrame({
+        isolation: isolationRect ? { left: isolationRect.left, top: isolationRect.top, width: isolationRect.width, height: isolationRect.height } : null,
+        host: portalHost && hostRect ? { left: hostRect.left, top: hostRect.top, width: hostRect.width, height: hostRect.height, positioned: getComputedStyle(portalHost).position !== "static", transformed: hostInsideFixedContainingBlock(portalHost) } : null,
+        viewport: { width: window.innerWidth, height: window.innerHeight },
+      });
+      setFramePosition(frame.position);
+      const relativeTrigger = { top: triggerRect.top - frame.originTop, right: triggerRect.right - frame.originLeft, bottom: triggerRect.bottom - frame.originTop, left: triggerRect.left - frame.originLeft, width: triggerRect.width, height: triggerRect.height };
+      setPlacement(resolveSelectPlacement(relativeTrigger, content.getBoundingClientRect(), { width: frame.viewportWidth, height: frame.viewportHeight }, side, align, sideOffset, Math.max(0, collisionPadding), context.direction === "rtl"));
     };
     measure();
     const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
@@ -524,7 +578,7 @@ const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(funct
       window.removeEventListener("resize", measure);
       window.removeEventListener("scroll", measure, true);
     };
-  }, [align, collisionPadding, context.contentRef, context.direction, context.open, context.triggerRef, side, sideOffset, modalLayer.isolationRoot, modalLayer.ready]);
+  }, [align, collisionPadding, container, context.contentRef, context.direction, context.open, context.triggerRef, floatingHost, side, sideOffset, modalLayer.container, modalLayer.isolationRoot, modalLayer.ready]);
 
   useIsomorphicLayoutEffect(() => {
     const content = context.contentRef.current;
@@ -622,7 +676,7 @@ const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(funct
       )}
       style={
         {
-          position: modalLayer.isolationRoot ? "absolute" : "fixed",
+          position: framePosition,
           left: placement?.left ?? 0,
           top: placement?.top ?? 0,
           visibility: placement ? undefined : "hidden",

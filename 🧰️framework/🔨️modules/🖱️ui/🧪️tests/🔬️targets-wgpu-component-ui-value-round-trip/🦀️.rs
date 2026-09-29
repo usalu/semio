@@ -79,7 +79,7 @@ mod value_round_trip_tests {
             presence: UiPresence::default(),
             default_open: Some(true),
             action: Some(act("open")),
-            actions: Some(vec![UiTreeItemAction { icon_id: IconName::Save, label: Some(Label::data("Row action")), action: act("rowAction"), placement: Some(UiTreeActionPlacement::Menu) }]),
+            actions: Some(vec![UiTreeItemAction { icon_id: IconName::Save, label: Some(Label::data("Row action")), action: act("rowAction"), placement: Some(UiTreeActionPlacement::Menu), disabled: false }]),
             draggable: Some(true),
             drag_data: None,
             items: None,
@@ -109,7 +109,7 @@ mod value_round_trip_tests {
             TableCell::Number { value: 3.5 },
             TableCell::EditableText { value: "Grüße\n世界".into(), action: act("set-cell") },
             TableCell::Stepper { value: 1.0, min: 0.0, max: 10.0, step: 1.0, action: act("step") },
-            TableCell::Buttons { buttons: vec![UiTreeItemAction { icon_id: IconName::Save, label: None, action: act("btn"), placement: None }] },
+            TableCell::Buttons { buttons: vec![UiTreeItemAction { icon_id: IconName::Save, label: None, action: act("btn"), placement: None, disabled: false }] },
         ];
         for value in values {
             assert_eq!(TableCell::from_value(value.to_value()).expect("valid DslValue decodes"), value);

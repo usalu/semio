@@ -1003,8 +1003,7 @@ impl HttpBodyCancellationHandle {
 // implementor (`LocalSocketBody`, this file's own tests) implements that SAME trait method with a
 // genuinely different concrete body type — collapsing to one concrete type would break the test
 // impl, and fixing that means giving `AsyncHttpTransport` an associated type, out of scope here. (b)
-// `dyn_enum_close!` — its variant DSL has no per-variant `#[cfg]` (confirmed empirically for
-// `VersionGraph`'s own `#[cfg(feature = "vcs")]` case, same file family), so a `#[cfg(test)]`-only
+// `dyn_enum_close!` — its variant DSL has no per-variant `#[cfg]`, so a `#[cfg(test)]`-only
 // variant cannot be expressed in one enum declaration. Revisit alongside `AsyncHttpTransport` if
 // that trait ever gains an associated `Body` type.
 // 🚫️async: E6 dyn-compat — machine-readable form of the `dedyn-fw-os-misc` reasoning above, added
@@ -1591,6 +1590,15 @@ impl TokenBucket {
     }
 }
 
+/// 💰️ One package's byte budget at one instant: what it may still move before the next refill turn, and its whole
+/// per-turn allowance. A caller about to move a known number of bytes compares the two and waits for a refill turn instead
+/// of starting a transfer the budget would cut short.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct HttpPackageBudget {
+    pub remaining_bytes: u64,
+    pub capacity_bytes: u64,
+}
+
 /// 🐌️ How often [`HttpPool::spawn_refill_driver`] tops every tracked package's bucket back to its
 /// `network_bytes_per_min` cap in production: `NativeDirectoryTransport::with_new_http_pool_now` starts its
 /// pool's driver at this interval, so the budget is an allowance per minute, never a lifetime one. This
@@ -1716,6 +1724,18 @@ impl HttpPool {
         let Some(bucket) = buckets.get_mut(package) else { return self.bytes_per_minute_cap };
         bucket.observe_refill_epoch(refill_epoch);
         bucket.remaining_bytes
+    }
+
+    /// 💰️ `package`'s budget right now — an untracked package reads as a full bucket.
+    // 🚫️async: E1 pure in-memory read a blocking gateway thread polls while it waits for a refill turn — see R9.
+    pub fn package_budget_now(&self, package: &PackageId) -> HttpPackageBudget {
+        let refill_epoch = self.refill_epoch.load(Ordering::SeqCst);
+        let mut buckets = self.buckets.lock().expect("HttpPool buckets mutex poisoned");
+        let remaining_bytes = buckets.get_mut(package).map_or(self.bytes_per_minute_cap, |bucket| {
+            bucket.observe_refill_epoch(refill_epoch);
+            bucket.remaining_bytes
+        });
+        HttpPackageBudget { remaining_bytes, capacity_bytes: self.bytes_per_minute_cap }
     }
 
     /// ▶️ Starts one finite maintenance turn per refill interval. A turn advances a shared epoch

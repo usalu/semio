@@ -1,0 +1,22 @@
+{
+ "plugin": "demonstrator",
+ "dir": "🎪️demonstrator",
+ "apps": [
+  {
+   "app": "s.demonstrator.playground@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "crate::editor::playground::PlaygroundEditor",
+   "create": "crate::editor::playground::create_playground_editor",
+   "app": "s.demonstrator.playground@1/*#editor"
+  }
+ ]
+}

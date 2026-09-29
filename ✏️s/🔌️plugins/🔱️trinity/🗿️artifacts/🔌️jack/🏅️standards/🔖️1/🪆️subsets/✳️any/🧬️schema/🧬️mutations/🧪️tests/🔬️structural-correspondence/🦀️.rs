@@ -395,5 +395,53 @@ fn direct_owners_descriptors_and_language_neutral_catalog_correspond() {
         }
         assert!(vectors.iter().any(|vector| vector["mutationId"] == kind && vector["mutationDirectoryName"] == directory), "direct owner {directory} must correspond to the JSON catalog");
     }
+    {
+        let kind = "set-query";
+        let aggregate_variant = "SetQuery";
+        let directory = "🔎️set-query";
+        let binary_tag = 8;
+        let owner = mutation_root.join("🔎️set-query");
+        let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
+        let descriptor_source = std::fs::read_to_string(owner.join("🔣️.json")).expect("direct language-neutral descriptor");
+        let descriptor: pack::JsonValue = pack::parse_json(&descriptor_source).expect("direct descriptor must be valid JSON");
+        assert!(descriptor_kinds.contains(&kind), "direct owner {directory} must have a derived descriptor");
+        assert!(source.contains("protocol::MutationKind"), "direct owner {directory} must implement its payload");
+        assert!(!source.contains(concat!("::", "mutation::")), "direct owner {directory} must not route through a nested mutation module");
+        assert_eq!(descriptor["semanticKind"], kind);
+        assert_eq!(descriptor["aggregateVariant"], aggregate_variant);
+        assert_eq!(descriptor["payloadSchema"], "🧬️schema/🔣️.json");
+        assert_eq!(descriptor["textOpcode"], kind);
+        assert_eq!(descriptor["binaryTag"], binary_tag);
+        assert_eq!(descriptor["invertibility"], "explicit-mutation");
+        assert_eq!(descriptor["diffParticipation"], "detect");
+        assert_eq!(descriptor["composition"], "atomic");
+        assert_eq!(descriptor["requiredLanguageSurfaces"], pack::json!(["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]));
+        assert!(descriptor["owner"].as_str().expect("descriptor owner").ends_with(&format!("/🧬️mutations/{directory}")));
+        assert!(!descriptor["outcomeClasses"].as_array().expect("descriptor outcome classes").is_empty());
+        let payload_schema_source = std::fs::read_to_string(owner.join("🧬️schema/🔣️.json")).expect("direct JSON payload schema");
+        let payload_schema: pack::JsonValue = pack::parse_json(&payload_schema_source).expect("direct payload schema must be valid JSON");
+        assert_eq!(payload_schema["title"], aggregate_variant);
+        {
+            let surface_source = std::fs::read_to_string(owner.join("🟦️.ts")).expect("direct mutation surface");
+            assert!(surface_source.contains(kind) || surface_source.contains(aggregate_variant));
+        }
+        {
+            let surface_source = std::fs::read_to_string(owner.join("🔗️.graphql")).expect("direct mutation surface");
+            assert!(surface_source.contains(kind) || surface_source.contains(aggregate_variant));
+        }
+        {
+            let surface_source = std::fs::read_to_string(owner.join("🛰️.proto")).expect("direct mutation surface");
+            assert!(surface_source.contains(kind) || surface_source.contains(aggregate_variant));
+        }
+        {
+            let surface_source = std::fs::read_to_string(owner.join("📝️text/🦀️.rs")).expect("direct mutation surface");
+            assert!(surface_source.contains(kind) || surface_source.contains(aggregate_variant));
+        }
+        {
+            let surface_source = std::fs::read_to_string(owner.join("💾️binary/🦀️.rs")).expect("direct mutation surface");
+            assert!(surface_source.contains(kind) || surface_source.contains(aggregate_variant));
+        }
+        assert!(vectors.iter().any(|vector| vector["mutationId"] == kind && vector["mutationDirectoryName"] == directory), "direct owner {directory} must correspond to the JSON catalog");
+    }
     assert!(!catalog_kinds.contains(&"set-snapshot"));
 }

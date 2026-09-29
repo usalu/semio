@@ -1,6 +1,21 @@
 
 use super::*;
 
+/// ♻️ LAW (ticket 26/09/23 session 14d, WG11): a retired editor releases its text a page per grant — a 1 MiB document (with a
+/// multi-byte scalar straddling every page edge) reaches terminal-empty in about 16 grants (at most 20), never one grant per scalar.
+#[test]
+fn a_retired_editor_releases_its_text_a_page_per_grant() {
+    let mut host = EditorHost::new();
+    host.set_text("🙂a".repeat(1024 * 1024 / 5));
+    let mut retirement = EditorHostRetirement::new(host);
+    let mut grants = 1;
+    while !retirement.close_step() {
+        grants += 1;
+        assert!(grants <= 20, "a 1 MiB document retires page by page");
+    }
+    assert!(retirement.terminal_is_empty());
+}
+
 #[test]
 fn insert_space_inside_token_inserts_without_replacing() {
     let mut host = EditorHost::new();

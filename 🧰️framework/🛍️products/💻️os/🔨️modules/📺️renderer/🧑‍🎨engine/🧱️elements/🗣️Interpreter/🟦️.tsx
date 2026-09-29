@@ -112,6 +112,8 @@ import {
   UiDocumentStore,
   emitIntent,
   guestPresenceTableV1,
+  rowActionBinding,
+  rowActivationBinding,
   subscribeGuestPresenceV1,
   useUiDocumentRevision,
   useUiDocumentRoot,
@@ -135,6 +137,8 @@ import {
   type StackLayout,
   type StyleSpec,
   type PatchRejection,
+  type RowAction,
+  type RowTarget,
   type SurfaceId,
   type SurfaceProps,
   type UiDocumentLimits,
@@ -2078,7 +2082,7 @@ export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentStat
   const domId = uiNodeDomId(state.surface, windowPath ?? record.key, record.id);
   registerTreeWalkRow(walk, windowPath ?? record.key, domId);
   const presence = overlay.byKey.get(record.key) ?? {};
-  const activateBinding = (record.bindings ?? []).find((b) => b.trigger === "activate");
+  const activateBinding = rowActivationBinding(record);
   const hoverBinding = (record.bindings ?? []).find((b) => b.trigger === "hoverPreview");
   const childItems = collectTreeItems(state, record.children ?? []);
   const controlRecords = collectTreeItemControls(state, record.children ?? []);
@@ -2106,8 +2110,22 @@ export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentStat
     items: childItems.length > 0 ? childItems.map((child) => treeItemToTreeData(store, state, child, context, overlay, leftoverIds, walk, windowPath ?? parentWindowPath)) : undefined,
     onClick: activateBinding ? () => dispatchTrigger(context, record, "activate") : (pickClick ?? (activatableControl ? () => dispatchTrigger(context, activatableControl, "activate") : undefined)),
     onPointerEnter: hoverBinding ? () => dispatchTrigger(context, record, "hoverPreview") : undefined,
-    actions: (props.rowActions ?? []).length > 0 ? (props.rowActions ?? []).map((action) => ({ kind: "button" as const, icon: resolveControlIconNode(action.icon, 12), title: action.label ? wireLabel(action.label) : undefined, placement: action.placement ?? "row", onClick: () => context.onIntent(context.store.buildIntent(record, action.action)) })) : undefined,
+    actions: rowTreeActions(record, props, context),
   };
+}
+
+/** 🎬️ A tree row's actions as `TreeDataItem` buttons — each its verb on the row's ONE target, dispatched exactly as a table
+ * row with the same target dispatches it; a disabled action renders disabled and its dispatch is refused. */
+function rowTreeActions(record: UiNodeRecord, props: Extract<Component, { type: "treeItem" }>, context: UiInterpreterContext) {
+  const target = props.target;
+  if (!target || (props.rowActions ?? []).length === 0) return undefined;
+  return (props.rowActions ?? []).map((action) => ({ kind: "button" as const, icon: resolveControlIconNode(action.icon, 12), title: action.label ? wireLabel(action.label) : undefined, placement: action.placement ?? "row", disabled: action.disabled === true, onClick: () => dispatchRowAction(record, target, action, context) }));
+}
+
+/** 🎬️ Fires one row action on its target through the store, or nothing when the contract twin refuses it (disabled). */
+function dispatchRowAction(record: UiNodeRecord, target: RowTarget, action: RowAction, context: UiInterpreterContext): void {
+  const resolved = rowActionBinding(target, action);
+  if (resolved.ok) context.onIntent(context.store.buildIntent(record, resolved.binding));
 }
 
 function TreeView({ store, record, context }: { readonly store: UiDocumentStore; readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
@@ -2539,7 +2557,7 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
     }
   };
   const activateRow = (row: UiNodeRecord) => {
-    if ((row.bindings ?? []).some((binding) => binding.trigger === "activate")) {
+    if (rowActivationBinding(row)) {
       void dispatchTrigger(context, row, "activate");
     }
   };
@@ -2694,7 +2712,8 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
                             icon={resolveControlIconNode(action.icon)}
                             aria-label={label}
                             title={label}
-                            onClick={() => context.onIntent(context.store.buildIntent(row, action.action))}
+                            disabled={action.disabled === true}
+                            onClick={() => props.target && dispatchRowAction(row, props.target, action, context)}
                           />
                         );
                       })}
@@ -2814,7 +2833,7 @@ if (import.meta.vitest) {
   const { registerTests1: registerTableWindowTests } = await import("./🧪️tests/📊️table/🟦️.tsx");
   await registerTableWindowTests(
     import.meta.vitest,
-    { TreeWindowContext, UiDocumentStore, UiNodeView, tableColumnWindowRequestV1, tableWindowNextColumnV1, tableWindowNextRowV1, tableWindowScrollLeftForColumnV1, tableWindowScrollTopForRowV1, tableWindowViewportCapRowsV1, treeWindowRowHeightPx },
+    { TreeWindowContext, UiDocumentStore, UiNodeView, treeItemToTreeData, tableColumnWindowRequestV1, tableWindowNextColumnV1, tableWindowNextRowV1, tableWindowScrollLeftForColumnV1, tableWindowScrollTopForRowV1, tableWindowViewportCapRowsV1, treeWindowRowHeightPx },
     { url: import.meta.url },
   );
   const { registerTests1: registerProgressTests } = await import("./🧪️tests/📶️progress/🟦️.tsx");

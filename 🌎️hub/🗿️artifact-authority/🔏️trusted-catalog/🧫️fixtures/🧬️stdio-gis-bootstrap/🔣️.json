@@ -32,7 +32,7 @@
         "componentBlake3": "1212121212121212121212121212121212121212121212121212121212121212",
         "descriptorSha256": "1313131313131313131313131313131313131313131313131313131313131313",
         "executionProtocol": {
-          "appChannelVersion": 19
+          "appChannelVersion": 20
         },
         "browserActor": {
           "kind": "closed-browser-actor",
@@ -68,7 +68,7 @@
         "componentBlake3": "2222222222222222222222222222222222222222222222222222222222222222",
         "descriptorSha256": "2323232323232323232323232323232323232323232323232323232323232323",
         "executionProtocol": {
-          "appChannelVersion": 19
+          "appChannelVersion": 20
         },
         "browserActor": {
           "kind": "none"
@@ -106,7 +106,7 @@
         }
       }
     ],
-    "generationId": "7d60c5698681ae8c3bf2bd7a522c1a09996a01f64083498a4c4a213884d6ca7f"
+    "generationId": "aa17c878184a5aa832f9766c9e30b25e914c53aa83afe619cd7a0968a4dec227"
   },
   "sources": {
     "stdioReceipts": "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json",
@@ -323,12 +323,12 @@
         "accepted": false
       }
     ],
-    "initialGenerationId": "7d60c5698681ae8c3bf2bd7a522c1a09996a01f64083498a4c4a213884d6ca7f",
+    "initialGenerationId": "aa17c878184a5aa832f9766c9e30b25e914c53aa83afe619cd7a0968a4dec227",
     "failedCandidateGenerationId": "f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1",
-    "currentAfterFailedCandidate": "7d60c5698681ae8c3bf2bd7a522c1a09996a01f64083498a4c4a213884d6ca7f",
+    "currentAfterFailedCandidate": "aa17c878184a5aa832f9766c9e30b25e914c53aa83afe619cd7a0968a4dec227",
     "nextGenerationId": "3434343434343434343434343434343434343434343434343434343434343434",
     "stalePlan": {
-      "issuedGenerationId": "7d60c5698681ae8c3bf2bd7a522c1a09996a01f64083498a4c4a213884d6ca7f",
+      "issuedGenerationId": "aa17c878184a5aa832f9766c9e30b25e914c53aa83afe619cd7a0968a4dec227",
       "observedGenerationId": "3434343434343434343434343434343434343434343434343434343434343434",
       "expected": "stale"
     },

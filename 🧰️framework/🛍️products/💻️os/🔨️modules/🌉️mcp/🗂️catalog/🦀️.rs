@@ -254,8 +254,8 @@ pub enum ToolExposure {
 //#endregion 🔖️ToolExposure
 
 //#region 🔖️CapabilityPresentation
-/// 📝️ One argument's search/display-facing summary — deliberately not the full `manifest::ActionArgDef`
-/// (whose `schema`/`presentation` already live in `input_schema` below; repeating them here would be
+/// 📝️ One argument's search/display-facing summary — on the wire deliberately not the full `manifest::ActionArgDef`
+/// (whose `schema`/`presentation` already live in `input_schema` below; repeating them there would be
 /// duplicate state).
 #[derive(Clone, Debug, PartialEq, serde::Serialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -264,6 +264,12 @@ pub struct CapabilityArgSummary {
     pub id: String,
     pub label: String,
     pub required: bool,
+    /// 🧮️ The declared argument itself, never on the wire: `ActionAdapter::prepare` runs an agent's input through the
+    /// shells' one effective-args rule (`manifest::effective_action_args`) with it, so an omitted optional argument
+    /// runs with its declared `default`. `None` only for a summary decoded from a value.
+    #[serde(skip)]
+    #[value(skip)]
+    pub definition: Option<manifest::ActionArgDef>,
 }
 
 /// 🎨️ UI-shaped presentation hints carried through from the source `ActionDefinition`/
@@ -508,7 +514,7 @@ fn capability_from_action(id: &str, owner: CapabilityOwner, artifact_kind: Optio
             category: action.category.clone(),
             keys: action.keys.clone(),
             in_palette: action.in_palette,
-            args: action.args.iter().map(|arg| CapabilityArgSummary { id: arg.id.clone(), label: arg.label.resolve(terminology, locale).to_string(), required: arg.required }).collect(),
+            args: action.args.iter().map(|arg| CapabilityArgSummary { id: arg.id.clone(), label: arg.label.resolve(terminology, locale).to_string(), required: arg.required, definition: Some(arg.clone()) }).collect(),
         },
         examples: action.semantics.examples.iter().map(|request| CapabilityExample { request: request.clone(), input: serde_json::Value::Null }).collect(),
         source,
@@ -542,7 +548,7 @@ fn capability_from_command(id: &str, owner: CapabilityOwner, artifact_kind: Opti
             category: Some(command.category.clone()),
             keys: command.keybindings.first().map(|kb| kb.chord.clone()),
             in_palette: command.in_palette,
-            args: command.args.iter().map(|arg| CapabilityArgSummary { id: arg.id.clone(), label: arg.label.resolve(terminology, locale).to_string(), required: arg.required }).collect(),
+            args: command.args.iter().map(|arg| CapabilityArgSummary { id: arg.id.clone(), label: arg.label.resolve(terminology, locale).to_string(), required: arg.required, definition: Some(arg.clone()) }).collect(),
         },
         examples: command.semantics.examples.iter().map(|request| CapabilityExample { request: request.clone(), input: serde_json::Value::Null }).collect(),
         source,

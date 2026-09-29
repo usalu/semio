@@ -40,3 +40,39 @@ fn inspector_slider_control_rides_on_a_tree_row() {
     let change = bindings.iter().find(|binding| binding["trigger"] == "change").unwrap_or_else(|| panic!("the control commits on change: {control}"));
     assert!(change["action"].to_string().contains("patchFlowWidgets"), "{change}");
 }
+
+#[test]
+fn inspector_exposes_typed_operator_fields_and_connected_sources() {
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    crate::flow_operators::installed();
+    let mut host = semio_framework_os_flow::FlowHost::default();
+    let source = host.add_widget(r#"{"kind":"inputSlider","id":"width"}"#, 0.0, 0.0).unwrap();
+    let shape = host.add_widget(r#"{"kind":"neuron","id":"shape","neuronKind":"brep.mesh.box"}"#, 200.0, 0.0).unwrap();
+    let labels = crate::editor::generation3d::terminology::generation3d_labels(&semio_framework_plugin::ViewModel::default());
+    let tree = render(&host.host_snapshot, &[shape.clone()], labels).unwrap();
+    let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).unwrap();
+    let projection: serde_json::Value = serde_json::from_str(&projection).unwrap();
+    let rows = projection["children"][0]["children"].as_array().unwrap();
+    let row = rows.iter().find(|row| row["key"] == "procedural-play-inspector.input.width").unwrap();
+    assert_eq!(row["children"][0]["component"]["type"], "input");
+    assert!(row["children"][0]["bindings"].to_string().contains("setWidgetInput"));
+    assert!(row["children"][0]["bindings"].to_string().contains("commit"));
+    host.connect_ports(&source, "number", &shape, "width").unwrap();
+    let tree = render(&host.host_snapshot, &[shape], labels).unwrap();
+    let connected = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).unwrap();
+    assert!(connected.contains("Connected"));
+    assert!(!connected.contains("procedural-play-inspector.input.width.input"));
+    host.retire_cold();
+}
+
+#[test]
+fn inspector_boolean_controls_and_literal_text_have_distinct_accessible_controls() {
+    let boolean = editable_input("boolean", "Enabled", "shape", "enabled", None, "true", None).unwrap();
+    let text = editable_input("text", "Text", "note", "text", None, "true", Some(InputKind::LongText)).unwrap();
+    let boolean = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(boolean)).unwrap();
+    let text = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(text)).unwrap();
+    assert!(boolean.contains("checkbox"));
+    assert!(boolean.contains("Enabled"));
+    assert!(text.contains("longText"));
+    assert!(text.contains("Text"));
+}

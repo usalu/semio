@@ -1258,3 +1258,37 @@ async fn media_export_wire_matches_the_language_neutral_v19_fixture_above_number
     }
 }
 //#endregion 📥️CommandIngressPages
+
+
+/// 🪪️ The scalar owner query roundtrips the shared wire vectors without a document archive.
+#[semio_framework_async_macros::async_test]
+async fn document_identity_wire_matches_the_language_neutral_v20_fixture() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️fixtures/🪪️document-identity-wire-v20/🔣️.json")).unwrap();
+    assert_eq!(fixture["channelVersion"].as_u64().unwrap(), CHANNEL_VERSION as u64);
+    assert!(serde_json::from_value::<AppDocumentIdentity>(serde_json::json!({ "appInstanceId": 17 })).is_err());
+    assert!(serde_json::from_value::<AppDocumentIdentity>(serde_json::json!({ "appInstanceId": 17, "parentDocumentId": null, "claimedControllerId": "foreign" })).is_err());
+    for row in fixture["cases"].as_array().unwrap() {
+        let seq = row["seq"].as_str().unwrap().parse::<u64>().unwrap();
+        let identity: AppDocumentIdentity = serde_json::from_value(row["identity"].clone()).unwrap();
+        let command = AppCommand::ReadDocumentIdentity { seq };
+        let encoded = encode_app_command(&command).await.unwrap();
+        let command_bytes: Vec<u8> = serde_json::from_value(row["commandBytes"].clone()).unwrap();
+        assert_eq!(encoded.front_page().unwrap().as_slice(), command_bytes);
+        assert_eq!(decode_app_command(&command_bytes).await.unwrap(), command);
+        let mut paged = PagedAppCommandDecodeCursor::new(encoded);
+        let decoded = loop { if let Some(decoded) = paged.step().unwrap() { break decoded; } };
+        assert_eq!(decoded, command);
+        let frame = AppFrame::DocumentIdentity { in_reply_to: seq, identity };
+        let frame_bytes: Vec<u8> = serde_json::from_value(row["frameBytes"].clone()).unwrap();
+        assert_eq!(encode_app_frame(&frame).await, frame_bytes);
+        assert_eq!(decode_app_frame(&frame_bytes).await.unwrap(), frame);
+        let mut trailing = frame_bytes.clone();
+        trailing.push(0);
+        assert!(decode_app_frame(&trailing).await.is_err());
+    }
+    for bytes in [vec![31, 0, 0, 2], vec![31, 0, 0, 1, 0], vec![31, 0, 255, 255, 255, 255, 31, 0]] {
+        assert!(decode_app_frame(&bytes).await.is_err());
+    }
+    let oversized = AppFrame::DocumentIdentity { in_reply_to: 0, identity: AppDocumentIdentity { app_instance_id: 0, parent_document_id: Some("x".repeat(513)) } };
+    assert!(decode_app_frame(&encode_app_frame(&oversized).await).await.is_err());
+}

@@ -4,7 +4,7 @@
   "title": "JackArtifact",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "name", "manifest", "camera", "content"],
+  "required": ["schema", "name", "manifest", "camera", "content", "query"],
   "properties": {
     "schema": { "type": "string", "x-semio-state": "artifact" },
     "name": { "type": "string", "x-semio-state": "artifact" },
@@ -16,7 +16,8 @@
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio"
     },
-    "rootNodeId": { "type": "string", "x-semio-state": "artifact" }
+    "rootNodeId": { "type": "string", "x-semio-state": "artifact" },
+    "query": { "type": "string", "x-semio-state": "artifact" }
   },
   "$defs": {
     "Camera": {

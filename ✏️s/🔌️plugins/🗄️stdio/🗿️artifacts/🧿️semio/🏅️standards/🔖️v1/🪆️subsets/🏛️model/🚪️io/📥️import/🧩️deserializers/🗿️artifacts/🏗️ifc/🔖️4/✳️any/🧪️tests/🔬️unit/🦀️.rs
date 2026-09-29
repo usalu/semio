@@ -6,7 +6,7 @@ const FIXTURE: &str = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFI
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn fixture_snapshot() -> IfcSnapshot {
-    let doc = semio_s_artifact_stdio_step::engine::part21::parse_part21(FIXTURE).expect("parse fixture");
+    let doc = semio_s_artifact_stdio_contract::part21::parse_part21(FIXTURE).expect("parse fixture");
     semio_s_artifact_stdio_ifc::schema::snapshot::from_part21_document(semio_s_artifact_stdio_ifc::STDIO_IFC_DOCUMENT_SCHEMA, &doc)
 }
 

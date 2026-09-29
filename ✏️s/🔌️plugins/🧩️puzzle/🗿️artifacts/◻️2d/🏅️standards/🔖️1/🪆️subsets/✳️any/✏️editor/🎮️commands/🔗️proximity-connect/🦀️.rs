@@ -1,7 +1,7 @@
 //! 🔗️ `proximity-connect` command, and the proximity search the node drop and `translateSelection` share.
 
 use crate::editor::puzzle2d::{
-    fixture_nodes, new_edge_id, puzzle2d_handle_world_position, puzzle2d_kinds_compatible, puzzle2d_node_reach, puzzle2d_occupied_handles, puzzle2d_push_edge, Puzzle2dActionCtx, PUZZLE2D_PROXIMITY_CONNECT_MAX, PUZZLE2D_PROXIMITY_GESTURE_MAX,
+    fixture_nodes, new_edge_id, puzzle2d_entity_hidden, puzzle2d_handle_world_position, puzzle2d_kinds_compatible, puzzle2d_node_reach, puzzle2d_occupied_handles, puzzle2d_push_edge, Puzzle2dActionCtx, PUZZLE2D_PROXIMITY_CONNECT_MAX, PUZZLE2D_PROXIMITY_GESTURE_MAX,
 };
 use serde_json::{json, Value};
 use std::collections::HashSet;
@@ -20,7 +20,7 @@ fn open_handles(node: &Value) -> Vec<(String, String, f64, f64)> {
         .and_then(Value::as_array)
         .into_iter()
         .flatten()
-        .filter(|handle| handle.get("hidden").and_then(Value::as_bool) != Some(true) && handle.get("locked").and_then(Value::as_bool) != Some(true))
+        .filter(|handle| !puzzle2d_entity_hidden(handle) && handle.get("locked").and_then(Value::as_bool) != Some(true))
         .filter_map(|handle| {
             let id = handle.get("id").and_then(Value::as_str)?.to_string();
             let kind = handle.get("handleKind").and_then(Value::as_str).unwrap_or_default().to_string();
@@ -49,7 +49,7 @@ pub fn puzzle2d_proximity_pairs(fixture: &Value, node_id: &str, radius: f64) -> 
     let Some(moved) = nodes.iter().find(|node| node.get("id").and_then(Value::as_str) == Some(node_id)) else {
         return Vec::new();
     };
-    if moved.get("hidden").and_then(Value::as_bool) == Some(true) || moved.get("locked").and_then(Value::as_bool) == Some(true) {
+    if puzzle2d_entity_hidden(moved) || moved.get("locked").and_then(Value::as_bool) == Some(true) {
         return Vec::new();
     }
     let moved_handles = open_handles(moved);
@@ -61,7 +61,7 @@ pub fn puzzle2d_proximity_pairs(fixture: &Value, node_id: &str, radius: f64) -> 
     let mut claimed = puzzle2d_occupied_handles(fixture);
     let mut reach: Vec<&Value> = Vec::new();
     for node in nodes {
-        if node.get("id").and_then(Value::as_str) == Some(node_id) || node.get("hidden").and_then(Value::as_bool) == Some(true) {
+        if node.get("id").and_then(Value::as_str) == Some(node_id) || puzzle2d_entity_hidden(node) {
             continue;
         }
         let (x, y) = centre(node);

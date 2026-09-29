@@ -88,7 +88,8 @@ const DB_IO_PROCESS_ITEM_CREDIT: usize = DB_IO_OPERATION_ITEMS * DB_IO_OPERATION
 const DB_IO_PROCESS_CONTROL_CREDIT: usize = DB_IO_OPERATION_ITEMS * DB_IO_OPERATION_CONTROL_CREDIT;
 
 /// 🧱️ Fixed writer signals/controllers are process backing, separate from recyclable operation credit.
-pub const DB_IO_WRITER_STATIC_BACKING_BYTES: u64 = (writer::release::WAL_WRITER_SIGNAL_BACKING_BYTES + writer::release::WAL_WRITER_CONTROLLER_BACKING_BYTES) as u64;
+pub const DB_IO_WRITER_STATIC_BACKING_BYTES: u64 =
+    (writer::release::WAL_WRITER_SIGNAL_BACKING_BYTES + writer::release::WAL_WRITER_PARK_CLOCK_BACKING_BYTES + writer::release::WAL_WRITER_CONTROLLER_BACKING_BYTES + writer::WAL_WRITER_ADMISSION_BACKING_BYTES) as u64;
 pub const DB_IO_PROCESS_WITH_WRITER_BACKING_BYTES: u64 = DB_IO_PROCESS_BYTES + DB_IO_WRITER_STATIC_BACKING_BYTES;
 const _: () = assert!(DB_IO_WRITER_STATIC_BACKING_BYTES <= 4 * 1024 * 1024);
 
@@ -7632,10 +7633,14 @@ impl Drop for MemoryStorage {
 
 impl WalStorage for MemoryStorage {
     async fn acquire_writer(&self, document: &ArtifactId) -> Result<WalWriterPermit, DbError> {
-        match memory_execute(DbIoTask::WalWriterAcquire { backend: self.control, document: memory_document(document)? }).await? {
-            DbIoResult::WalWriter(writer) => Ok(writer),
-            _ => Err(DbError::Internal("memory WAL writer result taxonomy".to_string())),
-        }
+        let document = memory_document(document)?;
+        writer::admitted_acquire(self.control, std::time::Duration::from_millis(writer::WAL_WRITER_ADMISSION_WAIT_MS), || async {
+            match memory_execute(DbIoTask::WalWriterAcquire { backend: self.control, document: document.clone() }).await? {
+                DbIoResult::WalWriter(writer) => Ok(writer),
+                _ => Err(DbError::Internal("memory WAL writer result taxonomy".to_string())),
+            }
+        })
+        .await
     }
     async fn create_segment(&self, writer: &WalWriterPermit, index: u64) -> Result<(), DbError> {
         match memory_execute(DbIoTask::WalCreate { backend: self.control, document: writer.document().clone(), writer: writer.key(), index }).await? {
@@ -8858,6 +8863,12 @@ mod fs_storage {
             super::open_db_io_backend_admitted(&pool, || Self::open_once(pool.clone(), root)).await
         }
 
+        /// 📊️ This backend's writer admission line so far — how many acquisitions had to wait for a writer, how many
+        /// waits were refused, and how many wait now.
+        pub(crate) fn writer_admission_census(&self) -> super::writer::WalWriterAdmissionCensus {
+            super::writer::admission_census(self.control)
+        }
+
         /// 🎯️ One filesystem backend open attempt, refused at once when the backend capacity is taken.
         async fn open_once(pool: Arc<WorkerPool>, root: &Path) -> Result<Self, DbStorageOpenRejected> {
             let root = root.to_str().ok_or_else(|| DbError::InvalidArgument("filesystem storage root is not UTF-8".to_string())).and_then(DbIoText::try_from_str)?;
@@ -8900,7 +8911,11 @@ mod fs_storage {
 
     impl WalStorage for FsStorage {
         async fn acquire_writer(&self, document: &ArtifactId) -> Result<WalWriterPermit, DbError> {
-            wal_writer(execute(DbIoTask::WalWriterAcquire { backend: self.control, document: document_text(document)? }).await?)
+            let document = document_text(document)?;
+            super::writer::admitted_acquire(self.control, std::time::Duration::from_millis(super::writer::WAL_WRITER_ADMISSION_WAIT_MS), || async {
+                wal_writer(execute(DbIoTask::WalWriterAcquire { backend: self.control, document: document.clone() }).await?)
+            })
+            .await
         }
 
         async fn create_segment(&self, writer: &WalWriterPermit, index: u64) -> Result<(), DbError> {

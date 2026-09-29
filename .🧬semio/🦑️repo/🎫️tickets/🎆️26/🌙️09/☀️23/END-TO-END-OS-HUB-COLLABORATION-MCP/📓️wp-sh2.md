@@ -5,6 +5,55 @@ Rules: `📓️session-14-preamble.md` (+ 13/12). Inputs `wp-sh2/`, expendable c
 `.🧬semio/🌐hub/s14-sh2-*`. Ports: hubs 8080–8089, serves 6580–6589. Guest-linked edits: prepared patch + overlay proof
 during the freeze, landed compile-atomic in window 3.
 
+## Session 15
+
+Successor (2026-09-29 19:2x; predecessor died ~18:45 without handover). Focus: APPROVED P2 Space set (guest + host) + S18's Space
+directory stall at ~28 docs (same set: bounded delta batches). Guest freeze ON until "WINDOW 5 OPEN".
+
+| # | Item | Status |
+|---|---|---|
+| R | reconcile the predecessor's last step | **tree clean**: `p2-set.py apply` (dry) on live 19:2x **123/123 apply, 0 applied, 0 3-way, 0 conflicts** (every listed tree file = the set's base); payload = stage (130 listed, 123 changed, 0 stale; captured 18:44 after the 18:28 E0277 fix); no SH2 process or lane ticket alive; backups `s14-sh2-p2-backup/*` are overlay-root only |
+| 1 | P2 guest proof (overlay) | **p2f 19:40–19:43** (18:44 payload + oracle rebase): kernel `os_directory` **63/63**, kernel `sync,ureq` check 0 errors, space-home caa **123/123**, space-home plain **28/28**, space plain **52/52**, plugin-space **85/1** (`descriptor_is_fresh` = describe regen at landing), renderer-wgpu check 0 errors, 0 warnings in set files; space-space caa **95/17** = 13 store-drop-witness + 2 missing-row code reds (all tree-baseline tests) + 2 P2 lane-assertion reds → fixed in the stage (`p2/p2-registered-fixture.py`), re-proof **p2g queued** (overlay lane 6th). The 2 missing-row laws go green only with T6 row 12 (S20: reducer codes cross the job boundary) |
+| 2 | P2 host proof (tsc; ShellHost changed 18:05, space script 17:20 — after the last tsc 17:19) | **tsc clean of new errors** (overlay synced 19:26 + set written): os files 27 = only the overlay dual-module `typedwire` test (0 in set files); space script 38 = tree baseline 38 (TS18046 class); bun TS laws (activity twin, 1 000 check-ins → 15 batches, largest 65 341 B ≤ 64 KiB, +1 check-in = 1 batch); 6 space oracles clean in the overlay (17/31/54/23/11/11). Rule-20 boot = at landing (host part cannot land alone) |
+| 3 | t6-queue row (host part NOT safe alone: the host feeds `applyDirectoryEvents`, a verb only the guest part adds) | **row 20 appended 19:3x** (proof status in the row; one landing, guest + host) |
+| 4 | live proof on 7800 t6 (after 'T6 HUB READY' + the round lands) | waiting |
+| 5 | space oracle `home-directory-identity-rows-check` red on the TREE (pin drift, peer 13:17) | **LANDED (rule 22, test-only)**: 54 clean; set re-based (1 file, 3-way clean), 123/123 |
+| 6 | coordinator: dedupe the evening-predecessor section | done: folded under `## Session 14` as `### Session 14a` |
+
+### Log 15
+
+- 19:2x predecessor's last runs (captures `.🧬semio/🌐hub/s14-sh2-captures/`): `p2c` 17:54–18:13 (base space-space caa 89/17 = tree
+  baseline, `p2/base-fails.txt`); `p2d` 18:14–18:34 space-space caa **compile red E0277** (`TypedOperationFixtureReceipt` has no `Debug`,
+  `.expect_err` in the request-delete / open-artifact unit tests) — fixed in the stage 18:28 (`.err().expect(…)`), never re-proven; same
+  run: space plain 52/52, kernel `os_directory` 63/63, space-home caa 123/123, plugin-space 85/1 (`descriptor_is_fresh` = describe regen at
+  landing), renderer-wgpu `check --lib --tests` 0 errors (4m21s). `p2e-space.txt` empty (never started). `p2-contract-case.txt` 18:49
+  (`contract fundamental --case 🫧️mutate-s-space-1-any-viewer-transient`): for the new case only the repo-wide classes every transient
+  lane shares (no runtime inventory; no third-party library, decision records a surveyed negative) — same as P1 / generation3d.
+- 19:25 overlay proof queued (`SH2_TAG=p2f sh2-overlay.sh p2-proof`, driver pid 5063, mutex 5066; new job `p2-proof` = sync → clear-created →
+  `apply --write` → space-space caa + plain, kernel `os_directory`, kernel `sync,ureq` check, space-home caa + plain, plugin-space,
+  renderer-wgpu check; no base run — the base is `p2/base-fails.txt`). Lane: c13 holding, SH2 next.
+- 19:26 overlay synced by hand (141 copied) + set written; `tsc` (`p2/tsconfig-p2-os-overlay.json`, `…-root-overlay.json`, new tree
+  twin `…-root-tree.json`): captures `s14-sh2-captures/p2f-tsc-{os,root,root-tree}.txt`; `bun p2/p2-ts-laws.ts <overlay>` ok.
+- 19:2x space oracles: identity-rows red on the tree AND the overlay (not P2): `home_row_action(…, "manageSpace", &row.id)` pin vs the
+  tree's fallible `(…, "manageSpace")?`, and adjacency pins broken by a `RowActionPlacement` import. New `p2/p2-oracle-soft.ts <root>`
+  lists every failing pin at once (tree 2, overlay 2 — P2 adds none). Fixed on the tree (landing row), set re-based + re-captured.
+- 19:3x t6-queue row 20 appended; overlap scan: my files also appear in C12 hub-order + sdk-t6 (ShellHost, wgpu Shell, os `🟦️.ts`,
+  backbone-envelope-io), S19 3b + S20 (wgpu Shell) → rebase + dry run after those land (noted in the row).
+
+- 19:40–19:43 **p2f** (`s14-sh2-captures/p2f-p2-proof.txt`, fails `p2/p2f-fails.txt`): see row 1. The 17 space-space caa reds: 13 are the store
+  drop witness (`artifact store reached Drop without its exact terminal-empty shallow-shell witness` — the context's registered app was
+  never closed; memory "Store Drop Witness"), 2 are `open_artifact_of_a_missing_row_faults` / `request_delete_of_a_missing_row_faults`
+  answering `interactive-job.app-owned-output` instead of the reducer's code — the SDK's MOUNTED terminal fault
+  (`terminal_fault = ArtifactBoundedToolFault::from_payload(&fault.detail)`) keeps only the message of the reducer's prose detail
+  (`retained command reducer rejected operation: <code> <msg>`), while the agent-lane preview decodes the code; S20's T6 row 12
+  (`s20-patch-fault-code.py`) already frames job fault details `<code>\u{1f}<message>` and splits them in `from_payload` → no second
+  fix; P2 lands after row 12. 2 are P2's own laws: a settled feed publishes `[Transient, Ui, Terminal]` (render refresh + terminal
+  marker), the laws demanded `[Transient]` only.
+- 19:4x stage fix `p2/p2-registered-fixture.py` (idempotent, `--write`): `Registered<A>` in the viewer transient tests (bound to
+  instance 1, `close_registered_fixture_app` on drop unless panicking; Deref/DerefMut), the editor context's `SpaceIndexApp` +
+  `feed`/`settle_typed`/`settle_action`/`table` and both P2 laws use it (explicit closes removed); `publishes_only_transient_state`
+  (Transient present, only Transient | Ui | Terminal). Captured (123/123 live dry run), overlay refreshed (3 files), `p2g`
+  (`sh2-overlay.sh p2-space`: space-space caa + plain) queued 19:48.
 ## Session 14
 
 ### Session 14c
@@ -140,6 +189,52 @@ transient; both surfaces share one page route (`HomeDirectoryPageWork`); receipt
   build/target dirs deleted (rule 23, 3.0 GB); the overlay mirror is kept for a fast re-proof.
 - 03:3x RELAY sent to L1 (crates, lanes, T3 regen/taxonomy extras) and main. Nothing of P1 landed on the tree (guest freeze → T3 via L1); no landing rows.
 
+### Session 14c-3 — P2 Space activity: a check-in moves the Space row for every member (2026-09-29 16:5x →)
+
+Coordinator (C12 collab STEP 6, `📓️wp-c12.md` row 28): the hub publishes `artifact.checkpoint-published` to both users but the
+Space table's "Updated" never moves. Root cause (host delivery was fine — worker space lane → `collectSpaceDirectoryEvents` →
+`foldDirectoryEvents`): (1) the kernel fold `os_directory::fold` (Rust + TS twin) ignored checkpoint events; (2)
+`SpaceIndexConfig::indexed_artifact_from_directory` hard-coded `updated = created`; (3) `touchArtifact` wrote the retired
+`SSpaceSnapshot.artifacts` lane the table never renders, relayed by BOTH shells through a background index-document session
+per checkpoint. Latent, same family (S18 sweep: the directory stalls at ~28 documents with `interactive-job.publication-stalled`):
+(a) the Space index kept the folded directory + presence in the undoable CONFIG lane (whole-record snapshot + inverse copy per
+fold — the P1 fault class); (b) the host re-sent the space's FULL history on every event (128 KiB retained cap).
+Design (approved 17:0x): ONE guest+host set `wp-sh2/p2/` (`p2-set.py`: stage/base `.🧬semio/🌐hub/s14-sh2-p2-*`, three-way
+`rebase`, capture, dry-run/`--write`/`revert`):
+- kernel read model: `DirectorySpace.document_activity` (`DirectoryDocumentActivity {documentId, updatedAtMs, updatedBy}`) folded
+  from a HUMAN's checkpoint publication of an ANNOUNCED document (admin/system/unannounced/unknown-space ignored, latest wins in
+  place); Rust + TS twin + read-model JSON schema; `DirectorySpace`/`DirectoryReadModel` carry their own camel-case value codec
+  (Home's private wire structs removed — Home's transient wire IS the kernel codec); language-neutral cases
+  `🧫️fixtures/📇️directory/🕒️document-activity-v1.json` authored by an independent Python reading (`p2-activity-fixture.py`).
+- Home P1 transient: the checkpoint event now addresses its row (one-row fold ≡ kernel fold, new law over the activity cases);
+  wire/schema/fixtures/vectors/TS law/space-script oracle carry `documentActivity` (+2 malformed cases).
+- Space index: directory projection + presence → the TRANSIENT lane, owned by the viewer facet (`👁️viewer/🫧️transient`, so
+  the viewer never imports `::editor::`) and reused by the editor; `SpaceIndexTransient` (kernel read model of the space's
+  events + presence rows behind `Arc`s), verbs `📥️apply-directory-events` (bounded batch ≤ 1 hub page, frontier
+  `afterSeqExclusive`, `0` = origin) and `👥️set-artifact-presence`, both non-invertible; shared route `SpaceIndexTransientWork`
+  (admits in O(batch), folds once at publication); editor `Config = NoConfig` (config lane retired, NoConfig projections),
+  opening reads the ONE row from the captured transient; viewer gets the retained feed route + renders directory rows (it
+  rendered the retired snapshot lane); `touchArtifact` verb retired (13 editor tools, viewer 2); vectors + case
+  `🫧️mutate-s-space-1-any-viewer-transient` (`p2-space-vectors.py`), retained catalog fixture + subset schema narrowing
+  re-stated (`p2-space-limits.py`).
+- host: ShellHost feeds each mounted Space surface bounded delta batches (`spaceDirectoryBatchesV1`, sequential, frontier per
+  instance, origin replay on remount / not-applied, 1 s refeed on a retryable refusal); the `touchArtifact` relays of the
+  React shell (background index sessions) and the wgpu shell removed (`p2-host-edits.py` re-applies onto the live shells).
+- Laws: one check-in event moves Updated (en `2027-01-15 08:05 UTC` / de `15.01.2027, 08:05 UTC`) + Updated By for the author's
+  editor AND the spectator's viewer, feeds write only the transient lane; 1 000 check-ins fold in bounded batches, root size
+  independent of check-ins, last check-in = Updated; 1 000 documents + 1 000 check-ins list every document, the newest in the
+  one batch carrying it, table stamps total 1 002 en/de (S18 stall); frontier refusals by name; origin replay no-op; wire
+  corruption refused; vectors through the production bridge; TS: activity twin parity + 1 000-check-in batching (15 batches,
+  ≤ 64 KiB each).
+- 17:1x–17:4x overlay `p2a` (fresh private build-dir, overlay lane): space crates check clean (own warnings then cleaned);
+  kernel `os_directory` 62/62 incl. the activity law; space-home caa 123/123 (incl. kernel-parity law); space plain 52/52;
+  plugin-space 85/1 (`descriptor_is_fresh` = the describe regen); renderer-wgpu check 0 errors; tsc os 0 in P2 files (27 =
+  overlay dual-module artifact in UiDocumentStore), root tsc only the pre-existing TS18046 class; space script oracles
+  (projection-persistence 17, page-owner 31, identity-rows 54 (+surface-law count 3 → 2), job-catalog 23, data-class 11,
+  plugin-identity 11) clean; bun TS laws clean. space-space caa 92/19: my 4 (bridge report keys, document loads with empty
+  ops = framework now requires an ops header → laws no longer load a document) fixed; the other 15 (`dispatch_typed` of a
+  retained verb answers only the operation handle; `load_document_text` without an ops header) → baseline run queued.
+
 #### Window-3 landing runbook (SH2, both sets, in this order)
 
 1. `python3 wp-sh2/sh2-apply.py` (dry) → `--write` (80 files).
@@ -240,7 +335,7 @@ Successor agent (2026-09-28 12:0x, guest freeze ON since 12:02:46).
 - 13:1x own serve for the probes: `serve-hold --serve http://127.0.0.1:6580/ --hub http://127.0.0.1:7800` (w2-detach pid 49307, log
   `.🧬semio/🌐hub/s14-sh2-serve/serve-hold-6580.log`), ready in 3 s.
 
-## Session 14 (evening, predecessor)
+### Session 14a — evening predecessor (2026-09-27 18:2x →)
 
 | # | Item | Status |
 |---|---|---|
@@ -249,7 +344,7 @@ Successor agent (2026-09-28 12:0x, guest freeze ON since 12:02:46).
 | 3 | kernel lib reds (directory client ×5, open-plan fixture, en1993 grammar) | pending re-measure (SH1 overlay 15:34: 1233/1234, only en1993 left) |
 | 4 | space/home e2e in `s` (create, bind/import, delete, reopen) locally + hub 7800 | probe written (`wp-sh2/sh2-home-e2e.mjs`); **baseline (pre-SH2 guests, serve 6580 → 7800 B3):** no import control (expected), **create-space row never appears — Home table never streams past row 27** (finding W1, routed to main); full run after landing |
 
-### Log
+#### Log 14a
 
 - 18:2x read AGENTS.md, preambles 14/13/12, fleet-14 log (no CHAIN LAUNCHED yet), `📓️wp-sh1.md` + `wp-sh1/`, `📓️wp-lc.md`,
   `📓️wp-ld.md`, inventory row SH1, fleet-13 log 14:00→16:0x.
@@ -316,7 +411,7 @@ Successor agent (2026-09-28 12:0x, guest freeze ON since 12:02:46).
   `structural_correspondence` red); other baselines still queued.
 - 19:5x asked main: land pre-freeze (like H13) or hold for window 3; default hold.
 
-### Blocker B1 — local studios cannot persist or bind in any real shell (design, not in this slice's scope)
+#### Blocker B1 — local studios cannot persist or bind in any real shell (design, not in this slice's scope)
 
 Measured in the code: every shell runs guests as wasm32 (browser jco; native wgpu shell via wasmtime), the guest's local studio catalog
 is process-global memory (`LocalStorageBackbonePort` = memory fallback on wasip2, `store::set_host_backbone_port` has no caller), and
@@ -342,7 +437,7 @@ catalog on Home open. This set makes bind refuse by name (`s.home.bind-space-fil
   tree-window scheduler decides window-vs-panel body from the PRIMARY session's app, Home is the landing app → refreshed as a
   panel body. Routed to main (S18?).
 
-### Design B1 (session 14b) — host-owned, event-sourced local studio catalog
+#### Design B1 (session 14b) — host-owned, event-sourced local studio catalog
 
 Measured facts it builds on (code read 12:1x–12:3x, 09-28): the dev serve's `/semio-backbone` endpoint (`🧑‍💻dev/🔌️vite-plugins/🟦️.ts`
 `readBackbonePayload`/`writeBackbonePayload`) already reads/writes `file://<path>` (raw archive) and `folder://<dir>` (sqlite

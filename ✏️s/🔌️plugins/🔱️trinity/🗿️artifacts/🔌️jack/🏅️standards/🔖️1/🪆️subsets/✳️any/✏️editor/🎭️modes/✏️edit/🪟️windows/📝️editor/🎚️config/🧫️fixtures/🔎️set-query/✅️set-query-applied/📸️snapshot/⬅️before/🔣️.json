@@ -1,3 +1,0 @@
-{
-  "jackQuery": "MATCH (a:Piece) RETURN a"
-}

@@ -251,30 +251,30 @@ pub struct PngSnapshot {
     pub interlace: bool,
     // PLTE (§11.2.3) — index-keyed collection, optional.
     #[state(artifact)]
-    #[value(default)]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub plte: Option<Vec<PngRgb>>,
     // tRNS (§11.3.3).
     #[state(artifact)]
-    #[value(default)]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub trns: Option<PngTransparency>,
     // Typed ancillary set (§11.3.5-11.3.6).
     #[state(artifact)]
-    #[value(default)]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub gama: Option<u32>,
     #[state(artifact)]
-    #[value(default)]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub chrm: Option<PngChromaticities>,
     #[state(artifact)]
-    #[value(default)]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub srgb: Option<PngSrgbIntent>,
     #[state(artifact)]
-    #[value(default)]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub phys: Option<PngPhysicalDims>,
     #[state(artifact)]
-    #[value(default)]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub time: Option<PngTimestamp>,
     #[state(artifact)]
-    #[value(default)]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub bkgd: Option<PngBackground>,
     // tEXt/zTXt/iTXt (§11.3.4) — index-keyed, see `PngTextChunk` doc for why.
     #[state(artifact)]

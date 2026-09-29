@@ -1,0 +1,148 @@
+{
+  "mesh": {
+    "vertices": [
+      [
+        1,
+        2,
+        3
+      ],
+      [
+        5,
+        2,
+        3
+      ],
+      [
+        5,
+        5,
+        3
+      ],
+      [
+        3,
+        4,
+        3
+      ],
+      [
+        1,
+        5,
+        3
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    ]
+  },
+  "cases": [
+    {
+      "query": {
+        "kind": "vertex",
+        "index": 3
+      },
+      "expected": {
+        "point": [
+          3,
+          4,
+          3
+        ]
+      }
+    },
+    {
+      "query": {
+        "kind": "edge",
+        "index": 1
+      },
+      "expected": {
+        "start": [
+          5,
+          2,
+          3
+        ],
+        "end": [
+          5,
+          5,
+          3
+        ],
+        "length": 3
+      }
+    },
+    {
+      "query": {
+        "kind": "face",
+        "index": 0
+      },
+      "expected": {
+        "vertices": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "center": [
+          3,
+          3.6,
+          3
+        ]
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "kind": "vertex",
+      "index": -1
+    },
+    {
+      "kind": "vertex",
+      "index": 5
+    },
+    {
+      "kind": "edge",
+      "index": 20
+    },
+    {
+      "kind": "face",
+      "index": 1
+    },
+    {
+      "kind": "face",
+      "index": 0.5
+    },
+    {
+      "kind": "unknown",
+      "index": 0
+    }
+  ],
+  "previewTransforms": [
+    {
+      "factor": [
+        -1,
+        1,
+        1
+      ]
+    },
+    {
+      "factor": [
+        1,
+        -1,
+        1
+      ]
+    },
+    {
+      "factor": [
+        1,
+        1,
+        -1
+      ]
+    }
+  ]
+}

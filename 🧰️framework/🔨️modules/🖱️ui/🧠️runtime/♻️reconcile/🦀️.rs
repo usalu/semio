@@ -939,26 +939,53 @@ impl SurfaceSemanticCensusCursor {
         SurfaceSemanticCensusStep::Progress(usage)
     }
 
-    fn binding_step(&mut self, binding: &ui_contract::ActionBinding) -> SurfaceSemanticCensusStep {
-        let usage = match self.action {
-            0 => self.inline_text(&binding.action.scope),
-            1 => self.inline_text(&binding.action.name),
+    /// 📏️ A row's verbs from component stage `first` on: its row-action backing, each action's icon, label and verb, then
+    /// its ONE target — scope, argument map and activation verb. A row names N verbs, never N argument maps.
+    fn row_verbs_step(&mut self, row_actions: &ui_contract::UiFixedList<ui_contract::RowAction>, target: Option<&ui_contract::RowTarget>, first: u8) -> SurfaceSemanticCensusStep {
+        let progress = |usage| SurfaceSemanticCensusStep::Progress(usage);
+        match self.container - first {
+            0 => {
+                self.container += 1;
+                progress(self.backing::<ui_contract::RowAction>(row_actions.capacity()))
+            }
+            1 => {
+                let Some(action) = row_actions.get(self.entry) else {
+                    self.container += 1;
+                    self.entry = 0;
+                    return progress(SurfaceSemanticUsage::default());
+                };
+                let usage = match self.data_attribute {
+                    0 => self.inline_text(&action.icon),
+                    1 => action.label.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value.0)),
+                    _ => {
+                        self.data_attribute = 0;
+                        self.entry += 1;
+                        return progress(self.inline_text(&action.verb));
+                    }
+                };
+                self.data_attribute += 1;
+                progress(usage)
+            }
             2 => {
-                if let Some(args) = &binding.args {
-                    if let Err(fault) = self.push_value(args) {
+                self.container += 1;
+                progress(target.map_or_else(SurfaceSemanticUsage::default, |target| self.inline_text(&target.scope)))
+            }
+            3 => {
+                self.container += 1;
+                if let Some(args) = target.and_then(|target| target.args.as_ref()) {
+                    let Some(args) = args.credited_clone() else { return SurfaceSemanticCensusStep::Fault(SurfaceReconcileFault::AliasCapacity) };
+                    if let Err(fault) = self.push_owned_value(ui_contract::UiValue::Map(args)) {
                         return SurfaceSemanticCensusStep::Fault(fault);
                     }
                 }
-                SurfaceSemanticUsage::default()
+                progress(SurfaceSemanticUsage::default())
             }
-            3 => binding.capability.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(value)),
-            _ => {
-                self.action = 0;
-                return SurfaceSemanticCensusStep::Complete;
+            4 => {
+                self.container += 1;
+                progress(target.and_then(|target| target.activation.as_ref()).map_or_else(SurfaceSemanticUsage::default, |verb| self.inline_text(verb)))
             }
-        };
-        self.action += 1;
-        SurfaceSemanticCensusStep::Progress(usage)
+            _ => SurfaceSemanticCensusStep::Complete,
+        }
     }
 
     fn component_step(&mut self, component: &ui_contract::Component) -> SurfaceSemanticCensusStep {
@@ -1162,26 +1189,7 @@ impl SurfaceSemanticCensusCursor {
                     };
                     progress(usage)
                 }
-                5 => {
-                    self.container = 6;
-                    progress(self.backing::<ui_contract::RowAction>(props.row_actions.capacity()))
-                }
-                6 => {
-                    let Some(action) = props.row_actions.get(self.entry) else { return SurfaceSemanticCensusStep::Complete };
-                    let step = match self.data_attribute {
-                        0 => progress(self.inline_text(&action.icon)),
-                        1 => progress(action.label.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value.0))),
-                        _ => self.binding_step(&action.action),
-                    };
-                    if matches!(step, SurfaceSemanticCensusStep::Complete) {
-                        self.data_attribute = 0;
-                        self.entry += 1;
-                        return progress(SurfaceSemanticUsage::default());
-                    }
-                    self.data_attribute += 1;
-                    step
-                }
-                _ => SurfaceSemanticCensusStep::Complete,
+                _ => self.row_verbs_step(&props.row_actions, props.target.as_ref(), 5),
             },
             Image(props) => {
                 let usage = match self.container {
@@ -1250,26 +1258,7 @@ impl SurfaceSemanticCensusCursor {
                     self.entry += 1;
                     progress(self.inline_text(cell))
                 }
-                2 => {
-                    self.container = 3;
-                    progress(self.backing::<ui_contract::RowAction>(props.row_actions.capacity()))
-                }
-                3 => {
-                    let Some(action) = props.row_actions.get(self.entry) else { return SurfaceSemanticCensusStep::Complete };
-                    let step = match self.data_attribute {
-                        0 => progress(self.inline_text(&action.icon)),
-                        1 => progress(action.label.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value.0))),
-                        _ => self.binding_step(&action.action),
-                    };
-                    if matches!(step, SurfaceSemanticCensusStep::Complete) {
-                        self.data_attribute = 0;
-                        self.entry += 1;
-                        return progress(SurfaceSemanticUsage::default());
-                    }
-                    self.data_attribute += 1;
-                    step
-                }
-                _ => SurfaceSemanticCensusStep::Complete,
+                _ => self.row_verbs_step(&props.row_actions, props.target.as_ref(), 2),
             },
             Extension(props) => match self.container {
                 0 => {

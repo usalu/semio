@@ -1,0 +1,22 @@
+{
+ "plugin": "imperative",
+ "dir": "📜️imperative",
+ "apps": [
+  {
+   "app": "s.imperative.procedure@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "crate::editor::procedure::ImperativePlayApp",
+   "create": "crate::editor::procedure::create_imperative_app",
+   "app": "s.imperative.procedure@1/*#editor"
+  }
+ ]
+}

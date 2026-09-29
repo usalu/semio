@@ -31,4 +31,5 @@ export function testSharedDynamicValueOracle(): void {
   assert.equal(reads, 0, "validation must not execute accessor values");
   const child = { value: 1 }, shared = { left: child, right: child };
   assert.deepEqual(parseDslValue(shared), shared);
+  for (const number of fixture.numbers) assert.equal(JSON.stringify(Number(number.literal)), number.json, number.literal);
 }

@@ -1141,6 +1141,26 @@ async fn registry_enforced_app_accepts_a_declared_operation_action() {
     assert!(published_a_document_mutation(&receipt), "a declared operation action must reach the document lane");
 }
 
+/// 🙈️ LAW: `setStepEnabled` — the step row's eye — is idempotent by value: the value the row's target asks for publishes
+/// one document edit, replaying it publishes none and leaves the step exactly as the first dispatch set it; a dispatch
+/// without its value is refused at the command boundary, never defaulted into a flip.
+#[semio_framework_async_macros::async_test]
+async fn set_step_enabled_is_idempotent_by_value_and_refuses_a_missing_value() {
+    let mut app = app_with_registry();
+    settled_dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None }));
+    let step = app.snapshot().expect("snapshot with the added step").step_payloads.last().cloned().expect("the added step");
+    let bare = DslValue::object([("id".to_string(), DslValue::String(step.id.clone()))]);
+    assert!(<Process3dPlayApp as ArtifactEditor>::command_from_action("setStepEnabled", Some(&bare)).is_err(), "setStepEnabled without its value must be refused");
+    let command = || Process3dCommand::SetStepEnabled(set_step_enabled::SetStepEnabled { id: step.id.clone(), enabled: !step.enabled });
+    let (_, first) = settled_dispatch(&mut app, command());
+    assert!(published_a_document_mutation(&first), "setStepEnabled with the inverse value is one document edit");
+    let set = app.snapshot().expect("snapshot after the first set");
+    assert_eq!(set.step_payloads.iter().find(|entry| entry.id == step.id).map(|entry| entry.enabled), Some(!step.enabled), "the step reaches the value the row asked for");
+    let (_, replay) = settled_dispatch(&mut app, command());
+    assert!(!published_a_document_mutation(&replay), "replaying setStepEnabled with the same value publishes no second edit");
+    assert_eq!(app.snapshot().expect("snapshot after the replay"), set, "replaying setStepEnabled with the same value leaves the document unchanged");
+}
+
 //#region 🔖️MediaTests
 #[semio_framework_async_macros::async_test]
 async fn export_brep_out_returns_step_text_structured_payload() {

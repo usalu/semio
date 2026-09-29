@@ -173,6 +173,7 @@ import type {
   SelectItem as GeneratedSelectItem,
   KeyValueEntry as GeneratedKeyValueEntry,
   RowAction as GeneratedRowAction,
+  RowTarget as GeneratedRowTarget,
   ContainerProps as GeneratedContainerProps,
   TextProps as GeneratedTextProps,
   ButtonProps as GeneratedButtonProps,
@@ -261,6 +262,7 @@ export type DropOverlaySpec = GeneratedDropOverlaySpec;
 export type SelectItem = GeneratedSelectItem;
 export type KeyValueEntry = GeneratedKeyValueEntry;
 export type RowAction = GeneratedRowAction;
+export type RowTarget = GeneratedRowTarget;
 export type ContainerProps = GeneratedContainerProps;
 export type TextProps = GeneratedTextProps;
 export type ButtonProps = GeneratedButtonProps;

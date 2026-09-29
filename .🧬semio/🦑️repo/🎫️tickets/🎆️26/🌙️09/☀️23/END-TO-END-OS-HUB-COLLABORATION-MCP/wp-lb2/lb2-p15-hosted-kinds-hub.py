@@ -164,6 +164,34 @@ def field_value_end(body, start):
     return None
 
 
+def depths(body):
+    """🧭️ Bracket depth before each character of a struct-literal body (`{` at index 0), string literals skipped — a field of
+    the literal itself sits at depth 1, a field of a nested literal (an `AppDefinition` in `apps`) deeper."""
+    out, depth, index, quoted = [], 0, 0, False
+    while index < len(body):
+        character = body[index]
+        out.append(depth)
+        if quoted:
+            if character == "\\":
+                out.append(depth)
+                index += 1
+            elif character == '"':
+                quoted = False
+        elif character == '"':
+            quoted = True
+        elif character in "([{":
+            depth += 1
+        elif character in ")]}":
+            depth -= 1
+        index += 1
+    return out
+
+
+def own_field(body, pattern):
+    level = depths(body)
+    return next((match for match in re.finditer(pattern, body) if level[match.start()] == 1), None)
+
+
 def manifest_literals(text, label):
     out, cursor, found = [], 0, 0
     for match in real_literals(text):
@@ -173,10 +201,10 @@ def manifest_literals(text, label):
             problems.append(f"{label}: unbalanced PluginManifest literal")
             return text
         body = text[brace:end]
-        if "hosted_artifact_kinds" in body or re.search(r"\.\.\s*[A-Za-z_(]", body):
+        if own_field(body, r"hosted_artifact_kinds[:,]") or own_field(body, r"\.\.\s*[A-Za-z_(]"):
             continue
-        field = re.search(r"\n(\s*)artifact_kinds[:,]", body)
-        inline = re.search(r"(artifact_kinds: [^,{}]*(?:\{[^{}]*\})?[^,{}]*, )", body) if not field else None
+        field = own_field(body, r"\n(\s*)artifact_kinds[:,]")
+        inline = own_field(body, r"(artifact_kinds: [^,{}]*(?:\{[^{}]*\})?[^,{}]*, )") if not field else None
         if field:
             end_of_value = field_value_end(body, field.end() - 1)
             if end_of_value is None:
@@ -380,6 +408,13 @@ def hub_fixture(text):
 
 
 def hub_tests(text):
+    text = once(
+        text,
+        '            "name": "Fixture Document",\n            "sourceFormat": "fixture",\n',
+        '            "label": { "native": { "en": "Fixture Document", "de": "Fixture-Dokument" }, "reuse": { "en": "Fixture Document", "de": "Fixture-Dokument" } },\n'
+        '            "sourceFormat": "fixture",\n',
+        "hub tests: kind spec label",
+    )
     text = once(
         text,
         "        if case[\"declaredOn\"] == \"plugin-and-editor\" {\n",

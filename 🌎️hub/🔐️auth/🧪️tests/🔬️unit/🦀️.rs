@@ -1,6 +1,8 @@
 use super::password::{PasswordCredentialError, PasswordCredentialV1};
 use semio_framework_hash::{hmac_sha256, pbkdf2_sha256};
-use super::rate_limit::{HubRateLimiterV1, RateLimitClassV1, RateLimitClockV1, RateLimitDecisionV1, RateLimitRefusalV1, RateLimitSubjectV1, RATE_LIMIT_CLASSES, RATE_LIMIT_REFUSAL_MESSAGE};
+use super::rate_limit::{
+    HubRateLimiterV1, HubStreamLimiterV1, RateLimitClassV1, RateLimitClockV1, RateLimitDecisionV1, RateLimitRefusalV1, RateLimitSubjectV1, StreamLimitClassV1, StreamLimitPolicyV1, RATE_LIMIT_CLASSES, RATE_LIMIT_REFUSAL_MESSAGE, STREAM_LIMIT_CLASSES,
+};
 use super::*;
 
 /// 🕰️ A hand-stepped clock: every rate-limit law below reads exactly the milliseconds it sets.
@@ -273,28 +275,79 @@ fn every_rate_limit_class_is_a_schema_member_and_its_policy_validates() {
     }
 }
 
-/// 🚦️ The Rust rate-limit refusal is exactly `RateLimitRefusalV1`: every non-auth class's body validates against the declared
-/// schema (owned draft-07 validator), its notice is the declared en + de const, and the fixture's valid bodies validate while
-/// every near miss (no wait, an unknown class, a missing language, another code, no `retryAfterMs`, an extra field) does not.
+#[test]
+fn every_stream_limit_class_is_a_schema_member_and_its_policy_validates() {
+    let document: serde_json::Value = serde_json::from_str(SCHEMA_MODULE).expect("hub.auth schema module");
+    let declared: Vec<&str> = document["$defs"]["AuthStreamLimitClassV1"]["enum"].as_array().expect("stream class enum").iter().map(|class| class.as_str().expect("class name")).collect();
+    assert_eq!(declared, STREAM_LIMIT_CLASSES.iter().map(|class| class.as_str()).collect::<Vec<_>>(), "the schema enum and the Rust stream classes are one list, in one order");
+    let validator = structural("AuthStreamLimitPolicyV1");
+    for class in STREAM_LIMIT_CLASSES {
+        let policy = class.policy();
+        let row = serde_json::json!({ "class": class.as_str(), "hubStreams": policy.hub_streams, "principalStreams": policy.principal_streams, "admissionWaitMs": policy.admission_wait_ms, "retryAfterMs": policy.retry_after_ms });
+        assert!(validator.is_valid_json(&row.to_string()), "{} policy {row} validates against AuthStreamLimitPolicyV1", class.as_str());
+        assert!(policy.principal_streams <= policy.hub_streams, "one principal never holds more than the hub has");
+    }
+}
+
+/// 🚦️ The Rust rate-limit refusal is exactly `RateLimitRefusalV1`: every non-auth rate-limit class's and every stream-limit
+/// class's body validates against the declared schema (owned draft-07 validator), its notice is the declared en + de const,
+/// and the fixture's valid bodies validate while every near miss (no wait, an unknown class, a missing language, another
+/// code, no `retryAfterMs`, an extra field) does not.
 #[test]
 fn the_rate_limit_refusal_is_the_declared_schema_body() {
     let document: serde_json::Value = serde_json::from_str(SCHEMA_MODULE).expect("hub.auth schema module");
     let validator = structural("RateLimitRefusalV1");
     assert_eq!(serde_json::to_value(RATE_LIMIT_REFUSAL_MESSAGE).unwrap(), document["$defs"]["RateLimitRefusalMessageV1"]["const"]);
-    for class in RATE_LIMIT_CLASSES.into_iter().filter(|class| *class != RateLimitClassV1::Auth) {
-        let body = serde_json::to_value(RateLimitRefusalV1::new(class, u64::from(class.policy().cost_ms))).unwrap();
-        assert!(validator.is_valid_json(&body.to_string()), "{} refusal {body} validates", class.as_str());
+    let mut refusals: Vec<RateLimitRefusalV1> = RATE_LIMIT_CLASSES.into_iter().filter(|class| *class != RateLimitClassV1::Auth).map(|class| RateLimitRefusalV1::new(class, u64::from(class.policy().cost_ms))).collect();
+    refusals.extend(STREAM_LIMIT_CLASSES.map(|class| RateLimitRefusalV1::streams(class, class.policy().retry_after_ms)));
+    for refusal in &refusals {
+        let body = serde_json::to_value(refusal).unwrap();
+        assert!(validator.is_valid_json(&body.to_string()), "{} refusal {body} validates", refusal.class);
     }
     assert_eq!(RateLimitRefusalV1::new(RateLimitClassV1::DirectoryCommand, 0).retry_after_ms, 1, "a refusal always names a positive wait");
+    assert_eq!(RateLimitRefusalV1::streams(StreamLimitClassV1::ExecutionTargetAsset, 0).retry_after_ms, 1, "a stream refusal always names a positive wait");
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚦️rate-limit-refusal-v1/🔣️.json")).unwrap();
-    for body in fixture["valid"].as_array().unwrap() {
+    let valid = fixture["valid"].as_array().unwrap();
+    assert_eq!(valid.len(), refusals.len(), "the fixture holds one body per refusing class");
+    for body in valid {
         assert!(validator.is_valid_json(&body.to_string()), "valid fixture body {body}");
-        let class = RATE_LIMIT_CLASSES.into_iter().find(|class| class.as_str() == body["class"].as_str().unwrap()).unwrap();
-        assert_eq!(&serde_json::to_value(RateLimitRefusalV1::new(class, u64::from(class.policy().cost_ms))).unwrap(), body, "the Rust body for {} is the fixture's", class.as_str());
+        let refusal = refusals.iter().find(|refusal| refusal.class == body["class"].as_str().unwrap()).unwrap();
+        assert_eq!(&serde_json::to_value(refusal).unwrap(), body, "the Rust body for {} is the fixture's", refusal.class);
     }
     for body in fixture["invalid"].as_array().unwrap() {
         assert!(!validator.is_valid_json(&body.to_string()), "near miss {body} must not validate");
     }
+}
+
+/// 🚰️ The execution-target asset stream rule under a narrow policy: a principal streams at most its own bound and the hub
+/// at most its own; a request finding them taken waits first come, first served and is admitted the moment a stream ends,
+/// or is refused with the typed `execution-target-asset` refusal once its admission wait passes; a principal is forgotten
+/// with its last stream.
+#[tokio::test]
+async fn an_asset_stream_waits_for_a_slot_within_its_bounds_and_a_full_rule_is_a_typed_refusal() {
+    let policy = StreamLimitPolicyV1 { hub_streams: 2, principal_streams: 1, admission_wait_ms: 200, retry_after_ms: 1_000 };
+    let class = StreamLimitClassV1::ExecutionTargetAsset;
+    let limiter = std::sync::Arc::new(HubStreamLimiterV1::with_policies([(class, policy)]));
+    let (alice, bob, carol) = (RateLimitSubjectV1::principal("alice"), RateLimitSubjectV1::principal("bob"), RateLimitSubjectV1::principal("carol"));
+    let first = limiter.admit(class, alice).await.expect("a free rule admits at once");
+    let started = std::time::Instant::now();
+    let refused = limiter.admit(class, alice).await.err().expect("a principal at its bound waits, then is refused");
+    assert!(started.elapsed() >= std::time::Duration::from_millis(policy.admission_wait_ms), "the refusal comes only after the whole admission wait");
+    assert_eq!(serde_json::to_value(refused).unwrap(), serde_json::to_value(RateLimitRefusalV1::streams(class, policy.retry_after_ms)).unwrap(), "the refusal is the typed stream refusal naming the policy's wait");
+    let second = limiter.admit(class, bob).await.expect("another principal streams beside it");
+    assert_eq!(limiter.live_streams(class), 2);
+    assert!(limiter.admit(class, carol).await.is_err(), "a full hub refuses a third principal after the wait");
+    let waiting = tokio::spawn({
+        let limiter = limiter.clone();
+        async move { limiter.admit(class, carol).await.is_ok() }
+    });
+    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    drop(first);
+    assert!(waiting.await.unwrap(), "a waiting stream is admitted the moment one ends");
+    assert_eq!(limiter.live_streams(class), 1, "the admitted waiter's permit ended with its task");
+    drop(second);
+    assert_eq!(limiter.live_streams(class), 0);
+    assert_eq!(limiter.tracked_principals(), 0, "a principal is forgotten with its last stream");
 }
 
 const SCHEMA_MODULE: &str = include_str!("../../🧬️schema/🔣️.json");

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Set Widget Input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "widgetId",
+    "channel",
+    "value"
+  ],
+  "properties": {
+    "widgetId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "channel": {
+      "type": "string",
+      "minLength": 1
+    },
+    "value": {
+      "type": "string",
+      "maxLength": 1048576
+    },
+    "component": {
+      "enum": [
+        "x",
+        "y",
+        "z"
+      ]
+    },
+    "gesture": {
+      "type": "string"
+    }
+  }
+}
+

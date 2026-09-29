@@ -18,6 +18,7 @@ path = "../../🦀️.rs"
 semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-obj = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true, features = ["conversion-brep", "conversion-mesh"] }
+semio-s-artifact-stdio-contract = { workspace = true }
 semio-s-artifact-stdio-step = { workspace = true }
 semio-s-artifact-stdio-stl = { workspace = true }
 math = { path = "../../../../../../../🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }

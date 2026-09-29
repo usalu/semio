@@ -180,7 +180,7 @@ pub struct RiffChunk {
 //#endregion 🔖️RawChunk
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.avi")]
 pub struct AviSnapshot {
@@ -207,6 +207,14 @@ pub struct AviSnapshot {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn default_schema() -> String {
     STDIO_AVI_DOCUMENT_SCHEMA.into()
+}
+
+/// 🆕️ A new avi document: `stdio.avi`, and a main header whose `dwReserved[4]` are the four zero DWORDs every written
+/// `avih` carries — the empty `reserved` list saved as four zeros and reopened as a different document.
+impl Default for AviSnapshot {
+    fn default() -> Self {
+        Self { schema: default_schema(), main_header: AviMainHeader { reserved: vec![0; 4], ..AviMainHeader::default() }, streams: Vec::new(), idx1_present: false, unknown_chunks: Vec::new(), hdrl_extra: Vec::new() }
+    }
 }
 //#endregion 🔖️Snapshot
 

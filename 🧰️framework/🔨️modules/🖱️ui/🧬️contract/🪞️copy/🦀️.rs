@@ -224,6 +224,28 @@ impl TypedCopy for UiValue {
     }
 }
 
+impl TypedCopy for UiMap {
+    const DEPTH: usize = 1;
+    fn empty_like(&self) -> Self {
+        Self::default()
+    }
+    fn allocation(&self, _: &Self, _: &[usize]) -> Result<usize, &'static str> {
+        Ok(0)
+    }
+    fn copy_one(&self, candidate: &mut Self, _: &mut [usize], _: &mut Vec<u8>, _: usize, work: usize) -> Result<UiComponentCopyProgress, PagedListAllocationError> {
+        if work < size_of::<Self>() {
+            return Ok(Default::default());
+        }
+        let mut arena = match UI_VALUE_ARENA.try_lock() {
+            Ok(arena) => arena,
+            Err(std::sync::TryLockError::WouldBlock) => return Ok(Default::default()),
+            Err(std::sync::TryLockError::Poisoned(_)) => return Err(error("typed copy value arena is poisoned")),
+        };
+        *candidate = self.try_clone_in(&mut arena).ok_or_else(|| error("typed copy exact map alias admission failed"))?;
+        Ok(UiComponentCopyProgress { complete: true, ..progress(size_of::<Self>()) })
+    }
+}
+
 impl<T: TypedCopy> TypedCopy for Option<T> {
     const DEPTH: usize = 1 + T::DEPTH;
     fn empty_like(&self) -> Self {

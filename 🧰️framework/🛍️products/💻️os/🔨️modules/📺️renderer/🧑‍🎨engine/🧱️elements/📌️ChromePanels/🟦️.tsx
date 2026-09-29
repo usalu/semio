@@ -45,6 +45,7 @@ import {
   singleTreeLeaf,
   uiDataLabel,
   windowTemplatePaletteTreeDragController,
+  childElementId,
 } from "@semio-tech/ui-react";
 import { WCAG_AA_CONTRAST, themePaintContrastPairs, type Rgba8, type WcagContrastGrade } from "@semio-tech/ui-styling";
 import { type AppRef, type AppRole, type ArtifactDialect, dialectCoordinate, type Conflict, type ConflictResolution, type MergePolicy, type NamedLayout, type WindowLayout } from "@semio-tech/framework";
@@ -148,12 +149,12 @@ function worldProjectionTemplatesToTreeItems(templates: readonly WorldProjection
   return [...templates]
     .reverse()
     .map((template) => ({
-      id: `${idPrefix}.${template.id}`,
+      id: childElementId(idPrefix, template.id),
       label: template.label,
       icon: displayWindowKindIcon(template.iconId as IconName),
       defaultOpen: false,
       dragData: { [COMPOSE_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId, templateId: encodeWorldProjectionTemplateId(template.args.spec) }) },
-      ...(template.children?.length ? { items: worldProjectionTemplatesToTreeItems(template.children, windowKindId, `${idPrefix}.${template.id}`) } : {}),
+      ...(template.children?.length ? { items: worldProjectionTemplatesToTreeItems(template.children, windowKindId, childElementId(idPrefix, template.id)) } : {}),
     }));
 }
 
@@ -166,7 +167,7 @@ function buildDisplayWindowsTree(host: DisplayHostApi): TreePanelConfig {
     dragAndDropController: windowTemplatePaletteTreeDragController(),
     sections: host.windowKinds.length
       ? host.windowKinds.map((kind) => ({
-          id: `framework.display.windows.${kind.id}`,
+          id: childElementId(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, kind.id),
           label: kind.label,
           icon: displayWindowKindIcon(kind.iconId),
           defaultOpen: false,
@@ -176,12 +177,12 @@ function buildDisplayWindowsTree(host: DisplayHostApi): TreePanelConfig {
           items:
             kind.surfaceKind === "world-3d"
               ? [
-                  ...worldProjectionTemplatesToTreeItems(createWorldProjectionTemplates({ controllerId: kind.id }), kind.id, `framework.display.windows.${kind.id}.projection`),
-                  { id: `framework.display.windows.${kind.id}.kind`, label: kind.label, icon: displayWindowKindIcon(kind.iconId), dragData: { [COMPOSE_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId: kind.id }) } },
+                  ...worldProjectionTemplatesToTreeItems(createWorldProjectionTemplates({ controllerId: kind.id }), kind.id, childElementId(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, kind.id, "projection")),
+                  { id: childElementId(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, kind.id, "kind"), label: kind.label, icon: displayWindowKindIcon(kind.iconId), dragData: { [COMPOSE_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId: kind.id }) } },
                 ]
               : [
                   {
-                    id: `framework.display.windows.${kind.id}.kind`,
+                    id: childElementId(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, kind.id, "kind"),
                     label: kind.label,
                     icon: displayWindowKindIcon(kind.iconId),
                     dragData: {

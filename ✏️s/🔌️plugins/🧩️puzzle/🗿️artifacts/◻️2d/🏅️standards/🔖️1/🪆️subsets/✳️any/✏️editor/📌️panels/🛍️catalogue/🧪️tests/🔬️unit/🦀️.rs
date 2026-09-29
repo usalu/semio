@@ -78,10 +78,18 @@ fn the_catalogue_stamps_every_section_and_never_pages() {
     drain_retired_ui_owners();
 }
 
+/// 🎯️ The verb a row activates — its ONE target's activation.
+fn activation_of(row: &BuiltNode) -> Option<String> {
+    match &row.component {
+        semio_framework_ui_contract::Component::TreeItem(props) => props.target.as_ref().and_then(|target| target.activation.as_ref()).map(|activation| activation.as_str().to_string()),
+        _ => None,
+    }
+}
+
 /// 🪟️ (c) A host window materialises exactly `[offset, offset + rows)`; every catalogue row keeps
-/// its own `addNode` binding, because a catalogue row is not a pick target.
+/// its own `addNode` activation, because a catalogue row is not a pick target.
 #[test]
-fn a_catalogue_window_materialises_its_slice_with_row_bindings_intact() {
+fn a_catalogue_window_materialises_its_slice_with_row_activations_intact() {
     drain_retired_ui_owners();
     let scene = scaled_scene(SCALE_KINDS);
     let (offset, rows) = (40u32, 9u32);
@@ -95,7 +103,7 @@ fn a_catalogue_window_materialises_its_slice_with_row_bindings_intact() {
     let expected: Vec<String> = (offset..offset + rows).map(|index| format!("{NODES_SECTION}.kind-{index}")).collect();
     assert_eq!(keys, expected);
     for row in nodes.children.iter() {
-        assert_eq!(row.bindings.len(), 1, "catalogue row {} keeps its own addNode binding", row.key.as_str());
+        assert_eq!(activation_of(row).as_deref(), Some("addNode"), "catalogue row {} keeps its own addNode activation", row.key.as_str());
     }
     drop(tree);
     drain_retired_ui_owners();

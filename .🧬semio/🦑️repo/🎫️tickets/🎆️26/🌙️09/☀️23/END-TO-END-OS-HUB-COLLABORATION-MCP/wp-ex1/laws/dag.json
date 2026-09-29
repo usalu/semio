@@ -1,0 +1,22 @@
+{
+ "plugin": "dag",
+ "dir": "🕸️dag",
+ "apps": [
+  {
+   "app": "s.dag.dag@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "crate::editor::dag::DagPlayApp",
+   "create": "crate::editor::dag::create_dag_app",
+   "app": "s.dag.dag@1/*#editor"
+  }
+ ]
+}

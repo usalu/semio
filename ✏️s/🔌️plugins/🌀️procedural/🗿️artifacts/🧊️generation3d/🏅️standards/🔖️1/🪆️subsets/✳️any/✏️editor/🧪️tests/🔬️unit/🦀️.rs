@@ -664,7 +664,7 @@ fn retained_route_dispositions_are_exact_and_exhaustive() {
     assert_eq!(GENERATION3D_FLOW_EVAL_TOOL_IDS.len(), 5);
     assert_eq!(GENERATION3D_CONTRIBUTIONS_TOOL_IDS.len(), 1);
     assert_eq!(GENERATION3D_DOCUMENT_IO_TOOL_IDS.len(), 3);
-    assert_eq!(<Generation3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 41, "all four factories' proofs, aggregated");
+    assert_eq!(<Generation3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 42, "all four factories' proofs, aggregated");
     assert_eq!(Generation3dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 32);
     assert_eq!(Generation3dFlowEvalJobFactory::PUBLICATION_CONTRACTS.len(), 5);
     assert_eq!(Generation3dContributionsJobFactory::PUBLICATION_CONTRACTS.len(), 1);
@@ -833,6 +833,7 @@ fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         "activate-selection",
         "edit-mesh-selection",
         "knife-mesh-selection",
+        "set-widget-input",
     ];
     let commands = every_command();
     assert_eq!(commands.len(), expected_keywords.len(), "every_command() and expected_keywords must stay in the same declaration order");
@@ -856,7 +857,7 @@ pub(super) fn every_command() -> Vec<Generation3dCommand> {
         Generation3dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }),
         Generation3dCommand::DeleteSelection(delete_selection::DeleteSelection {}),
         Generation3dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: "extrude".into() }),
-        Generation3dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), x: Some(10.0), y: None }),
+        Generation3dCommand::AddWidget(add_widget::AddWidget { neuron_kind: None, format: None, action: None, kind: "inputSlider".into(), x: Some(10.0), y: None }),
         Generation3dCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["height".into()], field: "value".into(), value: Some(9.5), gesture: None }),
         Generation3dCommand::Reorganize(reorganize::Reorganize {}),
         Generation3dCommand::TranslateSelection(translate_selection::TranslateSelection { node_ids: vec!["extrude".into()], dx: 1.0, dy: 2.0, dz: 3.0 }),
@@ -893,6 +894,7 @@ pub(super) fn every_command() -> Vec<Generation3dCommand> {
         Generation3dCommand::ActivateSelection(activate_selection::ActivateSelection {}),
         Generation3dCommand::EditMeshSelection(edit_mesh_selection::EditMeshSelection { cuts: 1, operation: "extrude".into(), amount: 0.1, dx: 0.0, dy: 0.0, dz: 0.0 }),
         Generation3dCommand::KnifeMeshSelection(knife_mesh_selection::KnifeMeshSelection { start: [0.0, -1.0, 0.0], end: [0.0, 1.0, 0.0] }),
+        Generation3dCommand::SetWidgetInput(set_widget_input::SetWidgetInput { widget_id: "shape".into(), channel: "width".into(), value: "2".into(), component: None, gesture: None }),
     ]
 }
 
@@ -1239,7 +1241,7 @@ async fn a_replacing_preview_run_start_retires_the_previous_runs_last_snapshot_a
         let effects = app.pending_effects(Some(&preview_view)).await;
         let receipt = context::drive_preview_run(&mut app, &preview_view, &effects).await;
         assert_eq!(receipt.state.as_deref(), Some("finalized"), "round {round}: the read-only run settles and finalizes itself: {receipt:?}");
-        context::dispatch(&mut app, Generation3dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), x: None, y: None })).await;
+        context::dispatch(&mut app, Generation3dCommand::AddWidget(add_widget::AddWidget { neuron_kind: None, format: None, action: None, kind: "inputNote".into(), x: None, y: None })).await;
         context::settle(&mut app).await;
     }
     let effects = app.pending_effects(Some(&preview_view)).await;
@@ -1255,7 +1257,7 @@ async fn undo_redo_round_trips_flow_graph_edits() {
     let before = context::snapshot(&app).host_snapshot.widgets.len();
     semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(
         &mut app,
-        Generation3dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), x: None, y: None }),
+        Generation3dCommand::AddWidget(add_widget::AddWidget { neuron_kind: None, format: None, action: None, kind: "inputNote".into(), x: None, y: None }),
         |app| context::snapshot(&app).host_snapshot.widgets.len(),
         before,
         before + 1,

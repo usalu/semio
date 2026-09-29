@@ -117,6 +117,16 @@ impl ValueError {
     }
 }
 
+/// 🧭️ Applies `edit` at `path` of a value whose codec is hand-written: through the value tree the codec emits, decoded back
+/// so every invariant its `from_value` checks holds for the edited value — the path edit a derived [`FromValue`] performs
+/// field by field. On failure `target` is unchanged. A hand-written `FromValue` routes its `edit_value_at_path` here.
+pub fn edit_through_value<T: ToValue + FromValue>(target: &mut T, path: &[&str], edit: ValueEdit) -> Result<(), ValueError> {
+    let mut value = target.to_value();
+    value.edit_value_at_path(path, edit)?;
+    *target = T::from_value(value)?;
+    Ok(())
+}
+
 fn path_index(segment: &str, length: usize, insert: bool) -> Result<usize, ValueError> {
     if insert && segment == "-" {
         return Ok(length);

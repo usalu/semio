@@ -85,8 +85,9 @@ async fn a_slow_answer_arrives_inside_the_callers_deadline_and_not_after_it() {
 //#endregion ⏱️RequestBudget
 
 //#region 🔁️ByteBudgetRefill
-/// 🔁️ A directory transport's byte budget is an allowance per refill turn, never a lifetime one: once exhausted,
-/// a request is refused naming that cause, and the pool's own driver admits requests again on its next turn (shared
+/// 🔁️ A directory transport's byte budget is an allowance per refill turn, never a lifetime one: once exhausted, the
+/// transport reads it as spent and refuses with the typed budget refusal a caller waits on, and the pool's own driver
+/// admits requests again on its next turn (shared
 /// fixture `🔁️byte-budget-refill.json`; the semio MCP gateway wedged on the lifetime budget, ticket 26/09/23 14b).
 #[semio_framework_async_macros::async_test]
 async fn an_exhausted_directory_byte_budget_names_itself_and_refills_on_the_pools_own_turn() {
@@ -114,7 +115,9 @@ async fn an_exhausted_directory_byte_budget_names_itself_and_refills_on_the_pool
     let http_pool = refilled_http_pool(&runtime, &scope, compute.clone(), budget, 2, fixture["refillIntervalMs"].as_u64().unwrap());
     let transport = NativeDirectoryTransport::new_now(runtime.clone(), scope.clone(), http_pool, PackageId("os.directory-client".into()), ActorId(0));
     let context = || OperationContext { actor: 0, generation: 0, trace: semio_framework_async::TraceId(0), lane: 0, deadline_ms: None, cancel: semio_framework_async::CancelToken::root_now(), capability: None };
+    assert_eq!(transport.network_budget(), semio_framework_os_services::HttpPackageBudget { remaining_bytes: budget, capacity_bytes: budget });
     let first = transport.http(&context(), HttpMethod::Get, &url, None, None).await;
+    let spent = transport.network_budget();
     let refused = transport.http(&context(), HttpMethod::Get, &url, None, None).await;
     let started = std::time::Instant::now();
     let refilled = loop {
@@ -129,7 +132,9 @@ async fn an_exhausted_directory_byte_budget_names_itself_and_refills_on_the_pool
     }
     server.join().unwrap();
     assert_eq!(first.map(|response| (response.status, response.body)), Ok((200, body.as_bytes().to_vec())));
-    assert!(matches!(&refused, Err(TransportError::Io(detail)) if detail.contains(fixture["refusalFragment"].as_str().unwrap())), "an exhausted budget names itself: {refused:?}");
+    assert_eq!(spent, semio_framework_os_services::HttpPackageBudget { remaining_bytes: 0, capacity_bytes: budget }, "one request spent the whole budget");
+    assert_eq!(fixture["refusal"], "budget-exhausted");
+    assert!(matches!(&refused, Err(TransportError::BudgetExhausted)), "an exhausted budget is its own typed refusal: {refused:?}");
     assert_eq!(refilled.map(|response| (response.status, response.body)), Some((200, body.as_bytes().to_vec())), "the pool's own refill turn admits requests again");
     drop(transport);
     drop(compute);

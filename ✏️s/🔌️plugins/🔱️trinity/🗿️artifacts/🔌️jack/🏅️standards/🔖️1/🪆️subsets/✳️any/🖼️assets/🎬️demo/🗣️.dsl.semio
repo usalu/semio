@@ -1,5 +1,5 @@
 semio trinity.jack.dsl v1
-schema=trinity.graph name="Nakagin Capsule Tower" manifest-id=nakagin root-node-id="7dc5b737-3b6b-4068-b315-b7bacc91c2e1" camera={
+schema=trinity.graph name="Nakagin Capsule Tower" manifest-id=nakagin root-node-id="7dc5b737-3b6b-4068-b315-b7bacc91c2e1" query="MATCH (a:Piece)-[r:Connection]->(b:Piece) WHERE a.name = 'b' AND b.name != 'b' RETURN a.name, b.name, b.label" camera={
   x=0.0 y=0.0 zoom=1.0
 }
 nodes=[ {

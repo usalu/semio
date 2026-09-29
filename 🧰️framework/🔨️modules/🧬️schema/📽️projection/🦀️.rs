@@ -702,6 +702,16 @@ channels: Array<string>,
 broadcast: boolean, };"####,
         },
         SchemaMetadata {
+            name: "HostedArtifactKind",
+            version: 1,
+            typescript: r####"/**
+ * 🏠️ One artifact kind a package hosts — the kind id, one document schema of its owner's codecs, and the OWNER: the plugin
+ * that owns the kind (declares it and its codec), a declared dependency of the host (see `PluginManifest::hosted_artifact_kinds`).
+ * The owner is explicit, never read off the kind id — an embedded surface's kind (`3d.cad`) names no plugin.
+ */
+export type HostedArtifactKind = { id: string, schema: string, owner: string, };"####,
+        },
+        SchemaMetadata {
             name: "IconName",
             version: 1,
             typescript: r####"export type IconName = "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | "arrow-right" | "arrow-right-left" | "arrow-up" | "award" | "bar-chart-3" | "beam" | "bell" | "book-open" | "box" | "building" | "cad-shape" | "calendar" | "calendar-days" | "camera" | "check" | "check-circle-2" | "chevron-down" | "chevron-left" | "chevron-right" | "chevron-up" | "chevrons-up-down" | "circle" | "circle-dot" | "clipboard" | "clipboard-list" | "clock" | "cloud" | "code" | "columns" | "combine" | "component" | "copy" | "cpu" | "crosshair" | "cylinder" | "dag" | "display-windows" | "document-jack" | "document-report" | "download" | "draw" | "edit" | "edit-3" | "eraser" | "export" | "external-link" | "eye" | "eye-off" | "fem-app" | "fem-model" | "file" | "file-archive" | "file-code" | "file-image" | "file-json" | "file-spreadsheet" | "file-text" | "file-type" | "file-video" | "filter" | "flip-horizontal" | "flip-vertical" | "flow" | "flow-graph" | "focus" | "folder" | "folder-open" | "folder-plus" | "forms" | "gis2d" | "gis3d" | "git-branch" | "git-commit" | "git-merge" | "globe" | "graduation-cap" | "graph-dag" | "graph-media" | "grid-3x3" | "grip-vertical" | "hammer" | "hand" | "hard-drive" | "hash" | "help-circle" | "hexagon" | "home" | "hud-overlay" | "image" | "image-plus" | "image-up" | "imperative" | "import" | "info" | "landmark" | "lasso" | "layers" | "layout" | "layout-grid" | "library" | "lightbulb" | "link" | "link-2-off" | "list" | "list-checks" | "list-ordered" | "list-tree" | "loader-2" | "lock" | "lock-open" | "lod-depth" | "lowpoly-model" | "magnet" | "map" | "math-app" | "math-graph" | "maximize-2" | "message-circle" | "message-square" | "minimize-2" | "minus" | "monitor" | "moon" | "more-horizontal" | "mouse-pointer" | "mouse-pointer-2" | "move" | "move-3d" | "network" | "note" | "note-math" | "paint-bucket" | "paintbrush" | "palette" | "panel-catalogue" | "panel-inspection" | "panel-left" | "panel-parameters" | "panel-right" | "panel-top" | "pause" | "pen-tool" | "pencil" | "pipette" | "play" | "play-circle" | "plug" | "plus" | "preview" | "procedural2d" | "process-workpiece" | "projection-axonometric" | "projection-curvilinear" | "projection-dimetric" | "projection-isometric" | "projection-oblique" | "projection-oblique-cabinet" | "projection-oblique-cavalier" | "projection-oblique-military" | "projection-one-point" | "projection-orthographic" | "projection-parallel" | "projection-perspective" | "projection-three-point" | "projection-trimetric" | "projection-two-point" | "puzzle" | "puzzle5d-3d" | "raster" | "reasoning-wires" | "rectangle-tool" | "redo" | "redo-2" | "relocate-3d" | "remodel-app" | "remodel-model" | "rotate-ccw" | "rotate-cw" | "s" | "save" | "scaling" | "scan" | "scan-line" | "scene-3d" | "scissors" | "search" | "select-all" | "sequence" | "settings" | "settings-2" | "shapes" | "shooting-scene" | "sigma" | "skip-back" | "skip-forward" | "slab" | "sliders-horizontal" | "smartphone" | "smile" | "sparkles" | "square" | "square-arrow-down-left" | "square-arrow-down-right" | "square-arrow-up-left" | "square-arrow-up-right" | "square-dashed" | "sticky-note" | "sun" | "table-2" | "tablet" | "tags" | "terrain-3d" | "text-cursor" | "text-search" | "toggle-left" | "transform-3d" | "trash" | "trash-2" | "triangle" | "triangle-alert" | "trinity" | "trinity-lhs" | "trinity-rewriting" | "trinity-rhs" | "type" | "typography" | "undo" | "undo-2" | "unlink" | "unlock" | "user" | "users" | "volume-brush" | "window" | "workbench" | "workflow" | "wrench" | "writer" | "x" | "zoom-in" | "zoom-out";"####,
@@ -1100,6 +1110,13 @@ commands: Array<CommandDefinition>,
  * 🗂️ Plugin-level artifact kinds (library plugins with zero apps declare kinds here).
  */
 artifactKinds: Array<ArtifactKindSpec>,
+/**
+ * 🏠️ Artifact kinds another package owns whose documents this plugin's apps open — one row per kind and document
+ * schema its owner's codecs decode (`PluginBuilder::host_artifact`, or a surface of another plugin's artifact the plugin
+ * registers). Distinct from `artifact_kinds`: the codec rows stay
+ * the owner's, and a trusted catalog binds these kinds to the owner's codecs.
+ */
+hostedArtifactKinds: Array<HostedArtifactKind>,
 /**
  * 🔗️ Direct plugin dependencies this plugin requires to load — see `PluginDependency`/
  * `resolve_load_order`.
@@ -1738,7 +1755,7 @@ export type UiStatus = "waiting" | "loading" | "idle" | "finished";"####,
         },
         SchemaMetadata { name: "UiTextNode", version: 1, typescript: r####"export type UiTextNode = { value: Label, emphasize?: boolean, dataAttributes?: { [key in string]?: string }, presence?: UiPresence, menu?: UiMenuRef, };"#### },
         SchemaMetadata { name: "UiToggleNode", version: 1, typescript: r####"export type UiToggleNode = { id: string, iconId: IconName, text?: Label, onChange: ActionDescriptor, presence?: UiPresence, menu?: UiMenuRef, };"#### },
-        SchemaMetadata { name: "UiTreeItemAction", version: 1, typescript: r####"export type UiTreeItemAction = { iconId: IconName, label?: Label, action: ActionDescriptor, placement?: UiTreeActionPlacement, };"#### },
+        SchemaMetadata { name: "UiTreeItemAction", version: 2, typescript: r####"export type UiTreeItemAction = { iconId: IconName, label?: Label, action: ActionDescriptor, placement?: UiTreeActionPlacement, disabled?: boolean, };"#### },
         SchemaMetadata {
             name: "UiTreeItemNode",
             version: 1,

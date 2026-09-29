@@ -48,6 +48,7 @@ impl PendingHubDocumentEvent {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct BrowserTickOutput {
+    media_slots: Vec<crate::media_slots::PresentedMediaSlot>,
     cursor: &'static str,
     fullscreen: Option<bool>,
     request_frame: bool,
@@ -352,7 +353,7 @@ impl BrowserRendererWorker {
         if let Some(detail) = self.quarantined.clone() {
             return encode_tick_timed(
                 generation,
-                BrowserTickOutput { cursor: "default", fullscreen: None, request_frame: false, next_deadline_delay_ms: None, continue_frame: false, progress: 1.0, quarantined: true, fault_code: Some("present-failed"), fault_detail: Some(detail) },
+                BrowserTickOutput { media_slots: Vec::new(), cursor: "default", fullscreen: None, request_frame: false, next_deadline_delay_ms: None, continue_frame: false, progress: 1.0, quarantined: true, fault_code: Some("present-failed"), fault_detail: Some(detail) },
             );
         }
         let host = self.host.as_mut().ok_or_else(|| js_error("worker-closed", "renderer host is unavailable"))?;
@@ -382,6 +383,7 @@ impl BrowserRendererWorker {
         encode_tick_timed(
             generation,
             BrowserTickOutput {
+                media_slots: if present_fault.is_some() { Vec::new() } else { outcome.media_slots },
                 cursor: outcome.cursor_css,
                 fullscreen: host.platform_fullscreen.take(),
                 request_frame: continue_frame,

@@ -28695,6 +28695,23 @@
     "topicContributions": [],
     "commands": [],
     "artifactKinds": [],
+    "hostedArtifactKinds": [
+      {
+        "id": "s.stdio.step",
+        "schema": "stdio.step",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.dxf",
+        "schema": "stdio.dxf",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.dwg",
+        "schema": "stdio.dwg",
+        "owner": "stdio"
+      }
+    ],
     "dependencies": [
       {
         "pluginId": "stdio",
@@ -29117,8 +29134,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "af0867cfeb1c96aa046b2e2224d84a1cd3994c55d2f1ee2567d6476b28802ee2",
-    "coreWasmSha256": "826043cfeb7180d2a4634676f12ca57392f32f635bbb1fe6e5f65fbd37421da3",
-    "descriptorSha256": "7d188750a3d260715d33e6ba70acd9452a73a2fad711a8c3c60f18631c8bf4ba"
+    "wasmSha256": "7f20c2dbdc4de7be757981de1bb35098c319655146a494ac76712b9eea697fdf",
+    "coreWasmSha256": "c057e384605060aa322a1a126a85ba22d4cbd5e9063229e763df93451cd80e5b",
+    "descriptorSha256": "64913dab873e70af4f5e0239cd92ea00fc4054803846f342d421a931e8a6993b"
   }
 }

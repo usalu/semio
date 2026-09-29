@@ -295,6 +295,25 @@ impl Frame {
             Frame::Rect { locked, .. } | Frame::Text { locked, .. } | Frame::Image { locked, .. } => locked.unwrap_or(false),
         }
     }
+
+    pub fn layer_id(&self) -> &str {
+        match self {
+            Frame::Rect { layer_id, .. } | Frame::Text { layer_id, .. } | Frame::Image { layer_id, .. } => layer_id,
+        }
+    }
+}
+
+/// 🔒 A frame on a locked layer, or a frame that is itself locked, stays where it is.
+pub fn frame_edits_blocked(document: &LayoutSnapshot, page: &Page, frame: &Frame) -> bool {
+    frame.locked() || layer_locked(document, page, frame.layer_id())
+}
+
+/// 🔒 The layer is locked on this page, or on the page's parent when the frame is inherited.
+pub fn layer_locked(document: &LayoutSnapshot, page: &Page, layer_id: &str) -> bool {
+    if page.layers.iter().any(|layer| layer.id == layer_id && layer.locked) {
+        return true;
+    }
+    page.parent_page_id.as_ref().and_then(|id| document.parent_pages.iter().find(|parent| parent.id == *id)).is_some_and(|parent| parent.layers.iter().any(|layer| layer.id == layer_id && layer.locked))
 }
 
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, ToValue, FromValue)]
@@ -903,6 +922,30 @@ pub struct PagePatch {
     pub parent_page_id: Option<Option<String>>,
     #[value(default)]
     pub guides: Option<Vec<LayoutRect>>,
+    #[value(default)]
+    pub overrides: Option<Vec<PageOverride>>,
+    #[value(default)]
+    pub layer_added: Option<Layer>,
+    #[value(default)]
+    pub layer_removed: Option<String>,
+    #[value(default)]
+    pub frame_layer: Option<PageFrameLayer>,
+    #[value(default)]
+    pub frame_order: Option<Vec<String>>,
+}
+
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(deny_unknown_fields)]
+pub struct PageFrameLayer {
+    pub frame_id: String,
+    pub layer_id: String,
+}
+
+pub fn set_frame_layer(frame: &mut Frame, layer_id: &str) {
+    match frame {
+        Frame::Rect { layer_id: slot, .. } | Frame::Text { layer_id: slot, .. } | Frame::Image { layer_id: slot, .. } => *slot = layer_id.to_string(),
+    }
 }
 
 /// 🩹️ Pure field-apply for a {@link FramePatch} onto a {@link Frame} — no inverse capture (every
@@ -1033,6 +1076,44 @@ impl Patchable<PagePatch> for Page {
         if let Some(guides) = &patch.guides {
             self.guides = guides.clone();
         }
+        if let Some(overrides) = &patch.overrides {
+            self.overrides = overrides.clone();
+        }
+        if let Some(layer) = &patch.layer_added {
+            if self.layers.iter().all(|item| item.id != layer.id) {
+                self.layer_ids.push(layer.id.clone());
+                self.layers.push(layer.clone());
+            }
+        }
+        if let Some(layer_id) = &patch.layer_removed {
+            self.layer_ids.retain(|id| id != layer_id);
+            self.layers.retain(|layer| layer.id != *layer_id);
+        }
+        if let Some(order) = &patch.frame_order {
+            let mut next = Vec::new();
+            for id in order {
+                if let Some(pos) = self.frames.iter().position(|frame| frame.id() == id) {
+                    next.push(self.frames.remove(pos));
+                }
+            }
+            next.append(&mut self.frames);
+            self.frames = next;
+            for layer in &mut self.layers {
+                let rank = |id: &String| order.iter().position(|item| item == id).unwrap_or(usize::MAX);
+                layer.object_ids.sort_by_key(rank);
+            }
+        }
+        if let Some(change) = &patch.frame_layer {
+            if let Some(frame) = self.frames.iter_mut().find(|frame| frame.id() == change.frame_id) {
+                set_frame_layer(frame, &change.layer_id);
+            }
+            for layer in &mut self.layers {
+                layer.object_ids.retain(|id| id != &change.frame_id);
+            }
+            if let Some(layer) = self.layers.iter_mut().find(|layer| layer.id == change.layer_id) {
+                layer.object_ids.push(change.frame_id.clone());
+            }
+        }
         if let Some(entry) = &patch.layer_patched {
             if let Some(layer) = self.layers.iter_mut().find(|layer| layer.id == entry.layer_id) {
                 if let Some(name) = &entry.name {
@@ -1085,6 +1166,16 @@ impl Patchable<PagePatch> for Page {
         }
         if self.columns.gutter != other.columns.gutter {
             patch.columns_gutter = Some(other.columns.gutter);
+            changed = true;
+        }
+        if self.overrides != other.overrides {
+            patch.overrides = Some(other.overrides.clone());
+            changed = true;
+        }
+        let self_ids: Vec<String> = self.frames.iter().map(|frame| frame.id().to_string()).collect();
+        let other_ids: Vec<String> = other.frames.iter().map(|frame| frame.id().to_string()).collect();
+        if self_ids != other_ids {
+            patch.frame_order = Some(other_ids);
             changed = true;
         }
         changed.then_some(patch)
@@ -1381,6 +1472,36 @@ pub mod standards {
                         #[path = "."]
                         pub mod update_link {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️update-link/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod set_page_overrides {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📎set-page-overrides/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod create_layer {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑create-layer/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod set_frame_layer {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲set-frame-layer/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod set_drawing_text {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️set-drawing-text/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod reorder_frame {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜reorder-frame/🦀️.rs"]
                             mod component;
                             pub use component::*;
                         }

@@ -748,14 +748,14 @@ describe("capTreeWindowRequests", () => {
 
 // #region 🈳️EmptyStateDirection
 describe("Tree empty state reading direction", () => {
-  it("mirrors the tree for a right-edge panel but lets its empty-state content read in its own direction", async () => {
+  it("keeps the tree in its own reading direction inside a mirrored panel", async () => {
     const { FlowProvider } = await import("../../../../🔨️modules/🧭️flow-direction-context/🟦️.tsx");
     const view = render(
       <FlowProvider inline="rtl">
         <Tree sections={[]} emptyState={<p>No task is running.</p>} />
       </FlowProvider>,
     );
-    expect(view.getByRole("tree").getAttribute("dir")).toBe("rtl");
+    expect(view.getByRole("tree").getAttribute("dir")).toBe("auto");
     const message = view.getByText("No task is running.");
     expect(message.closest("[dir]")?.getAttribute("dir")).toBe("auto");
     expect(message.closest('[data-slot="tree-empty-state"]')).not.toBeNull();

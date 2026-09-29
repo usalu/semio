@@ -61,7 +61,7 @@ impl ZipArtifact {
 
 //#region 🔖️DocumentHelpers
 /// 🦑 Dissolved out of the former `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-
-/// MACHINES) — mirrors `png`'s own `empty_png_snapshot`/`demo_png_snapshot` placement beside the
+/// MACHINES) — mirrors `png`'s own `blank_png_snapshot`/`demo_png_snapshot` placement beside the
 /// artifact struct.
 /// 🌱 Empty persisted snapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

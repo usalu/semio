@@ -115,7 +115,1100 @@
       "fixtures": []
     }
   ],
-  "runtime_capabilities": [],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-animation.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.semio@v1/animation",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.semio@v1/animation"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-audio.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.semio@v1/audio",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.semio@v1/audio"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-brep.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.semio@v1/brep",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.semio@v1/brep"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-cad.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.semio@v1/cad",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.semio@v1/cad"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-document.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.semio@v1/document",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.semio@v1/document"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-drawing.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.semio@v1/drawing",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.semio@v1/drawing"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-flow.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.semio@v1/flow",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.semio@v1/flow"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-image.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.semio@v1/image",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.semio@v1/image"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-mesh.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.semio@v1/mesh",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.semio@v1/mesh"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-model.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.semio@v1/model",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.semio@v1/model"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-presentation.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.semio@v1/presentation",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.semio@v1/presentation"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-value.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.semio@v1/value",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.semio@v1/value"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-video.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.semio@v1/video",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.semio@v1/video"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-animation-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.animation.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.animation.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-audio-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.audio.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.audio.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-brep-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.brep.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.brep.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-cad-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.cad.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.cad.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-document-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.document.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.document.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-drawing-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.drawing.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.drawing.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-flow-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.flow.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.flow.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-graph-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.graph.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.graph.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-image-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.image.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.image.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-kit-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.kit.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.kit.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-mesh-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.mesh.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.mesh.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-model-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.model.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.model.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-object-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.object.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.object.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-presentation-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.presentation.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.presentation.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-table-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.table.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.table.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-text-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.text.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.text.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-value-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.value.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.value.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-video-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.semio.video.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.video.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.schema.schema-export-s-stdio-semio-child.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema-export:s.stdio.semio#child",
+      "claims": [
+        {
+          "namespace": "schema-export",
+          "value": "s.stdio.semio#child"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.schema.schema-export-s-stdio-semio-geometry.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema-export:s.stdio.semio#geometry",
+      "claims": [
+        {
+          "namespace": "schema-export",
+          "value": "s.stdio.semio#geometry"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.schema.schema-s-stdio-semio-animation.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.semio.animation",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.animation"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.schema.schema-s-stdio-semio-audio.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.semio.audio",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.audio"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.schema.schema-s-stdio-semio-brep.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.semio.brep",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.brep"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.schema.schema-s-stdio-semio-cad.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.semio.cad",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.cad"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.schema.schema-s-stdio-semio-document.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.semio.document",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.document"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.schema.schema-s-stdio-semio-drawing.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.semio.drawing",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.drawing"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.schema.schema-s-stdio-semio-flow.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.semio.flow",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.flow"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.schema.schema-s-stdio-semio-graph.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.semio.graph",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.graph"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.schema.schema-s-stdio-semio-image.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.semio.image",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.image"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.schema.schema-s-stdio-semio-kit.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.semio.kit",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.kit"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.schema.schema-s-stdio-semio-mesh.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.semio.mesh",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.mesh"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.schema.schema-s-stdio-semio-model.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.semio.model",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.model"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.schema.schema-s-stdio-semio-object.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.semio.object",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.object"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.schema.schema-s-stdio-semio-presentation.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.semio.presentation",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.presentation"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.schema.schema-s-stdio-semio-table.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.semio.table",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.table"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.schema.schema-s-stdio-semio-text.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.semio.text",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.text"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.schema.schema-s-stdio-semio-value.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.semio.value",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.value"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.schema.schema-s-stdio-semio-video.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.semio.video",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio.video"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.schema.schema-s-stdio-semio.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.semio",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.semio"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-animation-extension-semio.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:23:s.stdio.semio.animation:semio|codec:s.stdio.semio.animation",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "s.stdio.semio.animation"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "23:s.stdio.semio.animation:semio"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-document-extension-semio.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:22:s.stdio.semio.document:semio|codec:s.stdio.semio.document",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "s.stdio.semio.document"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "22:s.stdio.semio.document:semio"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-graph-extension-semio.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:19:s.stdio.semio.graph:semio|codec:s.stdio.semio.graph",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "s.stdio.semio.graph"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "19:s.stdio.semio.graph:semio"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-image-extension-semio.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:19:s.stdio.semio.image:semio|codec:s.stdio.semio.image",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "s.stdio.semio.image"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "19:s.stdio.semio.image:semio"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-presentation-extension-semio.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:26:s.stdio.semio.presentation:semio|codec:s.stdio.semio.presentation",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "s.stdio.semio.presentation"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "26:s.stdio.semio.presentation:semio"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-table-extension-semio.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:19:s.stdio.semio.table:semio|codec:s.stdio.semio.table",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "s.stdio.semio.table"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "19:s.stdio.semio.table:semio"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-text-extension-semio.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:18:s.stdio.semio.text:semio|codec:s.stdio.semio.text",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "s.stdio.semio.text"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "18:s.stdio.semio.text:semio"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-audio-extension-semio.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:17:stdio.semio.audio:semio|codec:stdio.semio.audio",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.semio.audio"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "17:stdio.semio.audio:semio"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-brep-extension-semio.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:16:stdio.semio.brep:semio|codec:stdio.semio.brep",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.semio.brep"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "16:stdio.semio.brep:semio"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-cad-extension-semio.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:15:stdio.semio.cad:semio|codec:stdio.semio.cad",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.semio.cad"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "15:stdio.semio.cad:semio"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-drawing-extension-semio.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:19:stdio.semio.drawing:semio|codec:stdio.semio.drawing",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.semio.drawing"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "19:stdio.semio.drawing:semio"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-extension-semio.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:11:stdio.semio:semio|codec:stdio.semio",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.semio"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "11:stdio.semio:semio"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-flow-extension-semio.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:16:stdio.semio.flow:semio|codec:stdio.semio.flow",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.semio.flow"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "16:stdio.semio.flow:semio"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-kit-extension-semio.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:15:stdio.semio.kit:semio|codec:stdio.semio.kit",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.semio.kit"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "15:stdio.semio.kit:semio"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-mesh-extension-semio.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:16:stdio.semio.mesh:semio|codec:stdio.semio.mesh",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.semio.mesh"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "16:stdio.semio.mesh:semio"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-model-extension-semio.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:17:stdio.semio.model:semio|codec:stdio.semio.model",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.semio.model"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "17:stdio.semio.model:semio"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-object-extension-semio.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:18:stdio.semio.object:semio|codec:stdio.semio.object",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.semio.object"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "18:stdio.semio.object:semio"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-value-extension-semio.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:17:stdio.semio.value:semio|codec:stdio.semio.value",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.semio.value"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "17:stdio.semio.value:semio"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-video-extension-semio.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:17:stdio.semio.video:semio|codec:stdio.semio.video",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.semio.video"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "17:stdio.semio.video:semio"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.standard.v1.representation.mime-application-vnd-semio-extension-semio",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:application/vnd.semio|extension:.semio",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "application/vnd.semio"
+        },
+        {
+          "namespace": "extension",
+          "value": ".semio"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-animation.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.semio@v1/animation",
+      "claims": [
+        {
+          "namespace": "validated-dialect",
+          "value": "s.stdio.semio@v1/animation"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-audio.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.semio@v1/audio",
+      "claims": [
+        {
+          "namespace": "validated-dialect",
+          "value": "s.stdio.semio@v1/audio"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-brep.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.semio@v1/brep",
+      "claims": [
+        {
+          "namespace": "validated-dialect",
+          "value": "s.stdio.semio@v1/brep"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-cad.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.semio@v1/cad",
+      "claims": [
+        {
+          "namespace": "validated-dialect",
+          "value": "s.stdio.semio@v1/cad"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-document.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.semio@v1/document",
+      "claims": [
+        {
+          "namespace": "validated-dialect",
+          "value": "s.stdio.semio@v1/document"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-drawing.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.semio@v1/drawing",
+      "claims": [
+        {
+          "namespace": "validated-dialect",
+          "value": "s.stdio.semio@v1/drawing"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-flow.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.semio@v1/flow",
+      "claims": [
+        {
+          "namespace": "validated-dialect",
+          "value": "s.stdio.semio@v1/flow"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-graph.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.semio@v1/graph",
+      "claims": [
+        {
+          "namespace": "validated-dialect",
+          "value": "s.stdio.semio@v1/graph"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-image.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.semio@v1/image",
+      "claims": [
+        {
+          "namespace": "validated-dialect",
+          "value": "s.stdio.semio@v1/image"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-kit.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.semio@v1/kit",
+      "claims": [
+        {
+          "namespace": "validated-dialect",
+          "value": "s.stdio.semio@v1/kit"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-mesh.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.semio@v1/mesh",
+      "claims": [
+        {
+          "namespace": "validated-dialect",
+          "value": "s.stdio.semio@v1/mesh"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-model.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.semio@v1/model",
+      "claims": [
+        {
+          "namespace": "validated-dialect",
+          "value": "s.stdio.semio@v1/model"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-object.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.semio@v1/object",
+      "claims": [
+        {
+          "namespace": "validated-dialect",
+          "value": "s.stdio.semio@v1/object"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-presentation.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.semio@v1/presentation",
+      "claims": [
+        {
+          "namespace": "validated-dialect",
+          "value": "s.stdio.semio@v1/presentation"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-table.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.semio@v1/table",
+      "claims": [
+        {
+          "namespace": "validated-dialect",
+          "value": "s.stdio.semio@v1/table"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-text.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.semio@v1/text",
+      "claims": [
+        {
+          "namespace": "validated-dialect",
+          "value": "s.stdio.semio@v1/text"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-value.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.semio@v1/value",
+      "claims": [
+        {
+          "namespace": "validated-dialect",
+          "value": "s.stdio.semio@v1/value"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-video.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.semio@v1/video",
+      "claims": [
+        {
+          "namespace": "validated-dialect",
+          "value": "s.stdio.semio@v1/video"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1.v1",
+      "category": "subset-validator",
+      "descriptor": "runtime-capability:subset-validator:validated-dialect:s.stdio.semio@v1/*",
+      "claims": [
+        {
+          "namespace": "validated-dialect",
+          "value": "s.stdio.semio@v1/*"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

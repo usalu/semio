@@ -1,6 +1,6 @@
 mod tests {
     use super::*;
-    use crate::standards::v_ap214::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
+    use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
     use crate::standards::v_ap214::subsets::cc1::schema::CODE_SHAPE_REPRESENTATION_PRESENT;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

@@ -4,6 +4,67 @@ Slice: S20 (session 14; continues T12's rows 1.7/1.8). Coordinator: `main`. Port
 Scripts/patches: `.tmp-ticket/wp-s20/`. Expendable captures: `.tmp-ticket/wp-s20/generated/`. Durable data: `.🧬semio/🌐hub/s14-s20-*/`.
 Private cargo: `CARGO_TARGET_DIR=.tmp-ticket/wp-s20/target` (native lane, build-fleet-b).
 
+## Session 15
+
+Successor S20 (2026-09-29 19:2x, Opus 5.5). Rules: `📓️session-15-preamble.md` (29–33) + session-14 rules 1–28. GUEST FREEZE ON.
+
+| # | Item | State | Evidence |
+|---|---|---|---|
+| R | reconcile predecessor (last active ~13:2x, session limit; not resumed in session 14) | **done 19:3x** — no orphan S20 lane job, no half-applied live hunk (all S20 work sits on the faults overlay); last overlay captures: framework fault laws **EXIT 0** 13:52; family checks RED: FH1 `fh1-H2` EXIT 101 13:48, FH2 `fh2-check3` EXIT 101 13:55 (24 × E0277 `?` → `dsl::Fault`), FH3 `fh3-all2` EXIT 101 13:59 (11 × E0308); helpers FH1–FH3 dead since ~13:2x | `.🧬semio/🌐hub/s14-s20-overlay-build/logs/0929-1{24917,25217,25749,30244}-*.txt` |
+| 1 | rebase the faults overlay onto the post-round-3a live tree (`s20-overlay-land.py rebase`) | **done 19:37**: 651 clean · 72 merged · 13 token-merged (each verified = exactly our edits) · 7 hand-resolved + 1 accepted live deletion (`s20-rebase-resolve.py`); sync 870 copied / 114 created / 30 deleted; backup `s14-s20-rebase/backup-0929-193710` | `.🧬semio/🌐hub/s14-s20-rebase/report.json` |
+| 2 | census + fix-ups on the rebased overlay; then L1's train union `check --lib --tests` (228 crates + 59 features) on the overlay | **census 22 → 1** (`s20-rebase-fixes.py`: cad/puzzle2d/3d/5d flag-value, jack query-too-large + 6 retired jack declarations, SDK presence read, P9 `app.command.no-effect` {action} / `app.notice` / `app.example.*` catalogued (617); `s20-rebase-pdf-page.py`: 44 free-text pdf-page refusals LB2's round 2 added → codes, 22 new en/de). Remaining 1 = `MutationMessageCode for &'static str` bridge (`FaultCode::new(self)`, pass-2 scope) → coordinator decision. Union check QUEUED 19:44 (overlay lane, behind LB2 p17 / C12 / P9) | `.🧬semio/🌐hub/s14-s20-sets/rebase/census-{1,2,3}.txt`, `s14-s20-overlay-build/logs/0929-194444-s15-union-1.txt` |
+| 3 | row-12 landing plan dry run on live | **0 conflicts 21:08** (746 clean, 1 merged, 1 token-merged, 8 creates; earlier 19:5x also 0) (740 clean, 2 merged, 8 creates; the gitignored generated manifest TS is not landed → L1 regenerates typegen `framework-rs:generate` in the row-12 step) | `.🧬semio/🌐hub/s14-s20-landing/report.json` |
+| 4 | exports through the `s` UI: layout, shooting native raster, cad brep | **layout PREPARED 21:3x** (`s20-patch-layout-export.py`, T7g (renumbered), dry-run clean on live + overlay, not compiled: freeze); shooting = in-guest raster path needed (`rasterize_svg_to_png_base64` is native-only) — open; cad = CD1's step-exchange set | `wp-s20/s20-patch-layout-export.py`, `📓️t6-queue.md` T7g |
+| 5 | coordinator decision (a): pass-1 census excludes ONLY the pass-2 bridge (path+item `FAULT_PASS2_BRIDGE`) + FINDING: SDK app-origin raises → `Framework` (17) + law rule `framework-app-origin` | **done 20:2x**: self-test 48/48, census **0 violations PASS** | `wp-s20/s20-f1/f1-origin-and-bridge.py`, `s14-s20-sets/rebase/census-4.txt` |
+| 6 | union-1 reds (43 errors / 10 crates) fixed: process3d flag-value, draw 24 free-text `ok_or`, os-mcp 3 gateway faults, 10 test helpers | **fixed 20:3x**, census 0 (`census-5.txt`); **union-2 QUEUED 20:35** | `wp-s20/s20-rebase-fixes-2.py`, `…/logs/0929-203523-s15-union-2.txt` |
+| 7 | PASS 2 (mutation reports by code): spec §6, p2 overlay (APFS clone), codemod 3 583 report sites + 656 apply rejections → `MutationCode`; drift list for FH4 | **codemod done 21:0x**; FH4 on drift (133 left); **P2-F1 written 21:1x** (`p2-api.py`: `MutationCode` + reports/apply errors without message, bridge + census exclusion removed; `p2-consumers.py`: history wire, store, sync (7 literals), planner, run, MCP relay, wgpu conflict row = catalog text by code; `p2-ts.py`: kernel TS type, React conflict text by code; catalog texts + classes for the 7 codes); framework check QUEUED 21:17 on the p2 build-dir (seeded by APFS clone) | spec `📓️fault-localization-api.md` §6, `wp-s20/s20-p2/p2-codemod.py`, `s14-s20-sets/p2/drift-sites.json` |
+| 8 | FAULT CLASSES (coordinator 20:5x): 7 classes, `.fault(code, class, text)`, record v3 `class`, os-mcp map by class, law | **applied 21:0x on the pass-1 overlay**: machinery (`class-machinery.py`: `FaultClass` + `FaultDefinition/FaultCatalogEntry.class`, guest-side `declared_fault_class` (catalog scanned line by line, no big allocation), builder `.fault(code, class, text)` + registration, record v3 `class` (Rust/schema/fixture/TS decoder/AJV twin), catalog schema, projection + generated TS, os-mcp `Fault.class` + map BY CLASS + `details.fault.class`, census rules `class-missing`/`class-unknown`, `framework-app-origin` narrowed to raise position); reviewed classes (FH5/6/7) + S20 pattern calls (`class-decisions.py`: `*closing*` → unavailable (36), window/route-stale → precondition-failed, stale handles → internal, 4 singles) + 9 retexts (`class-retext.py`) applied by `class-apply.py` (1 942 declarations, catalog 617). **Census 0 violations PASS** (`census-7.txt`), self-test 49/49, TS twin 23/23, tsc os 0 + repo 0; union-3 + fault laws QUEUED 21:05 | `wp-s20/s20-class/`, `s14-s20-sets/rebase/{census-7,tsc-os-2,tsc-repo-1}.txt`, `…/logs/0929-210514-s15-c3-*.txt` |
+| 9 | pass-1 union-2 (L1's 228 crates + 59 features, after the union-1 fixes) | **GREEN 20:54** (EXIT 0) | `…/logs/0929-203523-s15-union-2.txt` |
+
+### Session 15 log
+
+- 19:2x read preambles 15/14, this report, `📓️fault-localization-api.md`, `📓️t6-queue.md` row 12, FH1–FH3 reports, L1 session-15 table
+  (round 4 = C13 P4, C12 hub-order, SH2 P2, T7c P9, T7d LB2 p17, then row 12). Overlay change set vs its 08:53 baseline: 745 changed +
+  9 created (non-`.🧬semio`), 0 deleted (`.🧬semio/🌐hub/s14-s20-sets/rebase/diff-0.json`).
+- 19:3x `wp-s20/s20-overlay-land.py` gains `rebase [--write]` (overlay := live for every non-OURS file, OURS := `git merge-file --diff3`
+  onto live; conflicts → `.🧬semio/🌐hub/s14-s20-rebase/conflicts/`, hand resolutions → `resolved/` + `resolved.json`; `--write` backs up
+  OURS + baseline, writes overlay, new baseline = live at the rebase, and the merge BASE blobs `…overlay-faults.bases/` — so the next
+  rebase (after round 4) and the landing plan no longer depend on git history).
+- 19:3x rebase dry run: 21 line-level conflicts → `token_merge` (same 3-way over word/punct/space tokens) merged 13 (verified: token edit
+  multiset live→merged == base→ours for all 13); 8 hand-resolved in `wp-s20/s20-rebase-resolve.py` (jack editor/text-edit/format/run-query:
+  live side + raise conversions; jack window config deleted by C12's query-in-document → accepted; pdf 1.7 page imports + `req_text`;
+  os plugin `📜️script.ts` oracles union; generated manifest TS = live + `faults` field + `FaultDefinition`). `rebase --write` 19:37.
+- 19:4x census on the rebased overlay (`GIT_DIR=… GIT_WORK_TREE=<overlay> bun ./📜️script.ts verify faults`): 22 violations (all from
+  post-08:53 live code) → fixed → **1** (the pass-2 bridge). Framework catalog regenerated by FH1's tools (`wp-fh1/catalog_texts.py` +4,
+  `fh1-census.ts A`, `fh1-catalog.py` → 617). Hidden free-text helper calls the census cannot see: pdf 1.7 page (44) converted by hand
+  table; the rest is the compiler's job (union check queued: `wp-s20/s20-f1/overlay-union.sh s15-union-1`).
+- 19:5x landing plan (`s20-overlay-land.py plan`, BASE blobs from the rebase): 0 conflicts.
+- 20:0x–20:5x coordinator decisions: (a) bridge exclusion by path+item; FINDING SDK app-origin → Framework (17) + rule
+  `framework-app-origin`; pass 2 started (spec §6, p2 overlay clone 7 min, codemod 3 583 + 656 sites, FH4 on the drift list);
+  fault classes (spec §7). EX1 relay answered (catalog has both `app.example.*`; EX1 retexts `unreadable` with {example}).
+- 20:3x union-1 reds fixed (`s20-rebase-fixes-2.py`), union-2 GREEN 20:54 (only 17 crates re-checked: every other unit fresh).
+- 21:0x class machinery + reviewed classes + pattern calls + retexts (see row 8). A broken splice of mine in the gitignored generated
+  manifest TS (rebase resolution cut `FaultDefinition` at its first field doc) repaired in both overlays; resolver fixed.
+- 21:1x union-3 red: 1 error (EditorBuilder's forwarding list `fault(code, text)` lacked the class) → fixed in `class-machinery.py`;
+  union-4 + fault laws + p2 framework check queued; all three wait at the lane's load gate (1-min load 61: peers' builds + copies).
+- Exports (item 4) analysis: layout `layout:out` refuses because the layout editor has no `build_snapshot_disposer` (SDK default
+  `None` → "media export owner lacks an exact bounded snapshot disposer"); shooting `photos:out` calls
+  `semio_framework_os::rasterize_svg_to_png_base64`, which is native-only (usvg/resvg) and refuses inside the wasm guest → needs an
+  in-guest raster path; cad `brep:out` = CD1's `wp-cd1/step-exchange` set (new code `cad.export.failed` {reason} to declare at the
+  row-12 rebase onto it).
+- 21:2x–21:3x waiting: union-4 (pass 1), fault laws, p2 framework check all hold/queue the overlay lane but sit in its load gate
+  (1-min load 47–61 from peers). Layout export set prepared (SDK `bounded_snapshot_disposer` reusing the SDK's bounded config
+  value retirement; layout opt-in; law) and registered as T7f.
+- 21:5x row-12 proof-1 (native 228 + wasm32-wasip2 178 in one ticket): 2 errors total — shared puzzle retained module still
+  called `TypedOperationFault::of_fault(fault)` (→ `of_declared`), MCP quick law's `Fault` literal lacked `class` (+ its expected
+  `details.fault` gains `class`); wasm32 had no wasm-only error. Fault laws run was blocked by the same MCP test. Fixed in
+  `class-machinery.py`; proof-2 (native + wasm32 + laws in one ticket) queued 21:53.
+- 21:5x P2-F1 round 1 (`p2-framework-1`): replication map delta still passed code + message → `p2-fixups-1.py` (map apply →
+  frozen codes, neutral fixture + TS twin). FH4 DONE (0 drift in its 12 families, census 0); the 13 remaining framework/hub/
+  sourcing/reasoning drift sites fixed by me (`p2-fixups-2.py`); census rule `app-mutation-code` added on p2 (`p2-census.py`,
+  self-test 48/48). `p2-framework-2` queued 21:53. Open P2 notes (FH4): builders' `Diagnostic::error("mutation.apply", …)`
+  (diagnostic codes are outside the fault law — a later pass), gltf rejection record's unused `detail` field.
+
 ## Session 14
 
 | # | Item | State | Evidence |
@@ -307,3 +368,43 @@ framework answer needs no per-kind code and no guest change for the React shell:
   descriptors list them; the host intercepts them onto the same two handlers, and the os commands above are removed in
   that same patch (one implementation). Agents already have `artifact_export` over the semio MCP.
 - Per-kind extra formats (STEP/OBJ/PDF/…) stay domain extensions/stdio codecs on top (the existing per-kind verbs).
+
+### Design — shooting `photos:out` raster in guests (session 15, for the coordinator's decision)
+
+Facts: `photos:out` renders the shot as a semio drawing (a `Path` frame with fill + stroke, a scaled PNG emblem `Image`, a
+centred `Text` label) → SVG → `semio_framework_os::rasterize_svg_to_png_base64` (usvg/resvg, native-only; `wasm32-wasip2` returns
+"SVG rasterization requires the native semio-framework-os host"). The framework raster module `🖌️raster` rasterizes on the GPU
+(vello/wgpu, native-only); `🔤️typeset` outlines text through Typst/usvg (native-only); the only first-party fonts are the
+Libertinus OTF (CFF outlines) under `📚️compiler/🌍️world/🔤️fonts`; `🔲️pixels` has PNG encode/decode + bilinear resize.
+
+- **A (recommended): first-party CPU tier in `🖌️raster`**, target-neutral (native + wasm32-wasip2 + browser guest):
+  `cpu::rasterize(&VectorScene, width, height, background) -> RGBA8` — nonzero scanline fill with exact-area coverage
+  anti-aliasing over flattened `BezPath`s, stroke expansion (miter/round joins, butt caps) to fill polygons, an `ImageOp`
+  (bilinear blit via `🔲️pixels`), bounded work (`step(budget)` → progress + cancellation for the export job); text through a
+  first-party OpenType reader (cmap + hmtx + CFF Type 2 charstrings → `BezPath`) over the embedded Libertinus Sans/Serif, simple
+  left-to-right advance layout (no shaping beyond cmap; the label is Latin). Shooting renders its semio drawing through it on
+  EVERY tier (one output); native resvg becomes the third-party oracle (per-pixel tolerance law on shared fixtures).
+  Cost ~1–1.5 days; reusable by layout/draw/raster exports and animate's guest video frames.
+- **B: host capability** (guest asks the host to rasterize SVG): new WIT import + native impl (resvg exists) + browser impl
+  (OffscreenCanvas is async; components import sync) → ABI change across all components, two host implementations, no
+  guarantee the browser twin renders like resvg. Not recommended.
+- **Decision 21:4x: A, built by the new slice RS1.** My design above did NOT account for the existing first-party pieces. Pointers
+  for RS1, so it does not have to find them again (read-only survey, 21:4x):
+  - **Scene input: draw.** `flatten_drawing_document_to_scene_nodes` (the drawing canvas projection) plus the PDF painter
+    `drawing_document_to_pdf`, in `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🦀️.rs`.
+    The painter walks scene nodes (even-odd fills, shadings, ExtGState alpha, RGB images + SMask, text) into PDF OPERATORS, not
+    pixels. Reuse its node walk and paint model as the rasterizer's input contract. Its text is PDF Helvetica, which has no
+    outlines.
+  - **Target: `🖌️raster`.** It already has the target-neutral scene types (`FillOp`, `StrokeOp`, `DrawOp`, `VectorScene`) and a
+    GPU-only `SceneRasterizer` (vello/wgpu). The CPU tier consumes the same `VectorScene`: ONE rasterizer for every guest, never
+    shooting-only.
+  - **Text: the ui crate.** `🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📝️text/🦀️.rs` has the glyph atlas and WG11's T7a
+    exact advances + T7b `text::PairKerning` (GPOS/`kern` pairs, Chromium as oracle). Its faces are
+    `🖼️assets/🔤️fonts/*/🔤️outline.ttf` (TrueType glyf, simpler than the Libertinus CFF I proposed — drop that part).
+    CAUTION: that module is built on parley/fontique/swash (third-party crates behind the ui interface, wgpu target). It is
+    not a first-party OpenType reader, and whether it links into `wasm32-wasip2` guests without breaking the "no third-party
+    runtime dependency in the shipped component" rule is unverified. RS1 must settle with the coordinator: either reuse behind
+    the interface in guests, or extract a first-party glyf/cmap/hmtx reader and keep the same advance + kerning source, so
+    exported text measures like both shells.
+  - **Oracle:** `semio_framework_os::rasterize_svg_to_png_base64` (usvg/resvg, native) on shared fixtures, with a per-pixel
+    tolerance law; `🔲️pixels` provides `encode_png` / `decode_png` / `resize_bilinear`.

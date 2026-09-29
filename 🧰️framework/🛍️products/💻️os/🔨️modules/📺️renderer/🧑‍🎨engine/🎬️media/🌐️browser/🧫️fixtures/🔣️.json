@@ -1,0 +1,49 @@
+{
+  "revision": "18446744073709551614",
+  "generation": "18446744073709551613",
+  "operation": "18446744073709551612",
+  "bytes": [
+    82,
+    73,
+    70,
+    70
+  ],
+  "cases": [
+    {
+      "name": "successful-export",
+      "retire": false,
+      "state": "complete",
+      "expected": [
+        "submit",
+        "poll",
+        "take"
+      ]
+    },
+    {
+      "name": "cancel-running-on-retire",
+      "retire": true,
+      "state": "running",
+      "expected": [
+        "submit",
+        "poll",
+        "cancel"
+      ]
+    },
+    {
+      "name": "drain-completed-on-retire",
+      "retire": true,
+      "state": "complete",
+      "expected": [
+        "submit",
+        "poll",
+        "take"
+      ]
+    }
+  ],
+  "wav": {
+    "sampleRate": 8000,
+    "sampleCount": 8000,
+    "sampleValue": 128,
+    "durationMs": 1000
+  }
+}

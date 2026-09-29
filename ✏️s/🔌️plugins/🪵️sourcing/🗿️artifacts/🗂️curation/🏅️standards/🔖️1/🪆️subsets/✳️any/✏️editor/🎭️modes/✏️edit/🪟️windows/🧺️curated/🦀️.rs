@@ -63,9 +63,9 @@ pub(crate) fn curated_rows(document: &CurationSnapshot, cfg: &SourcingCurationCo
 fn curated_row_actions(item: &CuratedItem, kind: &ObjectKind, labels: &SourcingLabels) -> Vec<UiTreeItemAction> {
     let mut actions = Vec::new();
     if item.count < kind.availability {
-        actions.push(UiTreeItemAction { icon_id: "plus".into(), label: Some(labels.curate.into()), action: sourcing_table_action("curationAdd", Some(&kind.id)), placement: Some(UiTreeActionPlacement::Row) });
+        actions.push(UiTreeItemAction { icon_id: "plus".into(), label: Some(labels.curate.into()), action: sourcing_table_action("curationAdd", Some(&kind.id)), placement: Some(UiTreeActionPlacement::Row), disabled: false });
     }
-    actions.push(UiTreeItemAction { icon_id: "trash-2".into(), label: Some(labels.remove.into()), action: sourcing_table_action("curationRemove", Some(&kind.id)), placement: Some(UiTreeActionPlacement::Row) });
+    actions.push(UiTreeItemAction { icon_id: "trash-2".into(), label: Some(labels.remove.into()), action: sourcing_table_action("curationRemove", Some(&kind.id)), placement: Some(UiTreeActionPlacement::Row), disabled: false });
     actions
 }
 

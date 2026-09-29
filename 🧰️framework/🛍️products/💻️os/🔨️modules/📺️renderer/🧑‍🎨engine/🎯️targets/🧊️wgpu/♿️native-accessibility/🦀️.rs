@@ -285,10 +285,11 @@ pub(crate) fn native_accessibility_tree(publication: &NativeAccessibilityPublica
 }
 
 /// 🎯️ The shell event one assistive-technology action request is: `Focus`, `Blur`, `Click` (activate) and `SetValue`
-/// on a node this tree addresses. Anything else — another action, a node the tree does not know — answers nothing.
+/// on a node this tree addresses and that advertises the action — `Blur` being `Focus`'s inverse, a node that can take focus
+/// can give it back. Anything else — another action, an unadvertised one, a node the tree does not know — answers nothing.
 fn action_dispatch(tree: &NativeAccessibilityTree, request: &accesskit::ActionRequest) -> Option<ui_render::DispatchEvent> {
     let target = tree.addresses.get(&request.target_node)?.clone();
-    let supported = tree.update.nodes.iter().find(|(id, _)| *id == request.target_node).is_some_and(|(_, node)| node.supports_action(request.action));
+    let supported = tree.update.nodes.iter().find(|(id, _)| *id == request.target_node).is_some_and(|(_, node)| node.supports_action(request.action) || (request.action == accesskit::Action::Blur && node.supports_action(accesskit::Action::Focus)));
     if !supported {
         return None;
     }

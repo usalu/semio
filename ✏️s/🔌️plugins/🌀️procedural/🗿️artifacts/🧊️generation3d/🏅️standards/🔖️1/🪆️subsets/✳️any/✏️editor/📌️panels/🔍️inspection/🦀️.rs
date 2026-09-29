@@ -4,6 +4,8 @@ use crate::editor::generation3d::terminology::Generation3dLabels;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
 use crate::widget_id;
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, Widget};
+use semio_framework_artifact_flow_flow::neural::Value;
+use dsl::ToValue as _;
 use semio_framework_plugin::plugin_app_close_prelude::{input, Buildable, HasBase, HasChildren, InputKind, Trigger, UiAssemblyResult, UiListBuilder, UiValue};
 use semio_framework_plugin::{tree_item, ActionFactory, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
@@ -85,12 +87,42 @@ pub fn render(host_snapshot: &FlowHostSnapshot, selected_node_ids: &[String], la
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
     }
     if let Widget::InputNote { text, .. } = widget {
-        fields.try_push(tree_item("procedural-play-inspector.note", format!("{}: {text}", labels.value_field.as_str()))?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
+        fields.try_push(if text.len() <= semio_framework_ui_contract::UI_TEXT_MAX_BYTES { editable_input("procedural-play-inspector.note", labels.value_field.as_str(), selected_id, "text", None, text, Some(InputKind::LongText))? } else { tree_item("procedural-play-inspector.note", labels.input_text_too_long.as_str())? }).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
     }
-    if let Widget::Neuron { neuron_kind, .. } = widget {
+    if let Widget::Neuron { neuron_kind, params, .. } = widget {
         fields
-            .try_push(tree_item("procedural-play-inspector.neuron-kind", format!("{}: {neuron_kind}", labels.id_field.as_str()))?)
+            .try_push(tree_item("procedural-play-inspector.neuron-kind", crate::editor::generation3d::terminology::generation3d_catalogue_name(labels, neuron_kind, neuron_kind))?)
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
+        let infos = semio_framework_os_flow::flow_neuron_kind_info_map();
+        if let Some(info) = infos.get(neuron_kind) {
+            for port in &info.inputs {
+                let key = format!("procedural-play-inspector.input.{}", port.name);
+                let label = crate::editor::generation3d::terminology::generation3d_input_name(labels, &port.name, port.label.as_deref().unwrap_or(&port.name));
+                if let Some(connection) = host_snapshot.synapses.iter().find(|synapse| synapse.to == *selected_id && synapse.to_port == port.name) {
+                    fields.try_push(tree_item(&key, format!("{label}: {} ({}.{})", labels.input_connected.as_str(), connection.from, connection.from_port))?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
+                    continue;
+                }
+                let current = params.get(&port.name).or(port.default.as_ref());
+                let schema = current.and_then(Value::as_dictionary).and_then(|dictionary| dictionary.schema()).or_else(|| port.value_types.first().map(String::as_str)).unwrap_or("");
+                let value = current.map(|value| value.to_value());
+                if !port.cardinality.is_collection() && matches!(schema, "point" | "vector") {
+                    for axis in ["x", "y", "z"] {
+                        let number = value.as_ref().and_then(|value| value.get(axis)).and_then(dsl::DslValue::as_f64).unwrap_or(0.0);
+                        fields.try_push(editable_input(&format!("{key}.{axis}"), &format!("{label} {axis}"), selected_id, &port.name, Some(axis), &number.to_string(), Some(InputKind::Number))?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
+                    }
+                } else if !port.cardinality.is_collection() && matches!(schema, "number" | "text" | "boolean") {
+                    let atom = value.as_ref().and_then(|value| value.get("value"));
+                    let text = atom.map(|value| value.as_str().map(str::to_string).unwrap_or_else(|| dsl::json::to_json_string(value))).unwrap_or_default();
+                    if text.len() <= semio_framework_ui_contract::UI_TEXT_MAX_BYTES {
+                        fields.try_push(editable_input(&key, label, selected_id, &port.name, None, &text, if schema == "boolean" { None } else { Some(if schema == "number" { InputKind::Number } else { InputKind::LongText }) })?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
+                    } else {
+                        fields.try_push(tree_item(&key, format!("{label}: {}", labels.input_text_too_long.as_str()))?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
+                    }
+                } else {
+                    fields.try_push(tree_item(&key, format!("{label}: {}", labels.input_connect_hint.as_str()))?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
+                }
+            }
+        }
     }
     if let Widget::Variable { name, schema, .. } = widget {
         fields
@@ -115,6 +147,23 @@ pub fn render(host_snapshot: &FlowHostSnapshot, selected_node_ids: &[String], la
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
+
+/// 🎛️ One labeled input commits typed edits through the retained document command.
+fn editable_input(key: &str, label: &str, widget: &str, channel: &str, component: Option<&str>, value: &str, kind: Option<InputKind>) -> UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let mut fields = vec![("widgetId", crate::ui_value_text(widget)?), ("channel", crate::ui_value_text(channel)?)];
+    if let Some(component) = component { fields.push(("component", crate::ui_value_text(component)?)); }
+    let (action, args) = ActionFactory::new(GENERATION_3D_PLAY_APP_ID).action("setWidgetInput", Some(crate::ui_value_map(fields)?))?;
+    let control = if kind.is_none() {
+        let control = semio_framework_ui_contract::toggle(value == "true").appearance(semio_framework_ui_contract::ToggleAppearance::Checkbox).try_id(format!("{key}.input")).and_then(|control| control.try_label(label)).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.control", "fixed UI input admission failed"))?;
+        match args { Some(args) => control.try_on_with(Trigger::Change, action, args), None => control.try_on(Trigger::Change, action) }.map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.binding", "fixed UI input admission failed"))?.try_build().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.control", "fixed UI input admission failed"))?
+    } else {
+    let control = input(kind.unwrap()).value(crate::ui_text(value.to_string())?).commit(crate::ui_text("blur")?).try_id(format!("{key}.input")).and_then(|control| control.try_label(label)).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.control", "fixed UI input admission failed"))?;
+    let control = match args { Some(args) => control.try_on_with(Trigger::Commit, action, args), None => control.try_on(Trigger::Commit, action) }.map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.binding", "fixed UI input admission failed"))?.try_build().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.control", "fixed UI input admission failed"))?;
+    control
+    };
+    semio_framework_ui_contract::tree_item(crate::ui_label(label)?).try_id(key).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.field-id", "fixed UI field admission failed"))?.try_children([control]).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.field", "fixed UI field admission failed"))?.try_build().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.field", "fixed UI field admission failed"))
+}
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

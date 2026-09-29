@@ -1,8 +1,8 @@
 {
   "$schema": "semio.puzzle.retained-command.fixture.v1",
   "owner": "puzzle3d",
-  "documentSchema": "puzzle.3d.fixture",
-  "payloadSchema": "puzzle.3d.fixture.tool-command.v1",
+  "documentSchema": "puzzle.3d",
+  "payloadSchema": "puzzle.3d.tool-command.v1",
   "toolIds": [
     "openAddObjectDialog",
     "worldPointerDown",
@@ -26,6 +26,8 @@
     "rotateSelection",
     "scaleSelection",
     "setSelectionFlag",
+    "setSelectionHidden",
+    "setSelectionLocked",
     "setTargetVolumeFlag",
     "translateSelection",
     "worldRelocate",

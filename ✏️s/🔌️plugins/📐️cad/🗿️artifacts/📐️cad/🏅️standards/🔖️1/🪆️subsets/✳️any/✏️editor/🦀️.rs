@@ -12,7 +12,7 @@ use crate::editor::cad::commands::io::{import_cad_file, load_raw_request, save_c
 use crate::editor::cad::commands::model_definition::set_active_example;
 use crate::editor::cad::commands::node::{add_node, rename_node, set_node_selection};
 use crate::editor::cad::commands::object::{add_object, delete_object, duplicate_object, patch_object, patch_selection};
-use crate::editor::cad::commands::reference::{patch_cad_play_reference, reference_hover, set_reference_selection};
+use crate::editor::cad::commands::reference::{patch_cad_play_reference, reference_hover, set_reference_hidden, set_reference_locked, set_reference_selection};
 use crate::editor::cad::commands::sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
 use crate::editor::cad::commands::transform::{apply_transformation, rotate_selection, scale_selection, translate_selection};
 use crate::editor::cad::commands::utility::set_dislocate_option;
@@ -391,6 +391,18 @@ pub fn cad_pane_suffix(pane: CadPaneId) -> &'static str {
 /// 🌳️ Cad's tree items carry an icon rather than the SDK `tree_item_with_action`'s description slot, so
 /// this stays a thin app-specific wrapper — built on the SDK's bare `tree_item` rather than hand-rolling
 /// the full `UiTreeItemNode` struct literal.
+/// 🙈️ A reference set-verb's definition: the `{modelDefinitionId, referenceId}` a row names and the REQUIRED boolean `flag`
+/// it sets — a missing value is refused, never defaulted.
+fn cad_reference_flag_action(id: &str, flag: &str, label: LocalizedLabel, value: LocalizedLabel) -> ActionDefinition {
+    ActionDefinition::bounded_catalog(id, label, ActionKind::Mutation)
+        .with_args([
+            ActionArgDef::text("modelDefinitionId", LocalizedLabel::native("Model Definition", "Modelldefinition")).required(),
+            ActionArgDef::text("referenceId", LocalizedLabel::native("Reference", "Referenz")).required(),
+            ActionArgDef::toggle(flag, value).required(),
+        ])
+        .in_palette(false)
+}
+
 pub fn cad_tree_item(id: impl Into<String>, label: impl AsRef<str>, icon_id: Option<&str>, action: (semio_framework_plugin::ActionId, Option<UiValue>)) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut item = tree_item_with_action(id.into(), ui_label(label)?, None, action)?;
     if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
@@ -1144,6 +1156,8 @@ semio_framework_plugin::app_commands! {
         "applyTransformation" as "apply-transformation" => apply_transformation::ApplyTransformation,
         "importCadFile" as "import-cad-file" => import_cad_file::ImportCadFile,
         "patchCadPlayReference" as "patch-cad-play-reference" => patch_cad_play_reference::PatchCadPlayReference,
+        "setReferenceHidden" as "set-reference-hidden" => set_reference_hidden::SetReferenceHidden,
+        "setReferenceLocked" as "set-reference-locked" => set_reference_locked::SetReferenceLocked,
         "engagementSubmit" as "engagement-submit" => engagement_submit::EngagementSubmit,
         "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
         "worldPointerDown" as "world-pointer-down" => world_pointer_down::WorldPointerDown,
@@ -1173,6 +1187,12 @@ semio_framework_plugin::app_commands! {
         "saveCurrent" as "save-current" => save_current::SaveCurrent,
         "loadRawRequest" as "load-raw-request" => load_raw_request::LoadRawRequest,
     }
+}
+
+/// 🙈️ A reference set-verb (`setReferenceHidden{hidden}`, `setReferenceLocked{locked}`) sets exactly the boolean its
+/// arguments carry — the row target's explicit next state — so a missing value is refused, never defaulted into a flip.
+fn cad_flag_value_required(action: &str, flag: &str) -> Fault {
+    Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("cad.action.flag-value-required"), format!("action '{action}' requires the boolean '{flag}' it sets"))
 }
 
 /// 🌉️ Converts the host shell's declared action id and JSON arguments into cad's closed typed
@@ -1254,6 +1274,16 @@ fn cad_command_from_action(action: &str, args: Option<&protocol::DslValue>) -> R
             field: str_field("field").unwrap_or_default(),
             value: value_string(),
             delta: f64_field("delta"),
+        }),
+        "setReferenceHidden" => CadCommand::SetReferenceHidden(set_reference_hidden::SetReferenceHidden {
+            model_definition_id: str_field("modelDefinitionId").unwrap_or_default(),
+            reference_id: str_field("referenceId").unwrap_or_default(),
+            hidden: bool_field("hidden").ok_or_else(|| cad_flag_value_required(action, "hidden"))?,
+        }),
+        "setReferenceLocked" => CadCommand::SetReferenceLocked(set_reference_locked::SetReferenceLocked {
+            model_definition_id: str_field("modelDefinitionId").unwrap_or_default(),
+            reference_id: str_field("referenceId").unwrap_or_default(),
+            locked: bool_field("locked").ok_or_else(|| cad_flag_value_required(action, "locked"))?,
         }),
         "engagementInput" => CadCommand::EngagementInput(engagement_input::EngagementInput { value: str_field("value").unwrap_or_default(), pane: str_field("pane") }),
         "engagementSubmit" => CadCommand::EngagementSubmit(engagement_submit::EngagementSubmit { pane: str_field("pane") }),
@@ -1343,7 +1373,7 @@ impl CadPlayApp {
 // 🤝️ `engagementSubmit`/`engagementPossibleSelect`/`worldPointerDown` route through the artifact
 // lane: an interaction step that reaches its commit state lands objects (Artifact) besides the
 // session snapshot (Config).
-const CAD_RETAINED_ARTIFACT_TOOL_IDS: &[&str] = &["addNode", "renameNode", "patchCadPlayReference", "addObject", "patchObject", "patchSelection", "deleteObject", "duplicateObject", "translateSelection", "rotateSelection", "scaleSelection", "engagementSubmit", "engagementPossibleSelect", "worldPointerDown", "applyTransformation"];
+const CAD_RETAINED_ARTIFACT_TOOL_IDS: &[&str] = &["addNode", "renameNode", "patchCadPlayReference", "setReferenceHidden", "setReferenceLocked", "addObject", "patchObject", "patchSelection", "deleteObject", "duplicateObject", "translateSelection", "rotateSelection", "scaleSelection", "engagementSubmit", "engagementPossibleSelect", "worldPointerDown", "applyTransformation"];
 const CAD_RETAINED_CONFIG_TOOL_IDS: &[&str] = &[
     "setCamera",
     "setProjection",
@@ -1370,6 +1400,8 @@ const CAD_RETAINED_TOOL_IDS: &[&str] = &[
     "addNode",
     "renameNode",
     "patchCadPlayReference",
+    "setReferenceHidden",
+    "setReferenceLocked",
     "addObject",
     "patchObject",
     "patchSelection",
@@ -1415,6 +1447,8 @@ const CAD_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &
     ArtifactToolPublicationContract { tool_id: "addNode", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "renameNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "patchCadPlayReference", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setReferenceHidden", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setReferenceLocked", lanes: &[ArtifactToolPublicationLane::Artifact] },
     // 🪆️ Every object gesture publishes on the Artifact lane alone: its ops re-mint the addressed
     // pane's composed model child handle on the parent document, which is ordinary in-history state.
     ArtifactToolPublicationContract { tool_id: "addObject", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -2148,6 +2182,8 @@ impl ArtifactEditor for CadPlayApp {
             "addNode",
             "renameNode",
             "patchCadPlayReference",
+            "setReferenceHidden",
+            "setReferenceLocked",
             "addObject",
             "patchObject",
             "patchSelection",
@@ -2473,6 +2509,8 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .mutation("applyTransformation", LocalizedLabel::native("Apply Transformation", "Transformation anwenden"))
             .mutation("importCadFile", LocalizedLabel::native("Import CAD File", "CAD-Datei importieren"))
             .action_with(ActionDefinition::bounded_catalog("patchCadPlayReference", LocalizedLabel::native("Patch Reference", "Referenz aktualisieren"), ActionKind::Mutation).in_palette(false))
+            .action_with(cad_reference_flag_action("setReferenceHidden", "hidden", LocalizedLabel::native("Set Reference Hidden", "Referenz verborgen festlegen"), LocalizedLabel::native("Hidden", "Verborgen")))
+            .action_with(cad_reference_flag_action("setReferenceLocked", "locked", LocalizedLabel::native("Set Reference Locked", "Referenz gesperrt festlegen"), LocalizedLabel::native("Locked", "Gesperrt")))
             .action_with(ActionDefinition::bounded_catalog("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Mutation).in_palette(false))
             .action_with(ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera"))
             .action_with(ActionDefinition::new("setProjection", LocalizedLabel::native("Set Projection", "Projektion festlegen"), ActionKind::View, "scan"))
@@ -2528,6 +2566,8 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("saveInPlay", LocalizedLabel::native("Writes the current model back into the playground document it was opened from.", "Schreibt das aktuelle Modell in das Playground-Dokument zurück, aus dem es geöffnet wurde."))
             .action_describe("loadRawRequest", LocalizedLabel::native("Asks the host to open a raw geometry file and load it into the model.", "Fordert den Host auf, eine Rohgeometriedatei zu öffnen und in das Modell zu laden."))
             .action_describe("patchCadPlayReference", LocalizedLabel::native("Sets one named property of one reference in the model's play definition — its target, placement or parameter.", "Setzt eine benannte Eigenschaft einer Referenz in der Play-Definition des Modells — Ziel, Platzierung oder Parameter."))
+            .action_describe("setReferenceHidden", LocalizedLabel::native("Sets one reference overlay hidden or shown, to exactly the value passed; repeating it changes nothing.", "Verbirgt eine Referenzüberlagerung oder zeigt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."))
+            .action_describe("setReferenceLocked", LocalizedLabel::native("Sets one reference overlay locked or unlocked, to exactly the value passed; repeating it changes nothing.", "Sperrt eine Referenzüberlagerung oder entsperrt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."))
             .action_describe("setProjection", LocalizedLabel::native("Switches the viewport between perspective and the orthographic projections.", "Schaltet das Ansichtsfenster zwischen Perspektive und den orthografischen Projektionen um."))
             .action_describe("toggleSun", LocalizedLabel::native("Turns the scene's sun light on or off.", "Schaltet das Sonnenlicht der Szene ein oder aus."))
             .action_describe("setSunAzimuth", LocalizedLabel::native("Sets the sun's compass direction, in degrees.", "Legt die Himmelsrichtung der Sonne in Grad fest."))
@@ -2589,6 +2629,8 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("applyTransformation", InteractiveJobClassification::Migrated)
             .action_interactive_job("importCadFile", InteractiveJobClassification::Migrated)
             .action_interactive_job("patchCadPlayReference", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setReferenceHidden", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setReferenceLocked", InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementSubmit", InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             .action_interactive_job("worldPointerDown", InteractiveJobClassification::Migrated)

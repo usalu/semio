@@ -1,3 +1,0 @@
-type JackEditorWindowConfig {
-  jackQuery: String! @state(kind: CONFIG)
-}

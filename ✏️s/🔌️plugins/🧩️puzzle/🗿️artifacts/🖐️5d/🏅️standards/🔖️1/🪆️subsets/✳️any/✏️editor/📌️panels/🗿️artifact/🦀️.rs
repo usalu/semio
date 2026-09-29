@@ -13,21 +13,21 @@
 //! `interactionSelect` binding [`PanelTreeBuilder::interaction_domain`] stamps, and every row is
 //! keyed by its raw entity id.
 //!
-//! 🙈️ A part row additionally carries two INLINE toggles (show/hide, lock/unlock) dispatching
-//! `setSelectionFlag {entity, flag, ids, value}` — a row action, not a binding, and each asks for the
-//! INVERSE of the state the row is in. A target-volume row carries the same pair through its OWN verb,
-//! `setTargetVolumeFlag {flag, id, value}`, because `setSelectionFlag` writes the part slice only. Grips
-//! and fasteners carry no such flag in this document model, so their rows carry no toggle. A row whose
-//! toggles the argument arena refuses is still built.
+//! 🙈️ A part row additionally carries ONE target `{entity, hidden, ids, locked}` and two INLINE toggles naming the
+//! set-verbs `setSelectionHidden`/`setSelectionLocked` — row actions, not bindings, and the target states the INVERSE
+//! of the state the row is in, so replaying a stale click sets a value and never flips one. A target-volume row carries
+//! the same pair through its OWN verbs, `setTargetVolumeHidden`/`setTargetVolumeLocked` over `{hidden, id, locked}`,
+//! because the selection verbs write the part slice only. Grips and fasteners carry no such flag in this document model,
+//! so their rows carry no toggle. A row whose toggles the argument arena refuses is still built.
 
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::{
     find_part_by_grip_full_id, puzzle5d_grip_full_id, puzzle5d_part_display_label, ui_label, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dPart, Puzzle5dScene, Puzzle5dTargetVolume, PUZZLE5D_GRANULARITY_FASTENER,
     PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART, PUZZLE5D_GRANULARITY_TARGET_VOLUME, PUZZLE5D_INTERACTION_DOMAIN, PUZZLE5D_PLAY_CONTROLLER_ID,
 };
-use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Buildable, BuiltNode, HasBase, RowAction, RowActionPlacement, Trigger};
+use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, RowActionPlacement};
 use semio_framework_plugin::{
-    tree_window_item, ActionFactory, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiText, UiValue, FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
+    row_action, row_target, tree_window_item, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiText, UiValue, FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
     FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
 };
 use semio_framework_ui_contract as ui;
@@ -79,53 +79,47 @@ fn grip_row(part: &Puzzle5dPart, grip: &Puzzle5dGrip) -> UiAssemblyResult<BuiltN
         .map_err(|_| PluginAssemblyError::new("ui.document.grip", "grip row admission failed"))
 }
 
-/// 🔁️ One inline row toggle's `setSelectionFlag` args. `value` is the flag state the click ASKS FOR —
-/// always the inverse of the row's current one, so "Show"/"Unlock" really un-hides and unlocks instead
-/// of re-applying the state the row was already in (the hardcoded-`true` defect puzzle 3d carried).
+/// 🎯️ A flag row's ONE target: its identity entries and the flag state each inline toggle ASKS FOR — always the inverse
+/// of the row's current one, stated as a value, so "Show"/"Unlock" really un-hide and unlock instead of re-applying the
+/// state the row was already in (the hardcoded-`true` defect puzzle 3d carried), and a replayed click changes nothing.
 ///
-/// 🔑️ `UiMapBuilder::push` admits keys in STRICTLY ASCENDING order only: `entity`, `flag`, `ids`,
-/// `value`.
-fn flag_args(entity: &str, id: &str, flag: &str, value: bool) -> UiAssemblyResult<UiValue> {
-    let text = |value: &str| UiText::try_from_str(value).map(UiValue::Text).ok_or_else(|| PluginAssemblyError::new("ui.document.flag", "puzzle5d row flag text admission failed"));
-    let mut ids = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.document.flag", "puzzle5d row flag list admission failed"))?;
-    ids.push(text(id)?).map_err(|_| PluginAssemblyError::new("ui.document.flag", "puzzle5d row flag id admission failed"))?;
-    let mut args = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.document.flag", "puzzle5d row flag map admission failed"))?;
-    for (key, value) in [("entity", text(entity)?), ("flag", text(flag)?), ("ids", UiValue::List(ids.finish())), ("value", UiValue::Bool(value))] {
-        args.push(key.to_owned(), value).map_err(|_| PluginAssemblyError::new("ui.document.flag", "puzzle5d row flag entry admission failed"))?;
+/// 🔑️ `UiMapBuilder::push` admits keys in STRICTLY ASCENDING order only, so `entries` arrive sorted by key.
+fn flag_target<const N: usize>(entries: [(&str, UiValue); N]) -> UiAssemblyResult<ui::RowTarget> {
+    let mut args = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.document.flag", "puzzle5d row target map admission failed"))?;
+    for (key, value) in entries {
+        args.push(key.to_owned(), value).map_err(|_| PluginAssemblyError::new("ui.document.flag", "puzzle5d row target entry admission failed"))?;
     }
-    Ok(UiValue::Map(args.finish()))
+    row_target(PUZZLE5D_PLAY_CONTROLLER_ID, Some(UiValue::Map(args.finish())), None)
 }
 
-fn hide_lock_actions(hidden: bool, locked: bool, labels: &Puzzle5dLabels, id: &str) -> UiAssemblyResult<[RowAction; 2]> {
-    let binding = |flag: &str, value: bool| -> UiAssemblyResult<ActionBinding> {
-        let (action, args) = ActionFactory::new(PUZZLE5D_PLAY_CONTROLLER_ID).action("setSelectionFlag", Some(flag_args(PUZZLE5D_GRANULARITY_PART, id, flag, value)?))?;
-        Ok(ActionBinding { trigger: Trigger::Activate, action, args, capability: None })
-    };
+fn flag_text(value: &str) -> UiAssemblyResult<UiValue> {
+    UiText::try_from_str(value).map(UiValue::Text).ok_or_else(|| PluginAssemblyError::new("ui.document.flag", "puzzle5d row target text admission failed"))
+}
+
+/// 🎯️ A part row's target: `{entity, hidden, ids, locked}` names exactly that part.
+fn part_flag_target(id: &str, hidden: bool, locked: bool) -> UiAssemblyResult<ui::RowTarget> {
+    let mut ids = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.document.flag", "puzzle5d row target list admission failed"))?;
+    ids.push(flag_text(id)?).map_err(|_| PluginAssemblyError::new("ui.document.flag", "puzzle5d row target id admission failed"))?;
+    flag_target([("entity", flag_text(PUZZLE5D_GRANULARITY_PART)?), ("hidden", UiValue::Bool(!hidden)), ("ids", UiValue::List(ids.finish())), ("locked", UiValue::Bool(!locked))])
+}
+
+/// 🎬️ A flag row's two inline toggles — `verbs` names the collection's own set-verbs.
+fn hide_lock_actions(hidden: bool, locked: bool, labels: &Puzzle5dLabels, verbs: [&str; 2]) -> UiAssemblyResult<[ui::RowAction; 2]> {
     Ok([
-        RowAction {
-            icon: ui_text(if hidden { "eye-off" } else { "eye" })?,
-            label: Some(ui_label(if hidden { labels.show.as_str() } else { labels.hide.as_str() })?),
-            action: binding("hidden", !hidden)?,
-            placement: RowActionPlacement::Row,
-        },
-        RowAction {
-            icon: ui_text(if locked { "lock" } else { "lock-open" })?,
-            label: Some(ui_label(if locked { labels.unlock.as_str() } else { labels.lock.as_str() })?),
-            action: binding("locked", !locked)?,
-            placement: RowActionPlacement::Row,
-        },
+        row_action(if hidden { "eye-off" } else { "eye" }, if hidden { labels.show.as_str() } else { labels.hide.as_str() }, verbs[0], RowActionPlacement::Row)?,
+        row_action(if locked { "lock" } else { "lock-open" }, if locked { labels.unlock.as_str() } else { labels.lock.as_str() }, verbs[1], RowActionPlacement::Row)?,
     ])
 }
 
-/// 🪙️ Attaches a row's INLINE toggles, and keeps the row when the argument arena cannot afford them.
+/// 🪙️ Attaches a row's target and INLINE toggles, and keeps the row when the argument arena cannot afford them.
 /// The arena is process-global and one page serves every panel of every plugin at once, so on a
 /// flagship document propagating a refusal would end the whole parts section at zero rows: a row
 /// without its toggles is still a pick target, a row that was never materialised is neither.
-fn with_hide_lock_actions(item: ui::TreeItemBuilder, hidden: bool, locked: bool, labels: &Puzzle5dLabels, id: &str) -> ui::TreeItemBuilder {
-    let Ok(actions) = hide_lock_actions(hidden, locked, labels, id) else {
+fn with_hide_lock_actions(item: ui::TreeItemBuilder, target: UiAssemblyResult<ui::RowTarget>, actions: UiAssemblyResult<[ui::RowAction; 2]>) -> ui::TreeItemBuilder {
+    let (Ok(target), Ok(actions)) = (target, actions) else {
         return item;
     };
-    let mut item = item;
+    let mut item = item.target(target);
     for row_action in actions {
         match item.try_row_action(row_action) {
             Ok(next) => item = next,
@@ -140,59 +134,19 @@ fn part_row(windows: &TreeWindows<'_>, document: &Puzzle5dDocument, part: &Puzzl
     let hidden = part.part_2d.hidden.unwrap_or(false);
     let locked = part.part_2d.locked.unwrap_or(false);
     let item = pick_item(&part.id, puzzle5d_part_display_label(part, document), "box", PUZZLE5D_GRANULARITY_PART)?.description(ui_text(&part.part_kind)?).dimmed(hidden);
-    let item = with_hide_lock_actions(item, hidden, locked, labels, &part.id);
+    let item = with_hide_lock_actions(item, part_flag_target(&part.id, hidden, locked), hide_lock_actions(hidden, locked, labels, ["setSelectionHidden", "setSelectionLocked"]));
     tree_window_item(windows, item, &part.id, false, &part.grips, |grip| grip_row(part, grip))
 }
 
-/// 🔁️ One target-volume toggle's `setTargetVolumeFlag` args, keys in STRICTLY ASCENDING order
-/// (`flag`, `id`, `value`). A volume is NOT flagged through `setSelectionFlag`: that verb writes the
-/// part slice only, so 5G's own `setTargetVolumeFlag` is the one authority over these two flags.
-fn volume_flag_args(id: &str, flag: &str, value: bool) -> UiAssemblyResult<UiValue> {
-    let text = |value: &str| UiText::try_from_str(value).map(UiValue::Text).ok_or_else(|| PluginAssemblyError::new("ui.document.volume-flag", "puzzle5d volume flag text admission failed"));
-    let mut args = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.document.volume-flag", "puzzle5d volume flag map admission failed"))?;
-    for (key, value) in [("flag", text(flag)?), ("id", text(id)?), ("value", UiValue::Bool(value))] {
-        args.push(key.to_owned(), value).map_err(|_| PluginAssemblyError::new("ui.document.volume-flag", "puzzle5d volume flag entry admission failed"))?;
-    }
-    Ok(UiValue::Map(args.finish()))
-}
-
-fn volume_hide_lock_actions(volume: &Puzzle5dTargetVolume, labels: &Puzzle5dLabels) -> UiAssemblyResult<[RowAction; 2]> {
-    let binding = |flag: &str, value: bool| -> UiAssemblyResult<ActionBinding> {
-        let (action, args) = ActionFactory::new(PUZZLE5D_PLAY_CONTROLLER_ID).action("setTargetVolumeFlag", Some(volume_flag_args(&volume.id, flag, value)?))?;
-        Ok(ActionBinding { trigger: Trigger::Activate, action, args, capability: None })
-    };
-    Ok([
-        RowAction {
-            icon: ui_text(if volume.hidden { "eye-off" } else { "eye" })?,
-            label: Some(ui_label(if volume.hidden { labels.show.as_str() } else { labels.hide.as_str() })?),
-            action: binding("hidden", !volume.hidden)?,
-            placement: RowActionPlacement::Row,
-        },
-        RowAction {
-            icon: ui_text(if volume.locked { "lock" } else { "lock-open" })?,
-            label: Some(ui_label(if volume.locked { labels.unlock.as_str() } else { labels.lock.as_str() })?),
-            action: binding("locked", !volume.locked)?,
-            placement: RowActionPlacement::Row,
-        },
-    ])
-}
-
 /// 🧊️ One target-volume row: a pick target of the same interaction domain, dimmed while hidden, with the
-/// two inline toggles a part row carries. Its toggles degrade exactly like a part's do.
+/// two inline toggles a part row carries — through the volume's OWN set-verbs, because the selection verbs write the part
+/// slice only. Its toggles degrade exactly like a part's do.
 fn target_volume_row(volume: &Puzzle5dTargetVolume, labels: &Puzzle5dLabels) -> UiAssemblyResult<BuiltNode> {
-    let mut item = pick_item(&volume.id, volume.id.clone(), "box-select", PUZZLE5D_GRANULARITY_TARGET_VOLUME)?.dimmed(volume.hidden);
-    if let Ok(actions) = volume_hide_lock_actions(volume, labels) {
-        for row_action in actions {
-            match item.try_row_action(row_action) {
-                Ok(next) => item = next,
-                Err((refused, _)) => {
-                    item = refused;
-                    break;
-                }
-            }
-        }
-    }
-    item.try_build().map_err(|_| PluginAssemblyError::new("ui.document.target-volume", "target volume row admission failed"))
+    let item = pick_item(&volume.id, volume.id.clone(), "box-select", PUZZLE5D_GRANULARITY_TARGET_VOLUME)?.dimmed(volume.hidden);
+    let target = flag_text(&volume.id).and_then(|id| flag_target([("hidden", UiValue::Bool(!volume.hidden)), ("id", id), ("locked", UiValue::Bool(!volume.locked))]));
+    with_hide_lock_actions(item, target, hide_lock_actions(volume.hidden, volume.locked, labels, ["setTargetVolumeHidden", "setTargetVolumeLocked"]))
+        .try_build()
+        .map_err(|_| PluginAssemblyError::new("ui.document.target-volume", "target volume row admission failed"))
 }
 
 fn fastener_row(document: &Puzzle5dDocument, fastener: &Puzzle5dFastener) -> UiAssemblyResult<BuiltNode> {

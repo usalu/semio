@@ -78,6 +78,8 @@ pub(crate) enum LayoutNodeKind {
         height: f32,
         expanded: bool,
         reversed: bool,
+        /// 🪟️ The leading spacer of the windowed container this row is the FIRST materialised child of (else `0`).
+        lead: f32,
     },
     /// 🎞️ One explicitly related TreeItem Surface, flowing below the row chrome and before nested
     /// rows in a bounded scene band.
@@ -90,6 +92,8 @@ pub(crate) enum LayoutNodeKind {
     TableRow {
         height: f32,
         actions: f32,
+        /// 🪟️ The windowed table's leading spacer when this row is its first materialised row (else `0`).
+        lead: f32,
     },
     /// 🎛️ A value-carrying control: one control row tall on its own, so a container that sizes its
     /// children by intrinsic height (a `Section`) never collapses it to zero.
@@ -227,6 +231,9 @@ pub(crate) struct FlowStyle {
     /// this file's header). An authored `LayoutSpec` carries each child's own `grow` instead.
     pub grows_children: bool,
     pub reverse: bool,
+    /// 🪟️ Main-axis empty pitch this child claims BEFORE itself in its parent's flow (after it, in a reversed flow) — a
+    /// windowed container's leading spacer, carried by its first materialised row. `0` for every other node.
+    pub lead: f32,
 }
 
 impl Default for FlowStyle {
@@ -251,6 +258,7 @@ impl Default for FlowStyle {
             text: false,
             grows_children: false,
             reverse: false,
+            lead: 0.0,
         }
     }
 }
@@ -360,11 +368,22 @@ fn flow_for(kind: LayoutNodeKind, parent_kind: Option<LayoutNodeKind>, authored:
             content.height = Dim::Length(header);
             content
         }
-        LayoutNodeKind::TreeRow { row, height, reversed, .. } => band(height, row, reversed),
+        LayoutNodeKind::TreeRow { row, height, reversed, lead, .. } => FlowStyle { lead, ..band(height, row, reversed) },
         LayoutNodeKind::TreeDetail { height } => FlowStyle { width: Dim::Fill, height: Dim::Length(height), shrink: 0.0, ..FlowStyle::default() },
-        LayoutNodeKind::TableRow { height, actions } => {
+        LayoutNodeKind::TableRow { height, actions, lead } => {
             let (left, right) = if metrics.inline.is_rtl() { (actions, metrics.gap) } else { (metrics.gap, actions) };
-            FlowStyle { row: true, reverse: metrics.inline.is_rtl(), gap_main: metrics.gap, align: Align::Center, height: Dim::Length(height), shrink: 0.0, padding: EdgePx { left, right, ..EdgePx::default() }, clips: true, ..FlowStyle::default() }
+            FlowStyle {
+                row: true,
+                reverse: metrics.inline.is_rtl(),
+                gap_main: metrics.gap,
+                align: Align::Center,
+                height: Dim::Length(height),
+                shrink: 0.0,
+                padding: EdgePx { left, right, ..EdgePx::default() },
+                clips: true,
+                lead,
+                ..FlowStyle::default()
+            }
         }
         LayoutNodeKind::Control { height, label_padding } => {
             let mut flow = authored.map_or_else(FlowStyle::default, flow_from_spec);
@@ -663,7 +682,7 @@ impl FlexTree {
             }
             let Some(&(width, height)) = self.intrinsic.get(child) else { return false };
             let (main, cross) = if flow.row { (width, height) } else { (height, width) };
-            main_sum += main;
+            main_sum += main + child_flow.lead;
             cross_max = cross_max.max(cross);
             count += 1;
         }
@@ -716,7 +735,7 @@ impl FlexTree {
                 continue;
             }
             let (main, cross) = child_flow.flow_size(flow, content_main, content_cross, intrinsic, child, measure);
-            base_sum += main;
+            base_sum += main + child_flow.lead;
             grow_sum += child_flow.grow;
             shrink_sum += child_flow.shrink * main;
             count += 1;
@@ -757,7 +776,9 @@ impl FlexTree {
                     Align::Start | Align::Stretch | Align::Baseline => 0.0,
                 };
                 if flow.reverse {
-                    cursor -= main;
+                    cursor -= main + child_flow.lead;
+                } else {
+                    cursor += child_flow.lead;
                 }
                 let (x, y, width, height) = if flow.row { (cursor, cross_start + offset, main, cross) } else { (cross_start + offset, cursor, cross, main) };
                 if flow.reverse {

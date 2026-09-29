@@ -26,7 +26,7 @@ use semio_s_artifact_stdio_xml::schema::diff::{XmlChildrenDiff, XmlDiff};
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 use semio_s_artifact_stdio_xml::{XmlSnapshot, STDIO_XML_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_zip::opc::{OpcContentTypes, OpcPackage, OpcPart, OpcRelationship, OpcTargetMode};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 //#region 🔖️GenericCollectionTriples
 /// 🌳 Index-keyed collection triple, generic over the item type `T` and its per-field diff type
@@ -692,7 +692,7 @@ fn absorb_rel_list_diff(a: DocxOpcRelListDiff, b: DocxOpcRelListDiff) -> DocxOpc
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_relationships(old: &HashMap<String, Vec<OpcRelationship>>, new: &HashMap<String, Vec<OpcRelationship>>) -> Option<DocxOpcRelationshipsDiff> {
+fn diff_relationships(old: &BTreeMap<String, Vec<OpcRelationship>>, new: &BTreeMap<String, Vec<OpcRelationship>>) -> Option<DocxOpcRelationshipsDiff> {
     let mut removed = Vec::new();
     let mut modified = Vec::new();
     for (owner, list) in old {
@@ -714,7 +714,7 @@ fn diff_relationships(old: &HashMap<String, Vec<OpcRelationship>>, new: &HashMap
     if removed.is_empty() && modified.is_empty() && added.is_empty() {
         None
     } else {
-        // 🗺️ Relationships live in a `HashMap<owner, …>`, which HAS no order to transport, so this
+        // 🗺️ Relationships live in an owner-keyed `BTreeMap` whose order IS its key order, so this
         // triple's `order` is empty by construction rather than by omission — `apply_relationships`
         // inserts by key and never reads one.
         Some(DocxOpcRelationshipsDiff { removed, modified, added, order: Vec::new() })
@@ -722,7 +722,7 @@ fn diff_relationships(old: &HashMap<String, Vec<OpcRelationship>>, new: &HashMap
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, diff: &DocxOpcRelationshipsDiff) -> MutationApplyResult<()> {
+fn apply_relationships(rels: &mut BTreeMap<String, Vec<OpcRelationship>>, diff: &DocxOpcRelationshipsDiff) -> MutationApplyResult<()> {
     let mut added = std::collections::HashSet::new();
     for owner in &diff.removed {
         if !rels.contains_key(owner) {
@@ -759,7 +759,7 @@ fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, diff: &
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn inverse_relationships(base: &HashMap<String, Vec<OpcRelationship>>, diff: &DocxOpcRelationshipsDiff) -> DocxOpcRelationshipsDiff {
+fn inverse_relationships(base: &BTreeMap<String, Vec<OpcRelationship>>, diff: &DocxOpcRelationshipsDiff) -> DocxOpcRelationshipsDiff {
     let removed: Vec<String> = diff.added.iter().map(|(owner, _)| owner.clone()).collect();
     let mut modified = Vec::new();
     for m in &diff.modified {

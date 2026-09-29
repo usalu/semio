@@ -1,0 +1,22 @@
+use super::*;
+use crate::viewer::space_index::transient::SpaceIndexTransient;
+
+/// 👥️ A heartbeat sets the artifact's row, a new list replaces it and the same list changes nothing.
+#[semio_framework_async_macros::async_test]
+async fn a_heartbeat_folds_as_the_artifacts_presence_row() {
+    let heartbeat = PresenceHeartbeat { artifact_id: "artifact-1".into(), actors_csv: "user:1,user:2".into() };
+    let shown = heartbeat.item().judge(&SpaceIndexTransient::default()).expect("admissible row").expect("a new row changes the transient");
+    assert_eq!(shown.presence_for("artifact-1"), vec!["user:1", "user:2"]);
+    let replaced = PresenceHeartbeat { artifact_id: "artifact-1".into(), actors_csv: "user:2".into() }.item().judge(&shown).expect("admissible row").expect("a changed row changes the transient");
+    assert_eq!(replaced.presence().len(), 1, "replaces, does not append, an existing artifact's row");
+    assert_eq!(replaced.presence_for("artifact-1"), vec!["user:2"]);
+    assert_eq!(heartbeat.item().judge(&shown).expect("admissible row"), None, "the same row is a no-op");
+}
+
+/// 🚫️ The direct lane never lands a presence row.
+#[semio_framework_async_macros::async_test]
+async fn the_direct_lane_refuses_by_name() {
+    let (snapshot, history) = (SSpaceSnapshot::default(), semio_framework_plugin::HistoryView::empty());
+    let refused = handle(&PresenceHeartbeat { artifact_id: "artifact-1".into(), actors_csv: String::new() }, &ArtifactView::new(&snapshot, &history), &ConfigView { snapshot: &NoConfig::default(), window: None });
+    assert!(matches!(refused, Err(fault) if fault.code.0.as_str() == "s.space.presence-heartbeat.requires-retained-job"));
+}

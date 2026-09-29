@@ -49,7 +49,10 @@ await client.connect(new StdioClientTransport({ command: process.env.SEMIO_OS_MC
 console.log(`${at()} connected`);
 if (process.env.G12_READ_LIST === "1") {
   const listed: any = await client.readResource({ uri: "semio://workspace/artifacts" });
-  console.log(`${at()} workspace/artifacts ${String(listed.contents?.[0]?.text ?? "").slice(0, 200)}`);
+  const body = JSON.parse(String(listed.contents?.[0]?.text ?? "{}"));
+  const artifacts: any[] = body.artifacts ?? [];
+  const mine = artifacts.find((artifact) => artifact?.scope?.documentId === noteId);
+  console.log(`${at()} workspace/artifacts count=${artifacts.length} target=${JSON.stringify(mine ?? null).slice(0, 600)} keys=${Object.keys(body).join(",")}`);
 }
 const opened: any = await client.callTool({ name: "artifact_open", arguments: { artifactId: noteId } }, undefined, { timeout: 600_000 });
 console.log(`${at()} artifact_open isError=${opened.isError === true} ${JSON.stringify(opened.structuredContent).slice(0, 1500)}`);

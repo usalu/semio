@@ -1,0 +1,767 @@
+[
+  {
+    "id": "inputs",
+    "en": "Inputs",
+    "de": "Eingaben"
+  },
+  {
+    "id": "outputs",
+    "en": "Outputs",
+    "de": "Ausgaben"
+  },
+  {
+    "id": "inputSlider",
+    "en": "Slider",
+    "de": "Schieberegler"
+  },
+  {
+    "id": "inputNote",
+    "en": "Note",
+    "de": "Notiz"
+  },
+  {
+    "id": "inputImage",
+    "en": "Image",
+    "de": "Bild"
+  },
+  {
+    "id": "variable",
+    "en": "Variable",
+    "de": "Variable"
+  },
+  {
+    "id": "outputPreview",
+    "en": "Preview",
+    "de": "Vorschau"
+  },
+  {
+    "id": "outputAction",
+    "en": "Action",
+    "de": "Aktion"
+  },
+  {
+    "id": "outputExport",
+    "en": "Export",
+    "de": "Export"
+  },
+  {
+    "id": "brep.mesh.inspectVertex",
+    "en": "Inspect Mesh Vertex",
+    "de": "Mesh-Punkt prüfen"
+  },
+  {
+    "id": "brep.mesh.inspectEdge",
+    "en": "Inspect Mesh Edge",
+    "de": "Mesh-Kante prüfen"
+  },
+  {
+    "id": "brep.mesh.inspectFace",
+    "en": "Inspect Mesh Face",
+    "de": "Mesh-Fläche prüfen"
+  },
+  {
+    "id": "brep.mesh.bevel",
+    "en": "Bevel Mesh Edges",
+    "de": "Mesh-Kanten abschrägen"
+  },
+  {
+    "id": "brep.mesh.dissolveEdges",
+    "en": "Dissolve Mesh Edges",
+    "de": "Mesh-Kanten auflösen"
+  },
+  {
+    "id": "brep.mesh.dissolveVertices",
+    "en": "Dissolve Mesh Vertices",
+    "de": "Mesh-Punkte auflösen"
+  },
+  {
+    "id": "brep.mesh.mergeVertices",
+    "en": "Merge Mesh Vertices",
+    "de": "Mesh-Punkte zusammenführen"
+  },
+  {
+    "id": "brep.mesh.moveProportional",
+    "en": "Move Mesh Proportionally",
+    "de": "Mesh proportional verschieben"
+  },
+  {
+    "id": "brep.mesh.snapVertices",
+    "en": "Snap Mesh Vertices to Grid",
+    "de": "Mesh-Punkte am Raster ausrichten"
+  },
+  {
+    "id": "brep.mesh.mirror",
+    "en": "Mirror Mesh Half",
+    "de": "Mesh-Hälfte spiegeln"
+  },
+  {
+    "id": "brep.mesh.decimate",
+    "en": "Simplify Mesh",
+    "de": "Mesh vereinfachen"
+  },
+  {
+    "id": "brep.mesh.mergeCoplanar",
+    "en": "Merge Coplanar Mesh Faces",
+    "de": "Koplanare Mesh-Flächen zusammenführen"
+  },
+  {
+    "id": "brep.bool.compoundCut",
+    "en": "Compound Cut",
+    "de": "Zusammengesetzter Schnitt"
+  },
+  {
+    "id": "brep.bool.cut",
+    "en": "Cut",
+    "de": "Differenz"
+  },
+  {
+    "id": "brep.bool.fuse",
+    "en": "Fuse",
+    "de": "Vereinigung"
+  },
+  {
+    "id": "brep.bool.intersect",
+    "en": "Intersect",
+    "de": "Schnittmenge"
+  },
+  {
+    "id": "brep.brep",
+    "en": "Brep",
+    "de": "BRep"
+  },
+  {
+    "id": "brep.curve.approximate",
+    "en": "Approximate",
+    "de": "Annähern"
+  },
+  {
+    "id": "brep.curve.arc",
+    "en": "Arc",
+    "de": "Kreisbogen"
+  },
+  {
+    "id": "brep.curve.circle",
+    "en": "Circle",
+    "de": "Kreis"
+  },
+  {
+    "id": "brep.curve.ellipse",
+    "en": "Ellipse",
+    "de": "Ellipse"
+  },
+  {
+    "id": "brep.curve.helix",
+    "en": "Helix",
+    "de": "Schraubenlinie"
+  },
+  {
+    "id": "brep.curve.interpolate",
+    "en": "Interpolate",
+    "de": "Interpolieren"
+  },
+  {
+    "id": "brep.curve.line",
+    "en": "Line",
+    "de": "Linie"
+  },
+  {
+    "id": "brep.curve.polygon",
+    "en": "Polygon",
+    "de": "Vieleck"
+  },
+  {
+    "id": "brep.curve.polyline",
+    "en": "Polyline",
+    "de": "Linienzug"
+  },
+  {
+    "id": "brep.curve.rectangle",
+    "en": "Rectangle",
+    "de": "Rechteck"
+  },
+  {
+    "id": "brep.edge",
+    "en": "Edge",
+    "de": "Kante"
+  },
+  {
+    "id": "brep.eval.curveClosestParameter",
+    "en": "Curve Closest Parameter",
+    "de": "Nächster Kurvenparameter"
+  },
+  {
+    "id": "brep.eval.curveCurvature",
+    "en": "Curve Curvature",
+    "de": "Kurvenkrümmung"
+  },
+  {
+    "id": "brep.eval.curveDomain",
+    "en": "Curve Domain",
+    "de": "Kurvenbereich"
+  },
+  {
+    "id": "brep.eval.curvePoint",
+    "en": "Curve Point",
+    "de": "Kurvenpunkt"
+  },
+  {
+    "id": "brep.eval.curveTangent",
+    "en": "Curve Tangent",
+    "de": "Kurventangente"
+  },
+  {
+    "id": "brep.eval.surfNormal",
+    "en": "Surface Normal",
+    "de": "Flächennormale"
+  },
+  {
+    "id": "brep.eval.surfPoint",
+    "en": "Surface Point",
+    "de": "Flächenpunkt"
+  },
+  {
+    "id": "brep.eval.surfaceClosestUv",
+    "en": "Surface Closest Uv",
+    "de": "Nächste UV-Koordinaten"
+  },
+  {
+    "id": "brep.face",
+    "en": "Face",
+    "de": "Fläche"
+  },
+  {
+    "id": "brep.geometry",
+    "en": "Geometry",
+    "de": "Geometrie"
+  },
+  {
+    "id": "brep.intersect.curveCurve",
+    "en": "Curve Curve",
+    "de": "Kurve mit Kurve schneiden"
+  },
+  {
+    "id": "brep.intersect.curveSurface",
+    "en": "Curve Surface",
+    "de": "Kurve mit Fläche schneiden"
+  },
+  {
+    "id": "brep.intersect.section",
+    "en": "Section",
+    "de": "Querschnitt"
+  },
+  {
+    "id": "brep.intersect.split",
+    "en": "Split",
+    "de": "Teilen"
+  },
+  {
+    "id": "brep.intersect.surfaceSurface",
+    "en": "Surface Surface",
+    "de": "Flächen miteinander schneiden"
+  },
+  {
+    "id": "brep.io.exportDwg",
+    "en": "Export Dwg",
+    "de": "DWG exportieren"
+  },
+  {
+    "id": "brep.io.exportObj",
+    "en": "Export Obj",
+    "de": "OBJ exportieren"
+  },
+  {
+    "id": "brep.io.exportStep",
+    "en": "Export Step",
+    "de": "STEP exportieren"
+  },
+  {
+    "id": "brep.io.exportStl",
+    "en": "Export Stl",
+    "de": "STL exportieren"
+  },
+  {
+    "id": "brep.io.importDwg",
+    "en": "Import Dwg",
+    "de": "DWG importieren"
+  },
+  {
+    "id": "brep.io.importObj",
+    "en": "Import Obj",
+    "de": "OBJ importieren"
+  },
+  {
+    "id": "brep.io.importStep",
+    "en": "Import Step",
+    "de": "STEP importieren"
+  },
+  {
+    "id": "brep.io.importStl",
+    "en": "Import Stl",
+    "de": "STL importieren"
+  },
+  {
+    "id": "brep.measure.area",
+    "en": "Area",
+    "de": "Flächeninhalt"
+  },
+  {
+    "id": "brep.measure.boundingBox",
+    "en": "Bounding Box",
+    "de": "Begrenzungsquader"
+  },
+  {
+    "id": "brep.measure.centerOfMass",
+    "en": "Center Of Mass",
+    "de": "Schwerpunkt"
+  },
+  {
+    "id": "brep.measure.classify",
+    "en": "Classify",
+    "de": "Klassifizieren"
+  },
+  {
+    "id": "brep.measure.closestPoint",
+    "en": "Closest Point",
+    "de": "Nächster Punkt"
+  },
+  {
+    "id": "brep.measure.distance",
+    "en": "Distance",
+    "de": "Abstand"
+  },
+  {
+    "id": "brep.measure.length",
+    "en": "Length",
+    "de": "Länge"
+  },
+  {
+    "id": "brep.measure.validate",
+    "en": "Validate",
+    "de": "Validieren"
+  },
+  {
+    "id": "brep.measure.volume",
+    "en": "Volume",
+    "de": "Volumen"
+  },
+  {
+    "id": "brep.mesh",
+    "en": "Polygon Mesh",
+    "de": "Polygonnetz"
+  },
+  {
+    "id": "brep.mesh.analyze",
+    "en": "Analyze Mesh",
+    "de": "Mesh analysieren"
+  },
+  {
+    "id": "brep.mesh.box",
+    "en": "Mesh Box",
+    "de": "Mesh-Quader"
+  },
+  {
+    "id": "brep.mesh.cone",
+    "en": "Mesh Cone",
+    "de": "Mesh-Kegel"
+  },
+  {
+    "id": "brep.mesh.construct",
+    "en": "Construct Mesh",
+    "de": "Mesh konstruieren"
+  },
+  {
+    "id": "brep.mesh.cylinder",
+    "en": "Mesh Cylinder",
+    "de": "Mesh-Zylinder"
+  },
+  {
+    "id": "brep.mesh.deleteFaces",
+    "en": "Delete Mesh Faces",
+    "de": "Mesh-Flächen löschen"
+  },
+  {
+    "id": "brep.mesh.exportJson",
+    "en": "Mesh to JSON",
+    "de": "Mesh als JSON"
+  },
+  {
+    "id": "brep.mesh.exportObj",
+    "en": "Mesh to OBJ",
+    "de": "Mesh als OBJ"
+  },
+  {
+    "id": "brep.mesh.extrude",
+    "en": "Extrude Mesh Faces",
+    "de": "Mesh-Flächen extrudieren"
+  },
+  {
+    "id": "brep.mesh.fillHoles",
+    "en": "Fill Mesh Holes",
+    "de": "Mesh-Löcher schließen"
+  },
+  {
+    "id": "brep.mesh.flip",
+    "en": "Flip Mesh Faces",
+    "de": "Mesh-Flächen umdrehen"
+  },
+  {
+    "id": "brep.mesh.fromBrep",
+    "en": "Mesh from B-Rep",
+    "de": "Mesh aus BRep"
+  },
+  {
+    "id": "brep.mesh.inset",
+    "en": "Inset Mesh Faces",
+    "de": "Mesh-Flächen einrücken"
+  },
+  {
+    "id": "brep.mesh.knifeCut",
+    "en": "Knife Cut Mesh Face",
+    "de": "Mesh-Fläche schneiden"
+  },
+  {
+    "id": "brep.mesh.loopCut",
+    "en": "Cut Mesh Loops",
+    "de": "Mesh-Kantenschleifen schneiden"
+  },
+  {
+    "id": "brep.mesh.moveVertices",
+    "en": "Move Mesh Vertices",
+    "de": "Mesh-Punkte verschieben"
+  },
+  {
+    "id": "brep.mesh.orient",
+    "en": "Orient Mesh Faces",
+    "de": "Mesh-Flächen ausrichten"
+  },
+  {
+    "id": "brep.mesh.plane",
+    "en": "Mesh Plane",
+    "de": "Mesh-Ebene"
+  },
+  {
+    "id": "brep.mesh.rotate",
+    "en": "Rotate Mesh",
+    "de": "Mesh drehen"
+  },
+  {
+    "id": "brep.mesh.rotateComponents",
+    "en": "Rotate Mesh Components",
+    "de": "Mesh-Komponenten drehen"
+  },
+  {
+    "id": "brep.mesh.scale",
+    "en": "Scale Mesh",
+    "de": "Mesh skalieren"
+  },
+  {
+    "id": "brep.mesh.scaleComponents",
+    "en": "Scale Mesh Components",
+    "de": "Mesh-Komponenten skalieren"
+  },
+  {
+    "id": "brep.mesh.sphere",
+    "en": "Mesh Sphere",
+    "de": "Mesh-Kugel"
+  },
+  {
+    "id": "brep.mesh.subdivide",
+    "en": "Subdivide Mesh Faces",
+    "de": "Mesh-Flächen unterteilen"
+  },
+  {
+    "id": "brep.mesh.toBrep",
+    "en": "Faceted B-Rep from Mesh",
+    "de": "Facettierter BRep aus Mesh"
+  },
+  {
+    "id": "brep.mesh.translate",
+    "en": "Translate Mesh",
+    "de": "Mesh verschieben"
+  },
+  {
+    "id": "brep.mesh.translateComponents",
+    "en": "Move Mesh Components",
+    "de": "Mesh-Komponenten verschieben"
+  },
+  {
+    "id": "brep.mesh.triangulate",
+    "en": "Triangulate Mesh",
+    "de": "Mesh triangulieren"
+  },
+  {
+    "id": "brep.mesh.weld",
+    "en": "Weld Mesh Vertices",
+    "de": "Mesh-Punkte verschweißen"
+  },
+  {
+    "id": "brep.prim3d.box",
+    "en": "Box",
+    "de": "Quader"
+  },
+  {
+    "id": "brep.prim3d.cone",
+    "en": "Cone",
+    "de": "Kegel"
+  },
+  {
+    "id": "brep.prim3d.convexHull",
+    "en": "Convex Hull",
+    "de": "Konvexe Hülle"
+  },
+  {
+    "id": "brep.prim3d.cylinder",
+    "en": "Cylinder",
+    "de": "Zylinder"
+  },
+  {
+    "id": "brep.prim3d.sphere",
+    "en": "Sphere",
+    "de": "Kugel"
+  },
+  {
+    "id": "brep.prim3d.torus",
+    "en": "Torus",
+    "de": "Torus"
+  },
+  {
+    "id": "brep.solid.chamfer",
+    "en": "Chamfer",
+    "de": "Abschrägen"
+  },
+  {
+    "id": "brep.solid.chamferAsymmetric",
+    "en": "Asymmetric Chamfer",
+    "de": "Asymmetrisch abschrägen"
+  },
+  {
+    "id": "brep.solid.chamferEdges",
+    "en": "Chamfer Edges",
+    "de": "Kanten abschrägen"
+  },
+  {
+    "id": "brep.solid.defeature",
+    "en": "Defeature",
+    "de": "Formelemente entfernen"
+  },
+  {
+    "id": "brep.solid.draft",
+    "en": "Draft",
+    "de": "Formschräge"
+  },
+  {
+    "id": "brep.solid.extrude",
+    "en": "Extrude Curve",
+    "de": "Kurve extrudieren"
+  },
+  {
+    "id": "brep.solid.fillet",
+    "en": "Fillet",
+    "de": "Abrunden"
+  },
+  {
+    "id": "brep.solid.filletEdges",
+    "en": "Fillet Edges",
+    "de": "Kanten abrunden"
+  },
+  {
+    "id": "brep.solid.filletVariable",
+    "en": "Variable Fillet",
+    "de": "Variabel abrunden"
+  },
+  {
+    "id": "brep.solid.offsetSolid",
+    "en": "Offset Solid",
+    "de": "Körper versetzen"
+  },
+  {
+    "id": "brep.solid.shell",
+    "en": "Shell",
+    "de": "Aushöhlen"
+  },
+  {
+    "id": "brep.surf.coons",
+    "en": "Coons Patch",
+    "de": "Coons-Fläche"
+  },
+  {
+    "id": "brep.surf.nurbsGrid",
+    "en": "Nurbs Grid",
+    "de": "NURBS-Gitter"
+  },
+  {
+    "id": "brep.surf.offset",
+    "en": "Offset Face",
+    "de": "Fläche versetzen"
+  },
+  {
+    "id": "brep.surf.planarFace",
+    "en": "Planar Face",
+    "de": "Ebene Fläche"
+  },
+  {
+    "id": "brep.surf.planarFaceWire",
+    "en": "Planar Face Wire",
+    "de": "Ebene Fläche aus Linienzug"
+  },
+  {
+    "id": "brep.surf.plane",
+    "en": "Plane",
+    "de": "Ebene"
+  },
+  {
+    "id": "brep.surf.thicken",
+    "en": "Thicken",
+    "de": "Verdicken"
+  },
+  {
+    "id": "brep.sweep.extrude",
+    "en": "Extrude",
+    "de": "Extrudieren"
+  },
+  {
+    "id": "brep.sweep.helical",
+    "en": "Helical Sweep",
+    "de": "Schraubenprofil ziehen"
+  },
+  {
+    "id": "brep.sweep.loft",
+    "en": "Loft",
+    "de": "Profile verbinden"
+  },
+  {
+    "id": "brep.sweep.pipe",
+    "en": "Pipe",
+    "de": "Rohr entlang Pfad"
+  },
+  {
+    "id": "brep.sweep.revolve",
+    "en": "Revolve",
+    "de": "Rotationskörper"
+  },
+  {
+    "id": "brep.sweep.sweep",
+    "en": "Sweep",
+    "de": "Profil entlang Pfad ziehen"
+  },
+  {
+    "id": "brep.text",
+    "en": "Text",
+    "de": "Text"
+  },
+  {
+    "id": "brep.topology.compound",
+    "en": "Compound",
+    "de": "Zusammensetzen"
+  },
+  {
+    "id": "brep.topology.explode",
+    "en": "Explode",
+    "de": "Zerlegen"
+  },
+  {
+    "id": "brep.topology.label",
+    "en": "Label",
+    "de": "Beschriften"
+  },
+  {
+    "id": "brep.topology.shells",
+    "en": "Shells",
+    "de": "Schalen"
+  },
+  {
+    "id": "brep.util.convertToNurbs",
+    "en": "Convert To Nurbs",
+    "de": "In NURBS umwandeln"
+  },
+  {
+    "id": "brep.util.faceFromWire",
+    "en": "Face From Wire",
+    "de": "Fläche aus Linienzug"
+  },
+  {
+    "id": "brep.util.heal",
+    "en": "Heal",
+    "de": "Reparieren"
+  },
+  {
+    "id": "brep.util.sew",
+    "en": "Sew",
+    "de": "Vernähen"
+  },
+  {
+    "id": "brep.util.vertex",
+    "en": "Vertex",
+    "de": "Punkt"
+  },
+  {
+    "id": "brep.vertex",
+    "en": "Vertex",
+    "de": "Punkt"
+  },
+  {
+    "id": "brep.xform.circularPattern",
+    "en": "Circular Pattern",
+    "de": "Kreisförmiges Muster"
+  },
+  {
+    "id": "brep.xform.copy",
+    "en": "Copy",
+    "de": "Kopieren"
+  },
+  {
+    "id": "brep.xform.gridPattern",
+    "en": "Grid Pattern",
+    "de": "Rastermuster"
+  },
+  {
+    "id": "brep.xform.linearPattern",
+    "en": "Linear Pattern",
+    "de": "Lineares Muster"
+  },
+  {
+    "id": "brep.xform.mirror",
+    "en": "Mirror",
+    "de": "Spiegeln"
+  },
+  {
+    "id": "brep.xform.rotate",
+    "en": "Rotate",
+    "de": "Drehen"
+  },
+  {
+    "id": "brep.xform.rotateAbout",
+    "en": "Rotate About",
+    "de": "Um Punkt drehen"
+  },
+  {
+    "id": "brep.xform.scale",
+    "en": "Scale",
+    "de": "Skalieren"
+  },
+  {
+    "id": "brep.xform.translate",
+    "en": "Translate",
+    "de": "Verschieben"
+  },
+  {
+    "id": "input",
+    "en": "Input",
+    "de": "Eingang"
+  },
+  {
+    "id": "output",
+    "en": "Output",
+    "de": "Ausgang"
+  },
+  {
+    "id": "contract",
+    "en": "Contract",
+    "de": "Schnittstelle"
+  },
+  {
+    "id": "brep",
+    "en": "Brep",
+    "de": "BRep"
+  }
+]

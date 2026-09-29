@@ -9,6 +9,7 @@ export interface JackArtifact {
   /** @state artifact */ camera: Camera;
   /** @state artifact @child kind=s.stdio.semio */ content: ArtifactChild;
   /** @state artifact */ rootNodeId?: string;
+  /** @state artifact */ query: string;
 }
 
 export interface Camera { x: number; y: number; zoom: number }
@@ -39,7 +40,7 @@ const exact = (row: Readonly<Record<string, unknown>>, required: readonly string
 /** 🪪️ Parses the persisted Jack document boundary and refuses embedded graph payloads. */
 export function parseJackArtifact(value: unknown, at = "$"): JackArtifact {
   const row = object(value, at);
-  exact(row, ["schema", "name", "manifest", "camera", "content"], ["manifestId", "rootNodeId"], at);
+  exact(row, ["schema", "name", "manifest", "camera", "content", "query"], ["manifestId", "rootNodeId"], at);
   return {
     schema: string(row.schema, `${at}.schema`),
     name: string(row.name, `${at}.name`),
@@ -48,6 +49,7 @@ export function parseJackArtifact(value: unknown, at = "$"): JackArtifact {
     camera: parseCamera(row.camera, `${at}.camera`),
     content: parseArtifactChild(row.content),
     rootNodeId: row.rootNodeId === undefined ? undefined : string(row.rootNodeId, `${at}.rootNodeId`),
+    query: string(row.query, `${at}.query`),
   };
 }
 

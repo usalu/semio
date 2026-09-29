@@ -32,13 +32,18 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 
 /// 🔌️ Builds the `stdio-media` bundle: every mp4/mp3/wav/avi subset's editor and viewer (with the owner-mutation roster where
 /// the subset's mutation enum derives one), one activation per artifact kind it opens read live from that kind's own
-/// `artifact_kind().id`, and the exact-pin runtime dependency on `stdio`, which owns those kinds and their codecs.
+/// `artifact_kind().id`, the exact-pin runtime dependency on `stdio`, which owns those kinds and their codecs, and the hosted runtime of
+/// each of them (`host_artifact`: schemas, inferences, document codecs, composers, formats, subset validators) in this component.
 pub fn plugin() -> Result<Plugin<StdioMediaApps>, PluginAssemblyError> {
     Plugin::<StdioMediaApps>::builder("stdio-media")
         .label("Stdio Media")
         .version(env!("CARGO_PKG_VERSION"))
         .package_id("semio:stdio-media")
         .depends_on("stdio", semio_framework::tree_pin!())
+        .host_artifact(semio_s_artifact_stdio_mp4::declaration(semio_s_artifact_stdio_mp4::definition()?).map_err(PluginAssemblyError::definition)?)
+        .host_artifact(semio_s_artifact_stdio_mp3::declaration(semio_s_artifact_stdio_mp3::definition()?).map_err(PluginAssemblyError::definition)?)
+        .host_artifact(semio_s_artifact_stdio_wav::declaration(semio_s_artifact_stdio_wav::definition()?).map_err(PluginAssemblyError::definition)?)
+        .host_artifact(semio_s_artifact_stdio_avi::declaration(semio_s_artifact_stdio_avi::definition()?).map_err(PluginAssemblyError::definition)?)
         .editor::<semio_s_artifact_stdio_mp4::editor::mp4::Mp4Editor>(semio_s_artifact_stdio_mp4::editor::mp4::create_mp4_editor())
         .viewer::<semio_s_artifact_stdio_mp4::viewer::mp4::Mp4Viewer>(semio_s_artifact_stdio_mp4::viewer::mp4::create_mp4_viewer())
         .editor::<semio_s_artifact_stdio_mp3::editor::mp3::Mp3Editor>(semio_s_artifact_stdio_mp3::editor::mp3::create_mp3_editor())

@@ -2111,8 +2111,12 @@ impl pack::value::ToValue for PdfSnapshot {
 }
 
 /// 🔀️ First-party value decoding for the public PDF snapshot. `schema` remains required while
-/// every other field falls back to its default.
+/// every other field falls back to its default; a path edit goes through the value tree ([`pack::value::edit_through_value`]).
 impl pack::value::FromValue for PdfSnapshot {
+    fn edit_value_at_path(&mut self, path: &[&str], edit: pack::value::ValueEdit) -> Result<(), pack::value::ValueError> {
+        pack::value::edit_through_value(self, path, edit)
+    }
+
     fn from_value(value: pack::value::DslValue) -> Result<Self, pack::value::ValueError> {
         use pack::value::FromValue;
         let entries = value.into_object()?;
@@ -2211,10 +2215,13 @@ impl store::ArtifactPack for PdfSnapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️SnapshotFixtures
-/// 🦑 Pure snapshot constructors, no codec/IO concern.
+/// 🆕️ A new pdf document: the empty 1.7 document as the real codec round-trips it — its retained object graph
+/// (`objects`/`trailer`) is what a fresh write produced, read back, exactly like [`demo_pdf17_snapshot`]; the empty
+/// `Default` carries no graph, so it saved as a document that reopened as a different one.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn empty_pdf_snapshot() -> PdfSnapshot {
-    PdfSnapshot::default()
+pub fn blank_pdf_snapshot() -> PdfSnapshot {
+    use crate::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};
+    encode_pdf(&PdfSnapshot::default()).and_then(|bytes| decode_pdf(&bytes)).expect("blank_pdf_snapshot: the empty document round-trips through the real codec")
 }
 
 /// 📄️ The demo `stdio.pdf.1.7` document -- the single source of truth for `🏅️standards/7️⃣1.7/

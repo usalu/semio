@@ -3212,39 +3212,33 @@ impl UiPipelines {
         let world_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("world3d_pipeline_layout"), bind_group_layouts: &[Some(&world_bind_group_layout)], immediate_size: 0 });
         let world_mesh_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("world3d_mesh_pipeline_layout"), bind_group_layouts: &[Some(&world_bind_group_layout), Some(&world_shadow_bind_group_layout)], immediate_size: 0 });
+        let world_vertex_layout = || wgpu::VertexBufferLayout {
+            array_stride: size_of::<World3dVertex>() as wgpu::BufferAddress,
+            step_mode: wgpu::VertexStepMode::Vertex,
+            attributes: &[
+                wgpu::VertexAttribute { offset: 0, shader_location: 0, format: wgpu::VertexFormat::Float32x3 },
+                wgpu::VertexAttribute { offset: 12, shader_location: 1, format: wgpu::VertexFormat::Float32x3 },
+                wgpu::VertexAttribute { offset: 24, shader_location: 2, format: wgpu::VertexFormat::Float32x4 },
+                wgpu::VertexAttribute { offset: 40, shader_location: 9, format: wgpu::VertexFormat::Float32x2 },
+            ],
+        };
+        let world_instance_layout = || wgpu::VertexBufferLayout {
+            array_stride: size_of::<World3dGpuInstance>() as wgpu::BufferAddress,
+            step_mode: wgpu::VertexStepMode::Instance,
+            attributes: &[
+                wgpu::VertexAttribute { offset: 0, shader_location: 3, format: wgpu::VertexFormat::Float32x4 },
+                wgpu::VertexAttribute { offset: 16, shader_location: 4, format: wgpu::VertexFormat::Float32x4 },
+                wgpu::VertexAttribute { offset: 32, shader_location: 5, format: wgpu::VertexFormat::Float32x4 },
+                wgpu::VertexAttribute { offset: 48, shader_location: 6, format: wgpu::VertexFormat::Float32x4 },
+                wgpu::VertexAttribute { offset: 64, shader_location: 7, format: wgpu::VertexFormat::Float32x4 },
+                wgpu::VertexAttribute { offset: 80, shader_location: 8, format: wgpu::VertexFormat::Float32x4 },
+                wgpu::VertexAttribute { offset: 96, shader_location: 10, format: wgpu::VertexFormat::Float32x4 },
+            ],
+        };
         let world_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("world3d_pipeline"),
             layout: Some(&world_mesh_pipeline_layout),
-            vertex: wgpu::VertexState {
-                module: &world_shader,
-                entry_point: Some("vs_main"),
-                buffers: &[
-                    wgpu::VertexBufferLayout {
-                        array_stride: size_of::<World3dVertex>() as wgpu::BufferAddress,
-                        step_mode: wgpu::VertexStepMode::Vertex,
-                        attributes: &[
-                            wgpu::VertexAttribute { offset: 0, shader_location: 0, format: wgpu::VertexFormat::Float32x3 },
-                            wgpu::VertexAttribute { offset: 12, shader_location: 1, format: wgpu::VertexFormat::Float32x3 },
-                            wgpu::VertexAttribute { offset: 24, shader_location: 2, format: wgpu::VertexFormat::Float32x4 },
-                            wgpu::VertexAttribute { offset: 40, shader_location: 9, format: wgpu::VertexFormat::Float32x2 },
-                        ],
-                    },
-                    wgpu::VertexBufferLayout {
-                        array_stride: size_of::<World3dGpuInstance>() as wgpu::BufferAddress,
-                        step_mode: wgpu::VertexStepMode::Instance,
-                        attributes: &[
-                            wgpu::VertexAttribute { offset: 0, shader_location: 3, format: wgpu::VertexFormat::Float32x4 },
-                            wgpu::VertexAttribute { offset: 16, shader_location: 4, format: wgpu::VertexFormat::Float32x4 },
-                            wgpu::VertexAttribute { offset: 32, shader_location: 5, format: wgpu::VertexFormat::Float32x4 },
-                            wgpu::VertexAttribute { offset: 48, shader_location: 6, format: wgpu::VertexFormat::Float32x4 },
-                            wgpu::VertexAttribute { offset: 64, shader_location: 7, format: wgpu::VertexFormat::Float32x4 },
-                            wgpu::VertexAttribute { offset: 80, shader_location: 8, format: wgpu::VertexFormat::Float32x4 },
-                            wgpu::VertexAttribute { offset: 96, shader_location: 10, format: wgpu::VertexFormat::Float32x4 },
-                        ],
-                    },
-                ],
-                compilation_options: Default::default(),
-            },
+            vertex: wgpu::VertexState { module: &world_shader, entry_point: Some("vs_main"), buffers: &[world_vertex_layout(), world_instance_layout()], compilation_options: Default::default() },
             fragment: Some(wgpu::FragmentState {
                 module: &world_shader,
                 entry_point: Some("fs_main"),
@@ -3274,36 +3268,7 @@ impl UiPipelines {
         let world_pipeline_translucent = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("world3d_pipeline_translucent"),
             layout: Some(&world_mesh_pipeline_layout),
-            vertex: wgpu::VertexState {
-                module: &world_shader,
-                entry_point: Some("vs_main"),
-                buffers: &[
-                    wgpu::VertexBufferLayout {
-                        array_stride: size_of::<World3dVertex>() as wgpu::BufferAddress,
-                        step_mode: wgpu::VertexStepMode::Vertex,
-                        attributes: &[
-                            wgpu::VertexAttribute { offset: 0, shader_location: 0, format: wgpu::VertexFormat::Float32x3 },
-                            wgpu::VertexAttribute { offset: 12, shader_location: 1, format: wgpu::VertexFormat::Float32x3 },
-                            wgpu::VertexAttribute { offset: 24, shader_location: 2, format: wgpu::VertexFormat::Float32x4 },
-                            wgpu::VertexAttribute { offset: 40, shader_location: 9, format: wgpu::VertexFormat::Float32x2 },
-                        ],
-                    },
-                    wgpu::VertexBufferLayout {
-                        array_stride: size_of::<World3dGpuInstance>() as wgpu::BufferAddress,
-                        step_mode: wgpu::VertexStepMode::Instance,
-                        attributes: &[
-                            wgpu::VertexAttribute { offset: 0, shader_location: 3, format: wgpu::VertexFormat::Float32x4 },
-                            wgpu::VertexAttribute { offset: 16, shader_location: 4, format: wgpu::VertexFormat::Float32x4 },
-                            wgpu::VertexAttribute { offset: 32, shader_location: 5, format: wgpu::VertexFormat::Float32x4 },
-                            wgpu::VertexAttribute { offset: 48, shader_location: 6, format: wgpu::VertexFormat::Float32x4 },
-                            wgpu::VertexAttribute { offset: 64, shader_location: 7, format: wgpu::VertexFormat::Float32x4 },
-                            wgpu::VertexAttribute { offset: 80, shader_location: 8, format: wgpu::VertexFormat::Float32x4 },
-                            wgpu::VertexAttribute { offset: 96, shader_location: 10, format: wgpu::VertexFormat::Float32x4 },
-                        ],
-                    },
-                ],
-                compilation_options: Default::default(),
-            },
+            vertex: wgpu::VertexState { module: &world_shader, entry_point: Some("vs_main"), buffers: &[world_vertex_layout(), world_instance_layout()], compilation_options: Default::default() },
             fragment: Some(wgpu::FragmentState {
                 module: &world_shader,
                 entry_point: Some("fs_main"),
@@ -3319,35 +3284,7 @@ impl UiPipelines {
         let world_shadow_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("world3d_shadow_pipeline"),
             layout: Some(&world_pipeline_layout),
-            vertex: wgpu::VertexState {
-                module: &world_shader,
-                entry_point: Some("vs_shadow"),
-                buffers: &[
-                    wgpu::VertexBufferLayout {
-                        array_stride: size_of::<World3dVertex>() as wgpu::BufferAddress,
-                        step_mode: wgpu::VertexStepMode::Vertex,
-                        attributes: &[
-                            wgpu::VertexAttribute { offset: 0, shader_location: 0, format: wgpu::VertexFormat::Float32x3 },
-                            wgpu::VertexAttribute { offset: 12, shader_location: 1, format: wgpu::VertexFormat::Float32x3 },
-                            wgpu::VertexAttribute { offset: 24, shader_location: 2, format: wgpu::VertexFormat::Float32x4 },
-                            wgpu::VertexAttribute { offset: 40, shader_location: 9, format: wgpu::VertexFormat::Float32x2 },
-                        ],
-                    },
-                    wgpu::VertexBufferLayout {
-                        array_stride: size_of::<World3dGpuInstance>() as wgpu::BufferAddress,
-                        step_mode: wgpu::VertexStepMode::Instance,
-                        attributes: &[
-                            wgpu::VertexAttribute { offset: 0, shader_location: 3, format: wgpu::VertexFormat::Float32x4 },
-                            wgpu::VertexAttribute { offset: 16, shader_location: 4, format: wgpu::VertexFormat::Float32x4 },
-                            wgpu::VertexAttribute { offset: 32, shader_location: 5, format: wgpu::VertexFormat::Float32x4 },
-                            wgpu::VertexAttribute { offset: 48, shader_location: 6, format: wgpu::VertexFormat::Float32x4 },
-                            wgpu::VertexAttribute { offset: 64, shader_location: 7, format: wgpu::VertexFormat::Float32x4 },
-                            wgpu::VertexAttribute { offset: 80, shader_location: 8, format: wgpu::VertexFormat::Float32x4 },
-                        ],
-                    },
-                ],
-                compilation_options: Default::default(),
-            },
+            vertex: wgpu::VertexState { module: &world_shader, entry_point: Some("vs_shadow"), buffers: &[world_vertex_layout(), world_instance_layout()], compilation_options: Default::default() },
             fragment: None,
             primitive: wgpu::PrimitiveState { cull_mode: Some(wgpu::Face::Back), ..Default::default() },
             depth_stencil: Some(wgpu::DepthStencilState {
@@ -3443,29 +3380,6 @@ impl UiPipelines {
             immediate_size: 0,
         });
         let world_celebration_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("world3d_celebration_pipeline_layout"), bind_group_layouts: &[Some(&world_bind_group_layout)], immediate_size: 0 });
-        let world_vertex_layout = || wgpu::VertexBufferLayout {
-            array_stride: size_of::<World3dVertex>() as wgpu::BufferAddress,
-            step_mode: wgpu::VertexStepMode::Vertex,
-            attributes: &[
-                wgpu::VertexAttribute { offset: 0, shader_location: 0, format: wgpu::VertexFormat::Float32x3 },
-                wgpu::VertexAttribute { offset: 12, shader_location: 1, format: wgpu::VertexFormat::Float32x3 },
-                wgpu::VertexAttribute { offset: 24, shader_location: 2, format: wgpu::VertexFormat::Float32x4 },
-                wgpu::VertexAttribute { offset: 40, shader_location: 9, format: wgpu::VertexFormat::Float32x2 },
-            ],
-        };
-        let world_instance_layout = || wgpu::VertexBufferLayout {
-            array_stride: size_of::<World3dGpuInstance>() as wgpu::BufferAddress,
-            step_mode: wgpu::VertexStepMode::Instance,
-            attributes: &[
-                wgpu::VertexAttribute { offset: 0, shader_location: 3, format: wgpu::VertexFormat::Float32x4 },
-                wgpu::VertexAttribute { offset: 16, shader_location: 4, format: wgpu::VertexFormat::Float32x4 },
-                wgpu::VertexAttribute { offset: 32, shader_location: 5, format: wgpu::VertexFormat::Float32x4 },
-                wgpu::VertexAttribute { offset: 48, shader_location: 6, format: wgpu::VertexFormat::Float32x4 },
-                wgpu::VertexAttribute { offset: 64, shader_location: 7, format: wgpu::VertexFormat::Float32x4 },
-                wgpu::VertexAttribute { offset: 80, shader_location: 8, format: wgpu::VertexFormat::Float32x4 },
-                wgpu::VertexAttribute { offset: 96, shader_location: 10, format: wgpu::VertexFormat::Float32x4 },
-            ],
-        };
         let celebration_instance_layout = || wgpu::VertexBufferLayout {
             array_stride: size_of::<World3dCelebrationGpuInstance>() as wgpu::BufferAddress,
             step_mode: wgpu::VertexStepMode::Instance,

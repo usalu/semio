@@ -17,7 +17,7 @@
       "stdio",
       "gis"
     ],
-    "executionProtocol": 19,
+    "executionProtocol": 20,
     "receiptIdentity": [
       "generationId",
       "bundleSha256",

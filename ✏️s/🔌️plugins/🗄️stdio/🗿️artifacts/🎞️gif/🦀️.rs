@@ -17,6 +17,7 @@ use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, M
 pub use schema::diff::GifDiff;
 pub use schema::mutations::GifMutation;
 pub use schema::snapshot::GifSnapshot;
+pub use schema::snapshot::STDIO_GIF89A_DOCUMENT_SCHEMA;
 pub use schema::GifArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.
@@ -58,7 +59,24 @@ pub const GIF_89A_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", sta
 /// 🗂️ This artifact's `ArtifactKindSpec`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    semio_s_artifact_stdio_contract::definition_only_assembly("gif", definition()?)
+    semio_s_artifact_stdio_contract::runtime_assembly("gif", definition()?, declaration)
+}
+
+/// 🧾️ The runtime `gif` declares for both standards (`87a`, `89a`, independently versioned ids): schemas, format, inference
+/// descriptors, composers and document codecs.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = formats()?;
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
+        .schema(standards::v87a::subsets::any::schema::gif_artifact_schema_descriptor())
+        .schemas([standards::v89a::subsets::any::schema::gif_artifact_schema_descriptor()])
+        .formats(formats)
+        .inferences([standards::v87a::subsets::any::schema::inferences::gif_artifact_inference_descriptor(), standards::v89a::subsets::any::schema::inferences::gif89a_artifact_inference_descriptor()])
+        .composers(standards::v87a::engine::io_registry::entries())
+        .composers(standards::v89a::engine::io_registry::entries())
+        .document_codec_bare::<standards::v87a::subsets::any::schema::snapshot::GifSnapshot, standards::v87a::subsets::any::schema::mutations::GifMutation>(STDIO_GIF_DOCUMENT_SCHEMA)
+        .document_codec_bare::<GifSnapshot, GifMutation>(STDIO_GIF89A_DOCUMENT_SCHEMA)
+        .try_build()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

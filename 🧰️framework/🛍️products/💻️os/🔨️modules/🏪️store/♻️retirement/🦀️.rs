@@ -103,9 +103,26 @@ impl RetireOwned for String {
     }
 }
 
+/// ♻️ A vector retires element by element, each through its own retirement, unless its elements have no drop glue: then
+/// nothing but their memory is released and a step releases a page of them at once (`maximum_bytes / size_of::<T>()`), so a
+/// large byte buffer or number array costs its size over the grant in steps instead of three steps per element (a returned
+/// 2 MiB `Vec<u8>` took ~6.3 M one-item pump turns). A grant narrower than one element retires that element on its own.
 struct Collection<T: RetireOwned>(ManuallyDrop<Vec<T>>);
 impl<T: RetireOwned> RetirementCursor for Collection<T> {
-    fn close_step(&mut self, _: usize) -> RetirementStep {
+    fn close_step(&mut self, maximum_bytes: usize) -> RetirementStep {
+        if !std::mem::needs_drop::<T>() && !self.0.is_empty() {
+            let width = size_of::<T>();
+            if width == 0 {
+                self.0.clear();
+                return RetirementStep::Bytes(0);
+            }
+            let count = (maximum_bytes / width).min(self.0.len());
+            if count > 0 {
+                let next = self.0.len() - count;
+                self.0.truncate(next);
+                return RetirementStep::Bytes(count * width);
+            }
+        }
         self.0.pop().map_or(RetirementStep::Complete, |value| RetirementStep::Child(value.retirement()))
     }
     fn terminal_is_empty(&self) -> bool {

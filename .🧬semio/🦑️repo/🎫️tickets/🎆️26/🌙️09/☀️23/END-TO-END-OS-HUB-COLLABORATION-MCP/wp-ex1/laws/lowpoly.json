@@ -1,0 +1,22 @@
+{
+ "plugin": "lowpoly",
+ "dir": "💠️lowpoly",
+ "apps": [
+  {
+   "app": "s.lowpoly.lowpoly@1/*#editor",
+   "examples": [
+    {
+     "id": "hexagonal-cut-concrete-forest-left",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "crate::editor::lowpoly::LowpolyPlayApp",
+   "create": "crate::editor::lowpoly::create_lowpoly_app",
+   "app": "s.lowpoly.lowpoly@1/*#editor"
+  }
+ ]
+}

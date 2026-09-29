@@ -51,7 +51,7 @@ export function testJackDocumentContract(): void {
   const snapshotFixtures = readdirSync(fixtureRoot, { recursive: true })
     .map((path) => String(path).replaceAll("\\", "/"))
     .filter((path) => path.includes("/📸️snapshot/") && path.endsWith("/🔣️.json"));
-  assert.equal(snapshotFixtures.length, 16);
+  assert.equal(snapshotFixtures.length, 18);
   for (const path of snapshotFixtures) {
     const parsed = parseJackSnapshot(json(new URL(join(fixtureRoot, path), import.meta.url)));
     assert.equal(parsed.content.target.dialect.artifactKind, cases.expectedChildKind, path);

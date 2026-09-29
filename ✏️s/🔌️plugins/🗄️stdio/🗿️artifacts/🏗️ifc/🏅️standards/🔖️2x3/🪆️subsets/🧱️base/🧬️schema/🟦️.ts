@@ -75,8 +75,8 @@ export const stdioIfc2x3BaseArtifactGuardConstant = <T extends string | number |
 export function parseIfc2x3Artifact(value: unknown, at = "$"): Ifc2x3Artifact {
   const row = stdioIfc2x3BaseArtifactGuardObject(value, at);
   return {
-    schema: row["schema"] === undefined ? undefined : parsePart21Document(row["schema"], `${at}.schema`),
-    document: row["document"] === undefined ? undefined : stdioIfc2x3BaseArtifactGuardString(row["document"], `${at}.document`),
+    schema: row["schema"] === undefined ? undefined : stdioIfc2x3BaseArtifactGuardString(row["schema"], `${at}.schema`),
+    document: row["document"] === undefined ? undefined : parsePart21Document(row["document"], `${at}.document`),
     edmPreamble: row["edmPreamble"] === undefined ? undefined : parseIfc2x3EdmPreamble(row["edmPreamble"], `${at}.edmPreamble`),
   };
 }

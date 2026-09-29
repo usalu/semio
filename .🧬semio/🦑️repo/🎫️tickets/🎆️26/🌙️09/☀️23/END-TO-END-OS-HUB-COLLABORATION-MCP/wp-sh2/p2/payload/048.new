@@ -1,0 +1,285 @@
+pub(crate) mod context {
+    
+    use super::super::*;
+    use semio_framework_plugin::EditorApp;
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
+    pub(crate) use crate::viewer::space_index::transient::tests::Registered;
+
+    pub type SpaceIndexApp = Registered<semio_framework_plugin::VcsArtifactApp<EditorApp<SpaceIndexEditor>>>;
+
+    /// 🧩️ Adapts `create_space_index_editor`'s `AppDefinition` (contract §2.4) into the
+    /// `App { definition, examples }` shape `new_app_with_registry` expects.
+    fn space_index_manifest_for_tests() -> semio_framework_plugin::App {
+        semio_framework_plugin::App { definition: create_space_index_editor(), examples: Vec::new() }
+    }
+
+    /// 🧪️ A self-closing app instance carrying the real `AppActionRegistry`. The registry-LESS
+    /// `artifact_app_laws::new_app` is unusable here: `with_registry_on_bus` joins
+    /// `EditorApp<SpaceIndexEditor>`'s `bounded_first_step_tool_proofs!` roster against the registry's
+    /// `Migrated` tool ids (`AppActionRegistry::validate_tool_job_rows`), and an empty registry
+    /// declares none of them — construction panics with `interactive-job.catalog-authority` …
+    /// `generated_migrated=false`, `migrated={}`. A registry-less wrapper could not dispatch anything
+    /// anyway (`admit_command_wire_with_proof` refuses every verb with no manifest declaration). The app is
+    /// [`Registered`]: bound to live instance `1` — a typed command addressed to any other instance is refused as not
+    /// belonging to the mounted app — and closed when it is dropped.
+    pub async fn new_app() -> SpaceIndexApp {
+        Registered::bound(new_app_with_registry::<EditorApp<SpaceIndexEditor>>(space_index_manifest_for_tests).await).await
+    }
+    
+    pub async fn new_app_with_artifact() -> (SpaceIndexApp, String) {
+        use crate::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow, empty_space_index_snapshot};
+        use semio_framework_plugin::PluginApp;
+        use store::ArtifactDsl;
+        let mut app = new_app().await;
+        let id = "artifact-1".to_string();
+        let mut snapshot = empty_space_index_snapshot("space-1");
+        snapshot.artifacts.push(SpaceArtifactRow {
+            id: id.clone(),
+            name: "First".into(),
+            kind_id: "s.draw.draw".into(),
+            schema: "s.draw.draw".into(),
+            dialect: SpaceArtifactDialect { artifact_kind: "s.draw.draw".into(), standard: "1".into(), subset: "*".into() },
+            created_at_ms: 1,
+            created_by: "user:1".into(),
+            updated_at_ms: 1,
+            updated_by: "user:1".into(),
+        });
+        let booted = app.document_text().await.expect("the booted document's text");
+        app.load_document_text(&store::ArtifactTextFiles { dsl: snapshot.print_dsl(), ops: booted.ops }).await.expect("load test artifact");
+        (app, id)
+    }
+    
+    /// 🌱️ The origin of `space-1` (sequences 1–4): created, a second author, one announced and indexed document `document_id`
+    /// named "First" — the Space transient's own shared fixture.
+    pub fn directory_origin(document_id: &str) -> Vec<semio_framework_os_kernel::os_directory::DirectoryEvent> {
+        crate::viewer::space_index::transient::tests::origin_of(document_id)
+    }
+
+    /// ✅️ `user`'s check-in of `document_id` at sequence `seq`: the checkpoint publication the hub fans out to every member.
+    pub fn check_in(seq: u64, user: &str, document_id: &str) -> semio_framework_os_kernel::os_directory::DirectoryEvent {
+        crate::viewer::space_index::transient::tests::check_in_of(seq, user, document_id)
+    }
+
+    /// 📥️ The host's directory batch of `space-1`'s `events`, continuing `after_seq_exclusive`.
+    pub fn fold_directory_events(after_seq_exclusive: u64, events: &[semio_framework_os_kernel::os_directory::DirectoryEvent]) -> fold_directory_events::FoldDirectoryEvents {
+        fold_directory_events::FoldDirectoryEvents { space_id: "space-1".into(), after_seq_exclusive, events_json: pack::to_json_string(&events.to_vec()) }
+    }
+
+    /// 🫧️ The transient the origin of `space-1` folds into, with `document_id`'s presence row `actors_csv`.
+    pub fn indexed_transient(document_id: &str, actors_csv: &str) -> SpaceIndexTransient {
+        let base = SpaceIndexTransient::default();
+        let listed = fold_directory_events(0, &directory_origin(document_id)).item().judge(&base).expect("admissible origin").expect("the origin lists the space");
+        presence_heartbeat::PresenceHeartbeat { artifact_id: document_id.into(), actors_csv: actors_csv.into() }.item().judge(&listed).expect("admissible presence").unwrap_or(listed)
+    }
+
+    /// 📥️ Feeds a registered Space surface one directory batch exactly as the host does and settles its retained job.
+    pub async fn feed<A: semio_framework_plugin::PluginApp>(app: &mut Registered<A>, after_seq_exclusive: u64, events: &[semio_framework_os_kernel::os_directory::DirectoryEvent]) -> semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt {
+        let batch = fold_directory_events(after_seq_exclusive, events);
+        let args = pack::json_to_dsl_value(&pack::json!({ "spaceId": batch.space_id, "afterSeqExclusive": batch.after_seq_exclusive, "eventsJson": batch.events_json }));
+        app.handle_action("foldDirectoryEvents", Some(&args), &meta("local")).await.expect("the surface admits the directory batch");
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut **app, 1).await.expect("the directory batch settles")
+    }
+
+    /// 🧵️ Dispatches one typed `command` on the editor and settles its retained job: the effects and lanes it published, or
+    /// the named fault its step answered.
+    pub async fn settle_typed(app: &mut SpaceIndexApp, command: SpaceIndexCommand) -> Result<semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt, Fault> {
+        app.dispatch_typed(command, &meta("local")).await?;
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut **app, 1).await
+    }
+
+    /// 🧵️ Dispatches `action` on a registered Space surface exactly as the shell does and settles its retained job: the
+    /// effects and lanes it published, or the named fault its step answered.
+    pub async fn settle_action<A: semio_framework_plugin::PluginApp>(app: &mut Registered<A>, action: &str, args: pack::JsonValue) -> Result<semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt, Fault> {
+        app.handle_action(action, Some(&pack::json_to_dsl_value(&args)), &meta("local")).await?;
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut **app, 1).await
+    }
+
+    /// 🗂️ An editor whose Space index folded the origin of `space-1` through the retained feed — one directory-owned row.
+    /// The index document stays the unsaved genesis one (no space id of its own), so it reads the one space its batches name.
+    pub async fn new_app_with_indexed_artifact() -> (SpaceIndexApp, String) {
+        let mut app = new_app().await;
+        let id = "artifact-0123456789abcdef0123456789abcdef".to_string();
+        feed(&mut app, 0, &directory_origin(&id)).await;
+        (app, id)
+    }
+
+    #[allow(dead_code)]
+    pub async fn dispatch(app: &mut SpaceIndexApp, command: SpaceIndexCommand) -> semio_framework_plugin::InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+    }
+}
+
+
+use super::*;
+use semio_framework_plugin::Effect;
+
+#[semio_framework_async_macros::async_test]
+async fn create_space_index_editor_builds_a_definition_for_this_dialect() {
+    let definition = create_space_index_editor();
+    assert_eq!(definition.dialect, SPACE_INDEX_DIALECT.into());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn editor_dialect_matches_the_artifact_coordinate() {
+    assert_eq!(<SpaceIndexEditor as ArtifactEditor>::DIALECT, SPACE_INDEX_DIALECT);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn every_declared_mutation_action_is_registered() {
+    let definition = create_space_index_editor();
+    for command in [
+        "createArtifact",
+        "deleteArtifact",
+        "renameArtifact",
+        "requestDeleteArtifact",
+        "openArtifact",
+        "openArtifactWith",
+        "inviteMember",
+        "requestInviteMember",
+        "removeMember",
+        "setVisibility",
+        "copyInviteLink",
+        "foldDirectoryEvents",
+        "presenceHeartbeat",
+    ] {
+        assert!(definition.actions.iter().any(|action| action.id == command), "registry declares {command}");
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_three_dialogs_are_registered_with_the_right_submit_actions() {
+    let definition = create_space_index_editor();
+    assert_eq!(definition.dialogs.len(), 3);
+    let by_id = |id: &str| definition.dialogs.iter().find(|dialog| dialog.id == id).unwrap_or_else(|| panic!("dialog {id} must be registered"));
+    assert_eq!(by_id("createArtifact").submit_action, ActionRef::new("createArtifact"));
+    assert_eq!(by_id("createArtifact").args.iter().map(|arg| arg.id.as_str()).collect::<Vec<_>>(), ["name", "kindChoice"]);
+    assert_eq!(by_id("deleteArtifact").submit_action, ActionRef::new("deleteArtifact"));
+    assert_eq!(by_id("inviteMember").submit_action, ActionRef::new("inviteMember"));
+    assert_eq!(by_id("inviteMember").args.len(), 2);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
+    use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView};
+    let snapshot = SSpaceSnapshot::default();
+    let history = HistoryView::empty();
+    let doc = ArtifactView::new(&snapshot, &history);
+    let cfg = ConfigView { snapshot: &NoConfig::default(), window: None };
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(<SpaceIndexEditor as ArtifactEditor>::render("nope", &doc, &cfg, &semio_framework_plugin::ViewModel::default()).expect("unknown body diagnostic tree")).expect("unknown body projection");
+    assert!(json.contains("Unknown body"));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_members_panel_body_renders_through_the_editor_dispatch() {
+    use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView};
+    let snapshot = SSpaceSnapshot::default();
+    let history = HistoryView::empty();
+    let doc = ArtifactView::new(&snapshot, &history);
+    let cfg = ConfigView { snapshot: &NoConfig::default(), window: None };
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(<SpaceIndexEditor as ArtifactEditor>::render(members_panel::SPACE_INDEX_BODY_MEMBERS, &doc, &cfg, &semio_framework_plugin::ViewModel::default()).expect("members panel tree")).expect("members panel projection");
+    assert!(json.contains("s-space-invite"));
+}
+
+/// 🆔️ Lane 4-F: `command_from_action` was entirely missing before this — every one of this app's
+/// own actions dispatched via a plain button click (`onAction`/`handleAction`) hit the default
+/// trait impl's unconditional error. Covers every declared action id, mirroring the sibling
+/// `command_from_action_covers_every_declared_action_and_rejects_unknown_ones` convention other
+/// artifact editors already use (e.g. `🌍️gis/🗿️artifacts/🗺️gismap`).
+#[semio_framework_async_macros::async_test]
+async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
+    let cases: Vec<(&str, pack::JsonValue)> = vec![
+        ("createArtifact", pack::json!({ "name": "First", "kindChoice": "{\"kindId\":\"s.gis.gismap\"}" })),
+        ("deleteArtifact", pack::json!({ "id": "artifact-1" })),
+        ("renameArtifact", pack::json!({ "id": "artifact-1", "newName": "Renamed" })),
+        ("requestDeleteArtifact", pack::json!({ "id": "artifact-1" })),
+        ("openArtifact", pack::json!({ "id": "artifact-1" })),
+        ("openArtifactWith", pack::json!({ "id": "artifact-1", "role": "editor", "pluginId": "writer", "appId": "writer.editor" })),
+        ("foldDirectoryEvents", pack::json!({ "spaceId": "space-1", "afterSeqExclusive": 4, "eventsJson": "[]" })),
+        ("presenceHeartbeat", pack::json!({ "artifactId": "artifact-1", "actorsCsv": "user:1" })),
+        ("inviteMember", pack::json!({ "email": "a@example.com", "role": "author" })),
+        ("removeMember", pack::json!({ "userId": "user:1" })),
+        ("setVisibility", pack::json!({ "visibility": "public" })),
+        ("copyInviteLink", pack::json!({ "role": "spectator", "ttlSecs": 604800u64 })),
+        ("requestInviteMember", pack::json!({})),
+    ];
+    for (action, args) in cases {
+        let args = pack::json_to_dsl_value(&args);
+        let command = SpaceIndexEditor::command_from_action(action, Some(&args)).unwrap_or_else(|error| panic!("{action} must bridge: {error:?}"));
+        assert_eq!(command.command_id(), action, "the bridged command's own id must round-trip");
+    }
+    assert!(SpaceIndexEditor::command_from_action("bogus", None).is_err());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn create_artifact_dialog_submission_preserves_the_exact_catalog_choice_in_the_host_relay() {
+    let kind_choice = "{\"kindId\":\"s.gis.gismap\",\"schema\":\"gis.map\"}";
+    let args = pack::json_to_dsl_value(&pack::json!({ "name": " First map ", "kindChoice": kind_choice }));
+    let SpaceIndexCommand::CreateArtifact(command) = SpaceIndexEditor::command_from_action("createArtifact", Some(&args)).expect("dialog submission must bridge") else {
+        panic!("expected CreateArtifact");
+    };
+    assert_eq!(command.kind_choice, kind_choice);
+    let mut app = context::new_app().await;
+    let result = context::settle_typed(&mut app, SpaceIndexCommand::CreateArtifact(command)).await.expect("dialog submission");
+    assert!(app.snapshot().expect("projection").artifacts.is_empty());
+    let [Effect::ReplayShellCommand { action_id, args }] = result.effects.as_slice() else {
+        panic!("dialog submission must emit one ReplayShellCommand");
+    };
+    assert_eq!(action_id, "os.create-space-artifact");
+    let args = pack::json_from_dsl_value(args.as_ref().expect("relay args"));
+    assert_eq!(args, pack::json!({ "kindChoice": kind_choice, "name": "First map" }));
+}
+
+/// 🆔️ Lane 4-F: `#s-space-create-artifact`'s no-args click must bridge to an EMPTY `CreateArtifact`
+/// payload (not error on missing fields) — its own handler treats empty `name`/`kindId` as "open
+/// the dialog", mirroring Home's `createSpace`.
+#[semio_framework_async_macros::async_test]
+async fn command_from_action_bridges_an_empty_create_artifact_click() {
+    let SpaceIndexCommand::CreateArtifact(payload) = SpaceIndexEditor::command_from_action("createArtifact", None).expect("no-args click must bridge") else { panic!("expected CreateArtifact") };
+    assert_eq!(payload.name, "");
+    assert_eq!(payload.kind_choice, "");
+}
+
+//#region 🕒️CheckIns
+/// 🪪️ `user`'s view in `locale`: the signed-in human the Space surfaces render for.
+fn view(locale: semio_framework_plugin::Locale) -> semio_framework_plugin::ViewModel {
+    semio_framework_plugin::ViewModel { locale, ..Default::default() }
+}
+
+/// 🖼️ The host-facing table body of a registered Space surface, projected.
+async fn table<A: semio_framework_plugin::PluginApp>(app: &mut context::Registered<A>, locale: semio_framework_plugin::Locale) -> String {
+    let rendered = app.render(main::BODY_KEY, None, &view(locale)).await.expect("host-facing Space table render");
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(rendered).expect("Space table projection")
+}
+
+/// 🕒️ SH2 P2 (C12 collab STEP 6): user A's check-in publishes ONE `artifact.checkpoint-published` event the hub fans out to
+/// every member. That one event, folded as one batch, moves the Space row's "Updated" to the check-in's minute and its
+/// "Updated By" to A — for A's editor and for B's read-only viewer alike, in English and in German — while the feed writes
+/// only the transient lane (no document, draft or config publication).
+#[semio_framework_async_macros::async_test]
+async fn one_check_in_event_moves_the_rows_updated_time_for_both_members_in_en_and_de() {
+    use semio_framework_plugin::Locale;
+    let (mut author, id) = context::new_app_with_indexed_artifact().await;
+    let mut spectator = context::Registered::bound(
+        semio_framework_plugin::VcsArtifactApp::<semio_framework_plugin::ViewerApp<crate::viewer::space_index::SpaceIndexViewer>>::with_registry(
+            Default::default(),
+            semio_framework_plugin::AppActionRegistry::from_definition(&crate::viewer::space_index::create_space_index_viewer()),
+        )
+        .await,
+    )
+    .await;
+    context::feed(&mut spectator, 0, &context::directory_origin(&id)).await;
+    for (en, de) in [(table(&mut author, Locale::En).await, table(&mut author, Locale::De).await), (table(&mut spectator, Locale::En).await, table(&mut spectator, Locale::De).await)] {
+        assert!(en.contains("2027-01-15 08:04 UTC") && de.contains("15.01.2027, 08:04 UTC"), "before any check-in the row shows its indexing minute: {en}");
+    }
+    let check_in = [context::check_in(5, "u-2", &id)];
+    for settled in [context::feed(&mut author, 4, &check_in).await, context::feed(&mut spectator, 4, &check_in).await] {
+        assert!(crate::viewer::space_index::transient::tests::publishes_only_transient_state(&settled.lanes), "the feed writes only the transient lane: {:?}", settled.lanes);
+    }
+    for (member, en, de) in [("author", table(&mut author, Locale::En).await, table(&mut author, Locale::De).await), ("spectator", table(&mut spectator, Locale::En).await, table(&mut spectator, Locale::De).await)] {
+        assert!(en.contains("2027-01-15 08:05 UTC"), "{member}: the one check-in event moves Updated (en): {en}");
+        assert!(de.contains("15.01.2027, 08:05 UTC"), "{member}: the one check-in event moves Aktualisiert (de): {de}");
+        assert!(en.contains("\"u-2\""), "{member}: Updated By names the human who checked in: {en}");
+        assert!(!en.contains("08:04 UTC"), "{member}: the stale minute is gone: {en}");
+    }
+}
+//#endregion 🕒️CheckIns

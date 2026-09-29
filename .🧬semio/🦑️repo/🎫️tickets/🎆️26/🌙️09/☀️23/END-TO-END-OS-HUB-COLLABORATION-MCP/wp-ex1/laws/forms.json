@@ -1,0 +1,30 @@
+{
+ "plugin": "forms",
+ "dir": "📋️forms",
+ "apps": [
+  {
+   "app": "s.forms.forms@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    },
+    {
+     "id": "contact",
+     "document": "distinct"
+    },
+    {
+     "id": "onboarding",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "crate::editor::forms::FormsPlayApp",
+   "create": "crate::editor::forms::create_forms_app",
+   "app": "s.forms.forms@1/*#editor"
+  }
+ ]
+}

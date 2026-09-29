@@ -1,0 +1,30 @@
+{
+ "plugin": "process",
+ "dir": "🏭️process",
+ "apps": [
+  {
+   "app": "s.process.process3d@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    },
+    {
+     "id": "drilled-plate",
+     "document": "distinct"
+    },
+    {
+     "id": "concrete-forest",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "crate::editor::process3d::Process3dPlayApp",
+   "create": "crate::editor::process3d::create_process3d_app",
+   "app": "s.process.process3d@1/*#editor"
+  }
+ ]
+}

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧬️schema/🧬️mutations/📥️apply-directory-events",
+  "semanticKind": "apply-directory-events",
+  "displayName": "Apply Directory Events",
+  "emoji": "📥️",
+  "aggregateVariant": "ApplyDirectoryEvents",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "apply-directory-events",
+  "binaryTag": 1,
+  "invertibility": "non-invertible",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

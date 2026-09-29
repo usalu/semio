@@ -18,6 +18,7 @@ pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[
     ("MoveNode", super::move_node::text::TEXT_OPCODE),
     ("ChangeDataProperty", super::change_data_property::text::TEXT_OPCODE),
     ("RemoveDataProperty", super::remove_data_property::text::TEXT_OPCODE),
+    ("SetQuery", super::set_query::text::TEXT_OPCODE),
 ];
 //#endregion 🧾️DerivedRegistry
 

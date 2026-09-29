@@ -24,7 +24,7 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/artifact.json#/$defs/DwgLogicalDrawing"
     },
     "header": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/artifact.json#/$defs/headerVariables"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/artifact.json#/$defs/DwgHeaderVariables"
     },
     "classes": {
       "type": "array",
@@ -48,16 +48,16 @@
       "type": "object"
     },
     "auxiliaryHeader": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/artifact.json#/$defs/auxiliaryHeader"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/artifact.json#/$defs/DwgAuxiliaryHeader"
     },
     "revisionHistory": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/artifact.json#/$defs/revisionHistory"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/artifact.json#/$defs/DwgRevisionHistory"
     },
     "preview": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/artifact.json#/$defs/indexedPreview"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/artifact.json#/$defs/DwgIndexedPreview"
     },
     "applicationHistory": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/artifact.json#/$defs/applicationHistory"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/artifact.json#/$defs/DwgApplicationHistory"
     }
   },
   "required": [

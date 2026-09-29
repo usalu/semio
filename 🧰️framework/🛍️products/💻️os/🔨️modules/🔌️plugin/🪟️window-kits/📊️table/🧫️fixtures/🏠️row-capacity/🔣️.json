@@ -11,13 +11,13 @@
     "argument": "spaceId",
     "activation": "openSpace",
     "actions": [
-      { "icon": "folder-open", "label": "Open", "action": "openSpace" },
-      { "icon": "pencil", "label": "Rename", "action": "renameSpace" },
-      { "icon": "link", "label": "Share", "action": "shareSpace" },
-      { "icon": "trash-2", "label": "Delete", "action": "deleteSpace" },
-      { "icon": "users", "label": "Manage", "action": "manageSpace" }
+      { "icon": "folder-open", "label": "Open", "verb": "openSpace" },
+      { "icon": "pencil", "label": "Rename", "verb": "renameSpace" },
+      { "icon": "link", "label": "Share", "verb": "shareSpace" },
+      { "icon": "trash-2", "label": "Delete", "verb": "deleteSpace" },
+      { "icon": "users", "label": "Manage", "verb": "manageSpace" }
     ]
   },
   "window": { "total": 500, "rows": 48 },
-  "expect": { "rowChildren": 0 }
+  "expect": { "rowChildren": 0, "minRowsPerWindow": 48, "maxRowItems": 68 }
 }

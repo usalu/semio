@@ -323,7 +323,7 @@ fn icon_name(icon: &ui_contract::UiText) -> IconName {
     IconName::from_str(icon.as_str()).unwrap_or(IconName::CircleDot)
 }
 
-fn ui_value_to_dsl(value: &ui_contract::UiValue) -> Option<DslValue> {
+fn ui_value_to_dsl(value: &impl serde::Serialize) -> Option<DslValue> {
     serde_json::to_value(value).ok().map(DslValue::from)
 }
 
@@ -360,11 +360,32 @@ fn record_presence(record: &UiNodeRecord) -> UiPresence {
 /// no record of their own and dispatch this descriptor instead. It therefore keeps the binding's
 /// authored scope rather than substituting the live document controller.
 fn record_action(record: &UiNodeRecord, trigger: ui_contract::Trigger, _controller: &str) -> Option<ActionDescriptor> {
-    record.bindings.iter().find(|binding| binding.trigger == trigger).map(|binding| ActionDescriptor {
-        controller_id: binding.action.scope.as_str().to_string(),
-        action: if binding.action.version == 1 { binding.action.name.as_str().to_string() } else { format!("{}@{}", binding.action.name.as_str(), binding.action.version) },
-        args: binding.args.as_ref().and_then(ui_value_to_dsl),
-    })
+    record.bindings.iter().find(|binding| binding.trigger == trigger).map(|binding| action_descriptor(&binding.action.scope, &binding.action.name, binding.action.version, binding.args.as_ref().and_then(ui_value_to_dsl)))
+}
+
+/// 🎬️ One versioned action as the `ActionDescriptor` the retained spec carries: the authored scope, and `name@version` past
+/// version 1 — the one spelling a record binding and a row verb share.
+fn action_descriptor(scope: &ui_contract::UiText, name: &ui_contract::UiText, version: u16, args: Option<DslValue>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: scope.as_str().to_string(), action: if version == 1 { name.as_str().to_string() } else { format!("{}@{}", name.as_str(), version) }, args }
+}
+
+/// 🎯️ The ONE target a tree or table row's verbs fire on.
+fn row_target(record: &UiNodeRecord) -> Option<&ui_contract::RowTarget> {
+    match &record.component {
+        ui_contract::Component::TreeItem(props) => props.target.as_ref(),
+        ui_contract::Component::TableRow(props) => props.target.as_ref(),
+        _ => None,
+    }
+}
+
+/// 🎬️ `verb` on a row's target as the retained spec's `ActionDescriptor` — scope, version and argument map inherited.
+fn row_verb_action(target: &ui_contract::RowTarget, verb: &ui_contract::UiText) -> ActionDescriptor {
+    action_descriptor(&target.scope, verb, target.version, target.args.as_ref().and_then(ui_value_to_dsl))
+}
+
+/// ▶️ A row's activation: the target's activation verb, never a record `Trigger::Activate` binding.
+fn row_activation(record: &UiNodeRecord) -> Option<ActionDescriptor> {
+    row_target(record).and_then(|target| target.activation.as_ref().map(|verb| row_verb_action(target, verb)))
 }
 
 fn record_action_or_inert(record: &UiNodeRecord, trigger: ui_contract::Trigger, controller: &str) -> ActionDescriptor {
@@ -378,7 +399,12 @@ fn record_action_or_inert(record: &UiNodeRecord, trigger: ui_contract::Trigger, 
 fn record_intent_bindings(record: &UiNodeRecord, surface: &str, revision: u64) -> UiIntentBindings {
     UiIntentBindings {
         address: UiIntentAddress { surface: surface.to_string(), revision, node: record.id.0, node_key: record.key.as_str().to_string() },
-        bindings: record.bindings.iter().map(|binding| (binding.trigger, binding.action.clone())).collect(),
+        bindings: record
+            .bindings
+            .iter()
+            .map(|binding| (binding.trigger, binding.action.clone()))
+            .chain(row_target(record).and_then(|target| target.activation.as_ref().map(|verb| (ui_contract::Trigger::Activate, ui_contract::ActionId::new(target.scope.clone(), verb.clone(), target.version)))))
+            .collect(),
     }
 }
 
@@ -591,15 +617,22 @@ fn data_attributes(map: Option<&ui_contract::UiFixedMap<ui_contract::UiText>>) -
     drag_data(map)
 }
 
-fn row_action(action: &ui_contract::RowAction, controller: &str) -> UiTreeItemAction {
+/// 🎬️ A row's actions as the retained item's trailing actions — each its verb on the row's ONE target.
+fn row_actions(row_actions: &ui_contract::UiFixedList<ui_contract::RowAction>, target: Option<&ui_contract::RowTarget>) -> Option<Vec<UiTreeItemAction>> {
+    let target = target.filter(|_| !row_actions.is_empty())?;
+    Some(row_actions.iter().map(|action| row_action(action, target)).collect())
+}
+
+fn row_action(action: &ui_contract::RowAction, target: &ui_contract::RowTarget) -> UiTreeItemAction {
     UiTreeItemAction {
         icon_id: icon_name(&action.icon),
         label: optional_contract_label(action.label.as_ref()),
-        action: ActionDescriptor { controller_id: controller.to_string(), action: action.action.action.name.as_str().to_string(), args: action.action.args.as_ref().and_then(ui_value_to_dsl) },
+        action: row_verb_action(target, &action.verb),
         placement: Some(match action.placement {
             ui_contract::RowActionPlacement::Row => UiTreeActionPlacement::Row,
             ui_contract::RowActionPlacement::Menu => UiTreeActionPlacement::Menu,
         }),
+        disabled: action.disabled,
     }
 }
 
@@ -624,7 +657,7 @@ fn tree_window(window: Option<&ui_contract::TreeWindow>) -> Option<UiTreeWindow>
 /// exactly as it windows a tree section. The column grid stays on the document — `TableProps::columns`/`actions_label` and
 /// every row's `TableRowProps::cells` are read through the node binding (`mounted_layout::document_table`) by the layout, the
 /// painter, the pointer router and the accessibility projection, so no second copy of a cell travels in the retained spec.
-fn table_section(document: &UiDocumentTree, record: &UiNodeRecord, props: &ui_contract::TableProps, controller: &str) -> UiTreeSectionNode {
+fn table_section(document: &UiDocumentTree, record: &UiNodeRecord, props: &ui_contract::TableProps) -> UiTreeSectionNode {
     UiTreeSectionNode {
         header_toolbar: None,
         window: tree_window(props.window.as_ref()),
@@ -632,19 +665,18 @@ fn table_section(document: &UiDocumentTree, record: &UiNodeRecord, props: &ui_co
         label: None,
         default_open: Some(true),
         presence: UiPresence::default(),
-        items: record.children.iter().filter_map(|child| document.record(*child)).filter_map(|row| table_row_item(row, controller)).collect(),
+        items: record.children.iter().filter_map(|child| document.record(*child)).filter_map(table_row_item).collect(),
     }
 }
 
-/// 📊️ One `Component::TableRow` as its tree item: named by its first cell (React's row name), activated by the record's own
-/// `Trigger::Activate` binding, its `RowAction`s the item's trailing actions — the one representation every target paints.
-fn table_row_item(record: &UiNodeRecord, controller: &str) -> Option<UiTreeItemNode> {
+/// 📊️ One `Component::TableRow` as its tree item: named by its first cell (React's row name), activated by its target's
+/// activation verb, its `RowAction`s the item's trailing actions — the one representation every target paints.
+fn table_row_item(record: &UiNodeRecord) -> Option<UiTreeItemNode> {
     let ui_contract::Component::TableRow(props) = &record.component else { return None };
-    let actions: Vec<UiTreeItemAction> = props.row_actions.iter().map(|action| row_action(action, controller)).collect();
     let mut item = UiTreeItemNode::base(record.key.as_str(), Label::data(props.cells.get(0).map_or(record.key.as_str(), |cell| cell.as_str())));
     item.presence = record_presence(record);
-    item.action = record_action(record, ui_contract::Trigger::Activate, controller);
-    item.actions = (!actions.is_empty()).then_some(actions);
+    item.action = row_activation(record);
+    item.actions = row_actions(&props.row_actions, props.target.as_ref());
     item.menu = menu_ref(record);
     Some(item)
 }
@@ -692,7 +724,6 @@ fn tree_item(document: &UiDocumentTree, record: &UiNodeRecord, surface: &str, co
             }
         }
     }
-    let actions: Vec<UiTreeItemAction> = props.row_actions.iter().map(|action| row_action(action, controller)).collect();
     UiTreeItemNode {
         window: tree_window(props.window.as_ref()),
         granularity: props.granularity.as_ref().map(|value| value.as_str().to_string()),
@@ -702,8 +733,8 @@ fn tree_item(document: &UiDocumentTree, record: &UiNodeRecord, surface: &str, co
         icon_id: props.icon.as_ref().map(icon_name),
         presence: record_presence(record),
         default_open: props.default_open,
-        action: record_action(record, ui_contract::Trigger::Activate, controller),
-        actions: if actions.is_empty() { None } else { Some(actions) },
+        action: row_activation(record),
+        actions: row_actions(&props.row_actions, props.target.as_ref()),
         draggable: props.draggable,
         drag_data: drag_data(props.drag_data.as_ref()),
         items: if items.is_empty() { None } else { Some(items) },
@@ -967,7 +998,7 @@ fn media_transport_revision(value: Option<&serde_json::Value>) -> bool {
         .is_some_and(|value| (value == "0" || (value.len() <= 20 && value.as_bytes().first().is_some_and(|first| (b'1'..=b'9').contains(first)) && value.as_bytes()[1..].iter().all(u8::is_ascii_digit))) && value.parse::<u64>().is_ok())
 }
 
-fn media_transport_contract_valid(value: &serde_json::Value) -> bool {
+pub fn media_transport_contract_valid(value: &serde_json::Value) -> bool {
     const ROOT_KEYS: &[&str] = &["schemaVersion", "kind", "mediaType", "revision", "durationMs", "positionMs", "selectionStartMs", "selectionEndMs", "locale", "labels", "resource", "capability", "hostContentHeight"];
     const LABEL_KEYS: &[&str] = &["play", "pause", "seek", "position", "duration", "selectionStart", "selectionEnd", "loading", "progress", "cancel", "unsupported", "unknownDuration", "audio", "video"];
     let Some(root) = value.as_object().filter(|root| json_object_has_exact_keys(root, ROOT_KEYS)) else { return false };
@@ -1158,7 +1189,10 @@ pub fn ui_node_from_record(document: &UiDocumentTree, record: &UiNodeRecord, sur
             padding: None,
             id: Some(record.key.as_str().to_string()),
             presence,
-            activate: record_action(record, ui_contract::Trigger::Activate, controller),
+            activate: match record.component {
+                ui_contract::Component::TreeSection(_) => record_action(record, ui_contract::Trigger::Activate, controller),
+                _ => row_activation(record),
+            },
             drop_action: record_action(record, ui_contract::Trigger::Drop, controller),
             drop_overlay: None,
             menu,
@@ -1166,7 +1200,7 @@ pub fn ui_node_from_record(document: &UiDocumentTree, record: &UiNodeRecord, sur
         }),
         ui_contract::Component::Table(props) => UiNode::Tree(UiTreeNode {
             presentation: ui_contract::TreePresentation::Standard,
-            sections: vec![table_section(document, record, props, controller)],
+            sections: vec![table_section(document, record, props)],
             presence,
             drop_action: record_action(record, ui_contract::Trigger::Drop, controller),
             menu,
@@ -1656,7 +1690,8 @@ fn tree_item_row(item: &UiTreeItemNode) -> UiNode {
 /// fixed action set, matching every other id-less synthesized/leaf child in this module.
 #[cfg(any(test, feature = "testkit"))]
 fn tree_item_action_row(action: &UiTreeItemAction) -> UiNode {
-    UiNode::Button(UiButtonNode { id: None, icon_id: action.icon_id, label: action.label.clone().unwrap_or_else(|| Label::data("")), action: action.action.clone(), style: None, presence: UiPresence::default(), menu: None })
+    let presence = UiPresence { state: if action.disabled { UiState::Disabled } else { UiState::Normal }, ..UiPresence::default() };
+    UiNode::Button(UiButtonNode { id: None, icon_id: action.icon_id, label: action.label.clone().unwrap_or_else(|| Label::data("")), action: action.action.clone(), style: None, presence, menu: None })
 }
 //#endregion 🔖️CompositeExpansion
 

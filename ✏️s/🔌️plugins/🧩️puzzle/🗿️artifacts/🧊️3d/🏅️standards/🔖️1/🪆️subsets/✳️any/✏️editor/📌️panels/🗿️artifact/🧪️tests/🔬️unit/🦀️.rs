@@ -355,29 +355,32 @@ fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node_ceili
 }
 //#endregion 🪟️WindowLaws
 
-/// 🔁️ One row action's `setSelectionFlag` args, flattened to `(flag, value)` — the two entries the
-/// reducer reads (`🎮️commands/🔖️set-selection-flag/🦀️.rs`).
-fn flag_binding(row_action: &RowAction) -> (String, bool) {
-    let Some(UiValue::Map(map)) = row_action.action.args.as_ref() else {
-        panic!("a hide/lock row action must carry setSelectionFlag args");
+/// 🔁️ One row action flattened to `(flag, value)`: the action names only its set-verb (`setSelectionHidden` →
+/// `hidden`), and the row's ONE target carries the value that verb sets (`🎮️commands/🔖️set-selection-flag/🦀️.rs`).
+fn flag_binding(row_action: &ui::RowAction, target: Option<&ui::RowTarget>) -> (String, bool) {
+    let flag = match row_action.verb.as_str() {
+        "setSelectionHidden" => "hidden",
+        "setSelectionLocked" => "locked",
+        verb => panic!("a hide/lock row action must name a set-verb, not {verb}"),
     };
-    let (mut flag, mut value) = (String::new(), None);
-    let mut cursor = map.iter();
+    let Some(args) = target.and_then(|target| target.args.as_ref()) else {
+        panic!("a hide/lock row must carry a target with its set-verb's value");
+    };
+    let mut value = None;
+    let mut cursor = args.iter();
     while let Some((key, entry)) = cursor.advance() {
-        match (key.as_str(), entry) {
-            ("flag", UiValue::Text(text)) => flag = text.as_str().to_string(),
-            ("value", UiValue::Bool(bit)) => value = Some(*bit),
-            _ => {}
+        if let (true, UiValue::Bool(bit)) = (key.as_str() == flag, entry) {
+            value = Some(*bit);
         }
     }
-    (flag, value.expect("a hide/lock row action must carry an explicit value"))
+    (flag.to_string(), value.expect("a hide/lock row target must carry an explicit value"))
 }
 
 /// 🔁️ Every hide/lock row action of one built tree, keyed by its row.
 fn flag_bindings(node: &BuiltNode, rows: &mut Vec<(String, String, bool)>) {
     if let ui::Component::TreeItem(props) = &node.component {
         for row_action in props.row_actions.iter() {
-            let (flag, value) = flag_binding(row_action);
+            let (flag, value) = flag_binding(row_action, props.target.as_ref());
             rows.push((node.key.as_str().to_string(), flag, value));
         }
     }
@@ -443,7 +446,7 @@ fn outliner_hide_and_lock_rows_dispatch_the_inverse_of_the_current_flag() {
 /// 🔁️ The checklist's own QA, closed as a loop: hide an object through the outliner's inline row
 /// action, re-render, then UN-hide it through the SAME row — for `hidden` and for `locked`. The
 /// sibling law above pins one render's args; this one pins that feeding those args to the reducer the
-/// row names (`setSelectionFlag`'s explicit `{entity, ids}` path, i.e.
+/// row names (`setSelectionHidden`/`setSelectionLocked`'s explicit `{entity, ids}` path, i.e.
 /// [`apply_puzzle3d_selection_flag`]) and re-rendering yields the OPPOSITE request, so the second
 /// click undoes the first. With the old hardcoded `value: true` the row asked for `true` on both
 /// passes and the object could never come back.

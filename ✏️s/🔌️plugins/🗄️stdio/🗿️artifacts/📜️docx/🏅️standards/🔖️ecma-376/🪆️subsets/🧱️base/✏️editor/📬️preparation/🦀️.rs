@@ -117,7 +117,7 @@ fn measure_snapshot(snapshot: &DocxSnapshot) -> Result<usize, String> {
         measure.string(left)?;
         measure.string(right)?;
     }
-    measure.add(snapshot.opc.relationships.capacity().saturating_mul(std::mem::size_of::<(String, Vec<semio_s_artifact_stdio_zip::opc::OpcRelationship>)>() * 2))?;
+    measure.add(snapshot.opc.relationships.len().saturating_mul(size_of::<(String, Vec<semio_s_artifact_stdio_zip::opc::OpcRelationship>)>() * 2))?;
     for (owner, relationships) in &snapshot.opc.relationships {
         measure.string(owner)?;
         measure.add(relationships.capacity().saturating_mul(std::mem::size_of::<semio_s_artifact_stdio_zip::opc::OpcRelationship>()))?;

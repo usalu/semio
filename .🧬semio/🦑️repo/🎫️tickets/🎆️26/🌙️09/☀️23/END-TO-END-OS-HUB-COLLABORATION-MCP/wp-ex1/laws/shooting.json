@@ -1,0 +1,26 @@
+{
+ "plugin": "shooting",
+ "dir": "🎥️shooting",
+ "apps": [
+  {
+   "app": "s.shooting.shooting@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    },
+    {
+     "id": "hexagonal-cut-concrete-forest-left",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "crate::editor::shooting::ShootingPlayApp",
+   "create": "crate::editor::shooting::create_shooting_app",
+   "app": "s.shooting.shooting@1/*#editor"
+  }
+ ]
+}

@@ -1,4 +1,5 @@
-//! 🗂️ `set-selection-flag` command.
+//! 🗂️ `set-selection-flag` command, and the two set-verbs an outliner row names (`setSelectionHidden`,
+//! `setSelectionLocked`).
 
 use crate::editor::puzzle2d::{apply_selection_flag, Puzzle2dActionCtx};
 use serde_json::Value;
@@ -8,6 +9,19 @@ use serde_json::Value;
 pub fn set_selection_flag(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
     let flag = args.and_then(|value| value.get("flag")).and_then(|value| value.as_str()).unwrap_or("hidden");
     let value = args.and_then(|value| value.get("value")).and_then(|value| value.as_bool()).unwrap_or(true);
+    apply(ctx, args, flag, value);
+}
+
+/// 🎯️ `setSelectionHidden{hidden}`/`setSelectionLocked{locked}`: `flag` set to exactly the boolean the arguments carry —
+/// the row target's explicit next state, so replaying it changes nothing. `command_from_action` already refused a
+/// missing value, so there is no default to fall back to here.
+pub fn set_selection_flag_value(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>, flag: &str) {
+    if let Some(value) = args.and_then(|value| value.get(flag)).and_then(Value::as_bool) {
+        apply(ctx, args, flag, value);
+    }
+}
+
+fn apply(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>, flag: &str, value: bool) {
     let explicit: Option<Vec<String>> = args
         .and_then(|value| value.get("ids"))
         .and_then(Value::as_array)

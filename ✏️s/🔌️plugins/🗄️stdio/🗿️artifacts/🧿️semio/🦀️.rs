@@ -51,7 +51,41 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 /// 🗂️ This artifact's `ArtifactKindSpec`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    semio_s_artifact_stdio_contract::definition_only_assembly("semio", definition()?)
+    semio_s_artifact_stdio_contract::runtime_assembly("semio", definition()?, declaration)
+}
+
+/// 🧾️ The runtime `semio` declares: the `✉️base` envelope schema opens the declaration and every subset appends its own
+/// rows (`subsets::*::io::declare`, the declarative twin of each subset's `register`).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let builder = semio_framework_plugin::ArtifactDeclaration::builder(definition).schema(subsets::base::schema::semio_artifact_schema_descriptor()).formats(formats()?).schema_documents(subsets::base::schema::SEMIO_SHARED_SCHEMA_DOCUMENTS);
+    let builder = subsets::base::io::declare(builder);
+    let builder = subsets::animation::io::declare(builder);
+    let builder = subsets::audio::io::declare(builder);
+    let builder = subsets::brep::io::declare(builder);
+    let builder = subsets::cad::io::declare(builder);
+    let builder = subsets::document::io::declare(builder);
+    let builder = subsets::drawing::io::declare(builder);
+    let builder = subsets::flow::io::declare(builder);
+    let builder = subsets::graph::io::declare(builder);
+    let builder = subsets::image::io::declare(builder);
+    let builder = subsets::kit::io::declare(builder);
+    let builder = subsets::mesh::io::declare(builder);
+    let builder = subsets::model::io::declare(builder);
+    let builder = subsets::object::io::declare(builder);
+    let builder = subsets::presentation::io::declare(builder);
+    let builder = subsets::table::io::declare(builder);
+    let builder = subsets::text::io::declare(builder);
+    let builder = subsets::value::io::declare(builder);
+    subsets::video::io::declare(builder).try_build()
+}
+
+/// 🎹️ The rows of `table` that write a `s.stdio.semio` dialect, copied once into `cache`. A composer's capability claims the
+/// dialect it writes and a dialect belongs to exactly one kind, so only these rows are this artifact's to declare; the bridge
+/// serializers that write another kind (semio → step, png, …) are that kind's, and stay reachable only through `register()`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn semio_written(table: &'static [semio_framework_plugin::ComposerEntry], cache: &'static std::sync::OnceLock<Vec<semio_framework_plugin::ComposerEntry>>) -> &'static [semio_framework_plugin::ComposerEntry] {
+    cache.get_or_init(|| table.iter().filter(|entry| entry.writes.artifact_kind == SEMIO_ARTIFACT_SCHEMA_ID).map(|entry| semio_framework_plugin::ComposerEntry { writes: entry.writes, reads: entry.reads, compose: entry.compose }).collect())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -74,12 +108,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 
 //#region 🔖️Register
-/// 🗂️ Registers all 19 of `v1`'s subsets' IO composers (18 domain subsets + `✉️base`
-/// itself) — dissolved out of the former standard-level `⚙️engine` (ticket
-/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES). `semio` is one of stdio's 10
-/// deliberate imperative-`register()` artifacts (never converted to the `ArtifactDeclaration`
-/// builder pattern). The Semio package contribution invokes it directly with the established call
-/// order and behavior.
+/// 🗂️ Registers all 19 subsets imperatively, outside any plugin assembly — the twin of [`declaration`] for native callers
+/// that open semio documents without assembling `stdio`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {
     subsets::brep::io::register();

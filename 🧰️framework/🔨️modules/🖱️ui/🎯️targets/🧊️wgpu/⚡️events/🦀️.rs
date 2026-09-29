@@ -1478,11 +1478,11 @@ impl EventRouter {
         }
     }
 
-    /// 🎬️ A row action's intent: the row's own address with the ACTION's versioned id from its `RowAction` binding
-    /// (`mounted_layout::document_row_action`) — `build_intent` would answer the row's own `Trigger::Activate` binding, its
-    /// primary activation, for the same trigger.
+    /// 🎬️ A row action's intent: the row's own address with the ACTION's versioned id — its verb on the row's ONE target
+    /// (`mounted_layout::document_row_action_id`) — `build_intent` would answer the row's activation, its primary action, for
+    /// the same trigger.
     fn row_action_command(&mut self, tree: &UiTree, row: NodeId, index: usize) -> Option<UiCommand> {
-        let binding = &crate::wgpu::mounted_layout::document_row_action(tree, row, index)?.action;
+        let action = crate::wgpu::mounted_layout::document_row_action_id(tree, row, index)?.ok()?;
         let args = tree.authored_tree_item(row)?.actions.as_deref()?.get(index)?.action.args.clone();
         let current_revision = tree.document().map_or(0, |document| document.revision().0);
         let address = match tree.node(row)?.intent.as_ref() {
@@ -1491,7 +1491,7 @@ impl EventRouter {
             None => UiIntentAddress::default(),
         };
         let seq = self.intents.next(&address.surface);
-        Some(UiCommand::App { window_id: self.window_id.clone(), intent: UiIntentCommand { address, trigger: binding.trigger, action: binding.action.clone(), args, input: None, seq } })
+        Some(UiCommand::App { window_id: self.window_id.clone(), intent: UiIntentCommand { address, trigger: Trigger::Activate, action, args, input: None, seq } })
     }
 
     /// 🎬️ The index of the Row-placed action whose trailing slot (`layout::tree_row_action_at`, the slots `paint` draws) holds the

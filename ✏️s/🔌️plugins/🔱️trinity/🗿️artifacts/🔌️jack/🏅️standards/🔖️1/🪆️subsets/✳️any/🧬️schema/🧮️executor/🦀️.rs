@@ -2,7 +2,7 @@
 #![allow(dead_code)]
 
 use crate::apply_trinity_graph_mutations;
-use crate::standards::v1::subsets::any::schema::mutations::{change_data_property, create_edge, create_node, delete_node, move_node, rename_node, TrinityGraphMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{change_data_property, create_edge, create_node, delete_node, move_node, rename_node, set_query, TrinityGraphMutation};
 use crate::{port_key, Edge, EntityRef, Graph, JackSnapshot, Node, Port, PortDirection, PropertyBag, PropertyValue};
 use std::collections::{BTreeMap, BTreeSet};
 

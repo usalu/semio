@@ -71,7 +71,7 @@ use semio_hub::artifact_authority::{
     AuthorityError, AuthorityLimits, AuthorityOperationControl, AuthorityProgress, CanonicalArtifactAuthority, CheckpointPublicationOrchestrator, CheckpointRequest, OperationContext, ValidatingCanonicalArtifactAuthority,
     VerifiedCheckpointPublisher,
 };
-use semio_hub::auth::rate_limit::{HubRateLimiterV1, RateLimitClassV1, RateLimitDecisionV1, RateLimitSubjectV1};
+use semio_hub::auth::rate_limit::{HubRateLimiterV1, HubStreamLimiterV1, RateLimitClassV1, RateLimitDecisionV1, RateLimitRefusalV1, RateLimitSubjectV1, StreamLimitClassV1, StreamPermitV1};
 use semio_hub::auth::password::PasswordCredentialV1;
 use semio_hub::auth::access_policy::{hub_access_permits, HubAccessActionV1, HubAccessRoleV1};
 use semio_hub::auth::agent::{
@@ -931,7 +931,7 @@ struct SpaceColors {
     by_actor: BTreeMap<String, ColorLease>,
 }
 
-/// 🔎️ The exact reason one document-open plan lost its socket authority. Eleven distinct refusals
+/// 🔎️ The exact reason one document-open plan lost its socket authority. Six distinct refusals
 /// collapse into close code `4401`; this names which. Test-only: the close frame is unchanged.
 #[cfg(test)]
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -942,7 +942,6 @@ enum DocumentPlanRefusalV1 {
     DescriptorDiffers,
     CatalogSelectionDiffers,
     DirectoryRevisionDiffers,
-    CheckpointDiffers,
 }
 
 #[cfg(test)]
@@ -2160,6 +2159,9 @@ struct HubState {
     /// 🚦️ Per-principal and per-remote-address token buckets in front of credential
     /// sign-in, directory commands, invite redemption and socket-grant issuance.
     rate_limits: Arc<HubRateLimiterV1>,
+    /// 🚰️ The stream rule of the execution-target asset routes (component, browser actor): immutable, content-addressed
+    /// bodies no request bucket meters, bounded by how many stream at once hub-wide and per principal.
+    asset_streams: Arc<HubStreamLimiterV1>,
     admin_subjects: Arc<[AdminSubject]>,
     admin_cursor_key: [u8; 32],
     /// 🏛️ Process-local MAC key authenticating one space-administration keyset cursor.
@@ -3755,7 +3757,7 @@ enum DocumentExecutionTargetAssetV1 {
 /// `DocumentOpenIntentV1`; a package id, digest, catalog generation, local path or plan receipt is
 /// never a selector. The private browser verifier rejects independently selected reads that differ
 /// from its open plan; this route rejects authorization or directory changes during one selection.
-async fn document_execution_target_selection(space_id: String, document_id: String, headers: HeaderMap, state: HubState, body: Bytes) -> Result<(DocumentExecutionTargetLeaseFieldsV1, VerifiedExecutionTargetAssets), DocumentOpenPlanRouteError> {
+async fn document_execution_target_selection(space_id: String, document_id: String, headers: HeaderMap, state: HubState, body: Bytes) -> Result<(DocumentExecutionTargetLeaseFieldsV1, VerifiedExecutionTargetAssets, RateLimitSubjectV1), DocumentOpenPlanRouteError> {
     let content_types = headers.get_all(axum::http::header::CONTENT_TYPE);
     if !socket_text_bounded(&space_id)
         || !socket_text_bounded(&document_id)
@@ -3855,7 +3857,11 @@ async fn document_execution_target_selection(space_id: String, document_id: Stri
     if state.directory.head_seq().await.map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))? != directory_revision {
         return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Stale));
     }
-    Ok((fields, assets))
+    let principal = match &subject {
+        SocketSubjectV1::Session { session_id, .. } => RateLimitSubjectV1::principal(session_id),
+        SocketSubjectV1::Share { share_id, .. } => RateLimitSubjectV1::principal(share_id),
+    };
+    Ok((fields, assets, principal))
 }
 
 async fn issue_document_execution_target(
@@ -3869,19 +3875,27 @@ async fn issue_document_execution_target(
     if uri.query().is_some() {
         return Err(document_open_plan_route_error(StatusCode::BAD_REQUEST, DocumentOpenPlanErrorCodeV1::Denied));
     }
-    tokio::time::timeout(std::time::Duration::from_millis(DOCUMENT_EXECUTION_TARGET_DEADLINE_MS), async move {
+    let hub = state.clone();
+    let (fields, assets, principal) = tokio::time::timeout(std::time::Duration::from_millis(DOCUMENT_EXECUTION_TARGET_DEADLINE_MS), async move {
         let (parts, body) = request.into_parts();
         let body = axum::body::to_bytes(body, DOCUMENT_EXECUTION_TARGET_REQUEST_MAX_BYTES).await.map_err(|_| document_open_plan_route_error(StatusCode::PAYLOAD_TOO_LARGE, DocumentOpenPlanErrorCodeV1::Denied))?;
-        let (fields, assets) = document_execution_target_selection(space_id, document_id, parts.headers, state, body).await?;
-        Ok(match asset {
-            DocumentExecutionTargetAssetV1::Manifest => DirectoryJson(fields).into_response(),
-            DocumentExecutionTargetAssetV1::Component => document_execution_target_stream(&assets.component)?,
-            DocumentExecutionTargetAssetV1::Descriptor => document_execution_target_bytes(&assets.descriptor),
-            DocumentExecutionTargetAssetV1::BrowserActor => document_execution_target_stream(assets.browser_actor.as_ref().ok_or_else(|| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::ComponentUnavailable))?)?,
-        })
+        document_execution_target_selection(space_id, document_id, parts.headers, state, body).await
     })
     .await
-    .unwrap_or_else(|_| Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded)))
+    .unwrap_or_else(|_| Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded)))?;
+    let streamed = match asset {
+        DocumentExecutionTargetAssetV1::Manifest => return Ok(DirectoryJson(fields).into_response()),
+        DocumentExecutionTargetAssetV1::Descriptor => return Ok(document_execution_target_bytes(&assets.descriptor)),
+        DocumentExecutionTargetAssetV1::Component => &assets.component,
+        DocumentExecutionTargetAssetV1::BrowserActor => assets.browser_actor.as_ref().ok_or_else(|| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::ComponentUnavailable))?,
+    };
+    match hub.asset_streams.admit(StreamLimitClassV1::ExecutionTargetAsset, principal).await {
+        Ok(permit) => document_execution_target_stream(streamed, permit),
+        Err(refusal) => {
+            hub.note("server.rate-limit", TraceOutcome::Refused, refusal.class);
+            Ok(rate_limit_refusal_response(refusal))
+        }
+    }
 }
 
 /// 🌊️ Streams one catalog-verified execution-target asset (the document's component or browser actor, tens of MB) from
@@ -3889,12 +3903,13 @@ async fn issue_document_execution_target(
 /// reading and hashing the whole asset under that deadline answered 503 for every large component once the hub was busy
 /// (ticket 26/09/23 S15: catalog B2 puzzle3d, `execution-target/component` 503 after a slow creation; the plugin-module
 /// twin of this defect was S12-1b). The stream withholds its last chunk until length, SHA-256 and BLAKE3 match, so a
-/// tampered asset ends the body short instead of completing it.
-fn document_execution_target_stream(asset: &TrustedCatalogAsset) -> Result<Response, DocumentOpenPlanRouteError> {
+/// tampered asset ends the body short instead of completing it. It holds `permit`, its slot of the asset stream rule, until
+/// the body ends or the client drops it.
+fn document_execution_target_stream(asset: &TrustedCatalogAsset, permit: StreamPermitV1) -> Result<Response, DocumentOpenPlanRouteError> {
     let stream = asset.stream().map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::ComponentUnavailable))?;
     let length = stream.byte_length();
-    let body = axum::body::Body::from_stream(futures::stream::unfold(stream, |mut stream| async move {
-        stream.next_chunk().await.map(|chunk| (chunk.map_err(|error| std::io::Error::other(error.to_string())), stream))
+    let body = axum::body::Body::from_stream(futures::stream::unfold((stream, permit), |(mut stream, permit)| async move {
+        stream.next_chunk().await.map(|chunk| (chunk.map_err(|error| std::io::Error::other(error.to_string())), (stream, permit)))
     }));
     Ok((StatusCode::OK, [(axum::http::header::CONTENT_TYPE, "application/octet-stream".to_string()), (axum::http::header::CONTENT_LENGTH, length.to_string()), (axum::http::header::CACHE_CONTROL, "no-store".to_string())], body).into_response())
 }
@@ -5001,13 +5016,17 @@ fn socket_grant_from_protocol_header(headers: &HeaderMap) -> Result<SocketGrantC
     SocketGrantCapability::parse(grant).map_err(|_| StatusCode::UNAUTHORIZED)
 }
 
-/// 🧭️ The pinned revision is a witness of issue order, not a freeze on the whole directory:
+/// 🧭️ The authority a document-open plan's socket holds for its whole life, re-proven before every
+/// frame it admits or sends: the sealed plan, its subject binding, the document's descriptor, the
+/// catalog's selection for that descriptor and surface, and a directory revision the directory has
+/// reached. The pinned revision is a witness of issue order, not a freeze on the whole directory:
 /// demanding equality made every outstanding plan die on the next directory append anywhere on
 /// the hub — another space's invite, a rename, an unrelated membership edit — so a member's live
 /// socket was closed 4401 by an event that had nothing to do with it. What a plan may never do is
 /// claim a revision the directory has not reached: that pin is forged and stays refused. Whether
 /// this caller still holds this scope is decided by membership and session revocation on their own
-/// paths, which is what closes a removed member's socket in the very same exchange.
+/// paths, which is what closes a removed member's socket in the very same exchange. The plan's
+/// bootstrap facts are no authority: [`document_plan_bootstrap_current`] checks them once, at admission.
 async fn document_plan_socket_validity(state: &HubState, record: &SocketGrantRecordV1, surface: Option<&str>) -> SocketBindingValidityV1 {
     let Some(authority) = record.document_plan.as_deref() else { return SocketBindingValidityV1::Active };
     if !state.readiness.features.open_plan || !state.readiness.features.open_plan_exchange {
@@ -5042,16 +5061,14 @@ async fn document_plan_socket_validity(state: &HubState, record: &SocketGrantRec
         return SocketBindingValidityV1::Unauthorized;
     }
     let Some(catalog) = state.openable_catalog.as_ref() else { return SocketBindingValidityV1::Unavailable };
-    if catalog.generation_id() != authority.catalog.generation_id
-        || catalog.resolve_document_open(&descriptor, Some(&authority.surface.surface_id), authority.grant.write).is_none_or(|selection| {
-            selection.package != authority.package
-                || selection.artifact != authority.artifact
-                || selection.parent_dialect != authority.parent_dialect
-                || selection.surface != authority.surface
-                || selection.browser_actor != authority.browser_actor
-                || selection.grant != authority.grant
-        })
-    {
+    if catalog.resolve_document_open(&descriptor, Some(&authority.surface.surface_id), authority.grant.write).is_none_or(|selection| {
+        selection.package != authority.package
+            || selection.artifact != authority.artifact
+            || selection.parent_dialect != authority.parent_dialect
+            || selection.surface != authority.surface
+            || selection.browser_actor != authority.browser_actor
+            || selection.grant != authority.grant
+    }) {
         #[cfg(test)]
         return record_document_plan_refusal(DocumentPlanRefusalV1::CatalogSelectionDiffers);
         #[cfg(not(test))]
@@ -5067,17 +5084,39 @@ async fn document_plan_socket_validity(state: &HubState, record: &SocketGrantRec
         #[cfg(not(test))]
         return SocketBindingValidityV1::Unauthorized;
     }
+    SocketBindingValidityV1::Active
+}
+
+/// 🌱️ Whether a document-open plan's bootstrap facts are still the hub's current ones.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum DocumentPlanBootstrapV1 {
+    Current,
+    Stale,
+    Unavailable,
+}
+
+/// 🌱️ Whether a document-open plan still names the catalog generation it was resolved in and the
+/// active checkpoint its client seeds from. Checked once, when its socket grant is consumed, because
+/// the client bootstraps from exactly that checkpoint pair. A Check In — a member's or the declared
+/// checkpoint policy's — and a catalog publication advance them without changing anyone's authority,
+/// so a live socket never re-checks them (ticket 26/09/23 session 14c: every Check In closed every
+/// other open socket of its document `4401` within one authorization tick), and a plan they outdated
+/// since its exchange is answered stale, never as a revocation.
+async fn document_plan_bootstrap_current(state: &HubState, record: &SocketGrantRecordV1) -> DocumentPlanBootstrapV1 {
+    let Some(authority) = record.document_plan.as_deref() else { return DocumentPlanBootstrapV1::Current };
+    let Some(catalog) = state.openable_catalog.as_ref() else { return DocumentPlanBootstrapV1::Unavailable };
+    if catalog.generation_id() != authority.catalog.generation_id {
+        return DocumentPlanBootstrapV1::Stale;
+    }
     let checkpoint = match tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.get_active_artifact_checkpoint(&authority.scope)).await {
         Ok(Ok(checkpoint)) => checkpoint.map(document_open_checkpoint),
-        Ok(Err(_)) | Err(_) => return SocketBindingValidityV1::Unavailable,
+        Ok(Err(_)) | Err(_) => return DocumentPlanBootstrapV1::Unavailable,
     };
-    if checkpoint.as_ref() != Some(&authority.checkpoint) {
-        #[cfg(test)]
-        return record_document_plan_refusal(DocumentPlanRefusalV1::CheckpointDiffers);
-        #[cfg(not(test))]
-        return SocketBindingValidityV1::Unauthorized;
+    if checkpoint.as_ref() == Some(&authority.checkpoint) {
+        DocumentPlanBootstrapV1::Current
+    } else {
+        DocumentPlanBootstrapV1::Stale
     }
-    SocketBindingValidityV1::Active
 }
 
 async fn consume_scoped_directory_socket_grant(state: &HubState, headers: &HeaderMap, scope: DocumentScope) -> Result<SocketGrantAdmissionV1, StatusCode> {
@@ -5094,10 +5133,19 @@ async fn consume_scoped_directory_socket_grant(state: &HubState, headers: &Heade
 
 /// 🧭️ Admits a document upgrade whose credential resolved to `subject`: the oldest pending
 /// document grant of that binding and audience, revalidated against its sealed plan, consumed once.
+/// A plan whose bootstrap a Check In or a catalog publication outdated since its exchange is
+/// answered `409` and its grant rejected: nobody's access changed, the client re-plans.
 async fn consume_document_socket_grant(state: &HubState, subject: &SocketSubjectV1, audience: SocketAudienceV1, surface: Option<&str>) -> Result<SocketGrantAdmissionV1, (StatusCode, &'static str)> {
     let candidate = state.socket_grants.pending_document_binding(&audience, &subject.binding(), now_ms()).map_err(|_| (StatusCode::UNAUTHORIZED, "socket-grant-pending"))?;
     match document_plan_socket_validity(state, &candidate, surface).await {
-        SocketBindingValidityV1::Active => state.socket_grants.consume(&candidate, now_ms()).map(|record| SocketGrantAdmissionV1 { record }).map_err(|_| (StatusCode::UNAUTHORIZED, "socket-grant-consume")),
+        SocketBindingValidityV1::Active => match document_plan_bootstrap_current(state, &candidate).await {
+            DocumentPlanBootstrapV1::Current => state.socket_grants.consume(&candidate, now_ms()).map(|record| SocketGrantAdmissionV1 { record }).map_err(|_| (StatusCode::UNAUTHORIZED, "socket-grant-consume")),
+            DocumentPlanBootstrapV1::Stale => {
+                state.socket_grants.reject_pending(&candidate.selector);
+                Err((StatusCode::CONFLICT, "socket-grant-stale"))
+            }
+            DocumentPlanBootstrapV1::Unavailable => Err((StatusCode::SERVICE_UNAVAILABLE, "socket-grant-503")),
+        },
         SocketBindingValidityV1::Unauthorized => {
             state.socket_grants.reject_pending(&candidate.selector);
             Err((StatusCode::UNAUTHORIZED, "socket-grant-401"))
@@ -9301,15 +9349,22 @@ async fn rate_limit_middleware(State(state): State<HubState>, request: axum::ext
             }
             _ => {
                 state.note("server.rate-limit", TraceOutcome::Refused, class.as_str());
-                let mut response = (StatusCode::TOO_MANY_REQUESTS, Json(semio_hub::auth::rate_limit::RateLimitRefusalV1::new(class, retry_after_ms))).into_response();
-                response.headers_mut().insert(axum::http::header::CACHE_CONTROL, axum::http::HeaderValue::from_static("no-store"));
-                if let Ok(value) = axum::http::HeaderValue::from_str(&RateLimitDecisionV1::Refused { retry_after_ms }.retry_after_secs().to_string()) {
-                    response.headers_mut().insert(axum::http::header::RETRY_AFTER, value);
-                }
-                response
+                rate_limit_refusal_response(RateLimitRefusalV1::new(class, retry_after_ms))
             }
         },
     }
+}
+
+/// 🚦️ The `429` of every non-auth rate-limited route family and of every stream-limited one: the typed refusal body, never
+/// cached, with its wait also as `retry-after` in whole seconds.
+fn rate_limit_refusal_response(refusal: RateLimitRefusalV1) -> Response {
+    let retry_after_ms = refusal.retry_after_ms;
+    let mut response = (StatusCode::TOO_MANY_REQUESTS, Json(refusal)).into_response();
+    response.headers_mut().insert(axum::http::header::CACHE_CONTROL, axum::http::HeaderValue::from_static("no-store"));
+    if let Ok(value) = axum::http::HeaderValue::from_str(&RateLimitDecisionV1::Refused { retry_after_ms }.retry_after_secs().to_string()) {
+        response.headers_mut().insert(axum::http::header::RETRY_AFTER, value);
+    }
+    response
 }
 
 /// 🏷️ Which rate-limit family a request belongs to, by method and path alone.
@@ -11857,6 +11912,7 @@ async fn serve() -> Result<(), HubError> {
             directory_service,
             credential_sign_in,
             rate_limits: Arc::new(HubRateLimiterV1::system()),
+            asset_streams: Arc::default(),
             admin_subjects,
             admin_cursor_key,
             space_administration_cursor_key,

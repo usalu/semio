@@ -336,41 +336,52 @@ pub fn out_length() -> ChannelSpec {
 }
 
 pub fn out_center() -> ChannelSpec {
-    ChannelSpec::named("P", "CoM", "center", "CenterOfMass")
+    ChannelSpec::named("P", "CoM", "center", "CenterOfMass").with_value_types(&["point"])
 }
 
 pub fn out_box() -> ChannelSpec {
-    ChannelSpec::named("B", "Box", "box", "BoundingBox")
+    ChannelSpec::named("B", "Box", "box", "BoundingBox").with_value_types(&["geometry"])
 }
 
 pub fn out_distance() -> ChannelSpec {
-    ChannelSpec::named("D", "Dst", "distance", "MeasuredDistance")
+    ChannelSpec::named("D", "Dst", "distance", "MeasuredDistance").with_value_types(&["number"])
 }
 
 pub fn out_classification() -> ChannelSpec {
-    ChannelSpec::named("C", "Cls", "classification", "PointClassification")
+    ChannelSpec::named("C", "Cls", "classification", "PointClassification").with_value_types(&["number"])
 }
 
 pub fn out_report() -> ChannelSpec {
-    ChannelSpec::named("R", "Rpt", "report", "ValidationReport")
+    ChannelSpec::named("R", "Rpt", "report", "ValidationReport").with_value_types(&["text"])
 }
 
 pub fn out_vertex() -> ChannelSpec {
-    ChannelSpec::named("V", "Vtx", "vertex", "Vertex")
+    ChannelSpec::named("V", "Vtx", "vertex", "Vertex").with_value_types(&["geometry"])
 }
 
 pub fn out_step() -> ChannelSpec {
-    ChannelSpec::named("S", "Stp", "step", "StepExport")
+    ChannelSpec::named("S", "Stp", "step", "StepExport").with_value_types(&["text"])
 }
 
 pub fn out_stl() -> ChannelSpec {
-    ChannelSpec::named("L", "Stl", "stl", "StlExport")
+    ChannelSpec::named("L", "Stl", "stl", "StlExport").with_value_types(&["text"])
 }
 
 pub fn out_obj() -> ChannelSpec {
-    ChannelSpec::named("O", "Obj", "obj", "ObjExport")
+    ChannelSpec::named("O", "Obj", "obj", "ObjExport").with_value_types(&["text"])
 }
 
+
+/// 🪪️ Expands only ambiguous channel shorthand to its full semantic identifier.
+fn distinct_channels(mut channels: Vec<ChannelSpec>) -> Vec<ChannelSpec> {
+    let codes: Vec<_> = channels.iter().map(|channel| channel.code.clone()).collect();
+    let abbreviations: Vec<_> = channels.iter().map(|channel| channel.abbreviation.clone()).collect();
+    for channel in &mut channels {
+        if codes.iter().filter(|code| **code == channel.code).count() > 1 { channel.code = channel.name.to_uppercase(); }
+        if abbreviations.iter().filter(|abbreviation| **abbreviation == channel.abbreviation).count() > 1 { channel.abbreviation = channel.name.clone(); }
+    }
+    channels
+}
 
 #[allow(
     clippy::too_many_arguments,
@@ -384,8 +395,8 @@ pub fn operator_info_with_outputs(id: &str, name: &str, abbreviation: &str, icon
         abbreviation: abbreviation.into(),
         icon: icon.into(),
         summary: summary.into(),
-        inputs,
-        outputs,
+        inputs: distinct_channels(inputs),
+        outputs: distinct_channels(outputs),
         group: group.iter().map(|entry| (*entry).to_string()).collect(),
         ..Default::default()
     }
@@ -463,7 +474,7 @@ impl Operator for BrepDeconstruct {
 }
 
 pub fn topology_output(code: &str, abbreviation: &str, name: &str, schema: &str) -> ChannelSpec {
-    ChannelSpec::named(code, abbreviation, name, name).with_operators(vec![schema.to_string()]).with_cardinality(Cardinality::ZeroOrMore)
+    ChannelSpec::named(code, abbreviation, name, name).with_operators(vec![schema.to_string()]).with_value_types(&["list"]).with_cardinality(Cardinality::ZeroOrMore)
 }
 
 pub fn text_schema() -> Schema {
@@ -1216,7 +1227,9 @@ fn mesh_result(mesh: &semio_s_artifact_stdio_semio::standards::v1::subsets::brep
 
 /// 🌉️ Dispatches one `BrepKernel` method by name over `os_pack::json` args (see `handle_result`
 /// and friends above for the response shapes); the sole bridge every `SemioBrepKernel` TS method
-/// (`✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🟦️.ts`) calls into.
+/// (`✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🟦️.ts`) calls into. Every arm is declared, argument for
+/// argument, by the verb catalog `🔣️.json` beside this file (schema `🧬️schema/🔣️.json`); the bridge law
+/// `🌊️flow/🧪️tests/📐️brep-invoke` holds the two to each other.
 fn brep_invoke_inner(method: &str, args_json: &str) -> Result<crate::os_pack::json::Value, BrepModuleError> {
     let args = invoke_args(args_json)?;
     match method {
@@ -1327,6 +1340,29 @@ fn brep_invoke_inner(method: &str, args_json: &str) -> Result<crate::os_pack::js
         "intersect" => {
             let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
             guard.intersect(&arg_handle(&args, "a")?, &arg_handle(&args, "b")?).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "translate" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.translate(&arg_handle(&args, "shape")?, arg_vec3(&args, "offset")?).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "rotate" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.rotate(&arg_handle(&args, "shape")?, arg_vec3(&args, "axis")?, arg_f64(&args, "angle")?).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "rotateAbout" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard
+                .rotate_about(&arg_handle(&args, "shape")?, arg_vec3(&args, "origin")?, arg_vec3(&args, "axis")?, arg_f64(&args, "angle")?)
+                .map(handle_result)
+                .map_err(BrepModuleError::from)
+        }
+        "scale" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.scale(&arg_handle(&args, "shape")?, arg_f64(&args, "factor")?, arg_vec3(&args, "center")?).map(handle_result).map_err(BrepModuleError::from)
+        }
+        "mirror" => {
+            let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;
+            guard.mirror(&arg_handle(&args, "shape")?, arg_vec3(&args, "origin")?, arg_vec3(&args, "normal")?).map(handle_result).map_err(BrepModuleError::from)
         }
         "sewFaces" => {
             let mut guard = kernel().write().map_err(|_| BrepModuleError::LockPoisoned)?;

@@ -1059,7 +1059,7 @@ mod plugin_builder_contract_tests {
             if matches!(body_key, "graph" | "properties") {
                 let item = TreeNode::try_new("item-1", Component::TreeItem(TreeItemProps {
                     label: Label(UiText::try_from_str("Item 1").expect("bounded fixture")), description: None, icon: None, default_open: None,
-                    draggable: None, drag_data: None, dimmed: None, window: None, granularity: None, inline_toolbar: None, detail: None, row_actions: UiFixedList::default(),
+                    draggable: None, drag_data: None, dimmed: None, window: None, granularity: None, inline_toolbar: None, detail: None, row_actions: UiFixedList::default(), target: None,
                 })).expect("bounded fixture");
                 let root = TreeNode::try_new("root", Component::Tree(TreeProps { presentation: Default::default(), interaction_domain: Some(UiText::try_from_str("items").expect("bounded fixture")) }))
                     .expect("bounded fixture").try_with_children([item]).unwrap_or_else(|_| panic!("bounded fixture"));
@@ -4989,6 +4989,29 @@ mod plugin_builder_contract_tests {
         drain_and_close_composed_fixture(&mut app);
     }
 
+    /// ⌨️ LAW (coordinator P1, ticket 26/09/23 C12): child-content publications at the maximum rate — 10 000 with no
+    /// maintenance turn between them — never fault. Every admission waits on the retirement ahead of it (bounded synchronous
+    /// reclaim) instead of answering `interactive-job.child-root-retirement-saturated`, every publication is admitted in
+    /// order (exactly the next generation), the registry never holds more than its fixed slots, and the saturated registry
+    /// reports maintenance pressure until maintenance returned it below its quarter-occupancy bound.
+    #[semio_framework_async_macros::async_test]
+    async fn child_publications_at_the_maximum_rate_wait_on_retirement_instead_of_faulting() {
+        let mut app = contract_composed_app_raw().await;
+        app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
+        install_test_snapshot_retirement(&mut app, "child-a", false);
+        let start = app.child_content_generation;
+        for index in 1..=10_000u64 {
+            let generation = app.admit_child_content_publication().unwrap_or_else(|fault| panic!("publication {index} faulted instead of waiting: {fault:?}"));
+            assert_eq!(generation, start + index, "publication {index} is admitted in order");
+            app.publish_child_content_member(generation, "slot", "child-a").await.unwrap_or_else(|fault| panic!("publication {index} did not land: {fault:?}"));
+            assert!(app.child_content_retirements.len() <= ARTIFACT_LIVE_OUTPUT_SLOTS, "the child-root retirement registry stays within its fixed slots");
+        }
+        assert!(PluginApp::maintenance_under_pressure(&app), "a saturated child-root retirement registry reports maintenance pressure");
+        crate::app::artifact_app_laws::drain_maintenance_pressure(&mut app);
+        assert!(app.child_content_retirements.len() < MAINTENANCE_CHILD_RETIREMENT_PRESSURE_OCCUPANCY, "pressure maintenance returns the child roots below their quarter-occupancy bound");
+        drain_and_close_composed_fixture(&mut app);
+    }
+
     /// ⏱️ This clause used to be an 8 ms wall clock. The clock was a PROXY for one property — the
     /// maximum child's bytes never cross the public dispatch boundary, the dispatch hands back a
     /// continuation instead — and on a loaded machine the proxy fails while the property holds. The
@@ -5754,6 +5777,28 @@ mod plugin_builder_contract_tests {
         assert_eq!(set_label_entries.len(), 1, "a coalesced gesture must grow one entry's op_lines, not append new entries");
     }
 
+    /// 📜️ LAW (ticket 26/09/23 C12): a coalesced gesture's history row previews only its edit's newest
+    /// `HISTORY_ROW_OPERATION_PREVIEW` operations — the newest one last — however long the gesture runs, so reading the history
+    /// costs the same per key at the end of a long typing run as at its start.
+    #[semio_framework_async_macros::async_test]
+    async fn a_long_coalesced_gesture_previews_its_newest_operations_only() {
+        let mut app = contract_app().await;
+        let mut value = String::new();
+        for key in 0..64u8 {
+            value.push(char::from(b'a' + key % 26));
+            app.dispatch_typed(TestCommand::SetLabel { value: value.clone() }, &meta()).await.expect("setLabel");
+            let _ = app.test_history().await;
+        }
+        let history = app.test_history().await;
+        let row = history.commands.iter().find(|entry| entry.action_id == "setLabel").expect("the gesture's row");
+        assert_eq!(row.op_count, 64, "the row counts every operation of its edit");
+        assert_eq!(row.op_lines.len(), HISTORY_ROW_OPERATION_PREVIEW, "the row previews a bounded tail of its operations");
+        assert!(row.op_lines.last().is_some_and(|line| line.contains(&value)), "the newest operation closes the preview: {:?}", row.op_lines);
+        let exported = app.history_snapshot().await.expect("history snapshot");
+        let exported = exported.upserts.iter().find(|entry| entry.action_id == "setLabel").expect("the gesture's exported row");
+        assert_eq!((exported.op_count, exported.op_lines.len()), (64, HISTORY_ROW_OPERATION_PREVIEW), "the exported row carries the bounded preview and its edit's operation count");
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn undo_and_redo_append_entries_and_never_shrink_the_log() {
         let mut app = contract_app().await;
@@ -5843,6 +5888,7 @@ mod plugin_builder_contract_tests {
                     config_edit_id: None,
                     child_edit_ids: Vec::new(),
                     op_lines: vec!["set-count value=1".into()],
+                    op_count: 1,
                     applied: true,
                     revertible: true,
                     count: 1,
@@ -5858,6 +5904,7 @@ mod plugin_builder_contract_tests {
                     config_edit_id: None,
                     child_edit_ids: Vec::new(),
                     op_lines: Vec::new(),
+                    op_count: 0,
                     applied: false,
                     revertible: false,
                     count: 1,
@@ -5912,6 +5959,7 @@ mod plugin_builder_contract_tests {
                 config_edit_id: None,
                 child_edit_ids: Vec::new(),
                 op_lines: vec![format!("register-mesh vertices=[{}]", "1.0 ".repeat(1_024))],
+                op_count: 1,
                 applied: true,
                 revertible: true,
                 count: 1,
@@ -5943,6 +5991,7 @@ mod plugin_builder_contract_tests {
             config_edit_id: None,
             child_edit_ids: Vec::new(),
             op_lines: Vec::new(),
+            op_count: 0,
             applied: true,
             revertible: true,
             count,
@@ -5977,6 +6026,7 @@ mod plugin_builder_contract_tests {
             config_edit_id: None,
             child_edit_ids: Vec::new(),
             op_lines: Vec::new(),
+            op_count: 0,
             applied: true,
             revertible,
             count: 1,
@@ -7177,6 +7227,7 @@ mod plugin_builder_contract_tests {
                 inline_toolbar: None,
                 detail: None,
                 row_actions: UiFixedList::default(),
+                target: None,
             }),
         )
         .expect("bounded fixture");
@@ -7229,6 +7280,7 @@ mod plugin_builder_contract_tests {
                     inline_toolbar: None,
                     detail: None,
                     row_actions: UiFixedList::default(),
+                    target: None,
                 }),
             )
             .expect("bounded fixture")

@@ -20,7 +20,7 @@ pub mod retained_command;
 
 #[cfg(all(test, feature = "component-app-assembly"))]
 fn retained_command_test_catalog() -> (&'static str, &'static str, &'static [&'static str], &'static str) {
-    ("puzzle3d", "puzzle.3d.fixture", editor::puzzle3d::PUZZLE3D_RETAINED_TOOL_IDS, include_str!("🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🗄️retained-jobs/🔣️.json"))
+    ("puzzle3d", "puzzle.3d", editor::puzzle3d::PUZZLE3D_RETAINED_TOOL_IDS, include_str!("🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🗄️retained-jobs/🔣️.json"))
 }
 
 //#region ⚠️ Errors
@@ -785,7 +785,7 @@ use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, Artifac
         // its extension claim from `<Puzzle3dPlaySnapshot as store::ArtifactDsl>::EXTENSION`
         // (`…/🧬️mutations/🦀️.rs`, the editor's real `Snapshot` type), which is
         // `"puzzle3d-play"`, not the base `Puzzle3dSnapshot`'s `"puzzle3d"`.
-        ("s.puzzle.puzzle3d.codec.document-1", "codec", "puzzle.3d.fixture:puzzle3d-play", &[("codec", "puzzle.3d.fixture"), ("codec-extension", "17:puzzle.3d.fixture:puzzle3d-play")], None),
+        ("s.puzzle.puzzle3d.codec.document-1", "codec", "puzzle.3d:puzzle3d-play", &[("codec", "puzzle.3d"), ("codec-extension", "9:puzzle.3d:puzzle3d-play")], None),
         ("s.puzzle.puzzle3d.localization.en", "localization", "3D Puzzle", &[], Some(("en", "3D Puzzle"))),
         ("s.puzzle.puzzle3d.localization.de", "localization", "3D-Puzzle", &[], Some(("de", "3D-Puzzle"))),
     ];

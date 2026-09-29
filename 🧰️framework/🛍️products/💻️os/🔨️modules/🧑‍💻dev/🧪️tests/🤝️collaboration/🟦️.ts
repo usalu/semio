@@ -210,9 +210,9 @@ async function collabShowsRebuild(page: import("playwright").Page): Promise<bool
  * (`CHECKIN_STATUS_LABELS.ready`, `🛠️ShellHelpers/🟦️.tsx`). */
 type CollabLocale = "en" | "de";
 
-const COLLAB_E2E_LOCALES: Readonly<Record<CollabLocale, { readonly browser: string; readonly studio: string; readonly public: string; readonly author: string; readonly checkedIn: string }>> = {
-  en: { browser: "en-US", studio: "Studio", public: "Public", author: "Author", checkedIn: "Checked in" },
-  de: { browser: "de-DE", studio: "Studio", public: "Öffentlich", author: "Autor", checkedIn: "Eingecheckt" },
+const COLLAB_E2E_LOCALES: Readonly<Record<CollabLocale, { readonly browser: string; readonly studio: string; readonly public: string; readonly author: string; readonly checkedIn: string; readonly open: string; readonly share: string }>> = {
+  en: { browser: "en-US", studio: "Studio", public: "Public", author: "Author", checkedIn: "Checked in", open: "Open", share: "Share" },
+  de: { browser: "de-DE", studio: "Studio", public: "Öffentlich", author: "Autor", checkedIn: "Eingecheckt", open: "Öffnen", share: "Teilen" },
 };
 
 /** 🧾️ One step's verdict: `true` PASS, `false` FAIL, `null` SKIP (the run does not own what the step needs). */
@@ -681,10 +681,12 @@ async function collabFindRow(page: import("playwright").Page, prefix: "space" | 
  * the summary, never silently absorbed (a hard load measured landing on a faulted window: `actor-activation.revoked`). */
 const collabRouteMisses: string[] = [];
 
-/** 🖱️ Activates one named row action (`Open: <id>`, `Share: <name>`, case-insensitive) from the keyboard — the ACTIONS column can sit past
- * the window's right edge, where a pointer click times out. */
+/** 🖱️ Activates one named row action (`Open: <id>` / `Öffnen: <id>`, `Share: <name>` / `Teilen: <name>`, case-insensitive) from the
+ * keyboard — the ACTIONS column can sit past the window's right edge, where a pointer click times out. The label is the one of
+ * the shell's locale, so the selector accepts every locale's label of the verb. */
 async function collabRowAction(page: import("playwright").Page, prefix: "space" | "artifact", id: string, verb: "open" | "share"): Promise<void> {
-  const action = page.locator(`[data-ui-node-key="${prefix}:${id}"] button[aria-label^="${verb}:" i]`).first();
+  const labels = [...new Set(Object.values(COLLAB_E2E_LOCALES).map((locale) => locale[verb]))];
+  const action = page.locator(labels.map((label) => `[data-ui-node-key="${prefix}:${id}"] button[aria-label^="${label}:" i]`).join(", ")).first();
   await action.waitFor({ state: "attached", timeout: 30_000 });
   await action.focus();
   await action.press("Enter");
@@ -1221,11 +1223,21 @@ async function collabRunScenario(
   const capability = adminCapability();
   if (capability === "") record(7, null, "skipped — this run joined an external hub without an admin-relay capability");
   else try {
-    const connectionsRes = await fetch(`${hubBaseUrl}/admin/api/connections`, { headers: { authorization: `Bearer ${capability}` } });
-    spaceE2eAssert(connectionsRes.ok, `GET /admin/api/connections returned ${connectionsRes.status}`);
-    const connections = (await connectionsRes.json()) as readonly Record<string, unknown>[];
-    const text = JSON.stringify(connections);
+    if (spaceId && artifactId) {
+      await collabOpenSpace(user1, spaceId);
+      await collabWaitForRow(user1, "artifact", artifactId, 30_000);
+      await collabRowAction(user1, "artifact", artifactId, "open");
+      spaceE2eAssert(await collabWaitForEditor(user1, 120_000), "user1's writer editor never re-mounted after STEP 6, so user1 holds no document connection to list");
+    }
     const [user1Id, user2Id] = [await collabHubUserId(user1), await collabHubUserId(user2)];
+    let text = "";
+    for (const deadline = Date.now() + 30_000; ; ) {
+      const connectionsRes = await fetch(`${hubBaseUrl}/admin/api/connections`, { headers: { authorization: `Bearer ${capability}` } });
+      spaceE2eAssert(connectionsRes.ok, `GET /admin/api/connections returned ${connectionsRes.status}`);
+      text = JSON.stringify(await connectionsRes.json());
+      if ((user1Id !== null && text.includes(user1Id) && user2Id !== null && text.includes(user2Id)) || Date.now() >= deadline) break;
+      await user1.waitForTimeout(1_000);
+    }
     spaceE2eAssert(user1Id !== null && text.includes(user1Id), `/admin/api/connections does not name user1's hub user ${JSON.stringify(user1Id)}: ${text.slice(0, 500)}`);
     spaceE2eAssert(user2Id !== null && text.includes(user2Id), `/admin/api/connections does not name user2's hub user ${JSON.stringify(user2Id)}: ${text.slice(0, 500)}`);
     const adminRes = await fetch(`${hubBaseUrl}/admin`, { headers: { authorization: `Bearer ${capability}` } });

@@ -1,5 +1,5 @@
 {
-  "why": "The declared-verb verdict, written once and read by two implementations: the Rust law `artifact_app_laws::declared_verb_findings` (`🧪️tests/⚖️declared-verb-verdicts/🦀️.rs`, which every plugin surface's `assert_declared_verbs_honour_their_declarations` applies to its own probes) and the AJV twin (`🧪️tests/⚖️declared-verb-verdicts/🟦️.ts`, run by the SDK's `test` script, which states every rule as one JSON Schema over the probe and lets AJV evaluate it). A probe is one declared verb dispatched on its app's boot example from every window kind that presents it (`windows`), each with its staged declared defaults (`staged`) and with two distinct values per perturbable declared argument (`arguments`). An outcome is `unreachable` (the dispatch infrastructure refused it before any handler ran), `refused` (the handler refused it by name) or `settled` (the lanes it published and what it changed). The rules: (a) a view or shell verb never writes or replaces the document from any window; (b) an agent-facing mutation never settles silently on every probe; (c) an agent- or chrome-facing verb never answers two distinct values of one declared argument identically (equal settles always count; equal refusals count only when every other declared argument carried a value, `othersSpecified`, and the staged invocation of that window was refused identically too); a destructive verb that settles writes the document or a user file; every declared agent or chrome verb bridges with its staged declared defaults (an input gesture's payload is the host's) and every declared verb is reachable from at least one window; an agent-facing verb run through the agent lane (`agent`, the MCP prepare phase at the catalog's address) writes the document exactly when the shell lane does and is not refused where the shell acts; no verb leaves the parent naming a composed child no store holds (`orphanedChildren`); (c) holds when some window tells the two values apart. An unbridged or unreachable verb reports that alone.",
+  "why": "The declared-verb verdict, written once and read by two implementations: the Rust law `artifact_app_laws::declared_verb_findings` (`🧪️tests/⚖️declared-verb-verdicts/🦀️.rs`, which every plugin surface's `assert_declared_verbs_honour_their_declarations` applies to its own probes) and the AJV twin (`🧪️tests/⚖️declared-verb-verdicts/🟦️.ts`, run by the SDK's `test` script, which states every rule as one JSON Schema over the probe and lets AJV evaluate it). A probe is one declared verb dispatched on its app's boot example from every window kind that presents it (`windows`), each with its staged declared defaults (`staged`) and with two distinct values per perturbable declared argument (`arguments`). An outcome is `unreachable` (the dispatch infrastructure refused it before any handler ran), `refused` (the handler refused it by name) or `settled` (the lanes it published and what it changed). The rules: (a) a view or shell verb never writes or replaces the document from any window; (b) an agent-facing mutation never settles silently on every probe; (c) an agent- or chrome-facing verb never answers two distinct values of one declared argument identically (equal settles always count; equal refusals count only when every other declared argument carried a value, `othersSpecified`, and the staged invocation of that window was refused identically too); a destructive verb that settles writes the document or a user file; every declared agent or chrome verb bridges with its staged declared defaults (an input gesture's payload is the host's) and every declared verb is reachable from at least one window; an agent-facing verb run through the agent lane (`agent`, the MCP prepare phase at the catalog's address) writes the document exactly when the shell lane does and acts wherever the shell acts — neither refused nor silent there (a preview that settles on nothing while the shell acts would tell an agent \"done\" for a verb that did nothing); no verb leaves the parent naming a composed child no store holds (`orphanedChildren`); (c) holds when some window tells the two values apart. An unbridged or unreachable verb reports that alone.",
   "cases": [
     {
       "name": "a view verb that publishes an artifact lane lies about its kind",
@@ -1206,6 +1206,94 @@
           "refused": {
             "code": "wires.delete-selection-empty",
             "detail": "x"
+          }
+        }
+      },
+      "findings": []
+    },
+    {
+      "name": "an agent settling silently where the shell acts diverges",
+      "probe": {
+        "verb": "evaluate",
+        "kind": "mutation",
+        "audience": "agent",
+        "destructive": false,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "canvas",
+            "staged": {
+              "settled": {
+                "lanes": [
+                  "transient",
+                  "terminal"
+                ],
+                "documentChanged": false,
+                "documentReplaced": false,
+                "configChanged": false,
+                "userPathWritten": false,
+                "hostEffects": 1,
+                "fingerprint": 208
+              }
+            },
+            "arguments": []
+          }
+        ],
+        "agent": {
+          "settled": {
+            "lanes": [],
+            "documentChanged": false,
+            "documentReplaced": false,
+            "configChanged": false,
+            "userPathWritten": false,
+            "hostEffects": 0,
+            "fingerprint": 209
+          }
+        }
+      },
+      "findings": [
+        {
+          "finding": "agentLaneDiverges"
+        }
+      ]
+    },
+    {
+      "name": "an agent settling silently where the shell settles silently agrees",
+      "probe": {
+        "verb": "refresh",
+        "kind": "view",
+        "audience": "agent",
+        "destructive": false,
+        "bridge": null,
+        "windows": [
+          {
+            "window": "canvas",
+            "staged": {
+              "settled": {
+                "lanes": [
+                  "terminal",
+                  "ui"
+                ],
+                "documentChanged": false,
+                "documentReplaced": false,
+                "configChanged": false,
+                "userPathWritten": false,
+                "hostEffects": 0,
+                "fingerprint": 210
+              }
+            },
+            "arguments": []
+          }
+        ],
+        "agent": {
+          "settled": {
+            "lanes": [],
+            "documentChanged": false,
+            "documentReplaced": false,
+            "configChanged": false,
+            "userPathWritten": false,
+            "hostEffects": 0,
+            "fingerprint": 211
           }
         }
       },

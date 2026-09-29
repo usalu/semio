@@ -141,6 +141,7 @@ serde_json = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
+semio-framework-schema = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 # 🧾️ The family components, linked as libraries (their workspace rows switch `plugin-root` off) so the shipped-fleet
 # census law can describe every stdio package and the editor catalogue reaches every editor.

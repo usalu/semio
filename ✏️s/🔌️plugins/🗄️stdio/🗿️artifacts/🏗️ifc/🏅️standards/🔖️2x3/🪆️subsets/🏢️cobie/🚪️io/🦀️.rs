@@ -76,6 +76,13 @@ pub mod derived_composition {
     pub fn register() {
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
     }
+
+    /// 🧾️ The declarative twin of [`register`]: this subset's `SubsetValidator` as a row of the artifact's
+    /// [`crate::declaration`].
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn declare(builder: semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady>) -> semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady> {
+        builder.subset_validators(std::slice::from_ref(validator_entry()))
+    }
     //#endregion 🔖️SubsetValidator
 
     #[cfg(test)]

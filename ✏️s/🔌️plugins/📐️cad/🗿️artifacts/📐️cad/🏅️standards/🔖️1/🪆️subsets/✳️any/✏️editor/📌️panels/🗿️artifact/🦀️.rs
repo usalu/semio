@@ -7,9 +7,9 @@ use crate::editor::cad::{cad_action, cad_tree_item, cad_tree_item_static, ui_lab
 use crate::standards::v1::subsets::any::io::geometry_import::CadObject;
 use crate::standards::v1::subsets::any::schema::inferences::{CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC};
 use crate::{CadPaneId, CadReference, CadSnapshot};
-use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, BuiltNode, HasBase, RowAction, RowActionPlacement, Trigger};
+use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, RowActionPlacement};
 use semio_framework_plugin::{
-    tree_window_item, LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiFixedList, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
+    row_action, row_target, tree_window_item, LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiFixedList, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
     FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
 };
 use semio_framework_ui_contract as ui;
@@ -61,31 +61,28 @@ pub(crate) fn object_tree_item(windows: &TreeWindows<'_>, id_suffix: &str, objec
     })
 }
 
+/// 🖼️ One reference overlay row. Its ONE target names the reference and the flag states its two inline toggles ASK FOR —
+/// always the inverse of the row's current ones — and activates `setReferenceSelection`; the toggles name only their
+/// set-verbs (`setReferenceHidden`, `setReferenceLocked`), so a stale view sets a value and never flips one.
+///
+/// 🔑️ `UiMapBuilder::push` admits keys in strictly ascending order only — `hidden`, `locked`, `modelDefinitionId`,
+/// `referenceId`.
 pub fn reference_tree_item(model_definition_id: &str, reference: &CadReference, labels: &CadLabels) -> UiAssemblyResult<BuiltNode> {
-    let select_args = ui_value_map([("modelDefinitionId", ui_value_text(model_definition_id)?), ("referenceId", ui_value_text(&reference.id)?)])?;
-    let mut item = cad_tree_item(format!("cad-reference:{model_definition_id}:{}", reference.id), &reference.id, Some("image"), cad_action("setReferenceSelection", Some(select_args))?)?;
-    // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `UiTreeItemNode` no longer carries
-    // `hoverAction`/`unhoverAction` — no generic tree-hover mechanism replaces it for a non-
-    // `interaction_domain`-bound tree; `referenceHover` stays reachable from the World3d surface only.
-    if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
-        props.description = Some(UiText::try_from_str(&reference.source_url).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "cad reference description admission failed"))?);
-        props.dimmed = Some(reference.hidden);
-        let specs = [
-            (if reference.hidden { "eye" } else { "eye-off" }, if reference.hidden { labels.show } else { labels.hide }, "hidden", !reference.hidden),
-            (if reference.locked { "unlock" } else { "lock" }, if reference.locked { labels.unlock } else { labels.lock }, "locked", !reference.locked),
-        ];
-        let mut row_actions = UiFixedList::default();
-        for (icon_id, label, field, value) in specs {
-            // 🔑️ `UiMapBuilder::push` admits keys in strictly ascending order only — `field` before
-            // `modelDefinitionId` before `referenceId` before `value`.
-            let args = ui_value_map([("field", ui_value_text(field)?), ("modelDefinitionId", ui_value_text(model_definition_id)?), ("referenceId", ui_value_text(&reference.id)?), ("value", ui_value_bool(value))])?;
-            let (action, args) = cad_action("patchCadPlayReference", Some(args))?;
-            let row_action = RowAction { icon: ui_key(icon_id)?, label: Some(ui_label(label.as_str())?), action: ActionBinding { trigger: Trigger::Activate, action, args, capability: None }, placement: RowActionPlacement::Row };
-            row_actions.try_push(row_action).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "cad reference row action admission failed"))?;
-        }
-        props.row_actions = row_actions;
-    }
-    Ok(item)
+    let args = ui_value_map([("hidden", ui_value_bool(!reference.hidden)), ("locked", ui_value_bool(!reference.locked)), ("modelDefinitionId", ui_value_text(model_definition_id)?), ("referenceId", ui_value_text(&reference.id)?)])?;
+    let admission = |_| PluginAssemblyError::new("ui.fixed-capacity", "cad reference row action admission failed");
+    ui::tree_item(ui_label(&reference.id)?)
+        .try_id(format!("cad-reference:{model_definition_id}:{}", reference.id))
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "cad reference row id admission failed"))?
+        .icon(ui_key("image")?)
+        .description(UiText::try_from_str(&reference.source_url).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "cad reference description admission failed"))?)
+        .dimmed(reference.hidden)
+        .target(row_target(CAD_PLAY_CONTROLLER_ID, Some(args), Some("setReferenceSelection"))?)
+        .try_row_action(row_action(if reference.hidden { "eye" } else { "eye-off" }, if reference.hidden { labels.show } else { labels.hide }.as_str(), "setReferenceHidden", RowActionPlacement::Row)?)
+        .map_err(|(_, error)| admission(error))?
+        .try_row_action(row_action(if reference.locked { "unlock" } else { "lock" }, if reference.locked { labels.unlock } else { labels.lock }.as_str(), "setReferenceLocked", RowActionPlacement::Row)?)
+        .map_err(|(_, error)| admission(error))?
+        .try_build()
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "cad reference row admission failed"))
 }
 
 /// 🗂️ The `document.references_by_model_definition_id` lookup repeated once per pane in `build_document_tree`.

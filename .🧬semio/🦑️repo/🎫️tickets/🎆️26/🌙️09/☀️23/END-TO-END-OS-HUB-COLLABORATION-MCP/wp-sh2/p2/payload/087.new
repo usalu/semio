@@ -1,0 +1,25 @@
+
+use super::*;
+use crate::editor::space_index::unit_tests::context;
+
+/// 📂️ Opening reads the directory-owned row from the transient the job captured and relays `os.open-artifact` without a
+/// role, so the shell resolves the user's `OpeningPreferences`.
+#[semio_framework_async_macros::async_test]
+async fn open_artifact_relays_with_document_and_space_ids() {
+    let (mut app, id) = context::new_app_with_indexed_artifact().await;
+    let settled = context::settle_action(&mut app, "openArtifact", pack::json!({ "id": id })).await.expect("open indexed artifact");
+    let [Effect::ReplayShellCommand { action_id, args }] = settled.effects.as_slice() else { panic!("one ReplayShellCommand, got {:?}", settled.effects) };
+    assert_eq!(action_id, "os.open-artifact");
+    let args = pack::json_from_dsl_value(args.as_ref().expect("relay args"));
+    assert_eq!(args.get("documentId").and_then(|v| v.as_str()), Some(id.as_str()));
+    assert_eq!(args.get("schema").and_then(|v| v.as_str()), Some("s.draw.draw"));
+    assert!(args.get("role").is_none(), "role is omitted so the shell resolves OpeningPreferences");
+}
+
+/// 🚫️ An id the transient lists no row for is refused by name.
+#[semio_framework_async_macros::async_test]
+async fn open_artifact_of_a_missing_row_faults() {
+    let mut app = context::new_app().await;
+    let error = context::settle_action(&mut app, "openArtifact", pack::json!({ "id": "ghost" })).await.err().expect("missing row must fault");
+    assert_eq!(error.code.0, "s.space.index.target-missing");
+}

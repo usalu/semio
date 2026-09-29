@@ -22,7 +22,7 @@ export function pluginTestInvocation(segments: string[]): { mode: "inventory" | 
 import { artifactAdmissionOracle, completionRejectionOracle } from "../../🧪️tests/🧪️artifact-admission-and-completion-oracles/🟦️.ts";
 import { coldDocumentPairIngressOracle, documentBackboneBindingOracle, guestLifecycleOracle, issuedPatchOracle } from "../../🧪️tests/🧪️reactor-contract-oracles/🟦️.ts";
 import { declaredVerbVerdictOracle } from "../../🧪️tests/⚖️declared-verb-verdicts/🟦️.ts";
-import { agentLanePreviewVerdictOracle } from "../../🧪️tests/🤖️agent-lane-preview/🟦️.ts";
+import { agentLaneCarriageOracle, agentLanePreviewVerdictOracle } from "../../🧪️tests/🤖️agent-lane-preview/🟦️.ts";
 
 //#region 🎯️Tasks
 class CheckScript extends BundleScript {
@@ -38,6 +38,7 @@ class TestScript extends BundleScript {
     console.log(`completion-rejection-oracle assertions=${completionRejectionOracle(this.repoRoot)}`);
     console.log(`declared-verb-verdict-oracle cases=${declaredVerbVerdictOracle()}`);
     console.log(`agent-lane-preview-verdict-oracle cases=${agentLanePreviewVerdictOracle()}`);
+    console.log(`agent-lane-carriage-oracle cases=${agentLaneCarriageOracle()}`);
     if (segments.length === 1 && segments[0] === "--retained-child-close-exact") {
       const receipts = await runExactCargoLaws({
         cwd: this.root,

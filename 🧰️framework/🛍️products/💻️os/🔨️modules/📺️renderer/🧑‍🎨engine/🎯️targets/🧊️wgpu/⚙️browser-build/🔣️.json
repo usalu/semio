@@ -6,6 +6,7 @@
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts"
   ],
   "externalDependencies": [
+    "ajv",
     "typescript"
   ]
 }

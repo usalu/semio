@@ -37,10 +37,10 @@
           "const": 8388608
         },
         "documentBytes": {
-          "const": 821248
+          "const": 843776
         },
         "aggregateBytes": {
-          "const": 52559872
+          "const": 54001664
         },
         "surfaceItems": {
           "const": 4097

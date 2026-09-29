@@ -12,8 +12,8 @@ pub mod board_host {
     use std::collections::{BTreeMap, BTreeSet};
 
     use super::{
-        board_json_locked_option, board_json_visible_option, builtin_edge_tips, circle_handle_angle_toward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, fixture_edge_handle_ids_from_object,
-        handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, handle_outward_at_node_rim, handle_position_on_circle, handle_position_on_rectangle, merge_ids_into_selection, merge_pick_into_selection, normalize_or_zero,
+        board_json_locked_option, board_json_visible_option, builtin_edge_tips, circle_handle_angle_toward, compute_edge_bezier_outward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, fixture_edge_handle_ids_from_object,
+        handle_exterior_cap_fill_path, handle_exterior_cap_peak, handle_exterior_cap_stroke_path, handle_outward_at_node_rim, handle_position_on_circle, handle_position_on_rectangle, merge_ids_into_selection, merge_pick_into_selection, normalize_or_zero,
         normalize_selection_mode, pick_merge_mode_for_modifiers, property_bag_from_value, rectangle_handle_angle_toward, region_bounds, region_grip_at, region_grip_drag, rotate_point_about, selection_drag_enclosing, selection_drag_shape,
         snap_region_scalar, snap_transform_angle, transform_pivot_of,
         transform_ring_angle_delta, transform_ring_hit, transform_ring_radius_world, ActiveUtility, BoardElementStyleKind, CachedIconBody, CachedIconPaintLease, CanvasPalette, CompatSpecificity, EdgeData, EdgeDescJson, EdgeKindDef,
@@ -2410,6 +2410,24 @@ pub mod board_host {
         }
     }
 
+    /// 🎨️ One node's icon commands inside [`WorldContentCache::scene`], baked at `(x, y)`.
+    struct NodeIconSpan {
+        id: String,
+        start: usize,
+        end: usize,
+        x: f64,
+        y: f64,
+    }
+
+    /// 🎨️ World-space node icons reused across frames. Spans stay valid under translation: a drag
+    /// draws each span at `current - baked` until retirement frees a slot for a fresh bake.
+    struct WorldContentCache {
+        generation: u64,
+        lod: BoardDrawLod,
+        scene: Scene,
+        spans: Vec<NodeIconSpan>,
+    }
+
     pub struct BoardHost {
         pub camera: Camera,
         pub nodes: BTreeMap<String, NodeData>,
@@ -2478,8 +2496,9 @@ pub mod board_host {
         last_preselect_emit_sig: Option<(Vec<String>, Vec<String>, Option<String>)>,
         /// 🧿️ Bumped when drawable content changes (not camera); keys {@link BoardHost.world_content_cache}.
         content_scene_generation: u64,
-        /// 🎨️ World-space Vello content reused across pan/zoom when generation and LOD match.
-        world_content_cache: RefCell<Option<(u64, BoardDrawLod, Scene)>>,
+        /// 🎨️ World-space node icons reused across pan/zoom. Keyed by generation and LOD; a pending
+        /// retirement keeps the previous bake and the draw shifts each span onto the live node center.
+        world_content_cache: RefCell<Option<WorldContentCache>>,
         opaque_scene_retirement: Cell<Option<OpaqueSceneRetirementToken>>,
         opaque_scene_fault: Cell<bool>,
         /// 🔍️ True while the wheel zoom gesture is active (skip grid + per-tile rebuild hot paths).
@@ -3757,7 +3776,7 @@ pub mod board_host {
                 self.opaque_scene_fault.set(true);
                 return false;
             };
-            let (_, _, scene) = cache.take().expect("world content cache was witnessed occupied");
+            let WorldContentCache { scene, .. } = cache.take().expect("world content cache was witnessed occupied");
             self.publish_opaque_scene_retirement(token, scene);
             false
         }
@@ -7879,20 +7898,21 @@ pub mod board_host {
                 Some(h) => h,
                 None => return,
             };
-            let src_pos = match self.handle_world_pos(source) {
-                Some(p) => p,
+            let (src_pos, src_out, _) = match self.handle_cap_attachment(source) {
+                Some(attachment) => attachment,
                 None => return,
             };
             let tmpl = match preview.handles.get(preview.target_handle_index) {
                 Some(t) => t,
                 None => return,
             };
-            let tgt_pos = self.brush_template_world_pos(center, preview.shape, preview.radius, preview.width, preview.height, tmpl.angle);
-            let Some(src_node) = self.nodes.get(&source.node_id) else {
+            let tgt_rim = self.brush_template_world_pos(center, preview.shape, preview.radius, preview.width, preview.height, tmpl.angle);
+            let tgt_radius = tmpl.radius.filter(|radius| radius.is_finite() && *radius > 0.0).unwrap_or(ui_styling::radii::HANDLE_DEFAULT);
+            let Some(tgt_out) = handle_outward_at_node_rim(tgt_rim, center, preview.shape, preview.radius, preview.width, preview.height) else {
                 return;
             };
-            let tgt_center = center;
-            let curve = compute_edge_bezier_points(src_pos, tgt_pos, Point::new(src_node.x, src_node.y), tgt_center);
+            let tgt_pos = handle_exterior_cap_peak(tgt_rim, tgt_out, tgt_radius);
+            let curve = compute_edge_bezier_outward(src_pos, tgt_pos, src_out, tgt_out);
             let p0 = self.draw_space_point(curve.p0(), world_space);
             let p1 = self.draw_space_point(curve.p1(), world_space);
             let p2 = self.draw_space_point(curve.p2(), world_space);
@@ -8801,6 +8821,13 @@ pub mod board_host {
             matches!(&self.interaction, Interaction::Selection { .. })
         }
 
+        /// 🖐️ True from the press that opens a pointer lane — a pending or live area select, or any gesture
+        /// [`Self::defers_descriptor_sync_from_js`] names — until its release, so a host keeps routing that release to the board
+        /// even when it lands outside the surface.
+        pub fn pointer_lane_in_flight(&self) -> bool {
+            self.defers_descriptor_sync_from_js() || matches!(&self.interaction, Interaction::SelectionPending { .. } | Interaction::Selection { .. })
+        }
+
         /// 🧿️ True during area select, link gestures, node drag, the rotate-ring gesture, or camera pan so JS can defer full `syncDescriptorJson` round-trips.
         pub fn defers_descriptor_sync_from_js(&self) -> bool {
             self.transform_drag.is_some()
@@ -8969,6 +8996,16 @@ pub mod board_host {
                 NodeShape::Circle => handle_position_on_circle(Point::new(n.x, n.y), self.scaled_node_radius(n), h.angle),
                 NodeShape::Rectangle => handle_position_on_rectangle(Point::new(n.x, n.y), self.scaled_node_width(n), self.scaled_node_height(n), h.angle),
             })
+        }
+
+        /// 🎯️ Where an edge meets a handle: the cap's outer peak, the outward normal, and the node center.
+        fn handle_cap_attachment(&self, h: &HandleData) -> Option<(Point, Vec2, Point)> {
+            let rim = self.handle_world_pos(h)?;
+            let n = self.nodes.get(&h.node_id)?;
+            let node_center = Point::new(n.x, n.y);
+            let outward = handle_outward_at_node_rim(rim, node_center, n.shape, self.scaled_node_radius(n), self.scaled_node_width(n), self.scaled_node_height(n))?;
+            let peak = handle_exterior_cap_peak(rim, outward, self.effective_handle_radius(h));
+            Some((peak, outward, node_center))
         }
 
         /// 📐️ Node half-extent for indirect ring layout: circle radius or half the shorter rectangle side.
@@ -9434,26 +9471,21 @@ pub mod board_host {
             }
             let source_handle = self.handles.get(&e.source)?;
             let target_handle = self.handles.get(&e.target)?;
-            let source_node = self.nodes.get(&source_handle.node_id)?;
-            let target_node = self.nodes.get(&target_handle.node_id)?;
-            let source_pos = self.handle_world_pos(source_handle)?;
-            let target_pos = self.handle_world_pos(target_handle)?;
-            Some(compute_edge_bezier_points(source_pos, target_pos, Point::new(source_node.x, source_node.y), Point::new(target_node.x, target_node.y)))
+            let (source_pos, source_out, _) = self.handle_cap_attachment(source_handle)?;
+            let (target_pos, target_out, _) = self.handle_cap_attachment(target_handle)?;
+            Some(compute_edge_bezier_outward(source_pos, target_pos, source_out, target_out))
         }
 
         fn link_drag_wire_curve_world(&self, source_id: &str, target_id: Option<&str>, end_world: Point) -> Option<CubicBez> {
             let source_handle = self.handles.get(source_id)?;
-            let source_node = self.nodes.get(&source_handle.node_id)?;
-            let source_pos = self.handle_world_pos(source_handle)?;
-            let source_center = Point::new(source_node.x, source_node.y);
-            let (target_pos, target_center) = if let Some(tid) = target_id {
-                let th = self.handles.get(tid)?;
-                let tn = self.nodes.get(&th.node_id)?;
-                (self.handle_world_pos(th)?, Point::new(tn.x, tn.y))
+            let (source_pos, source_out, _) = self.handle_cap_attachment(source_handle)?;
+            let (target_pos, target_out) = if let Some(tid) = target_id {
+                let (peak, outward, _) = self.handle_cap_attachment(self.handles.get(tid)?)?;
+                (peak, outward)
             } else {
-                (end_world, end_world)
+                (end_world, Vec2::ZERO)
             };
-            Some(compute_edge_bezier_points(source_pos, target_pos, source_center, target_center))
+            Some(compute_edge_bezier_outward(source_pos, target_pos, source_out, target_out))
         }
 
         fn active_link_wire_curve(&self) -> Option<CubicBez> {
@@ -10205,11 +10237,12 @@ pub mod board_host {
                         let handle_color = ho.get("color").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(String::from);
                         let handle_icon_kind = ho.get("iconKind").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
                         let handle_scale = ho.get("scale").and_then(|v| v.as_f64()).filter(|v| v.is_finite() && *v > 0.0);
+                        let handle_radius = ho.get("radius").and_then(|v| v.as_f64()).filter(|v| v.is_finite() && *v > 0.0);
                         handles.push(HandleDescJson {
                             id: hid.into(),
                             node_id: id.into(),
                             angle,
-                            radius: None,
+                            radius: handle_radius,
                             scale: handle_scale,
                             selected: None,
                             style: None,
@@ -10807,6 +10840,56 @@ pub mod board_host {
             }
         }
 
+        /// 🎨️ Bakes each visible node's icon (and its handle icons) as a contiguous span at the node's current center.
+        fn bake_node_icon_spans(&self, scene: &mut Scene, lod: BoardDrawLod) -> Vec<NodeIconSpan> {
+            let draw_handles = self.has_ports() && matches!(lod, BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro);
+            let draw_handle_icons = lod == BoardDrawLod::Micro;
+            let link_source = self.active_link_source_handle_id().map(str::to_string);
+            let link_compat_nodes: BTreeSet<String> = link_source.as_ref().map(|source| self.link_drag_compatible_target_node_ids(source).into_iter().collect()).unwrap_or_default();
+            let mut spans = Vec::new();
+            for node in self.nodes.values() {
+                if !node.visible {
+                    continue;
+                }
+                let start = scene.command_len();
+                if draw_handles {
+                    for handle in self.handles.values() {
+                        if handle.node_id != node.id || !self.handle_effectively_visible(handle.id.as_str()) {
+                            continue;
+                        }
+                        let Some(world) = self.handle_world_pos(handle) else { continue };
+                        let style_kind = self.resolve_handle_style_kind(handle, StyleChromePass::CachedBase);
+                        self.append_handle_marker(scene, handle, world, self.effective_handle_radius(handle), draw_handle_icons, style_kind, None, true, NodeHandlePaintLayer::Icons, true);
+                    }
+                }
+                self.paint_node_geometry(scene, node, lod, true, NodeHandlePaintLayer::Icons, StyleChromePass::CachedBase, link_compat_nodes.contains(&node.id));
+                let end = scene.command_len();
+                if end > start {
+                    spans.push(NodeIconSpan { id: node.id.clone(), start, end, x: node.x, y: node.y });
+                }
+            }
+            spans
+        }
+
+        /// 🗺️ Draws baked icon spans at each node's live center. A pending cache retirement keeps the
+        /// previous bake; the translation is the whole correction a drag needs.
+        fn append_baked_node_icons(&self, scene: &mut Scene, cache: &WorldContentCache, cam_aff: Affine) {
+            if cache.spans.is_empty() {
+                scene.append(&cache.scene, Some(cam_aff));
+                return;
+            }
+            for span in &cache.spans {
+                let Some(node) = self.nodes.get(&span.id) else { continue };
+                if !node.visible {
+                    continue;
+                }
+                let dx = node.x - span.x;
+                let dy = node.y - span.y;
+                let placed = if dx.abs() <= 1e-9 && dy.abs() <= 1e-9 { cam_aff } else { cam_aff * Affine::IDENTITY.translate((dx, dy)) };
+                scene.append_range(&cache.scene, span.start, span.end, Some(placed));
+            }
+        }
+
         /// 🎯️ Target regions are the backdrop: painted before the first entity layer, always in
         /// world space, so nothing they overlap is ever hidden behind them.
         fn append_cached_world_content(&self, scene: &mut Scene, lod: BoardDrawLod) {
@@ -10823,22 +10906,22 @@ pub mod board_host {
             self.append_nodes_and_handles_with_overlay_chrome(&mut fill_layer, None, lod, true, None, &overlay_ids, NodeHandlePaintLayer::Fill);
             scene.append(&fill_layer, Some(cam_aff));
             let mut cache = self.world_content_cache.borrow_mut();
-            let needs_rebuild = cache.as_ref().is_none_or(|c| c.0 != generation || c.1 != lod);
+            let needs_rebuild = cache.as_ref().is_none_or(|c| c.generation != generation || c.lod != lod);
             if needs_rebuild && self.opaque_scene_retirement.get().is_none() {
                 if cache.is_some() {
                     let Some(token) = infinite::canvas::reserve_opaque_scene_retirement() else {
                         self.opaque_scene_fault.set(true);
                         return;
                     };
-                    let (_, _, stale) = cache.take().expect("stale world content cache was witnessed occupied");
+                    let WorldContentCache { scene: stale, .. } = cache.take().expect("stale world content cache was witnessed occupied");
                     self.publish_opaque_scene_retirement(token, stale);
                 }
                 let mut content = Scene::new();
-                self.append_nodes_and_handles(&mut content, None, lod, true, None, StyleChromePass::CachedBase, NodeHandlePaintLayer::Icons);
-                *cache = Some((generation, lod, content));
+                let spans = self.bake_node_icon_spans(&mut content, lod);
+                *cache = Some(WorldContentCache { generation, lod, scene: content, spans });
             }
             if let Some(cached) = cache.as_ref() {
-                scene.append(&cached.2, Some(cam_aff));
+                self.append_baked_node_icons(scene, cached, cam_aff);
             }
             let edges_in_world_space = matches!(lod, BoardDrawLod::Overview | BoardDrawLod::Compact | BoardDrawLod::Minimap);
             if edges_in_world_space {

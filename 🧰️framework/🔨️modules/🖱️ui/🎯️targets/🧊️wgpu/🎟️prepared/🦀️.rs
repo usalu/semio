@@ -928,6 +928,8 @@ impl PreparedRasterPages {
 #[derive(Debug)]
 pub struct PreparedRasterRejected {
     fault: &'static str,
+    /// 🖼️ Whether the refusal is the SOURCE's own ([`Self::is_content_refusal`]).
+    content: bool,
     key: String,
     source: Vec<u8>,
     retained_source: Vec<u8>,
@@ -940,6 +942,19 @@ pub struct PreparedRasterRejected {
 impl PreparedRasterRejected {
     pub fn fault(&self) -> &'static str {
         self.fault
+    }
+
+    /// 🖼️ Whether this refusal is the source's own — undecodable or oversized, a typed per-image outcome its host retires
+    /// silently — rather than a raster-authority fault.
+    pub fn is_content_refusal(&self) -> bool {
+        self.content
+    }
+
+    /// 🖼️ This refusal classified as the source's own ([`Self::is_content_refusal`]) — what a host does with a refusal its
+    /// measured source caused.
+    pub fn into_content_refusal(mut self) -> Self {
+        self.content = true;
+        self
     }
 
     pub fn close_step(&mut self) -> bool {
@@ -1020,7 +1035,7 @@ impl PreparedRasterReservation {
 
     #[cfg_attr(target_pointer_width = "64", expect(clippy::result_large_err, reason = "Rejected preparation returns its exact source, key, and reservation credit without allocating beyond admission."))]
     pub fn try_reserve_source(key: String, source_bytes: usize) -> Result<Self, PreparedRasterRejected> {
-        let reject = |fault, key| PreparedRasterRejected { fault, key, source: Vec::new(), retained_source: Vec::new(), credit: None, source_released: false, retained_source_released: false, key_released: false };
+        let reject = |fault, key| PreparedRasterRejected { fault, content: false, key, source: Vec::new(), retained_source: Vec::new(), credit: None, source_released: false, retained_source_released: false, key_released: false };
         if key.len() > PREPARED_RASTER_KEY_BYTES {
             return Err(reject("raster producer exceeded fixed key credits", key));
         }
@@ -1028,7 +1043,7 @@ impl PreparedRasterReservation {
         let Some(source_peak_bytes) = source_bytes.checked_mul(2) else { return Err(reject("raster producer source credits overflowed", key)) };
         let Some(bytes) = source_peak_bytes.checked_add(key_bytes) else { return Err(reject("raster producer source credits overflowed", key)) };
         if source_bytes > PREPARED_RASTER_ITEM_BYTES {
-            return Err(reject("raster producer source exceeded fixed credits", key));
+            return Err(reject("raster producer source exceeded fixed credits", key).into_content_refusal());
         }
         let credit = PREPARED_RASTER_LEDGER.lock().ok().and_then(|mut ledger| ledger.reserve(1, bytes));
         let Some(credit) = credit else { return Err(reject("raster producer process credits exhausted", key)) };
@@ -1040,7 +1055,7 @@ impl PreparedRasterReservation {
     }
 
     pub fn reject_with_retained(mut self, fault: &'static str, source: Vec<u8>, retained_source: Vec<u8>) -> PreparedRasterRejected {
-        PreparedRasterRejected { fault, key: std::mem::take(&mut self.key), source, retained_source, credit: self.credit.take(), source_released: false, retained_source_released: false, key_released: false }
+        PreparedRasterRejected { fault, content: false, key: std::mem::take(&mut self.key), source, retained_source, credit: self.credit.take(), source_released: false, retained_source_released: false, key_released: false }
     }
 
     #[cfg_attr(target_pointer_width = "64", expect(clippy::result_large_err, reason = "Rejected preparation returns its exact source, key, and reservation credit without allocating beyond admission."))]

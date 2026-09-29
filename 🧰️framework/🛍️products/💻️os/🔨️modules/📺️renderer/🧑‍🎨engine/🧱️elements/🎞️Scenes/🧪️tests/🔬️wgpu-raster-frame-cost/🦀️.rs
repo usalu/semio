@@ -18,6 +18,7 @@ fn clear_pending_rasters(surface_id: &str) {
             if let Some(mut rejected) = surface.rejected.take() {
                 while !rejected.close_step() {}
             }
+            while surface.retire_refusal_step() {}
             if let Some(mut producer) = surface.closing.take() {
                 while !producer.close_step() {}
             }
@@ -127,7 +128,7 @@ fn admission_saturation_runs_no_hash_dimension_or_pixel_materialization() {
             Some(vec![0; 4])
         },
     );
-    assert!(result.is_none());
+    assert_eq!(result, Err(RasterUploadRefusal::Busy), "a saturated ledger is back-pressure, not the image's refusal");
     assert!(!dimensions_called.get());
     assert!(!decode_called.get());
     for reservation in reservations {
@@ -135,6 +136,36 @@ fn admission_saturation_runs_no_hash_dimension_or_pixel_materialization() {
         while !rejected.close_step() {}
     }
     clear_pending_rasters("raster-predecode-saturation");
+}
+
+/// 🖼️ LAW (ticket 26/09/23 session 14d, WG11): an undecodable source is a TYPED per-image refusal — it never blocks the next image
+/// on the same surface, and the frame's upload cursor retires it without faulting the frame.
+#[test]
+fn an_undecodable_source_is_a_typed_refusal_that_never_blocks_the_next_image() {
+    let mut authority = begin_pending_raster_authority_close();
+    while !authority.close_step() {}
+    reset_pending_raster_authority();
+    let surface_id = "raster-undecodable-source";
+    let refused = queue_canvas_image_upload_sized(surface_id, "broken", "data:image/png;base64,AAAA").0;
+    assert!(matches!(refused, Err(RasterUploadRefusal::Invalid(_))), "an undecodable source is the image's own typed refusal: {refused:?}");
+    assert!(queue_canvas_image_upload(surface_id, "valid", &tiny_png_data_url(4, 5, 6)).is_some(), "the refusal does not block the next image on the same surface");
+    let mut cursor = PendingRasterUploadCursor::default();
+    let mut uploads = 0;
+    for _ in 0..65_536 {
+        match cursor.step() {
+            PendingRasterUploadStep::Pending => {}
+            PendingRasterUploadStep::Upload(checked) => {
+                let mut producer = checked.take().unwrap_or_else(|_| panic!("the valid image uploads"));
+                producer.begin_close();
+                while !producer.close_step() {}
+                uploads += 1;
+            }
+            PendingRasterUploadStep::Complete => break,
+            PendingRasterUploadStep::Fault(fault) => panic!("a per-image refusal never faults the frame: {fault}"),
+        }
+    }
+    assert_eq!(uploads, 1, "exactly the valid image uploads");
+    assert!(PENDING_RASTER_STATE.with(|cell| cell.borrow().get(surface_id).is_some_and(|surface| surface.refused.iter().all(Option::is_none))), "the refusal retired within the pass");
 }
 
 #[test]

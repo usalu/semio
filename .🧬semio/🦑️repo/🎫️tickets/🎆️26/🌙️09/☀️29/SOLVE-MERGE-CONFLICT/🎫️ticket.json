@@ -1,0 +1,11 @@
+{
+  "title": "Solve Merge Conflict",
+  "emoji": "🔀",
+  "status": "closed",
+  "description": "Resolve stash pop merge conflict in 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx between Updated upstream and Stashed changes.",
+  "summary": "Resolved stash-pop conflict in ui react barrel by keeping upstream extraction: removed ~1900 lines of duplicate inline uiChromeTranslationBundles from 🟦️.tsx; bundles remain in ./🌐️i18n/🟦️.ts and are imported/re-exported via the I18n Port region. Staged the resolved file.",
+  "goal": "🎯runningframework",
+  "sessions": [
+    "⚪ea505af86bc341d9bb1cb7b666ce905e"
+  ]
+}

@@ -18,7 +18,6 @@ fn descriptors<S, M: Mutation<S>>() -> &'static [MutationLeafDescriptor] {
 
 /// 🧭️ Every mutation aggregate the artifact crates below mount, with its type name.
 const AGGREGATES: &[(&str, fn() -> &'static [MutationLeafDescriptor])] = &[
-    ("JackEditorWindowConfigMutation", descriptors::<semio_s_artifact_trinity_jack::editor::jack::query_window_config::JackEditorWindowConfig, semio_s_artifact_trinity_jack::editor::jack::query_window_config::JackEditorWindowConfigMutation>),
     ("JackEditorWindowTransientMutation", descriptors::<semio_s_artifact_trinity_jack::editor::jack::transient::JackEditorWindowTransient, semio_s_artifact_trinity_jack::editor::jack::transient::JackEditorWindowTransientMutation>),
     ("JackResultsWindowTransientMutation", descriptors::<semio_s_artifact_trinity_jack::editor::jack::transient::JackResultsWindowTransient, semio_s_artifact_trinity_jack::editor::jack::transient::JackResultsWindowTransientMutation>),
     ("JackGraphWindowConfigMutation", descriptors::<semio_s_artifact_trinity_jack::editor::jack::window_config::JackGraphWindowConfig, semio_s_artifact_trinity_jack::editor::jack::window_config::JackGraphWindowConfigMutation>),
@@ -34,7 +33,6 @@ const COORDINATES: &[(&str, &str, &str, &str, &str, &str)] = &[
     ("s.trinity.jack", "1", "any", "", "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any", ""),
     ("s.trinity.jack", "1", "any", "✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config", "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config", ""),
     ("s.trinity.jack", "1", "any", "✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient", "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient", ""),
-    ("s.trinity.jack", "1", "any", "✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🎚️config", "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🎚️config", ""),
     ("s.trinity.jack", "1", "any", "✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🫧️transient", "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🫧️transient", ""),
     ("s.trinity.rewriting", "1", "any", "", "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any", ""),
 ];

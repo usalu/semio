@@ -6,7 +6,7 @@ type TestSource = { readonly url: string };
  * windows' own spacers, and the keyboard moves one tab stop across rows the host has not streamed yet.
  * Testing Library's role queries are the third-party oracle for the accessibility tree. */
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
-  const { TreeWindowContext, UiDocumentStore, UiNodeView, tableColumnWindowRequestV1, tableWindowNextColumnV1, tableWindowNextRowV1, tableWindowScrollLeftForColumnV1, tableWindowScrollTopForRowV1, tableWindowViewportCapRowsV1, treeWindowRowHeightPx } = dependencies;
+  const { TreeWindowContext, UiDocumentStore, UiNodeView, treeItemToTreeData, tableColumnWindowRequestV1, tableWindowNextColumnV1, tableWindowNextRowV1, tableWindowScrollLeftForColumnV1, tableWindowScrollTopForRowV1, tableWindowViewportCapRowsV1, treeWindowRowHeightPx } = dependencies;
   const { describe, expect, it, afterEach } = vitest;
 
   const { cleanup, fireEvent, render, screen } = await import("@semio-tech/ui-react/test");
@@ -22,6 +22,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const matrixFixtureDir = join(dirname(fileURLToPath(source.url)), "../../../../🔌️plugin/🪟️window-kits/📊️table/🧫️fixtures/↔️two-axis");
   const matrixFixture = JSON.parse(readFileSync(join(matrixFixtureDir, "🔣️.json"), "utf8"));
   const matrixSchema = JSON.parse(readFileSync(join(matrixFixtureDir, "🧬️schema/🔣️.json"), "utf8"));
+  const rowTargetDir = join(dirname(fileURLToPath(source.url)), "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🎯️row-target");
+  const rowTarget = JSON.parse(readFileSync(join(rowTargetDir, "🔣️.json"), "utf8"));
+  const rowTargetSchema = JSON.parse(readFileSync(join(rowTargetDir, "🧬️schema/🔣️.json"), "utf8"));
 
   function mount(onIntent: (intent: any) => void, windows: unknown = null, sourceSnapshot: any = snapshot) {
     const store = new UiDocumentStore(sourceSnapshot.surface);
@@ -205,6 +208,43 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(intents).toEqual([]);
       fireEvent.click(screen.getByRole("button", { name: "Remove row: Atelier Ada" }));
       expect(intents.map((intent) => intent.action.name)).toEqual(["remove-row"]);
+    });
+
+    it("dispatches a tree row and a table row with one target identically, by the row-target fixture", () => {
+      expect(new Ajv2020({ strict: false }).validate(rowTargetSchema, rowTarget)).toBe(true);
+      const row = (name: string) => rowTarget.rows.find((candidate: any) => candidate.case === name).component;
+      const record = (id: number, key: string, component: any, children: number[] = []) => ({ id, key, component, layout: { kind: "stack", axis: "vertical", gap: "none", padding: { all: "none" }, align: "stretch", justify: "start", grow: false, wrap: false }, style: {}, activity: "idle", disabled: false, transition: null, accessibility: {}, bindings: [], menu: null, children });
+      const surface = "panel:row-target";
+      const nodes = [
+        record(0, "root", { type: "container" }, [1, 4]),
+        record(1, "tree", { type: "tree" }, [2]),
+        record(2, "section", { type: "treeSection", label: "Spaces" }, [3]),
+        record(3, "tree-row", row("tree-row")),
+        record(4, "table", { type: "table", label: "Spaces", columns: ["Name", "Kind"], actionsLabel: "Actions" }, [5]),
+        record(5, "table-row", row("table-row")),
+      ];
+      const store = new UiDocumentStore(surface);
+      store.loadSnapshot({ surface, revision: 1, root: 0, nodes });
+      const dispatched = (intents: any[]) => intents.map((intent) => ({ verb: intent.action.name, binding: { trigger: intent.trigger, action: intent.action, args: intent.args } }));
+      const treeIntents: any[] = [];
+      const treeRecord = store.getState().nodes.get(3);
+      const treeData = treeItemToTreeData(store, store.getState(), { record: treeRecord, props: treeRecord.component }, { store, onAction: () => {}, onIntent: (intent: any) => treeIntents.push(intent) }, { byKey: new Map() });
+      treeData.onClick();
+      for (const action of treeData.actions) action.onClick();
+      expect(treeData.actions.map((action: any) => action.disabled)).toEqual(rowTarget.rowActions.map((action: any) => action.disabled === true));
+      const tableIntents: any[] = [];
+      render(createElement(UiNodeView, { store, id: 4, context: { store, onAction: () => {}, onIntent: (intent: any) => tableIntents.push(intent) } }));
+      const tableRow = screen.getByRole("grid", { name: "Spaces" }).querySelectorAll<HTMLElement>("[role='row']")[1]!;
+      tableRow.focus();
+      fireEvent.keyDown(tableRow, { key: "Enter" });
+      for (const action of rowTarget.rowActions) {
+        const button = screen.getByRole("button", { name: `${action.label}: Studio` }) as HTMLButtonElement;
+        expect(button.disabled).toBe(action.disabled === true);
+        fireEvent.click(button);
+      }
+      const answered = (intents: any[]) => [...dispatched(intents), ...rowTarget.rowActions.filter((action: any) => action.disabled === true).map((action: any) => ({ verb: action.verb, refusal: "disabled" }))];
+      expect(dispatched(treeIntents)).toEqual(dispatched(tableIntents));
+      expect(answered(treeIntents)).toEqual(rowTarget.dispatch);
     });
   });
 }

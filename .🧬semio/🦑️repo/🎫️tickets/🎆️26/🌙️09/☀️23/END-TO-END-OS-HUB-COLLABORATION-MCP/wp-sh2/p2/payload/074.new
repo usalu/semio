@@ -1,0 +1,35 @@
+//! 💓️ SpaceIndexEditor commands command — `presence-heartbeat`: replaces the live actor list of one artifact (contract §C1's
+//! `DirectoryStreamMessage::Presence { spaceId, documentId, surface, actors }`, folded per artifact rather than per
+//! `(documentId, surface)` pair — the space table shows one row per artifact, so every surface and document of that artifact
+//! merges into one peer list for the "presence" column) in the viewer-owned transient projection (`👁️viewer/🫧️transient`).
+//! Ephemeral shared state, never config history.
+
+use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
+use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
+use crate::viewer::space_index::transient::{SetArtifactPresence, SpaceIndexTransientMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultOrigin, NoConfig, NoConfigMutation};
+
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[dsl(keyword = "presence-heartbeat")]
+pub struct PresenceHeartbeat {
+    pub artifact_id: String,
+    pub actors_csv: String,
+}
+
+impl PresenceHeartbeat {
+    /// 🫧️ The transient item this heartbeat replaces the artifact's presence row with.
+    pub fn item(&self) -> SpaceIndexTransientMutation {
+        SetArtifactPresence { artifact_id: self.artifact_id.clone(), actors_csv: self.actors_csv.clone() }.into()
+    }
+}
+
+/// 🚫️ The direct lane never lands a presence row: without the retained route there is no captured transient to judge it.
+pub fn handle(_payload: &PresenceHeartbeat, _doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<SSpaceMutation, NoConfigMutation>, Fault> {
+    Err(Fault::new(FaultOrigin::App, "s.space.presence-heartbeat.requires-retained-job", "a presence row lands only as the retained job"))
+}
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests

@@ -4434,12 +4434,23 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         id: "history",
         icon: StubIcon,
         name: "History",
-        tree: { sections: [{ id: "commands", label: "Commands", defaultOpen: true, items: [{ id: "command", label: "Toggle Panel" }] }] },
+        tree: {
+          sections: [
+            {
+              id: "commands",
+              label: "Commands",
+              defaultOpen: true,
+              items: [{ id: "group", label: "Toggle Panel", defaultOpen: false, items: [{ id: "child", label: "Child" }] }],
+            },
+          ],
+        },
       });
       const { container } = render(<Panel anchor="bottom-right" visible tabs={[tab]} activeTabPath={[tab.id]} />);
       expect(container.querySelector('[data-slot="panel"]')?.getAttribute("dir")).toBe("rtl");
       expect(container.querySelector('[data-slot="tree"]')?.getAttribute("dir")).toBe("auto");
       expect(container.querySelector('[data-slot="tree-item-row"]')?.closest('[data-slot="tree"]')?.getAttribute("dir")).toBe("auto");
+      const closedChevron = container.querySelector('[data-slot="tree-item-row"] [data-icon]')?.getAttribute("data-icon");
+      expect(closedChevron).toBe("chevron-right");
     });
 
     it("FlowProvider defaults to ltr/down and lets nested providers override only what they pass", () => {
@@ -4487,7 +4498,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(dirOf("right-middle")).toBe("rtl");
     });
 
-    it("Panel body follows the corner's flow — trees, labels, and their controls mirror same as the chrome", () => {
+    it("keeps a right-anchored panel's chrome mirrored and its tree rows left-to-right", () => {
       const StubIcon = (): null => null;
       const FlowProbe: React.FC = () => {
         const flow = useFlow();
@@ -4508,7 +4519,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { container: rightContainer } = render(<Panel anchor="top-right" visible tabs={tabs} activeTabPath={["tab-a"]} />);
       expect(rightContainer.querySelector('[data-slot="panel"]')?.getAttribute("dir")).toBe("rtl");
       expect(rightContainer.querySelector('[data-slot="panel-content"]')?.getAttribute("dir")).toBeNull();
-      expect(rightContainer.querySelector('[data-testid="flow-probe"]')?.textContent).toBe("rtl");
+      expect(rightContainer.querySelector('[data-slot="tree"]')?.getAttribute("dir")).toBe("auto");
+      expect(rightContainer.querySelector('[data-testid="flow-probe"]')?.textContent).toBe("ltr");
     });
 
     it("Panel derives its tab bar's stacking direction from the corner's flow block axis", () => {

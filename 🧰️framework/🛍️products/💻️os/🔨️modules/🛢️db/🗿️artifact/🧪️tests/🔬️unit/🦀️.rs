@@ -196,17 +196,25 @@ async fn artifact_runner_retirement_panic_retains_exact_cursor_until_explicit_re
 
 /// ⏰️ A maintenance turn that arrives before its reservation committed the retirement cursor keeps
 /// the hook (`Idle`) instead of retiring it: retiring there stranded the cursor, its slot and its pool
-/// use for the life of the process once the commit's own request found the hook gone.
+/// use for the life of the process once the commit's own request found the hook gone. Every reservation
+/// on one pool shares that pool's one hook, which retires with the pool's last slot.
 #[test]
 fn retirement_turn_before_its_commit_keeps_the_hook_for_the_committed_cursor() {
     let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)));
     let reservation = ArtifactRunnerRetirementReservation::try_reserve(pool.clone()).unwrap();
+    let second = ArtifactRunnerRetirementReservation::try_reserve(pool.clone()).unwrap();
     let (index, generation) = (reservation.index, reservation.generation);
-    assert_eq!(artifact_runner_retirement_step([index as u64, generation]), semio_framework_async::WorkerMaintenanceStep::Idle);
+    let hook = reservation.hook.unwrap();
+    let shared = second.hook.unwrap();
+    assert_eq!((shared.row, shared.generation), (hook.row, hook.generation), "reservations on one pool share its one hook");
+    let context = [hook.row as u64, hook.generation];
+    assert_eq!(artifact_runner_retirement_step(context), semio_framework_async::WorkerMaintenanceStep::Idle);
     assert_eq!(ARTIFACT_RUNNER_RETIREMENT_GENERATIONS[index].load(std::sync::atomic::Ordering::Acquire), generation, "an early turn keeps the reservation's slot");
     drop(reservation);
     assert_eq!(ARTIFACT_RUNNER_RETIREMENT_GENERATIONS[index].load(std::sync::atomic::Ordering::Acquire), 0);
-    assert_eq!(artifact_runner_retirement_step([index as u64, generation]), semio_framework_async::WorkerMaintenanceStep::Retire, "a generation that no longer owns its slot retires");
+    assert_eq!(artifact_runner_retirement_step(context), semio_framework_async::WorkerMaintenanceStep::Idle, "the pool's other slot keeps the shared hook");
+    drop(second);
+    assert_eq!(artifact_runner_retirement_step(context), semio_framework_async::WorkerMaintenanceStep::Retire, "the hook of a pool without slots retires");
     assert_eq!(pool.shutdown(), Ok(()));
 }
 
@@ -352,33 +360,35 @@ async fn artifact_engine_close_fault_cancel_stops_the_timer_until_readmission() 
     drop(storage);
 }
 
+/// 🪝️ Live authorities are not maintenance hooks: one pool holds more open authorities at once than it has maintenance
+/// hooks in all (spread over two fixed-capacity memory backends), each dropped authority still retires within its turn
+/// budget and releases its WAL writer, and afterwards the pool's whole hook capacity is free again — the shared retirement
+/// hook retired with the last slot.
 #[semio_framework_async_macros::async_test]
-async fn artifact_authority_drop_reuses_registered_retirement_slot_beyond_capacity() {
+async fn more_live_authorities_than_pool_maintenance_hooks_retire_through_one_shared_hook() {
     const ARTIFACT_RETIREMENT_LIVENESS_WATCHDOG: std::time::Duration = std::time::Duration::from_secs(60);
     const ARTIFACT_RETIREMENT_EVENT_TURN_BUDGET: usize = 96;
     fn idle(_: [u64; 2]) -> semio_framework_async::WorkerMaintenanceStep {
         semio_framework_async::WorkerMaintenanceStep::Idle
     }
     let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)));
-    let storage = storage().await;
-    let document = protocol::ArtifactId(String::from("retirement-reuse"));
-    let core = to_core_document_id(&document).await;
-    for ordinal in 0..=ARTIFACT_RUNNER_RETIREMENT_SLOTS {
+    let storages = [storage().await, storage().await];
+    let mut authorities = Vec::new();
+    for ordinal in 0..=semio_framework_async::WORKER_MAINTENANCE_CAPACITY {
+        let storage = storages[ordinal % storages.len()].clone();
         let engine_storage = storage.clone();
+        let document = protocol::ArtifactId(format!("retirement-shared-{ordinal}"));
         let engine_document = document.clone();
         let authority = ArtifactAuthority::spawn(
             pool.clone(),
-            move || async move {
-                if ordinal == 0 {
-                    ArtifactEngine::create_retained(engine_document, engine_storage, ArtifactEngineConfig::default(), 0).await.map(Box::new)
-                } else {
-                    ArtifactEngine::open_retained(engine_document, engine_storage, ArtifactEngineConfig::default(), 0).await.map(|(engine, _)| Box::new(engine))
-                }
-            },
+            move || async move { ArtifactEngine::create_retained(engine_document, engine_storage, ArtifactEngineConfig::default(), 0).await.map(Box::new) },
             MailboxCapacities::uniform(4),
         )
         .await
-        .unwrap();
+        .unwrap_or_else(|rejected| panic!("authority {ordinal} spawns beside the others: {:?}", rejected.error()));
+        authorities.push((storage, to_core_document_id(&document).await, authority));
+    }
+    for (storage, core, authority) in authorities {
         let handoff = authority.handoff.clone();
         let retirement = authority.retirement.as_ref().expect("spawned authority owns its retirement reservation");
         let (index, generation) = (retirement.index, retirement.generation);
@@ -812,17 +822,19 @@ async fn artifact_staging_retirement_success_refusal_cancel_stale_fault_drop_int
         }
     }
     let mut state = DocumentState::new();
+    let entries = vec![("parked-owners-retire-first".to_string(), None)];
+    state.apply_entries(&protocol::MutationId("parked-owners-retire-first".to_string()), entries).await.expect("an apply first retires every parked owner, so parked owners alone never refuse it");
+    for reservations in &ARTIFACT_STATE_RETIREMENT_RESERVATIONS {
+        reservations.store(u64::MAX, std::sync::atomic::Ordering::Release);
+    }
     let entries = vec![("exact-all-tier-state-refusal".to_string(), None)];
     let refusal = match state.apply_entries(&protocol::MutationId("exact-all-tier-state-refusal".to_string()), entries).await {
         Err(error) => error,
         Ok(_) => panic!("all-tier artifact retirement saturation admitted a state mutation"),
     };
     assert!(matches!(refusal, DbError::Unavailable(message) if message == "artifact state retirement pressure refused admission"));
-    for tier in [&ARTIFACT_STATE_RETIREMENT, &ARTIFACT_STATE_RETIREMENT_OVERFLOW, &ARTIFACT_STATE_RETIREMENT_QUARANTINE] {
-        let mut owners = tier.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        for slot in owners.iter_mut() {
-            *slot = None;
-        }
+    for reservations in &ARTIFACT_STATE_RETIREMENT_RESERVATIONS {
+        reservations.store(0, std::sync::atomic::Ordering::Release);
     }
 }
 
@@ -2511,3 +2523,62 @@ async fn artifact_history_panic_at_each_phase_transition_retains_then_fault_reti
     }
 }
 //#endregion 🔖️Actor
+
+/// 🪪️ LAW: an undo belongs to its author on the hub's event log too (`ArtifactEngine::submit`, the twin of
+/// `protocol::fold_history`'s refusal, `🔗️causal/🧫️fixtures/🗄️durable-collaborative-redo-v1`): a `Revert` or `Reinstate`
+/// naming any operation another actor wrote is refused with the one `history.foreign-transition` message whatever the merge
+/// policy and leaves the log untouched; the author's own undo/redo, one naming an operation of the same batch, and one naming
+/// an operation the log does not know are admitted (measured live on hub 7800 p33: B's crafted `Revert` of A's note edit was
+/// persisted and only the replicas refused it).
+#[semio_framework_async_macros::async_test]
+async fn a_history_transition_naming_another_actors_operation_is_refused_before_the_log() {
+    let document = protocol::ArtifactId("doc-1".to_string());
+    let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.expect("memory storage")));
+    let mut engine = ArtifactEngine::create(document.clone(), storage, ArtifactEngineConfig::default(), 0).expect("engine");
+    let write = |id: &str, actor: &str, at: u64| protocol::MutationEnvelope {
+        mutation_id: protocol::MutationId(id.to_string()),
+        document_id: document.clone(),
+        actor: protocol::ActorId(actor.to_string()),
+        dependencies: Vec::new(),
+        observed: None,
+        target: vec![id.to_string()],
+        diff: protocol::ArtifactDiff { schema: protocol::SchemaId("fixture.opaque.v1".into()), payload: id.as_bytes().to_vec() },
+        inverse: protocol::InverseMutation { schema: protocol::SchemaId("fixture.opaque.v1".into()), payload: Vec::new() },
+        timestamp: protocol::HybridLogicalTimestamp::new(at, 0),
+    };
+    let transition = |revert: bool, names: &[&str], actor: &str, at: u64| {
+        let mutation_ids = names.iter().map(|name| protocol::MutationId((*name).to_string())).collect();
+        let transition = if revert { protocol::HistoryTransition::Revert { mutation_ids } } else { protocol::HistoryTransition::Reinstate { mutation_ids } };
+        protocol::history_transition_envelope(&transition, &document, &protocol::ActorId(actor.to_string()), Vec::new(), protocol::HybridLogicalTimestamp::new(at, 0))
+    };
+    let cases: Vec<(&str, Vec<protocol::MutationEnvelope>, bool)> = vec![
+        ("A writes", vec![write("a1", "actor-a", 1)], true),
+        ("B writes", vec![write("b1", "actor-b", 2)], true),
+        ("B reverts A's operation", vec![transition(true, &["a1"], "actor-b", 3)], false),
+        ("B reinstates A's operation", vec![transition(false, &["a1"], "actor-b", 4)], false),
+        ("B reverts its own and A's operation", vec![transition(true, &["b1", "a1"], "actor-b", 5)], false),
+        ("B reverts its own operation", vec![transition(true, &["b1"], "actor-b", 6)], true),
+        ("B reinstates its own operation", vec![transition(false, &["b1"], "actor-b", 7)], true),
+        ("A reverts its own operation", vec![transition(true, &["a1"], "actor-a", 8)], true),
+        ("C writes and reverts in one batch", vec![write("c1", "actor-c", 9), transition(true, &["c1"], "actor-c", 10)], true),
+        ("B reverts an operation the log does not know", vec![transition(true, &["ghost"], "actor-b", 11)], true),
+    ];
+    for (index, (label, envelopes, admitted)) in cases.into_iter().enumerate() {
+        for policy in [protocol::MergePolicy::LaissezFaire, protocol::MergePolicy::Vigilant] {
+            let before = engine.frontier().await;
+            let batch = CommandBatch::new(envelopes.clone()).await.expect("batch");
+            match engine.submit(batch, SubmitOptions { policy, ..Default::default() }, index as u64 + 1).await {
+                Ok(_) => assert!(admitted, "{label} ({policy:?}) was admitted"),
+                Err(DbError::Rejected { messages, .. }) => {
+                    assert!(!admitted, "{label} ({policy:?}) was refused: {messages:?}");
+                    assert_eq!(messages.iter().map(|message| message.code.0.as_str()).collect::<Vec<_>>(), vec![FOREIGN_HISTORY_TRANSITION_CODE], "{label}");
+                    assert_eq!(engine.frontier().await.head_seq, before.head_seq, "{label}: a refused transition leaves the log untouched");
+                }
+                Err(other) => panic!("{label} ({policy:?}): {other:?}"),
+            }
+            if admitted {
+                break;
+            }
+        }
+    }
+}

@@ -7,7 +7,7 @@ use crate::editor::gif_89a::modes::edit;
 use crate::editor::gif_89a::modes::edit::windows::main;
 use crate::standards::v89a::subsets::any::schema::mutations::{set_snapshot as snapshot_edit_set_snapshot,set_frame_pixels, GifMutation};
 use crate::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
-use crate::{GIF_89A_DIALECT, STDIO_GIF_DOCUMENT_SCHEMA};
+use crate::{GIF_89A_DIALECT, STDIO_GIF89A_DOCUMENT_SCHEMA};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{AppOperationContext, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactStoreInitializationJob, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 use store::EngineHandles;
@@ -68,7 +68,7 @@ fn gif89aEditor_retained_extent(command: &Gif89aEditCommand, _snapshot: &GifSnap
 }
 fn gif89aEditor_retained_reduce(command: &Gif89aEditCommand, _snapshot: &GifSnapshot, _config: &NoConfig, _history: &semio_framework_plugin::HistoryView, _interaction: &protocol::InteractionState, _hover: &semio_framework_plugin::app::InteractionHoverState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Gif89aEditor>>>, _operation: &AppOperationContext) -> Result<Emit<GifMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
-        Gif89aEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&gif89aEditor_example_snapshot(example_id), STDIO_GIF_DOCUMENT_SCHEMA)], description: Some(format!("Load example {example_id}")), ..Default::default() }),
+        Gif89aEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&gif89aEditor_example_snapshot(example_id), STDIO_GIF89A_DOCUMENT_SCHEMA)], description: Some(format!("Load example {example_id}")), ..Default::default() }),
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
     }
 }
@@ -90,7 +90,7 @@ impl ToolJobFactory for Gif89aEditorExampleFactory {
 impl ArtifactOwnedToolJobFactory for Gif89aEditorExampleFactory {
     type Owner = EditorApp<Gif89aEditor>;
     const TOOL_IDS: &'static [&'static str] = STDIO_GIF_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = STDIO_GIF_DOCUMENT_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = STDIO_GIF89A_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[STDIO_GIF_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
 }
 //#region 🔖️Editor
@@ -115,13 +115,13 @@ impl ArtifactEditor for Gif89aEditor {
     type Command = Gif89aEditCommand;
 
     const DIALECT: Dialect = GIF_89A_DIALECT;
-    const DOCUMENT_SCHEMA: &'static str = STDIO_GIF_DOCUMENT_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = STDIO_GIF89A_DOCUMENT_SCHEMA;
 
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
         owner: EditorApp<Gif89aEditor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
         controller: "s.stdio.gif@89a/*#editor",
-        artifact_schema: "stdio.gif",
+        artifact_schema: "stdio.gif.89a",
         factory: "Gif89aEditorExampleFactory",
         factory_type: Gif89aEditorExampleFactory,
         contract: ToolExecutionContract::bounded_first_step(STDIO_GIF_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 64, 1, 65_536, 7_500),
@@ -143,13 +143,13 @@ impl ArtifactEditor for Gif89aEditor {
         Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory("stdio-snapshot-edit-artifact-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
     fn build_document_store_initialization_job(envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_GIF_DOCUMENT_SCHEMA, operation, generation))
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_GIF89A_DOCUMENT_SCHEMA, operation, generation))
     }
     fn command_id(command: &Self::Command) -> &'static str { gif89aEditor_command_id(command) }
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> { gif89aEditor_command_from_action(action, args) }
 
     fn initial_snapshot() -> Self::Snapshot {
-        GifSnapshot::default()
+        crate::standards::v89a::subsets::any::schema::blank_gif_snapshot()
     }
 
     fn handle(
@@ -164,7 +164,7 @@ impl ArtifactEditor for Gif89aEditor {
         match command {
             Gif89aEditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, _doc.snapshot),
             Gif89aEditCommand::SetActiveExample { example_id } => Ok(Emit {
-                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&gif89aEditor_example_snapshot(example_id), STDIO_GIF_DOCUMENT_SCHEMA)],
+                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&gif89aEditor_example_snapshot(example_id), STDIO_GIF89A_DOCUMENT_SCHEMA)],
                 description: Some(format!("Load example {example_id}")),
                 ..Default::default()
             }),

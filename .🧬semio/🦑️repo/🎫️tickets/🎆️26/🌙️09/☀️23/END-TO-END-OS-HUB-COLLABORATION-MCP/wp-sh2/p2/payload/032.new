@@ -1,0 +1,36 @@
+//! 📥️ Folds one bounded directory batch of this space into the Space index transient projection.
+//!
+//! The item this lane publishes is the batch itself (at most one hub page of events), so its cost never grows with the
+//! space's history. Non-invertible by declaration: the projection is derived hub state the host replays from the origin,
+//! never an edit anyone undoes.
+
+use super::{outcome, SpaceIndexTransient, SpaceIndexTransientMutation};
+
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[value(rename_all = "camelCase")]
+#[dsl(keyword = "apply-directory-events")]
+#[mutation_leaf(contract = ::protocol)]
+pub struct ApplyDirectoryEvents {
+    /// 🪪️ The one space every event of the batch names.
+    pub space_id: String,
+    /// 🚦️ The frontier the batch continues; `0` restarts the projection from the origin.
+    pub after_seq_exclusive: u64,
+    /// 📄️ The batch's directory events, canonical JSON, strictly ascending and strictly after the frontier.
+    pub events_json: String,
+}
+
+impl protocol::MutationKind<SpaceIndexTransient, SpaceIndexTransientMutation> for ApplyDirectoryEvents {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "apply", entity: "directory-events", kind: "apply-directory-events", record: "ApplyDirectoryEvents" };
+    fn diff(&self, base: &SpaceIndexTransient) -> protocol::MutationOutcome<SpaceIndexTransient> {
+        outcome(&SpaceIndexTransientMutation::ApplyDirectoryEvents(self.clone()), base, "directory", "The projection already holds exactly what the batch folds.")
+    }
+    fn inverse(&self, _base: &SpaceIndexTransient) -> Vec<SpaceIndexTransientMutation> {
+        Vec::new()
+    }
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Apply Directory Events", "Verzeichnisereignisse anwenden")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["directory".into()]
+    }
+}

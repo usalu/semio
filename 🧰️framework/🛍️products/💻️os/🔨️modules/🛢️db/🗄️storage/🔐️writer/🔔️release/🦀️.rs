@@ -4,13 +4,25 @@ use super::super::{DbIoBackendControl, DbIoBackendRetirementTurn, DbIoCredit, Db
 use super::{WalWriterKey, WAL_WRITER_CAPACITY};
 use crate::DbError;
 use semio_framework_async::{Lane, WorkerDeferredWakeTicket, WorkerMaintenanceRequest, WorkerMaintenanceStep, WorkerMaintenanceTicket, WorkerPool};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::task::{Context, Poll, Waker};
 
+/// 🅿️ Who may use an acquired writer right now: its holder while the holder writes (`Held`), the backend's next
+/// acquisition while the holder rests (`Parked` at `since` on its backend's park clock, least recent first), and nobody
+/// once the backend reclaimed it for another document — the holder then acquires a fresh writer before it writes again.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum WalWriterLease {
+    Held,
+    Parked { since: u64 },
+    Reclaimed,
+}
+
 struct WalWriterSignalCell {
     active: Option<WalWriterKey>,
     requested: bool,
+    lease: WalWriterLease,
     terminal_epoch: u64,
     waiter: Option<Waker>,
     notification: Option<Waker>,
@@ -20,7 +32,45 @@ struct WalWriterSignalCell {
 
 impl WalWriterSignalCell {
     const fn new() -> Self {
-        Self { active: None, requested: false, terminal_epoch: 0, waiter: None, notification: None, fault: None, deferred_fault_waiter: false }
+        Self { active: None, requested: false, lease: WalWriterLease::Held, terminal_epoch: 0, waiter: None, notification: None, fault: None, deferred_fault_waiter: false }
+    }
+
+    fn park(&mut self, key: WalWriterKey, since: u64) -> bool {
+        if self.active != Some(key) || self.requested || self.lease != WalWriterLease::Held {
+            return false;
+        }
+        self.lease = WalWriterLease::Parked { since };
+        true
+    }
+
+    fn resume(&mut self, key: WalWriterKey) -> bool {
+        if self.active != Some(key) || self.requested {
+            return false;
+        }
+        match self.lease {
+            WalWriterLease::Held => true,
+            WalWriterLease::Parked { .. } => {
+                self.lease = WalWriterLease::Held;
+                true
+            }
+            WalWriterLease::Reclaimed => false,
+        }
+    }
+
+    fn parked_since(&self, key: WalWriterKey) -> Option<u64> {
+        match self.lease {
+            WalWriterLease::Parked { since } if self.active == Some(key) && !self.requested && self.fault.is_none() => Some(since),
+            _ => None,
+        }
+    }
+
+    fn reclaim(&mut self, key: WalWriterKey) -> bool {
+        if self.parked_since(key).is_none() {
+            return false;
+        }
+        self.lease = WalWriterLease::Reclaimed;
+        self.requested = true;
+        true
     }
 
     /// 🔁️ A finished predecessor's undelivered terminal notification is handed back to its caller to
@@ -33,6 +83,7 @@ impl WalWriterSignalCell {
         let required_epoch = self.terminal_epoch.checked_add(1).ok_or(DbError::LimitExceeded("WAL writer terminal epoch"))?;
         self.active = Some(key);
         self.requested = false;
+        self.lease = WalWriterLease::Held;
         self.fault = None;
         self.deferred_fault_waiter = false;
         Ok((required_epoch, self.notification.take()))
@@ -56,6 +107,7 @@ impl WalWriterSignalCell {
         assert!(!self.deferred_fault_waiter);
         self.active = None;
         self.requested = false;
+        self.lease = WalWriterLease::Held;
     }
 
     fn finish(&mut self, key: WalWriterKey) -> Option<Waker> {
@@ -63,6 +115,7 @@ impl WalWriterSignalCell {
         self.terminal_epoch = self.terminal_epoch.checked_add(1).expect("writer acquisition reserved terminal epoch");
         self.active = None;
         self.requested = false;
+        self.lease = WalWriterLease::Held;
         self.fault = None;
         self.deferred_fault_waiter = false;
         self.waiter.take()
@@ -90,6 +143,8 @@ impl WalWriterSignalCell {
 
 static WAL_WRITER_SIGNALS: [[Mutex<WalWriterSignalCell>; WAL_WRITER_CAPACITY]; DB_IO_BACKEND_CONTROLS] = [const { [const { Mutex::new(WalWriterSignalCell::new()) }; WAL_WRITER_CAPACITY] }; DB_IO_BACKEND_CONTROLS];
 pub(crate) const WAL_WRITER_SIGNAL_BACKING_BYTES: usize = size_of_val(&WAL_WRITER_SIGNALS);
+static WAL_WRITER_PARK_CLOCKS: [AtomicU64; DB_IO_BACKEND_CONTROLS] = [const { AtomicU64::new(1) }; DB_IO_BACKEND_CONTROLS];
+pub(crate) const WAL_WRITER_PARK_CLOCK_BACKING_BYTES: usize = size_of_val(&WAL_WRITER_PARK_CLOCKS);
 
 fn cell(key: WalWriterKey) -> &'static Mutex<WalWriterSignalCell> {
     let (slot, _) = db_io_backend_parts(key.backend);
@@ -238,6 +293,40 @@ pub(crate) fn finish(key: WalWriterKey) {
     let mut cell = cell(key).lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     assert!(cell.notification.is_none());
     cell.notification = cell.finish(key);
+}
+
+/// 🅿️ The holder rests: until it resumes, its backend may reclaim this writer for another document, least recently parked
+/// first, and the acquisition first in the backend's admission line is told a writer became reclaimable.
+pub(crate) fn park(key: WalWriterKey) {
+    let (slot, _) = db_io_backend_parts(key.backend);
+    let since = WAL_WRITER_PARK_CLOCKS[usize::from(slot)].fetch_add(1, Ordering::Relaxed);
+    if cell(key).lock().unwrap_or_else(std::sync::PoisonError::into_inner).park(key, since) {
+        super::capacity_changed(key.backend);
+    }
+}
+
+/// ▶️ The holder writes again: `true` while its writer is still its own (held or parked), `false` once the backend
+/// reclaimed it or a release was requested — the holder must acquire a fresh writer first.
+pub(crate) fn resume(key: WalWriterKey) -> bool {
+    cell(key).lock().unwrap_or_else(std::sync::PoisonError::into_inner).resume(key)
+}
+
+/// ⏱️ The park clock reading of a writer its holder parked and nobody reclaimed or asked to release yet.
+pub(crate) fn parked_since(key: WalWriterKey) -> Option<u64> {
+    cell(key).lock().unwrap_or_else(std::sync::PoisonError::into_inner).parked_since(key)
+}
+
+/// 🪝️ Takes a parked writer back for the backend: exactly one of the holder's resume and this reclaim wins, so a holder
+/// never writes with a writer its backend is releasing. The reclaimed writer is released like a requested one.
+pub(crate) fn reclaim(key: WalWriterKey) -> bool {
+    cell(key).lock().unwrap_or_else(std::sync::PoisonError::into_inner).reclaim(key)
+}
+
+/// 🕰️ The worker pool (and so the clock and timer) of `backend`'s controller — the one clock a writer admission wait
+/// measures its deadline on and arms its wake with; `None` once the backend retired.
+pub(crate) fn controller_pool(backend: DbIoBackendControl) -> Option<Arc<WorkerPool>> {
+    let (slot, _) = db_io_backend_parts(backend);
+    WAL_WRITER_CONTROLLERS[usize::from(slot)].lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().filter(|row| row.backend == backend).map(|row| row.pool.clone())
 }
 
 pub(crate) fn notify_terminal(backend: DbIoBackendControl) {

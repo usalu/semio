@@ -10,8 +10,8 @@
   ],
   "cases": [
     { "id": "labels-select", "region": "labels", "row": 1, "x": 24, "action": { "controllerId": "history-controller", "action": "checkoutCheckpoint", "args": { "checkpointId": "checkpoint-a" } } },
-    { "id": "graph-select", "region": "graph", "row": 1, "x": 156.5, "action": { "controllerId": "history-controller", "action": "checkoutCheckpoint", "args": { "checkpointId": "checkpoint-a" } } },
-    { "id": "description-boundary-inert", "region": "description", "row": 1, "x": 157, "action": null },
+    { "id": "graph-select", "region": "graph", "row": 1, "x": 160.5, "action": { "controllerId": "history-controller", "action": "checkoutCheckpoint", "args": { "checkpointId": "checkpoint-a" } } },
+    { "id": "description-boundary-inert", "region": "description", "row": 1, "x": 161.25, "action": null },
     { "id": "description-text-inert", "region": "description", "row": 1, "x": 320, "action": null },
     { "id": "before-surface-inert", "region": "outside", "row": 1, "x": 19, "action": null },
     { "id": "after-surface-inert", "region": "outside", "row": 1, "x": 421, "action": null }

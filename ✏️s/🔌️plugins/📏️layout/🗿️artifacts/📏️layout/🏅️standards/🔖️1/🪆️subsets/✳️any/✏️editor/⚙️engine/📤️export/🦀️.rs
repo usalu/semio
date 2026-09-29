@@ -2141,8 +2141,9 @@ struct PdfRaster {
 /// 📕️ One painted element of a page's content stream, in page (top-left, y-down) coordinates.
 #[derive(Clone, Debug)]
 enum PdfItem {
+    Stroke { points: Vec<(f32, f32)>, closed: bool, color: [f32; 4], width: f32, fill: Option<[f32; 4]> },
     Rect { x: f32, y: f32, width: f32, height: f32, fill: Option<[f32; 4]>, stroke: Option<[f32; 4]> },
-    Glyph { x: f32, y: f32, size: f32, glyph_id: u16, color: [f32; 4] },
+    Glyph { x: f32, y: f32, size: f32, glyph_id: u16, color: [f32; 4], italic: bool },
     Image { x: f32, y: f32, width: f32, height: f32, rotation: f32, placeholder: bool, mark: String, raster: Option<PdfRaster> },
 }
 
@@ -3507,16 +3508,23 @@ impl LayoutExportJob {
             items += 1;
             Ok(())
         };
-        for rect in &list.rects {
-            push(PdfItem::Rect { x: rect.x, y: rect.y, width: rect.width, height: rect.height, fill: rect.fill.as_ref().map(|color| color.0), stroke: rect.stroke.as_ref().map(|color| color.0) }, &mut self.pdf_items)?;
-        }
-        for image in &list.images {
-            push(PdfItem::Image { x: image.x, y: image.y, width: image.width, height: image.height, rotation: image.rotation, placeholder: image.placeholder, mark: image.preview.clone(), raster: image.proxy_data_url.as_deref().and_then(Self::proxy_png_rgb) }, &mut self.pdf_items)?;
-        }
-        for run in &list.text_runs {
-            for glyph in &run.glyphs {
-                let glyph_id = u16::try_from(glyph.glyph_id).map_err(|_| "layout-export-glyph-range")?;
-                push(PdfItem::Glyph { x: glyph.x, y: glyph.y, size: glyph.font_size, glyph_id, color: glyph.color.0 }, &mut self.pdf_items)?;
+        for piece in crate::editor::layout::engine::scene::stack_pieces(&list) {
+            match piece {
+                crate::editor::layout::engine::scene::StackPiece::Stroke(stroke) | crate::editor::layout::engine::scene::StackPiece::FrameStroke(stroke) => {
+                    push(PdfItem::Stroke { points: stroke.points.clone(), closed: stroke.closed, color: stroke.color, width: stroke.width, fill: stroke.fill }, &mut self.pdf_items)?;
+                }
+                crate::editor::layout::engine::scene::StackPiece::Rect(rect) => {
+                    push(PdfItem::Rect { x: rect.x, y: rect.y, width: rect.width, height: rect.height, fill: rect.fill.as_ref().map(|color| color.0), stroke: rect.stroke.as_ref().map(|color| color.0) }, &mut self.pdf_items)?;
+                }
+                crate::editor::layout::engine::scene::StackPiece::Image(image) => {
+                    push(PdfItem::Image { x: image.x, y: image.y, width: image.width, height: image.height, rotation: image.rotation, placeholder: image.placeholder, mark: image.preview.clone(), raster: image.proxy_data_url.as_deref().and_then(Self::proxy_png_rgb) }, &mut self.pdf_items)?;
+                }
+                crate::editor::layout::engine::scene::StackPiece::Text(run) => {
+                    for glyph in &run.glyphs {
+                        let glyph_id = u16::try_from(glyph.glyph_id).map_err(|_| "layout-export-glyph-range")?;
+                        push(PdfItem::Glyph { x: glyph.x, y: glyph.y, size: glyph.font_size, glyph_id, color: glyph.color.0, italic: glyph.italic }, &mut self.pdf_items)?;
+                    }
+                }
             }
         }
         self.pdf_pages.push(PdfPagePlan { width, height, items });
@@ -3653,6 +3661,25 @@ fn pdf_preview_ops(mark: &str, x: f32, y: f32, width: f32, height: f32, page_hei
     fn pdf_item_ops(item: &PdfItem, page_height: f32) -> String {
         let color = |rgba: [f32; 4]| format!("{:.4} {:.4} {:.4}", rgba[0].clamp(0.0, 1.0), rgba[1].clamp(0.0, 1.0), rgba[2].clamp(0.0, 1.0));
         match item {
+            PdfItem::Stroke { points, closed, color: stroke_color, width, fill } => {
+                if points.len() < 2 {
+                    return String::new();
+                }
+                let mut path = String::new();
+                for (index, (x, y)) in points.iter().enumerate() {
+                    let verb = if index == 0 { "m" } else { "l" };
+                    path.push_str(&format!("{x:.3} {:.3} {verb} ", page_height - y));
+                }
+                if *closed {
+                    path.push_str("h ");
+                }
+                let mut ops = String::new();
+                if let Some(fill) = fill.filter(|rgba| rgba[3] > 0.001) {
+                    ops.push_str(&format!("q {} rg {path}f Q\n", color(fill)));
+                }
+                ops.push_str(&format!("q {} RG {width:.3} w {path}S Q\n", color(*stroke_color)));
+                ops
+            }
             PdfItem::Rect { x, y, width, height, fill, stroke } => {
                 let mut ops = String::new();
                 let path = format!("{:.3} {:.3} {:.3} {:.3} re", x, page_height - y - height, width, height);
@@ -3676,11 +3703,12 @@ fn pdf_preview_ops(mark: &str, x: f32, y: f32, width: f32, height: f32, page_hei
                 };
                 format!("{body}{}", Self::pdf_preview_ops(mark, *x, *y, *width, *height, page_height))
             }
-            PdfItem::Glyph { x, y, size, glyph_id, color: fill } => {
+            PdfItem::Glyph { x, y, size, glyph_id, color: fill, italic } => {
                 let tinted = fill[0] > 0.001 || fill[1] > 0.001 || fill[2] > 0.001;
                 let open = if tinted { format!("q {} rg ", color(*fill)) } else { String::new() };
                 let close = if tinted { " Q" } else { "" };
-                format!("{open}BT /F1 {:.3} Tf 1 0 0 1 {:.3} {:.3} Tm <{:04X}> Tj ET{close}\n", size, x, page_height - y, glyph_id)
+                let tm = if *italic { format!("1 0 0.250 1 {:.3} {:.3}", x, page_height - y) } else { format!("1 0 0 1 {:.3} {:.3}", x, page_height - y) };
+                format!("{open}BT /F1 {:.3} Tf {tm} Tm <{:04X}> Tj ET{close}\n", size, glyph_id)
             }
         }
     }

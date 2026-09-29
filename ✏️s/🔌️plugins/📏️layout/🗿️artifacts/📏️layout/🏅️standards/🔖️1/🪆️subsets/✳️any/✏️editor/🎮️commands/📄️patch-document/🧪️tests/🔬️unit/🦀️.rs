@@ -114,6 +114,25 @@ async fn patch_frame_applies_a_character_style_to_the_story() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn patch_frame_limits_a_character_style_to_a_span() {
+    let mut app = layout_app().await;
+    dispatch(&mut app, LayoutCommand::PatchDocument(PatchDocument { field: "addCharacterStyle".into(), value: "Emphasis".into() })).await;
+    dispatch(&mut app, LayoutCommand::PatchDocument(PatchDocument { field: "character-1.fontSize".into(), value: "24".into() })).await;
+    dispatch(&mut app, LayoutCommand::PatchFrame(patch_frame::PatchFrame { frame_id: "frame-text-1".into(), page_id: Some("page-1".into()), field: "characterStyle".into(), value: "character-1".into() })).await;
+    dispatch(&mut app, LayoutCommand::PatchFrame(patch_frame::PatchFrame { frame_id: "frame-text-1".into(), page_id: Some("page-1".into()), field: "styleEnd".into(), value: "5".into() })).await;
+    let snapshot = app.snapshot().expect("projection");
+    let story = snapshot.stories.iter().find(|story| story.id == "story-1").unwrap();
+    let run = &story.style_runs[0];
+    assert_eq!(run.start, 0);
+    assert_eq!(run.end, story.content.char_indices().nth(5).unwrap().0);
+    let mut engine = crate::editor::layout::engine::scene::LayoutEngine::new();
+    let list = crate::editor::layout::engine::scene::build_display_list_for_page(&mut engine, &snapshot, &snapshot.pages[0], "", &[], None, false);
+    let glyphs = &list.text_runs.iter().find(|run| run.object_id == "frame-text-1").expect("story").glyphs;
+    assert!(glyphs.iter().any(|glyph| (glyph.font_size - 24.0).abs() < 0.1), "{glyphs:?}");
+    assert!(glyphs.iter().any(|glyph| (glyph.font_size - 12.0).abs() < 0.1), "{glyphs:?}");
+}
+
+#[semio_framework_async_macros::async_test]
 async fn patch_frame_sets_link_resolution_and_color_profile() {
     let mut app = layout_app().await;
     dispatch(&mut app, LayoutCommand::PatchFrame(patch_frame::PatchFrame { frame_id: "frame-image-1".into(), page_id: Some("page-1".into()), field: "dpi".into(), value: "150".into() })).await;
@@ -123,4 +142,25 @@ async fn patch_frame_sets_link_resolution_and_color_profile() {
     assert_eq!(link.color_profile.as_deref(), Some("CMYK"));
     dispatch(&mut app, LayoutCommand::PatchFrame(patch_frame::PatchFrame { frame_id: "frame-image-1".into(), page_id: Some("page-1".into()), field: "colorProfile".into(), value: "".into() })).await;
     assert_eq!(app.snapshot().expect("projection").links[0].color_profile, None);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn patch_frame_overrides_an_inherited_frame() {
+    let mut app = layout_app().await;
+    dispatch(&mut app, LayoutCommand::PatchFrame(patch_frame::PatchFrame { frame_id: "frame-inherited".into(), page_id: Some("page-1".into()), field: "x".into(), value: "90".into() })).await;
+    let snapshot = app.snapshot().expect("projection");
+    assert_eq!(snapshot.pages[0].overrides[0].bounds.as_ref().unwrap().x, 90.0);
+    assert_eq!(snapshot.parent_pages[0].frames[0].bounds().x, 50.0);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn patch_page_adds_a_layer_and_patch_frame_moves_onto_it() {
+    let mut app = layout_app().await;
+    dispatch(&mut app, LayoutCommand::PatchPage(patch_page::PatchPage { page_id: Some("page-1".into()), field: "addLayer".into(), value: "Notes".into() })).await;
+    dispatch(&mut app, LayoutCommand::PatchFrame(patch_frame::PatchFrame { frame_id: "frame-1".into(), page_id: Some("page-1".into()), field: "layerId".into(), value: "layer-2".into() })).await;
+    let snapshot = app.snapshot().expect("projection");
+    let page = snapshot.pages.iter().find(|page| page.id == "page-1").unwrap();
+    assert_eq!(page.layers.last().unwrap().name, "Notes");
+    assert_eq!(page.frames.iter().find(|frame| frame.id() == "frame-1").unwrap().layer_id(), "layer-2");
+    assert!(page.layers.iter().find(|layer| layer.id == "layer-1").unwrap().object_ids.iter().all(|id| id != "frame-1"));
 }

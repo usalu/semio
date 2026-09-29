@@ -602,7 +602,7 @@
             path.line_to((f64::from(point), f64::from(point)));
         }
         scene.fill(FillRule::NonZero, Affine::IDENTITY, Color::from_rgba8(0, 0, 0, 255), None, &path);
-        *host.world_content_cache.borrow_mut() = Some((host.content_scene_generation, BoardDrawLod::Detail, scene));
+        *host.world_content_cache.borrow_mut() = Some(WorldContentCache { generation: host.content_scene_generation, lod: BoardDrawLod::Detail, scene, spans: Vec::new() });
         assert!(!host.quarantine_world_content_step());
         assert!(host.opaque_scene_retirement.get().is_some());
         let mut turns = 1usize;
@@ -1403,3 +1403,94 @@ fn regions_count_against_the_descriptor_census_and_never_the_pointer_credits() {
     assert!(!host.event_schema_fault, "and nothing faulted");
 }
 //#endregion 🎯️TargetRegions
+
+#[cfg(test)]
+fn icon_clip_centers(scene: &Scene) -> Vec<(f64, f64)> {
+    let encoded: serde_json::Value = serde_json::from_str(&infinite::canvas::draw_list::scene_draw_list_json(scene, infinite::canvas::draw_list::DrawListOptions::default())).expect("icon draw list");
+    encoded["commands"]
+        .as_array()
+        .expect("commands")
+        .iter()
+        .filter(|command| command[0].as_str() == Some("pc") && command[3][0].as_str() == Some("ci"))
+        .map(|command| {
+            let affine = command[2].as_array().expect("clip affine");
+            let coeffs: Vec<f64> = affine.iter().map(|value| value.as_f64().expect("affine coefficient")).collect();
+            let center = command[3].as_array().expect("clip circle");
+            let x = center[1].as_f64().expect("circle x");
+            let y = center[2].as_f64().expect("circle y");
+            (coeffs[0] * x + coeffs[2] * y + coeffs[4], coeffs[1] * x + coeffs[3] * y + coeffs[5])
+        })
+        .collect()
+}
+
+#[cfg(test)]
+/// 🗺️ A drag keeps each node's icon on that node while the previous icon scene is still retiring.
+#[test]
+fn dragged_node_icon_stays_on_the_node_while_icon_cache_retirement_is_pending() {
+    let icon = r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10"/></svg>"#;
+    let mut host = BoardHost::default();
+    let fixture = serde_json::json!({
+        "schema": "puzzle.2d.fixture",
+        "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+        "nodes": [
+            { "id": "node-a", "x": 0.0, "y": 0.0, "shape": "circle", "radius": 36.0, "iconKind": icon, "handles": [] },
+            { "id": "node-b", "x": 400.0, "y": 0.0, "shape": "circle", "radius": 36.0, "iconKind": icon, "handles": [] }
+        ],
+        "edges": []
+    });
+    assert!(host.parse_fixture_json(&fixture.to_string()));
+    host.set_size(800, 600, 1.0);
+    host.set_automatic_lod(false);
+    host.set_forced_draw_lod_label("detail");
+    let _ = host.build_vector_scene();
+    let origin = host.world_to_screen(Point::new(0.0, 0.0));
+    host.pointer_down_screen(origin.x, origin.y, 0, false, false);
+    let first = host.world_to_screen(Point::new(120.0, 80.0));
+    host.pointer_move_screen(first.x, first.y, false, false, false);
+    let _ = host.build_vector_scene();
+    let second = host.world_to_screen(Point::new(240.0, 160.0));
+    host.pointer_move_screen(second.x, second.y, false, false, false);
+    let painted = host.build_vector_scene();
+    assert!(host.opaque_scene_retirement.get().is_some(), "the previous icon scene is still retiring, which is when the icon used to freeze");
+    let node_a = host.nodes.get("node-a").expect("dragged node");
+    let node_b = host.nodes.get("node-b").expect("stationary node");
+    assert!((node_a.x - 240.0).abs() < 1e-6 && (node_a.y - 160.0).abs() < 1e-6, "the drag committed the second move");
+    let centers = icon_clip_centers(&painted);
+    let expect = |id_screen: Point| centers.iter().any(|(x, y)| (x - id_screen.x).abs() < 1.0 && (y - id_screen.y).abs() < 1.0);
+    assert!(expect(host.world_to_screen(Point::new(node_a.x, node_a.y))), "dragged icon clips: {centers:?}");
+    assert!(expect(host.world_to_screen(Point::new(node_b.x, node_b.y))), "stationary icon clips: {centers:?}");
+    let mut turns = 0usize;
+    while !host.quarantine_world_content_step() {
+        turns += 1;
+        assert!(turns < 8_192, "world icon scene reaches a terminal release");
+    }
+    while !host.icon_paint_cache.close_step() {
+        turns += 1;
+        assert!(turns < 8_192, "icon paint cache reaches a terminal release");
+    }
+}
+
+#[cfg(test)]
+/// 🎯️ A puzzle 2d fixture's handle `radius` is the cap size, and the edge leaves that cap rather than the node circle.
+#[test]
+fn puzzle2d_edge_starts_at_the_handle_cap() {
+    let board = serde_json::json!({
+        "schema": "puzzle.2d.fixture",
+        "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+        "nodes": [
+            { "id": "a", "x": 0.0, "y": 0.0, "shape": "circle", "radius": 20.0, "handles": [{ "id": "a:h", "handleKind": "door", "angle": 0.0, "radius": 3.0 }] },
+            { "id": "b", "x": 200.0, "y": 0.0, "shape": "circle", "radius": 20.0, "handles": [{ "id": "b:h", "handleKind": "door", "angle": 3.141592653589793, "radius": 3.0 }] }
+        ],
+        "edges": [{ "id": "e", "source": "a:h", "target": "b:h" }]
+    })
+    .to_string();
+    let mut host = BoardHost::default();
+    assert!(host.parse_fixture_json(&board), "the two-node board parses");
+    let source = host.handles.get("a:h").expect("source handle");
+    assert!((host.effective_handle_radius(source) - 3.0).abs() < 1e-9, "the authored cap radius is kept");
+    let curve = host.edge_curve(host.edges.get("e").expect("edge")).expect("edge curve");
+    let start = curve.p0();
+    let end = curve.p3();
+    assert!((start.x - 23.0).abs() < 1e-6 && start.y.abs() < 1e-6, "the edge leaves the east cap, outside the node circle: {start:?}");
+    assert!((end.x - 177.0).abs() < 1e-6 && end.y.abs() < 1e-6, "the edge arrives at the west cap, outside the node circle: {end:?}");
+}

@@ -139,8 +139,15 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     /** 🧭️ The corpus's `actionIds`, defined once for every language harness (the Rust contract law reads it the same way): every
      * binding of every node, nodes in ascending id order, duplicates kept — two cells bound to one verb are two reachable actions. */
+    /** 🎯️ Every action a record can dispatch: its bindings, then — for a tree/table row — its ONE target's activation and
+     * each row action's verb, all bound to that target's scope (the Rust twin is `reachable_action_ids`). */
     function allActionIds(state: ReturnType<InstanceType<typeof UiDocumentStore>["getState"]>): string[] {
-      return [...state.nodes.values()].sort((left, right) => left.id - right.id).flatMap((record) => (record.bindings ?? []).map((binding) => `${binding.action.scope}.${binding.action.name}@${binding.action.version}`));
+      return [...state.nodes.values()].sort((left, right) => left.id - right.id).flatMap((record) => {
+        const row = record.component as { type: string; target?: { scope: string; version: number; activation?: string | null } | null; rowActions?: readonly { verb: string }[] };
+        const target = row.type === "treeItem" || row.type === "tableRow" ? row.target ?? null : null;
+        const verbs = target ? [...(target.activation ? [target.activation] : []), ...(row.rowActions ?? []).map((action) => action.verb)] : [];
+        return [...(record.bindings ?? []).map((binding) => `${binding.action.scope}.${binding.action.name}@${binding.action.version}`), ...verbs.map((verb) => `${target!.scope}.${verb}@${target!.version}`)];
+      });
     }
 
     const cases = loadCorpus();

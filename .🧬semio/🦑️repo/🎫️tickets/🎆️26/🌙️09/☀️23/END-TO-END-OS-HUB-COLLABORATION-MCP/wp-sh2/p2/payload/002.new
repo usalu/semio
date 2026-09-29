@@ -1,0 +1,7145 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/directory/component.json",
+  "title": "Directory",
+  "description": "Directory event log wire contract (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS, contract C1): the hub's control-plane events, the client-issued commands that produce them, the `/directory/socket/v1` stream envelope, and the REST read DTOs.",
+  "$comment": "🧭️ Deviation from contract-freeze.md's C1 prose: `space.created`'s space-kind field and `create-space`'s space-kind field are named `spaceKind`, not the prose's bare `kind` — both bodies are internally tagged (`#[serde(tag = \"kind\")]`) so a same-named payload field would collide with the discriminator on the wire. Flagged as a sharedFileRequest in lane 0-A's report for the coordinator to fold back into contract-freeze.md.",
+  "$defs": {
+    "DirectorySpaceKind": {
+      "type": "string",
+      "enum": [
+        "atelier",
+        "studio",
+        "archive"
+      ]
+    },
+    "DirectorySpaceVisibility": {
+      "type": "string",
+      "enum": [
+        "private",
+        "public"
+      ]
+    },
+    "DirectorySpaceRole": {
+      "type": "string",
+      "enum": [
+        "author",
+        "spectator"
+      ]
+    },
+    "DirectoryActorKind": {
+      "type": "string",
+      "enum": [
+        "user",
+        "admin",
+        "system"
+      ]
+    },
+    "DirectoryActor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id"
+      ],
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/DirectoryActorKind"
+        },
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "Hlc": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "physicalMs",
+        "logical"
+      ],
+      "properties": {
+        "physicalMs": {
+          "type": "integer"
+        },
+        "logical": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "DocumentIndexEntryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "dialect"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[^\\u0000-\\u0020\\u007f-\\u009f](?:[^\\u0000-\\u001f\\u007f-\\u009f]*[^\\u0000-\\u0020\\u007f-\\u009f])?$"
+        },
+        "dialect": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "artifactKind",
+            "standard",
+            "subset"
+          ],
+          "properties": {
+            "artifactKind": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+            },
+            "standard": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+            },
+            "subset": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^(?:\\*|[A-Za-z0-9][A-Za-z0-9._:/-]*)$"
+            }
+          }
+        }
+      }
+    },
+    "DirectoryEventBody": {
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "userId",
+            "email",
+            "displayName"
+          ],
+          "properties": {
+            "kind": {
+              "const": "user.created"
+            },
+            "userId": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string"
+            },
+            "displayName": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "spaceId",
+            "name",
+            "spaceKind",
+            "visibility",
+            "ownerUserId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "space.created"
+            },
+            "spaceId": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "spaceKind": {
+              "$ref": "#/$defs/DirectorySpaceKind",
+              "x-semio-note": "the space's own kind (atelier/studio/archive) — named `spaceKind` rather than the contract prose's bare `kind` because this variant is internally tagged with a discriminator ALSO named `kind` (see the schema's own header docstring)"
+            },
+            "visibility": {
+              "$ref": "#/$defs/DirectorySpaceVisibility"
+            },
+            "ownerUserId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "spaceId",
+            "name"
+          ],
+          "properties": {
+            "kind": {
+              "const": "space.renamed"
+            },
+            "spaceId": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "spaceId",
+            "visibility"
+          ],
+          "properties": {
+            "kind": {
+              "const": "space.visibility-changed"
+            },
+            "spaceId": {
+              "type": "string"
+            },
+            "visibility": {
+              "$ref": "#/$defs/DirectorySpaceVisibility"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "spaceId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "space.archived",
+              "description": "Atomically freezes the space and demotes every current Author membership to Spectator."
+            },
+            "spaceId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "spaceId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "space.deleted"
+            },
+            "spaceId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "spaceId",
+            "userId",
+            "role"
+          ],
+          "properties": {
+            "kind": {
+              "const": "member.upserted"
+            },
+            "spaceId": {
+              "type": "string"
+            },
+            "userId": {
+              "type": "string"
+            },
+            "role": {
+              "$ref": "#/$defs/DirectorySpaceRole"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "spaceId",
+            "userId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "member.removed"
+            },
+            "spaceId": {
+              "type": "string"
+            },
+            "userId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "spaceId",
+            "userId",
+            "inviteId",
+            "role"
+          ],
+          "properties": {
+            "kind": {
+              "const": "invite.redeemed"
+            },
+            "spaceId": {
+              "type": "string"
+            },
+            "userId": {
+              "type": "string"
+            },
+            "inviteId": {
+              "type": "string"
+            },
+            "role": {
+              "$ref": "#/$defs/DirectorySpaceRole"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "descriptor"
+          ],
+          "properties": {
+            "kind": {
+              "const": "document.announced"
+            },
+            "descriptor": {
+              "$ref": "#/$defs/DocumentDescriptor"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "scope",
+            "descriptorDigestV1",
+            "entry"
+          ],
+          "properties": {
+            "kind": {
+              "const": "document.indexed"
+            },
+            "scope": {
+              "$ref": "#/$defs/DocumentScope"
+            },
+            "descriptorDigestV1": {
+              "$ref": "#/$defs/NonzeroArtifactHash"
+            },
+            "entry": {
+              "$ref": "#/$defs/DocumentIndexEntryV1"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "checkpoint"
+          ],
+          "properties": {
+            "kind": {
+              "const": "artifact.checkpoint-published"
+            },
+            "checkpoint": {
+              "$ref": "#/$defs/PublishedArtifactCheckpoint"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "retention"
+          ],
+          "properties": {
+            "kind": {
+              "const": "artifact.retention-advanced"
+            },
+            "retention": {
+              "$ref": "#/$defs/ArtifactRetention"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "userId",
+            "schema",
+            "mutation"
+          ],
+          "x-semio-note": "one preference change of ONE user, visible to that user only and never on the default directory lane: `GET /directory/preference-page/v1` carries these and nothing else, the default page and socket fold skip them. `schema` names the preference vocabulary (the hub is domain-neutral and never reads `mutation`); `mutation` is that vocabulary's canonical JSON text",
+          "properties": {
+            "kind": {
+              "const": "user.preference-recorded"
+            },
+            "userId": {
+              "type": "string"
+            },
+            "schema": {
+              "$ref": "#/$defs/UserPreferenceSchemaIdV1"
+            },
+            "mutation": {
+              "$ref": "#/$defs/UserPreferenceMutationTextV1"
+            }
+          }
+        }
+      ]
+    },
+    "UserPreferenceSchemaIdV1": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[a-z0-9][a-z0-9.-]*[a-z0-9]$"
+    },
+    "UserPreferenceMutationTextV1": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 4096,
+      "x-semio-note": "canonical JSON text of one object; the byte bound (4096 UTF-8 bytes) is enforced by both twins"
+    },
+    "DirectoryEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "seq",
+        "id",
+        "hlc",
+        "actor",
+        "body",
+        "recordedAtMs"
+      ],
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "x-semio-note": "dense, 1-based, backend-assigned"
+        },
+        "id": {
+          "type": "string",
+          "x-semio-note": "uuid v7"
+        },
+        "hlc": {
+          "$ref": "#/$defs/Hlc"
+        },
+        "actor": {
+          "$ref": "#/$defs/DirectoryActor"
+        },
+        "spaceId": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "body": {
+          "$ref": "#/$defs/DirectoryEventBody"
+        },
+        "recordedAtMs": {
+          "type": "integer"
+        }
+      }
+    },
+    "DirectoryEventPageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "sessionBindingSha256",
+        "authorizationGeneration",
+        "afterSeqExclusive",
+        "throughSeqInclusive",
+        "hasMore",
+        "events",
+        "receiptSha256"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.directory.event-page.v1"
+        },
+        "sessionBindingSha256": {
+          "type": "string",
+          "pattern": "^(?!0{64}$)[0-9a-f]{64}$"
+        },
+        "authorizationGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "afterSeqExclusive": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "throughSeqInclusive": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "hasMore": {
+          "type": "boolean"
+        },
+        "events": {
+          "type": "array",
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/DirectoryEvent"
+          }
+        },
+        "receiptSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "DirectoryCommand": {
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "name",
+            "spaceKind",
+            "visibility"
+          ],
+          "properties": {
+            "kind": {
+              "const": "create-space"
+            },
+            "name": {
+              "type": "string"
+            },
+            "spaceKind": {
+              "$ref": "#/$defs/DirectorySpaceKind"
+            },
+            "visibility": {
+              "$ref": "#/$defs/DirectorySpaceVisibility"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "spaceId",
+            "name"
+          ],
+          "properties": {
+            "kind": {
+              "const": "rename-space"
+            },
+            "spaceId": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "spaceId",
+            "visibility"
+          ],
+          "properties": {
+            "kind": {
+              "const": "set-visibility"
+            },
+            "spaceId": {
+              "type": "string"
+            },
+            "visibility": {
+              "$ref": "#/$defs/DirectorySpaceVisibility"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "spaceId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "archive-space"
+            },
+            "spaceId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "spaceId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "delete-space"
+            },
+            "spaceId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "spaceId",
+            "email",
+            "role"
+          ],
+          "properties": {
+            "kind": {
+              "const": "upsert-member"
+            },
+            "spaceId": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string"
+            },
+            "role": {
+              "$ref": "#/$defs/DirectorySpaceRole"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "spaceId",
+            "userId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "remove-member"
+            },
+            "spaceId": {
+              "type": "string"
+            },
+            "userId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "spaceId",
+            "role",
+            "ttlSecs"
+          ],
+          "properties": {
+            "kind": {
+              "const": "create-invite"
+            },
+            "spaceId": {
+              "type": "string"
+            },
+            "role": {
+              "$ref": "#/$defs/DirectorySpaceRole"
+            },
+            "ttlSecs": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "spaceId",
+            "inviteId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "revoke-invite"
+            },
+            "spaceId": {
+              "type": "string"
+            },
+            "inviteId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "descriptor"
+          ],
+          "properties": {
+            "kind": {
+              "const": "announce-document"
+            },
+            "descriptor": {
+              "$ref": "#/$defs/DocumentDescriptor"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "schema",
+            "mutation"
+          ],
+          "properties": {
+            "kind": {
+              "const": "record-user-preference"
+            },
+            "schema": {
+              "$ref": "#/$defs/UserPreferenceSchemaIdV1"
+            },
+            "mutation": {
+              "$ref": "#/$defs/UserPreferenceMutationTextV1"
+            }
+          }
+        }
+      ]
+    },
+    "DirectoryCommandOutcomeV1": {
+      "type": "string",
+      "enum": [
+        "accepted",
+        "previously-accepted",
+        "secret-undeliverable"
+      ]
+    },
+    "DirectoryCommandErrorCodeV1": {
+      "type": "string",
+      "enum": [
+        "unauthorized",
+        "forbidden",
+        "stale-session",
+        "request-conflict",
+        "invalid",
+        "overloaded",
+        "too-large",
+        "capacity",
+        "closed",
+        "cancelled",
+        "transport"
+      ]
+    },
+    "DirectoryCommandRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "requestId",
+        "command"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.directory.command-request.v1"
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^(?!0{32}$)[0-9a-f]{32}$",
+          "x-semio-note": "idempotency correlation only — never a capability"
+        },
+        "command": {
+          "$ref": "#/$defs/DirectoryCommand"
+        }
+      }
+    },
+    "DirectoryCommandResultV1": {
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "none"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "inviteToken"
+          ],
+          "properties": {
+            "kind": {
+              "const": "invite"
+            },
+            "inviteToken": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "x-semio-note": "one-shot capability; never persisted, broadcast, folded, or logged"
+            }
+          }
+        }
+      ]
+    },
+    "DirectoryCommandReceiptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "requestId",
+        "commandSha256",
+        "outcome",
+        "events",
+        "result",
+        "receiptSha256"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.directory.command-receipt.v1"
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^(?!0{32}$)[0-9a-f]{32}$"
+        },
+        "commandSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "outcome": {
+          "$ref": "#/$defs/DirectoryCommandOutcomeV1"
+        },
+        "events": {
+          "type": "array",
+          "maxItems": 4,
+          "items": {
+            "$ref": "#/$defs/DirectoryEvent"
+          }
+        },
+        "result": {
+          "$ref": "#/$defs/DirectoryCommandResultV1"
+        },
+        "receiptSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "outcome": {
+                "enum": [
+                  "previously-accepted",
+                  "secret-undeliverable"
+                ]
+              }
+            },
+            "required": [
+              "outcome"
+            ]
+          },
+          "then": {
+            "properties": {
+              "events": {
+                "maxItems": 0,
+                "type": "array"
+              },
+              "result": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "none"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "AdminIntentV1": {
+      "type": "object",
+      "required": [
+        "kind",
+        "requestId"
+      ],
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "requestId",
+            "name",
+            "spaceKind",
+            "visibility"
+          ],
+          "properties": {
+            "kind": {
+              "const": "create-space"
+            },
+            "requestId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "spaceKind": {
+              "$ref": "#/$defs/DirectorySpaceKind"
+            },
+            "visibility": {
+              "$ref": "#/$defs/DirectorySpaceVisibility"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "requestId",
+            "spaceId",
+            "name"
+          ],
+          "properties": {
+            "kind": {
+              "const": "rename-space"
+            },
+            "requestId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "spaceId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "requestId",
+            "spaceId",
+            "visibility"
+          ],
+          "properties": {
+            "kind": {
+              "const": "set-space-visibility"
+            },
+            "requestId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "spaceId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "visibility": {
+              "$ref": "#/$defs/DirectorySpaceVisibility"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "requestId",
+            "spaceId"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "archive-space",
+                "delete-space"
+              ]
+            },
+            "requestId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "spaceId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "requestId",
+            "spaceId",
+            "email",
+            "role"
+          ],
+          "properties": {
+            "kind": {
+              "const": "upsert-space-member"
+            },
+            "requestId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "spaceId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "email": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "role": {
+              "$ref": "#/$defs/DirectorySpaceRole"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "requestId",
+            "spaceId",
+            "userId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "remove-space-member"
+            },
+            "requestId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "spaceId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "userId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "requestId",
+            "spaceId",
+            "role",
+            "ttlSecs"
+          ],
+          "properties": {
+            "kind": {
+              "const": "create-space-invite"
+            },
+            "requestId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "spaceId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "role": {
+              "$ref": "#/$defs/DirectorySpaceRole"
+            },
+            "ttlSecs": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 31536000
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "requestId",
+            "spaceId",
+            "inviteId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "revoke-space-invite"
+            },
+            "requestId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "spaceId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "inviteId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "requestId",
+            "scope",
+            "ttlSecs"
+          ],
+          "properties": {
+            "kind": {
+              "const": "issue-document-share"
+            },
+            "requestId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "scope": {
+              "$ref": "#/$defs/DocumentScope"
+            },
+            "ttlSecs": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 31536000
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "requestId",
+            "scope",
+            "shareId",
+            "reasonCode"
+          ],
+          "properties": {
+            "kind": {
+              "const": "revoke-document-share"
+            },
+            "requestId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "scope": {
+              "$ref": "#/$defs/DocumentScope"
+            },
+            "shareId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "reasonCode": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "requestId",
+            "userId",
+            "reasonCode"
+          ],
+          "properties": {
+            "kind": {
+              "const": "revoke-user-sessions"
+            },
+            "requestId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "userId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "reasonCode": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "requestId",
+            "syncSessionId",
+            "reasonCode"
+          ],
+          "properties": {
+            "kind": {
+              "const": "kick-connection"
+            },
+            "requestId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "syncSessionId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "reasonCode": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "requestId",
+            "expectedHeadSeq"
+          ],
+          "properties": {
+            "kind": {
+              "const": "rebuild-directory-projections"
+            },
+            "requestId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "expectedHeadSeq": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      ]
+    },
+    "AdminIntentStateV1": {
+      "type": "string",
+      "enum": [
+        "succeeded",
+        "accepted",
+        "indeterminate",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "AdminIntentOutcomeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "durable"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "durable": {
+          "type": "boolean"
+        },
+        "kickAttempted": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "kickSignalled": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "AdminIntentResultV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "inviteToken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "shareToken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "AdminIntentReceiptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operationId",
+        "correlationId",
+        "state",
+        "outcome"
+      ],
+      "properties": {
+        "operationId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "correlationId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "state": {
+          "$ref": "#/$defs/AdminIntentStateV1"
+        },
+        "eventSeqFirst": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "eventSeqLast": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "result": {
+          "$ref": "#/$defs/AdminIntentResultV1"
+        },
+        "outcome": {
+          "$ref": "#/$defs/AdminIntentOutcomeV1"
+        }
+      }
+    },
+    "AdminOperationProgressV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "completedEvents",
+        "totalEvents",
+        "cancelRequested"
+      ],
+      "properties": {
+        "completedEvents": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "totalEvents": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cancelRequested": {
+          "type": "boolean"
+        }
+      }
+    },
+    "AdminOperationStatusV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receipt"
+      ],
+      "properties": {
+        "receipt": {
+          "$ref": "#/$defs/AdminIntentReceiptV1"
+        },
+        "progress": {
+          "$ref": "#/$defs/AdminOperationProgressV1"
+        }
+      }
+    },
+    "AdminRecordedConnectionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "syncSessionId",
+        "scope",
+        "connectedAtMs",
+        "source"
+      ],
+      "properties": {
+        "syncSessionId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "scope": {
+          "$ref": "#/$defs/DocumentScope"
+        },
+        "authenticatedUserId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "email": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "role": {
+          "$ref": "#/$defs/DirectorySpaceRole"
+        },
+        "connectedAtMs": {
+          "type": "integer"
+        },
+        "source": {
+          "const": "recorded-sync-session"
+        }
+      }
+    },
+    "AdminConnectionSnapshotV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rows",
+        "observedAtMs",
+        "source",
+        "headSeq"
+      ],
+      "properties": {
+        "rows": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/AdminRecordedConnectionV1"
+          }
+        },
+        "nextCursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "observedAtMs": {
+          "type": "integer"
+        },
+        "source": {
+          "const": "recorded-sync-sessions"
+        },
+        "headSeq": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "AdminOperationAuditPhaseV1": {
+      "type": "string",
+      "enum": [
+        "accepted",
+        "succeeded",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "AdminOperationAuditV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sequence",
+        "operationId",
+        "occurredAtMs",
+        "phase",
+        "intentKind",
+        "targetKind",
+        "targetId",
+        "principalUserId",
+        "principalSessionId",
+        "principalGeneration",
+        "correlationId",
+        "outcomeCode"
+      ],
+      "properties": {
+        "sequence": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "operationId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "occurredAtMs": {
+          "type": "integer"
+        },
+        "phase": {
+          "$ref": "#/$defs/AdminOperationAuditPhaseV1"
+        },
+        "intentKind": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "targetKind": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "targetId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "principalUserId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "principalSessionId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "principalGeneration": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "correlationId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "eventSeqFirst": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "eventSeqLast": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "outcomeCode": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "reasonCode": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "AdminOperationAuditPageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rows",
+        "observedAtMs"
+      ],
+      "properties": {
+        "rows": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/AdminOperationAuditV1"
+          }
+        },
+        "nextCursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "observedAtMs": {
+          "type": "integer"
+        }
+      }
+    },
+    "ConnectionView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "syncSessionId",
+        "spaceId",
+        "documentId",
+        "surface",
+        "actor",
+        "role",
+        "connectedAtMs",
+        "presenceKnown"
+      ],
+      "properties": {
+        "syncSessionId": {
+          "type": "string"
+        },
+        "spaceId": {
+          "type": "string"
+        },
+        "documentId": {
+          "type": "string"
+        },
+        "surface": {
+          "type": "string"
+        },
+        "actor": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "role": {
+          "$ref": "#/$defs/DirectorySpaceRole"
+        },
+        "connectedAtMs": {
+          "type": "integer"
+        },
+        "presenceKnown": {
+          "type": "boolean"
+        }
+      }
+    },
+    "DirectoryPresenceActor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actor",
+        "surface",
+        "color"
+      ],
+      "properties": {
+        "actor": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "surface": {
+          "type": "string"
+        },
+        "color": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
+      }
+    },
+    "RebootstrapRequired": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "checkpointId",
+        "descriptorDigestV1",
+        "baselineFrontier"
+      ],
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/DocumentScope"
+        },
+        "checkpointId": {
+          "$ref": "#/$defs/NonzeroArtifactHash"
+        },
+        "descriptorDigestV1": {
+          "$ref": "#/$defs/NonzeroArtifactHash"
+        },
+        "baselineFrontier": {
+          "$ref": "#/$defs/ArtifactFrontier"
+        }
+      }
+    },
+    "DirectoryStreamMessage": {
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "event"
+          ],
+          "properties": {
+            "kind": {
+              "const": "event"
+            },
+            "event": {
+              "$ref": "#/$defs/DirectoryEvent"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "phase",
+            "connection"
+          ],
+          "properties": {
+            "kind": {
+              "const": "connection"
+            },
+            "phase": {
+              "type": "string",
+              "enum": [
+                "opened",
+                "closed"
+              ]
+            },
+            "connection": {
+              "$ref": "#/$defs/ConnectionView"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "spaceId",
+            "documentId",
+            "actors"
+          ],
+          "properties": {
+            "kind": {
+              "const": "presence"
+            },
+            "spaceId": {
+              "type": "string"
+            },
+            "documentId": {
+              "type": "string"
+            },
+            "actors": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DirectoryPresenceActor"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "headSeq"
+          ],
+          "properties": {
+            "kind": {
+              "const": "heartbeat"
+            },
+            "headSeq": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "control"
+          ],
+          "properties": {
+            "kind": {
+              "const": "rebootstrap-required"
+            },
+            "control": {
+              "$ref": "#/$defs/RebootstrapRequired"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "spaceId",
+            "change"
+          ],
+          "properties": {
+            "kind": {
+              "const": "access-changed"
+            },
+            "spaceId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "change": {
+              "enum": [
+                "granted",
+                "revoked"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "SpaceView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "visibility",
+        "ownerUserId",
+        "memberCount",
+        "documentCount",
+        "activeConnections",
+        "createdAtMs",
+        "updatedAtMs"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/DirectorySpaceKind"
+        },
+        "visibility": {
+          "$ref": "#/$defs/DirectorySpaceVisibility"
+        },
+        "ownerUserId": {
+          "type": "string"
+        },
+        "role": {
+          "$ref": "#/$defs/DirectorySpaceRole"
+        },
+        "memberCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "documentCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "activeConnections": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "createdAtMs": {
+          "type": "integer"
+        },
+        "updatedAtMs": {
+          "type": "integer"
+        }
+      }
+    },
+    "PublicSpaceViewV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "visibility",
+        "memberCount",
+        "documentCount",
+        "createdAtMs",
+        "updatedAtMs"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/DirectorySpaceKind"
+        },
+        "visibility": {
+          "const": "public"
+        },
+        "memberCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "documentCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "createdAtMs": {
+          "type": "integer"
+        },
+        "updatedAtMs": {
+          "type": "integer"
+        }
+      }
+    },
+    "MemberSpaceViewV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "visibility",
+        "ownerUserId",
+        "role",
+        "memberCount",
+        "documentCount",
+        "activeConnections",
+        "createdAtMs",
+        "updatedAtMs"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/DirectorySpaceKind"
+        },
+        "visibility": {
+          "$ref": "#/$defs/DirectorySpaceVisibility"
+        },
+        "ownerUserId": {
+          "type": "string"
+        },
+        "role": {
+          "$ref": "#/$defs/DirectorySpaceRole"
+        },
+        "memberCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "documentCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "activeConnections": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "createdAtMs": {
+          "type": "integer"
+        },
+        "updatedAtMs": {
+          "type": "integer"
+        }
+      }
+    },
+    "PublicDocumentCatalogEntryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "documentId",
+        "artifactKind",
+        "artifactSchema",
+        "owner",
+        "packSchemaHash"
+      ],
+      "properties": {
+        "documentId": {
+          "type": "string"
+        },
+        "artifactKind": {
+          "type": "string"
+        },
+        "artifactSchema": {
+          "type": "string"
+        },
+        "owner": {
+          "$ref": "#/$defs/DocumentOwner"
+        },
+        "packSchemaHash": {
+          "$ref": "#/$defs/NonzeroArtifactHash"
+        }
+      }
+    },
+    "DirectorySpaceListEntryV1": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "access",
+            "space"
+          ],
+          "properties": {
+            "access": {
+              "const": "public"
+            },
+            "space": {
+              "$ref": "#/$defs/PublicSpaceViewV1"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "access",
+            "space"
+          ],
+          "properties": {
+            "access": {
+              "const": "member"
+            },
+            "space": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/MemberSpaceViewV1"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "const": "spectator"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "access",
+            "space"
+          ],
+          "properties": {
+            "access": {
+              "const": "author"
+            },
+            "space": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/MemberSpaceViewV1"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "const": "author"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "DirectorySpaceAdministrationMemberRowV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "userId",
+        "email",
+        "displayName",
+        "role",
+        "owner"
+      ],
+      "properties": {
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "role": {
+          "$ref": "#/$defs/DirectorySpaceRole"
+        },
+        "owner": {
+          "type": "boolean"
+        }
+      }
+    },
+    "DirectorySpaceAdministrationInviteRowV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "inviteId",
+        "role",
+        "createdAtMs",
+        "expiresAtMs",
+        "revoked",
+        "accepted"
+      ],
+      "properties": {
+        "inviteId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "role": {
+          "$ref": "#/$defs/DirectorySpaceRole"
+        },
+        "createdAtMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "expiresAtMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "revoked": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "DirectorySpaceAdministrationCursorV1": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^[A-Za-z0-9._-]+$"
+    },
+    "DirectorySpaceAdministrationCapabilitiesV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "renameSpace",
+        "setVisibility",
+        "deleteSpace",
+        "upsertMember",
+        "removeMember",
+        "createInvite",
+        "revokeInvite"
+      ],
+      "properties": {
+        "renameSpace": {
+          "type": "boolean"
+        },
+        "setVisibility": {
+          "type": "boolean"
+        },
+        "deleteSpace": {
+          "type": "boolean"
+        },
+        "upsertMember": {
+          "type": "boolean"
+        },
+        "removeMember": {
+          "type": "boolean"
+        },
+        "createInvite": {
+          "type": "boolean"
+        },
+        "revokeInvite": {
+          "type": "boolean"
+        }
+      }
+    },
+    "DirectorySpaceAdministrationMemberWindowV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rows"
+      ],
+      "properties": {
+        "rows": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/DirectorySpaceAdministrationMemberRowV1"
+          }
+        },
+        "nextCursor": {
+          "$ref": "#/$defs/DirectorySpaceAdministrationCursorV1"
+        }
+      }
+    },
+    "DirectorySpaceAdministrationInviteWindowV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rows"
+      ],
+      "properties": {
+        "rows": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/DirectorySpaceAdministrationInviteRowV1"
+          }
+        },
+        "nextCursor": {
+          "$ref": "#/$defs/DirectorySpaceAdministrationCursorV1"
+        }
+      }
+    },
+    "DirectorySpaceAdministrationDocumentWindowV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rows"
+      ],
+      "properties": {
+        "rows": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/DocumentView"
+          }
+        },
+        "nextCursor": {
+          "$ref": "#/$defs/DirectorySpaceAdministrationCursorV1"
+        }
+      }
+    },
+    "DirectorySpaceAdministrationPublicDocumentWindowV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rows"
+      ],
+      "properties": {
+        "rows": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/PublicDocumentCatalogEntryV1"
+          }
+        },
+        "nextCursor": {
+          "$ref": "#/$defs/DirectorySpaceAdministrationCursorV1"
+        }
+      }
+    },
+    "DirectorySpaceAdministrationPageV1": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "access",
+            "schema",
+            "sessionBindingSha256",
+            "authorizationGeneration",
+            "spaceId",
+            "space",
+            "documents",
+            "receiptSha256"
+          ],
+          "properties": {
+            "access": {
+              "const": "public"
+            },
+            "schema": {
+              "const": "semio.directory.space-administration-page.v1"
+            },
+            "sessionBindingSha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "authorizationGeneration": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "spaceId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "space": {
+              "$ref": "#/$defs/PublicSpaceViewV1"
+            },
+            "documents": {
+              "$ref": "#/$defs/DirectorySpaceAdministrationPublicDocumentWindowV1"
+            },
+            "receiptSha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "access",
+            "schema",
+            "sessionBindingSha256",
+            "authorizationGeneration",
+            "spaceId",
+            "space",
+            "members",
+            "documents",
+            "receiptSha256"
+          ],
+          "properties": {
+            "access": {
+              "const": "member"
+            },
+            "schema": {
+              "const": "semio.directory.space-administration-page.v1"
+            },
+            "sessionBindingSha256": {
+              "type": "string",
+              "pattern": "^(?!0{64}$)[0-9a-f]{64}$"
+            },
+            "authorizationGeneration": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "spaceId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "space": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/MemberSpaceViewV1"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "const": "spectator"
+                    }
+                  }
+                }
+              ]
+            },
+            "members": {
+              "$ref": "#/$defs/DirectorySpaceAdministrationMemberWindowV1"
+            },
+            "documents": {
+              "$ref": "#/$defs/DirectorySpaceAdministrationDocumentWindowV1"
+            },
+            "receiptSha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "access",
+            "schema",
+            "sessionBindingSha256",
+            "authorizationGeneration",
+            "spaceId",
+            "space",
+            "members",
+            "documents",
+            "invites",
+            "capabilities",
+            "receiptSha256"
+          ],
+          "properties": {
+            "access": {
+              "const": "author"
+            },
+            "schema": {
+              "const": "semio.directory.space-administration-page.v1"
+            },
+            "sessionBindingSha256": {
+              "type": "string",
+              "pattern": "^(?!0{64}$)[0-9a-f]{64}$"
+            },
+            "authorizationGeneration": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "spaceId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "space": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/MemberSpaceViewV1"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "const": "author"
+                    }
+                  }
+                }
+              ]
+            },
+            "members": {
+              "$ref": "#/$defs/DirectorySpaceAdministrationMemberWindowV1"
+            },
+            "documents": {
+              "$ref": "#/$defs/DirectorySpaceAdministrationDocumentWindowV1"
+            },
+            "invites": {
+              "$ref": "#/$defs/DirectorySpaceAdministrationInviteWindowV1"
+            },
+            "capabilities": {
+              "$ref": "#/$defs/DirectorySpaceAdministrationCapabilitiesV1"
+            },
+            "receiptSha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        }
+      ]
+    },
+    "MemberView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "userId",
+        "email",
+        "displayName",
+        "role"
+      ],
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "role": {
+          "$ref": "#/$defs/DirectorySpaceRole"
+        }
+      }
+    },
+    "UserView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "email",
+        "displayName",
+        "createdAtMs"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "createdAtMs": {
+          "type": "integer"
+        }
+      }
+    },
+    "DocumentScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "spaceId",
+        "documentId"
+      ],
+      "properties": {
+        "spaceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "documentId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "ArtifactHash": {
+      "type": "array",
+      "minItems": 32,
+      "maxItems": 32,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "DirectoryIndexedDocumentViewV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "descriptor",
+        "descriptorDigestV1",
+        "entry",
+        "createdAtMs",
+        "createdBy"
+      ],
+      "properties": {
+        "descriptor": {
+          "$ref": "#/$defs/DocumentDescriptor"
+        },
+        "descriptorDigestV1": {
+          "$ref": "#/$defs/ArtifactHash"
+        },
+        "entry": {
+          "$ref": "#/$defs/DocumentIndexEntryV1"
+        },
+        "createdAtMs": {
+          "type": "integer"
+        },
+        "createdBy": {
+          "type": "string"
+        }
+      }
+    },
+    "DirectoryDocumentActivity": {
+      "description": "The last checkpoint a human published for one announced document of a space: when (the event's recordedAtMs) and by whom (the plain user id of the publishing user actor). An admin or system publication leaves it as it was.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "documentId",
+        "updatedAtMs",
+        "updatedBy"
+      ],
+      "properties": {
+        "documentId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "updatedAtMs": {
+          "type": "integer"
+        },
+        "updatedBy": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "DirectorySpace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "view",
+        "members",
+        "documents",
+        "indexedDocuments",
+        "documentActivity"
+      ],
+      "properties": {
+        "view": {
+          "$ref": "#/$defs/SpaceView"
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MemberView"
+          }
+        },
+        "documents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocumentDescriptor"
+          }
+        },
+        "indexedDocuments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DirectoryIndexedDocumentViewV1"
+          }
+        },
+        "documentActivity": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DirectoryDocumentActivity"
+          }
+        }
+      }
+    },
+    "DirectoryReadModel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "spaces",
+        "cursor",
+        "users"
+      ],
+      "properties": {
+        "spaces": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/DirectorySpace"
+          }
+        },
+        "cursor": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "users": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/UserView"
+          }
+        }
+      }
+    },
+    "NonzeroArtifactHash": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ArtifactHash"
+        },
+        {
+          "not": {
+            "const": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    "DocumentOwner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pluginId",
+        "packageId",
+        "version",
+        "packageHash"
+      ],
+      "properties": {
+        "pluginId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "packageId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "packageHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "not": {
+            "const": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        }
+      }
+    },
+    "DocumentFrontier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "headSeq",
+        "commitSeq",
+        "epoch"
+      ],
+      "properties": {
+        "headSeq": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "commitSeq": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "epoch": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "DocumentDescriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "spaceId",
+        "documentId",
+        "artifactKind",
+        "artifactSchema",
+        "owner",
+        "packSchemaHash",
+        "bootstrapVersion",
+        "bootstrapFrontier",
+        "bootstrapSnapshotHash"
+      ],
+      "properties": {
+        "spaceId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "documentId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "artifactKind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "artifactSchema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "owner": {
+          "$ref": "#/$defs/DocumentOwner"
+        },
+        "packSchemaHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "not": {
+            "const": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        },
+        "bootstrapVersion": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "bootstrapFrontier": {
+          "$ref": "#/$defs/DocumentFrontier"
+        },
+        "bootstrapSnapshotHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "not": {
+            "const": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        }
+      }
+    },
+    "ArtifactFrontier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "documentId",
+        "headEditOrdinal",
+        "headEditId",
+        "lastCommitSeq",
+        "chainHash"
+      ],
+      "properties": {
+        "documentId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "headEditOrdinal": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "headEditId": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "lastCommitSeq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "chainHash": {
+          "$ref": "#/$defs/ArtifactHash"
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "headEditOrdinal": {
+              "const": 0
+            },
+            "headEditId": {
+              "const": ""
+            },
+            "lastCommitSeq": {
+              "const": 0
+            },
+            "chainHash": {
+              "const": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          }
+        },
+        {
+          "properties": {
+            "headEditOrdinal": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "headEditId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "lastCommitSeq": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "chainHash": {
+              "$ref": "#/$defs/NonzeroArtifactHash"
+            }
+          }
+        }
+      ]
+    },
+    "ArtifactBlobRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sha256",
+        "byteLength",
+        "storageKey"
+      ],
+      "properties": {
+        "sha256": {
+          "$ref": "#/$defs/NonzeroArtifactHash"
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "storageKey": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "ArtifactCheckpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "checkpointId",
+        "descriptorDigestV1",
+        "baselineFrontier",
+        "pack",
+        "spr",
+        "aggregateSha256",
+        "publishedAtMs"
+      ],
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/DocumentScope"
+        },
+        "checkpointId": {
+          "$ref": "#/$defs/NonzeroArtifactHash"
+        },
+        "parentCheckpointId": {
+          "$ref": "#/$defs/NonzeroArtifactHash"
+        },
+        "descriptorDigestV1": {
+          "$ref": "#/$defs/NonzeroArtifactHash"
+        },
+        "baselineFrontier": {
+          "$ref": "#/$defs/ArtifactFrontier"
+        },
+        "pack": {
+          "$ref": "#/$defs/ArtifactBlobRef"
+        },
+        "spr": {
+          "$ref": "#/$defs/ArtifactBlobRef"
+        },
+        "aggregateSha256": {
+          "$ref": "#/$defs/NonzeroArtifactHash"
+        },
+        "publishedAtMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "PublishedArtifactBlob": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sha256",
+        "byteLength"
+      ],
+      "properties": {
+        "sha256": {
+          "$ref": "#/$defs/NonzeroArtifactHash"
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "PublishedArtifactCheckpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "checkpointId",
+        "descriptorDigestV1",
+        "baselineFrontier",
+        "pack",
+        "spr",
+        "aggregateSha256",
+        "publishedAtMs"
+      ],
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/DocumentScope"
+        },
+        "checkpointId": {
+          "$ref": "#/$defs/NonzeroArtifactHash"
+        },
+        "parentCheckpointId": {
+          "$ref": "#/$defs/NonzeroArtifactHash"
+        },
+        "descriptorDigestV1": {
+          "$ref": "#/$defs/NonzeroArtifactHash"
+        },
+        "baselineFrontier": {
+          "$ref": "#/$defs/ArtifactFrontier"
+        },
+        "pack": {
+          "$ref": "#/$defs/PublishedArtifactBlob"
+        },
+        "spr": {
+          "$ref": "#/$defs/PublishedArtifactBlob"
+        },
+        "aggregateSha256": {
+          "$ref": "#/$defs/NonzeroArtifactHash"
+        },
+        "publishedAtMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "ArtifactRetention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "retainedCheckpointId",
+        "retainedFloor",
+        "checkpointLineageHead"
+      ],
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/DocumentScope"
+        },
+        "retainedCheckpointId": {
+          "$ref": "#/$defs/NonzeroArtifactHash"
+        },
+        "retainedFloor": {
+          "$ref": "#/$defs/ArtifactFrontier"
+        },
+        "checkpointLineageHead": {
+          "$ref": "#/$defs/NonzeroArtifactHash"
+        }
+      }
+    },
+    "DocumentView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "descriptor",
+        "headSeq",
+        "commitSeq",
+        "epoch"
+      ],
+      "properties": {
+        "descriptor": {
+          "$ref": "#/$defs/DocumentDescriptor"
+        },
+        "headSeq": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "commitSeq": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "epoch": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "DocumentExecutionTargetHashV1": {
+      "type": "string",
+      "pattern": "^(?!0{64}$)[0-9a-f]{64}$"
+    },
+    "DocumentExecutionTargetSurfaceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "surfaceId",
+        "appId",
+        "windowKindId",
+        "role",
+        "rendererTarget"
+      ],
+      "properties": {
+        "surfaceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "appId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "windowKindId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "viewer",
+            "editor"
+          ]
+        },
+        "rendererTarget": {
+          "type": "string",
+          "enum": [
+            "react",
+            "wgpu",
+            "wasm"
+          ]
+        }
+      }
+    },
+    "DocumentExecutionTargetLeaseFieldsV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "version",
+        "scope",
+        "descriptorDigestV1",
+        "catalog",
+        "package",
+        "component",
+        "descriptor",
+        "browserActor",
+        "artifact",
+        "parentDialect",
+        "surface",
+        "grant",
+        "checkpoint",
+        "revalidation"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os.document-execution-target-lease/v1"
+        },
+        "version": {
+          "const": 1
+        },
+        "scope": {
+          "$ref": "#/$defs/DocumentScope"
+        },
+        "descriptorDigestV1": {
+          "$ref": "#/$defs/DocumentExecutionTargetHashV1"
+        },
+        "catalog": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "generationId"
+          ],
+          "properties": {
+            "generationId": {
+              "$ref": "#/$defs/DocumentExecutionTargetHashV1"
+            }
+          }
+        },
+        "package": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "pluginId",
+            "packageId",
+            "version",
+            "componentSha256",
+            "componentBlake3",
+            "descriptorByteSha256",
+            "executionProtocol"
+          ],
+          "properties": {
+            "pluginId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "packageId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "componentSha256": {
+              "$ref": "#/$defs/DocumentExecutionTargetHashV1"
+            },
+            "componentBlake3": {
+              "$ref": "#/$defs/DocumentExecutionTargetHashV1"
+            },
+            "descriptorByteSha256": {
+              "$ref": "#/$defs/DocumentExecutionTargetHashV1"
+            },
+            "executionProtocol": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "appChannelVersion"
+              ],
+              "properties": {
+                "appChannelVersion": {
+                  "const": 19
+                }
+              }
+            }
+          }
+        },
+        "component": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sha256",
+            "blake3",
+            "byteLength"
+          ],
+          "properties": {
+            "sha256": {
+              "$ref": "#/$defs/DocumentExecutionTargetHashV1"
+            },
+            "blake3": {
+              "$ref": "#/$defs/DocumentExecutionTargetHashV1"
+            },
+            "byteLength": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 67108864
+            }
+          }
+        },
+        "descriptor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sha256",
+            "byteLength"
+          ],
+          "properties": {
+            "sha256": {
+              "$ref": "#/$defs/DocumentExecutionTargetHashV1"
+            },
+            "byteLength": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4194304
+            }
+          }
+        },
+        "browserActor": {
+          "$ref": "#/$defs/DocumentBrowserActorLease"
+        },
+        "artifact": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "schema",
+            "packSchemaHash"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "packSchemaHash": {
+              "$ref": "#/$defs/DocumentExecutionTargetHashV1"
+            }
+          }
+        },
+        "parentDialect": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "artifactKind",
+            "standard",
+            "subset"
+          ],
+          "properties": {
+            "artifactKind": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "standard": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "subset": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        },
+        "surface": {
+          "$ref": "#/$defs/DocumentExecutionTargetSurfaceV1"
+        },
+        "grant": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "read",
+            "write",
+            "observe"
+          ],
+          "properties": {
+            "read": {
+              "const": true
+            },
+            "write": {
+              "type": "boolean"
+            },
+            "observe": {
+              "const": true
+            }
+          }
+        },
+        "checkpoint": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "checkpointId",
+            "descriptorDigestV1",
+            "baselineFrontier",
+            "aggregateSha256"
+          ],
+          "properties": {
+            "checkpointId": {
+              "$ref": "#/$defs/DocumentExecutionTargetHashV1"
+            },
+            "descriptorDigestV1": {
+              "$ref": "#/$defs/DocumentExecutionTargetHashV1"
+            },
+            "baselineFrontier": {
+              "$ref": "#/$defs/ArtifactFrontier"
+            },
+            "aggregateSha256": {
+              "$ref": "#/$defs/DocumentExecutionTargetHashV1"
+            }
+          }
+        },
+        "revalidation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "directoryRevision",
+            "membershipGeneration"
+          ],
+          "properties": {
+            "directoryRevision": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "membershipGeneration": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "sessionGeneration": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "shareGeneration": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        }
+      }
+    },
+    "DocumentOpenPlanV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "version",
+        "receipt",
+        "expiresAtUnixMs",
+        "scope",
+        "descriptorDigestV1",
+        "catalog",
+        "package",
+        "artifact",
+        "parentDialect",
+        "surface",
+        "browserActor",
+        "grant",
+        "checkpoint",
+        "revalidation"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.document-open-plan/v1"
+        },
+        "version": {
+          "$ref": "#/$defs/DocumentExecutionTargetLeaseFieldsV1/properties/version"
+        },
+        "receipt": {
+          "type": "string",
+          "pattern": "^open\\.v1\\.[A-Za-z0-9_-]{43}$"
+        },
+        "expiresAtUnixMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "scope": {
+          "$ref": "#/$defs/DocumentExecutionTargetLeaseFieldsV1/properties/scope"
+        },
+        "descriptorDigestV1": {
+          "$ref": "#/$defs/DocumentExecutionTargetLeaseFieldsV1/properties/descriptorDigestV1"
+        },
+        "catalog": {
+          "$ref": "#/$defs/DocumentExecutionTargetLeaseFieldsV1/properties/catalog"
+        },
+        "package": {
+          "$ref": "#/$defs/DocumentExecutionTargetLeaseFieldsV1/properties/package"
+        },
+        "artifact": {
+          "$ref": "#/$defs/DocumentExecutionTargetLeaseFieldsV1/properties/artifact"
+        },
+        "parentDialect": {
+          "$ref": "#/$defs/DocumentExecutionTargetLeaseFieldsV1/properties/parentDialect"
+        },
+        "surface": {
+          "$ref": "#/$defs/DocumentExecutionTargetLeaseFieldsV1/properties/surface"
+        },
+        "browserActor": {
+          "$ref": "#/$defs/DocumentBrowserActorPlan"
+        },
+        "grant": {
+          "$ref": "#/$defs/DocumentExecutionTargetLeaseFieldsV1/properties/grant"
+        },
+        "checkpoint": {
+          "$ref": "#/$defs/DocumentExecutionTargetLeaseFieldsV1/properties/checkpoint"
+        },
+        "revalidation": {
+          "$ref": "#/$defs/DocumentExecutionTargetLeaseFieldsV1/properties/revalidation"
+        }
+      }
+    },
+    "InviteView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "spaceId",
+        "role",
+        "createdAtMs",
+        "expiresAtMs",
+        "revoked"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "spaceId": {
+          "type": "string"
+        },
+        "role": {
+          "$ref": "#/$defs/DirectorySpaceRole"
+        },
+        "createdAtMs": {
+          "type": "integer"
+        },
+        "expiresAtMs": {
+          "type": "integer"
+        },
+        "revoked": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SpaceArtifactCreationCatalog": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "spaceId",
+        "catalogGenerationId",
+        "kinds"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.space-artifact-creation-catalog/v1"
+        },
+        "spaceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+        },
+        "catalogGenerationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "not": {
+            "const": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        },
+        "kinds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/SpaceArtifactCreationCreationKind"
+          }
+        }
+      }
+    },
+    "SpaceArtifactCreationCreationKind": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kindId",
+        "schema",
+        "dialect",
+        "label"
+      ],
+      "properties": {
+        "kindId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+        },
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+        },
+        "dialect": {
+          "$ref": "#/$defs/SpaceArtifactCreationCreationDialect"
+        },
+        "label": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "en",
+            "de"
+          ],
+          "properties": {
+            "en": {
+              "$ref": "#/$defs/SpaceArtifactCreationLabel"
+            },
+            "de": {
+              "$ref": "#/$defs/SpaceArtifactCreationLabel"
+            }
+          }
+        }
+      }
+    },
+    "SpaceArtifactCreationCreationDialect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactKind",
+        "standard",
+        "subset"
+      ],
+      "properties": {
+        "artifactKind": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+        },
+        "standard": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+        },
+        "subset": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^(?:\\*|[A-Za-z0-9][A-Za-z0-9._:/-]*)$"
+        }
+      }
+    },
+    "SpaceArtifactCreationLabel": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[^\\u0000-\\u0020\\u007f-\\u009f](?:[^\\u0000-\\u001f\\u007f-\\u009f]*[^\\u0000-\\u0020\\u007f-\\u009f])?$"
+    },
+    "SpaceArtifactCreationRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "requestId",
+        "expectedCatalogGenerationId",
+        "kindId",
+        "name"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.space-artifact-create/v1"
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{32}$",
+          "not": {
+            "const": "00000000000000000000000000000000"
+          }
+        },
+        "expectedCatalogGenerationId": {
+          "type": "string",
+          "pattern": "^(?!0{64}$)[0-9a-f]{64}$"
+        },
+        "kindId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[^\\u0000-\\u0020\\u007f-\\u009f](?:[^\\u0000-\\u001f\\u007f-\\u009f]*[^\\u0000-\\u0020\\u007f-\\u009f])?$"
+        }
+      }
+    },
+    "SpaceArtifactCreationReady": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactId",
+        "kindId",
+        "artifactSchema",
+        "parentDialect"
+      ],
+      "properties": {
+        "artifactId": {
+          "type": "string",
+          "pattern": "^artifact-[0-9a-f]{32}$",
+          "not": {
+            "const": "artifact-00000000000000000000000000000000"
+          }
+        },
+        "kindId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+        },
+        "artifactSchema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+        },
+        "parentDialect": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "artifactKind",
+            "standard",
+            "subset"
+          ],
+          "properties": {
+            "artifactKind": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+            },
+            "standard": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+            },
+            "subset": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^(?:\\*|[A-Za-z0-9][A-Za-z0-9._:/-]*)$"
+            }
+          }
+        }
+      }
+    },
+    "SpaceArtifactCreationProgress": {
+      "description": "Where a running creation is, so a waiting author sees work instead of silence: `queued` until it starts, `compiling-guest` while the kind's component is compiled, `genesis` while the guest builds the empty document, `publishing` while the document is stored and announced. Only an unfinished creation (`accepted`, `preparing`) reports progress; `completedUnits` never exceeds `totalUnits`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stage", "completedUnits", "totalUnits"],
+      "properties": {
+        "stage": {
+          "enum": ["queued", "compiling-guest", "genesis", "publishing"]
+        },
+        "completedUnits": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "totalUnits": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "SpaceArtifactCreationStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "requestId",
+        "spaceId",
+        "catalogGenerationId",
+        "phase"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.space-artifact-creation-status/v1"
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{32}$",
+          "not": {
+            "const": "00000000000000000000000000000000"
+          }
+        },
+        "spaceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+        },
+        "catalogGenerationId": {
+          "type": "string",
+          "pattern": "^(?!0{64}$)[0-9a-f]{64}$"
+        },
+        "phase": {
+          "enum": [
+            "accepted",
+            "preparing",
+            "ready",
+            "indeterminate",
+            "failed",
+            "cancelled"
+          ]
+        },
+        "ready": {
+          "$ref": "#/$defs/SpaceArtifactCreationReady"
+        },
+        "progress": {
+          "$ref": "#/$defs/SpaceArtifactCreationProgress"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "phase": {
+                "enum": ["ready", "indeterminate", "failed", "cancelled"]
+              }
+            }
+          },
+          "then": {
+            "not": {
+              "required": ["progress"]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "phase": {
+                "const": "ready"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "ready": {
+                "$ref": "#/$defs/SpaceArtifactCreationReady"
+              }
+            },
+            "required": [
+              "ready"
+            ]
+          },
+          "else": {
+            "not": {
+              "properties": {
+                "ready": {}
+              },
+              "required": [
+                "ready"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "SpaceArtifactCreationV1": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/SpaceArtifactCreationRequest"
+        },
+        {
+          "$ref": "#/$defs/SpaceArtifactCreationStatus"
+        },
+        {
+          "$ref": "#/$defs/SpaceArtifactCreationCatalog"
+        }
+      ]
+    },
+    "EditedArtifactFrontierPositiveSafe": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "EditedArtifactFrontierHash": {
+      "type": "string",
+      "pattern": "^(?!0{64}$)[0-9a-f]{64}$"
+    },
+    "EditedArtifactFrontierText": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[^\\u0000-\\u001f\\u007f-\\u009f]+$"
+    },
+    "EditedArtifactFrontierV1": {
+      "description": "One edited, committed point of a document's ledger: the counters and content chain the hub's document authority published for it, and the edit id at its tip.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "documentId",
+        "headEditOrdinal",
+        "headEditId",
+        "lastCommitSeq",
+        "chainSha256"
+      ],
+      "properties": {
+        "documentId": {
+          "$ref": "#/$defs/EditedArtifactFrontierText"
+        },
+        "headEditOrdinal": {
+          "$ref": "#/$defs/EditedArtifactFrontierPositiveSafe"
+        },
+        "headEditId": {
+          "$ref": "#/$defs/EditedArtifactFrontierText"
+        },
+        "lastCommitSeq": {
+          "$ref": "#/$defs/EditedArtifactFrontierPositiveSafe"
+        },
+        "chainSha256": {
+          "$ref": "#/$defs/EditedArtifactFrontierHash"
+        }
+      }
+    },
+    "DocumentCheckInRequestId": {
+      "type": "string",
+      "pattern": "^(?!0{32}$)[0-9a-f]{32}$"
+    },
+    "DocumentCheckInV1": {
+      "description": "Check In: a document author names a committed ledger head; the hub materializes the checkpoint from its own document log and makes it the active checkpoint. No pair, pair hash, parent or scope is accepted from a client: scope comes from the route and author from the session.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "requestId",
+        "head"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.document-check-in/v1"
+        },
+        "requestId": {
+          "$ref": "#/$defs/DocumentCheckInRequestId"
+        },
+        "head": {
+          "$ref": "#/$defs/EditedArtifactFrontierV1"
+        }
+      }
+    },
+    "DocumentCheckInPhaseV1": {
+      "enum": [
+        "accepted",
+        "materializing",
+        "publishing",
+        "ready",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "DocumentCheckInRefusalV1": {
+      "description": "unknown-head: not a committed point of this document's ledger; stale-head: precedes the active checkpoint's baseline; active-checkpoint-changed: another check-in or approval advanced the active checkpoint meanwhile; ledger-not-replayable: the ledger range holds an approval decision; codec-refused: the trusted catalog's codec refused the ledger or the replayed pair; authority-changed: the author lost write access or the document its descriptor; unavailable: storage or the trusted catalog was unavailable.",
+      "enum": [
+        "unknown-head",
+        "stale-head",
+        "active-checkpoint-changed",
+        "ledger-not-replayable",
+        "codec-refused",
+        "authority-changed",
+        "unavailable"
+      ]
+    },
+    "DocumentCheckInProgressV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "completedUnits",
+        "totalUnits"
+      ],
+      "properties": {
+        "completedUnits": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "totalUnits": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "DocumentCheckInReadyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "checkpointId",
+        "parentCheckpointId",
+        "baseline"
+      ],
+      "properties": {
+        "checkpointId": {
+          "$ref": "#/$defs/EditedArtifactFrontierHash"
+        },
+        "parentCheckpointId": {
+          "$ref": "#/$defs/EditedArtifactFrontierHash"
+        },
+        "baseline": {
+          "$ref": "#/$defs/EditedArtifactFrontierV1"
+        }
+      }
+    },
+    "DocumentCheckInStatusV1": {
+      "description": "One Check In's observable state. Only ready names the checkpoint it made active and only failed names a refusal.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "requestId",
+        "phase",
+        "progress"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.document-check-in-status/v1"
+        },
+        "requestId": {
+          "$ref": "#/$defs/DocumentCheckInRequestId"
+        },
+        "phase": {
+          "$ref": "#/$defs/DocumentCheckInPhaseV1"
+        },
+        "progress": {
+          "$ref": "#/$defs/DocumentCheckInProgressV1"
+        },
+        "ready": {
+          "$ref": "#/$defs/DocumentCheckInReadyV1"
+        },
+        "refusal": {
+          "$ref": "#/$defs/DocumentCheckInRefusalV1"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "phase": {
+                "const": "ready"
+              }
+            },
+            "required": [
+              "phase"
+            ]
+          },
+          "then": {
+            "properties": {
+              "ready": true
+            },
+            "required": [
+              "ready"
+            ]
+          },
+          "else": {
+            "not": {
+              "properties": {
+                "ready": true
+              },
+              "required": [
+                "ready"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "phase": {
+                "const": "failed"
+              }
+            },
+            "required": [
+              "phase"
+            ]
+          },
+          "then": {
+            "properties": {
+              "refusal": true
+            },
+            "required": [
+              "refusal"
+            ]
+          },
+          "else": {
+            "not": {
+              "properties": {
+                "refusal": true
+              },
+              "required": [
+                "refusal"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "DocumentBrowserActorDigest": {
+      "type": "string",
+      "pattern": "^(?!0{64}$)[0-9a-f]{64}$"
+    },
+    "DocumentBrowserActorInterfaces": {
+      "type": "array",
+      "maxItems": 19,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "semio:framework/host-async@1.0.0",
+          "semio:framework/pure@1.0.0",
+          "wasi:cli/environment@0.2.0",
+          "wasi:cli/exit@0.2.0",
+          "wasi:cli/stderr@0.2.0",
+          "wasi:cli/stdin@0.2.0",
+          "wasi:cli/stdout@0.2.0",
+          "wasi:cli/terminal-input@0.2.0",
+          "wasi:cli/terminal-output@0.2.0",
+          "wasi:cli/terminal-stderr@0.2.0",
+          "wasi:cli/terminal-stdin@0.2.0",
+          "wasi:cli/terminal-stdout@0.2.0",
+          "wasi:clocks/monotonic-clock@0.2.0",
+          "wasi:clocks/wall-clock@0.2.0",
+          "wasi:io/error@0.2.0",
+          "wasi:io/poll@0.2.0",
+          "wasi:io/streams@0.2.0",
+          "wasi:random/insecure-seed@0.2.9",
+          "wasi:random/random@0.2.9"
+        ]
+      }
+    },
+    "DocumentBrowserActorNone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "const": "none"
+        }
+      }
+    },
+    "DocumentBrowserActorIdentity": {
+      "type": "object",
+      "required": [
+        "kind",
+        "schema",
+        "codegenPolicy",
+        "sha256",
+        "sourceComponentSha256",
+        "sourceDescriptorByteSha256",
+        "policySha256",
+        "importInterfaces"
+      ],
+      "properties": {
+        "kind": {
+          "const": "closed-browser-actor"
+        },
+        "schema": {
+          "const": "semio.os.closed-browser-actor.v1"
+        },
+        "codegenPolicy": {
+          "const": "semio.os.browser-jco-1.34.0-jspi.v1"
+        },
+        "sha256": {
+          "$ref": "#/$defs/DocumentBrowserActorDigest"
+        },
+        "sourceComponentSha256": {
+          "$ref": "#/$defs/DocumentBrowserActorDigest"
+        },
+        "sourceDescriptorByteSha256": {
+          "$ref": "#/$defs/DocumentBrowserActorDigest"
+        },
+        "policySha256": {
+          "$ref": "#/$defs/DocumentBrowserActorDigest"
+        },
+        "importInterfaces": {
+          "$ref": "#/$defs/DocumentBrowserActorInterfaces"
+        }
+      }
+    },
+    "DocumentBrowserActorPlan": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/DocumentBrowserActorNone"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "schema",
+            "codegenPolicy",
+            "sha256",
+            "sourceComponentSha256",
+            "sourceDescriptorByteSha256",
+            "policySha256",
+            "importInterfaces"
+          ],
+          "properties": {
+            "kind": {
+              "const": "closed-browser-actor"
+            },
+            "schema": {
+              "const": "semio.os.closed-browser-actor.v1"
+            },
+            "codegenPolicy": {
+              "const": "semio.os.browser-jco-1.34.0-jspi.v1"
+            },
+            "sha256": {
+              "$ref": "#/$defs/DocumentBrowserActorDigest"
+            },
+            "sourceComponentSha256": {
+              "$ref": "#/$defs/DocumentBrowserActorDigest"
+            },
+            "sourceDescriptorByteSha256": {
+              "$ref": "#/$defs/DocumentBrowserActorDigest"
+            },
+            "policySha256": {
+              "$ref": "#/$defs/DocumentBrowserActorDigest"
+            },
+            "importInterfaces": {
+              "$ref": "#/$defs/DocumentBrowserActorInterfaces"
+            }
+          }
+        }
+      ]
+    },
+    "DocumentBrowserActorLease": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/DocumentBrowserActorNone"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "schema",
+            "codegenPolicy",
+            "sha256",
+            "sourceComponentSha256",
+            "sourceDescriptorByteSha256",
+            "policySha256",
+            "importInterfaces",
+            "byteLength"
+          ],
+          "properties": {
+            "kind": {
+              "const": "closed-browser-actor"
+            },
+            "schema": {
+              "const": "semio.os.closed-browser-actor.v1"
+            },
+            "codegenPolicy": {
+              "const": "semio.os.browser-jco-1.34.0-jspi.v1"
+            },
+            "sha256": {
+              "$ref": "#/$defs/DocumentBrowserActorDigest"
+            },
+            "sourceComponentSha256": {
+              "$ref": "#/$defs/DocumentBrowserActorDigest"
+            },
+            "sourceDescriptorByteSha256": {
+              "$ref": "#/$defs/DocumentBrowserActorDigest"
+            },
+            "policySha256": {
+              "$ref": "#/$defs/DocumentBrowserActorDigest"
+            },
+            "importInterfaces": {
+              "$ref": "#/$defs/DocumentBrowserActorInterfaces"
+            },
+            "byteLength": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 67108864
+            }
+          }
+        }
+      ]
+    },
+    "DocumentBrowserActorV1": {
+      "$ref": "#/$defs/DocumentBrowserActorPlan"
+    },
+    "SpaceArtifactCreationCatalogAuthorityV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "catalog",
+        "cases",
+        "statusCases",
+        "refreshCases",
+        "draftCases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os.space-artifact-creation-catalog-authority/v1"
+        },
+        "catalog": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "runtimeKey",
+            "clientInstanceId",
+            "spaceId",
+            "catalogGenerationId",
+            "member"
+          ],
+          "properties": {
+            "runtimeKey": {
+              "type": "string",
+              "minLength": 1
+            },
+            "clientInstanceId": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+            },
+            "spaceId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "catalogGenerationId": {
+              "type": "string",
+              "pattern": "^(?!0{64}$)[0-9a-f]{64}$"
+            },
+            "member": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "captured",
+              "live",
+              "choice",
+              "admitted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]*$"
+              },
+              "captured": {
+                "enum": [
+                  "current",
+                  "without-member",
+                  "unavailable"
+                ]
+              },
+              "live": {
+                "enum": [
+                  "current",
+                  "unavailable",
+                  "rotated-generation",
+                  "replaced-client",
+                  "other-space"
+                ]
+              },
+              "choice": {
+                "enum": [
+                  "member",
+                  "nonmember"
+                ]
+              },
+              "admitted": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "statusCases": {
+          "const": [
+            {
+              "generation": "current",
+              "admitted": true
+            },
+            {
+              "generation": "rotated",
+              "admitted": false
+            },
+            {
+              "generation": "missing",
+              "admitted": false
+            }
+          ]
+        },
+        "refreshCases": {
+          "type": "array",
+          "minItems": 12,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "owner",
+              "authority",
+              "origin",
+              "message",
+              "admitted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]*$"
+              },
+              "owner": {
+                "enum": [
+                  "current",
+                  "absent",
+                  "ready",
+                  "opening"
+                ]
+              },
+              "authority": {
+                "enum": [
+                  "current",
+                  "unavailable",
+                  "rotated-generation",
+                  "replaced-runtime"
+                ]
+              },
+              "origin": {
+                "enum": [
+                  "current",
+                  "replaced-session",
+                  "replaced-client",
+                  "other-document"
+                ]
+              },
+              "message": {
+                "enum": [
+                  "current",
+                  "replaced-request",
+                  "rotated-generation"
+                ]
+              },
+              "admitted": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "draftCases": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "format",
+              "clear"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]*$"
+              },
+              "format": {
+                "enum": [
+                  "artifactKind",
+                  "surfaceApp",
+                  "static",
+                  "text"
+                ]
+              },
+              "clear": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ArtifactCreationReadyOpeningCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "current",
+        "prepare",
+        "open",
+        "outcome",
+        "release",
+        "publish",
+        "failure"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "current": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": {
+            "type": "boolean"
+          }
+        },
+        "prepare": {
+          "enum": [
+            "unused",
+            "missing",
+            "ready"
+          ]
+        },
+        "open": {
+          "enum": [
+            "unused",
+            "retired",
+            "failed",
+            "committed"
+          ]
+        },
+        "outcome": {
+          "enum": [
+            "opened",
+            "failed",
+            "retired"
+          ]
+        },
+        "release": {
+          "enum": [
+            "unused",
+            "success",
+            "failed"
+          ]
+        },
+        "publish": {
+          "type": "boolean"
+        },
+        "failure": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ArtifactCreationReadyOpeningV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "cases",
+        "mountCases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os.artifact-creation-ready-opening/v1"
+        },
+        "mountCases": {
+          "const": [
+            {
+              "id": "same-generation",
+              "actions": [
+                "current"
+              ],
+              "accepted": [
+                true
+              ],
+              "outcome": "ready",
+              "committed": true
+            },
+            {
+              "id": "rotated-generation",
+              "actions": [
+                "rotated"
+              ],
+              "accepted": [
+                false
+              ],
+              "outcome": "failed",
+              "committed": false
+            },
+            {
+              "id": "missing-generation",
+              "actions": [
+                "missing"
+              ],
+              "accepted": [
+                false
+              ],
+              "outcome": "failed",
+              "committed": false
+            },
+            {
+              "id": "closed-before-mount",
+              "actions": [
+                "close",
+                "current"
+              ],
+              "accepted": [
+                false
+              ],
+              "outcome": "failed",
+              "committed": false
+            },
+            {
+              "id": "duplicate-current",
+              "actions": [
+                "current",
+                "current"
+              ],
+              "accepted": [
+                true,
+                true
+              ],
+              "outcome": "ready",
+              "committed": true
+            },
+            {
+              "id": "refused-before-current",
+              "actions": [
+                "rotated",
+                "current"
+              ],
+              "accepted": [
+                false,
+                false
+              ],
+              "outcome": "failed",
+              "committed": false
+            },
+            {
+              "id": "closed-after-mount",
+              "actions": [
+                "current",
+                "close",
+                "current"
+              ],
+              "accepted": [
+                true,
+                false
+              ],
+              "outcome": "ready",
+              "committed": false
+            },
+            {
+              "id": "rebootstrap-before-port-ready",
+              "actions": [
+                "close"
+              ],
+              "accepted": [],
+              "outcome": "failed",
+              "committed": false
+            }
+          ]
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/$defs/ArtifactCreationReadyOpeningCase"
+          }
+        }
+      }
+    },
+    "InviteCapabilityTransferStateV1": {
+      "description": "🎟️ Every state a directory invite-capability transfer can hold.",
+      "enum": [
+        "available",
+        "copying",
+        "failed",
+        "copied",
+        "closed"
+      ]
+    },
+    "InviteCapabilityTransferInputV1": {
+      "description": "🎟️ Every input the invite-capability transfer machine accepts.",
+      "enum": [
+        "request",
+        "failed",
+        "copied",
+        "close",
+        "authority-lost"
+      ]
+    },
+    "InviteCapabilityTransferTransitionV1": {
+      "description": "🎟️ One transition of the invite-capability transfer machine. `discloses` marks the only transitions that expose the token to the clipboard; `erases` marks the transitions that drop it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "input",
+        "to",
+        "discloses",
+        "erases"
+      ],
+      "properties": {
+        "from": {
+          "$ref": "#/$defs/InviteCapabilityTransferStateV1"
+        },
+        "input": {
+          "$ref": "#/$defs/InviteCapabilityTransferInputV1"
+        },
+        "to": {
+          "$ref": "#/$defs/InviteCapabilityTransferStateV1"
+        },
+        "discloses": {
+          "type": "boolean"
+        },
+        "erases": {
+          "type": "boolean"
+        }
+      }
+    },
+    "InviteCapabilityDisclosureAuthorityV1": {
+      "description": "🔐️ The space roles allowed to see an invite token. Spectators never are.",
+      "enum": [
+        "author"
+      ]
+    },
+    "InviteCapabilityFocusPhaseV1": {
+      "description": "🎯️ Terminal phases the administration pane returns focus on.",
+      "enum": [
+        "ready",
+        "denied",
+        "stale",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "DirectoryAdministrationOpeningPhaseV1": {
+      "enum": [
+        "loading",
+        "ready",
+        "failed",
+        "closed"
+      ]
+    },
+    "DirectoryAdministrationRouteV1": {
+      "description": "🚪️ The shell route an invite transfer is opened through. `operationEpoch` fences a route against a stale reply.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actionId",
+        "spaceId",
+        "operationEpoch",
+        "openingPhase",
+        "requestKind"
+      ],
+      "properties": {
+        "actionId": {
+          "type": "string",
+          "pattern": "^os\\.directory\\.[a-z][a-z0-9-]*$",
+          "maxLength": 256
+        },
+        "spaceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "operationEpoch": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "openingPhase": {
+          "$ref": "#/$defs/DirectoryAdministrationOpeningPhaseV1"
+        },
+        "requestKind": {
+          "enum": [
+            "directory-administration-open",
+            "directory-administration-capability"
+          ]
+        }
+      }
+    },
+    "InviteCapabilityCopyV1": {
+      "description": "🈯️ Clipboard status copy for one locale, in transfer-state order: available, copying, failed.",
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160
+      }
+    },
+    "InviteCapabilityLabelsV1": {
+      "description": "🈯️ Invite transfer copy per locale. English and German are both required — the directory pane has no default language.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "$ref": "#/$defs/InviteCapabilityCopyV1"
+        },
+        "de": {
+          "$ref": "#/$defs/InviteCapabilityCopyV1"
+        }
+      }
+    },
+    "InviteCapabilityTransferV1": {
+      "description": "🎟️ The language-neutral invite-capability transfer machine for the directory administration pane: one outstanding transfer at a time, disclosure only to the author, and a duplicate request rejected without ever disclosing the token again.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "capacity",
+        "states",
+        "transitions",
+        "duplicateResult",
+        "shellRoute",
+        "disclosureAuthority",
+        "focusPhases",
+        "labels"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.directory.invite-capability-transfer.v1"
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1
+        },
+        "states": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/InviteCapabilityTransferStateV1"
+          }
+        },
+        "transitions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/InviteCapabilityTransferTransitionV1"
+          }
+        },
+        "duplicateResult": {
+          "const": "reject-without-disclosure"
+        },
+        "shellRoute": {
+          "$ref": "#/$defs/DirectoryAdministrationRouteV1"
+        },
+        "disclosureAuthority": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/InviteCapabilityDisclosureAuthorityV1"
+          }
+        },
+        "focusPhases": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/InviteCapabilityFocusPhaseV1"
+          }
+        },
+        "labels": {
+          "$ref": "#/$defs/InviteCapabilityLabelsV1"
+        }
+      }
+    },
+    "ArtifactCreationProgressPhaseV1": {
+      "enum": [
+        "accepted",
+        "preparing",
+        "ready",
+        "indeterminate",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "ArtifactCreationCatalogPhaseV1": {
+      "enum": [
+        "loading",
+        "ready",
+        "unavailable"
+      ]
+    },
+    "ArtifactCreationNoticeRoleV1": {
+      "enum": [
+        "status",
+        "alert"
+      ]
+    },
+    "ArtifactCreationNoticeLiveV1": {
+      "enum": [
+        "polite",
+        "assertive"
+      ]
+    },
+    "ArtifactCreationLocaleV1": {
+      "enum": [
+        "en",
+        "de"
+      ]
+    },
+    "ArtifactCreationProgressCopyV1": {
+      "description": "🈯️ Artifact-creation progress copy for one locale: the heading, how long the hub has been working on it, the cancel affordance, and one line per progress and catalog phase.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "heading",
+        "waiting",
+        "cancel",
+        "cancelling",
+        "opening",
+        "phases",
+        "catalog"
+      ],
+      "properties": {
+        "heading": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "waiting": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "\\{elapsed\\}"
+        },
+        "cancel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "cancelling": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "catalog": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "loading",
+            "ready",
+            "unavailable"
+          ],
+          "properties": {
+            "loading": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "ready": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "unavailable": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            }
+          }
+        },
+        "phases": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "accepted",
+            "preparing",
+            "ready",
+            "indeterminate",
+            "failed",
+            "cancelled"
+          ],
+          "properties": {
+            "accepted": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "preparing": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "ready": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "indeterminate": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "failed": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "cancelled": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            }
+          }
+        },
+        "opening": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "active",
+            "failed",
+            "retry"
+          ],
+          "properties": {
+            "active": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "failed": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "retry": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            }
+          }
+        }
+      }
+    },
+    "ArtifactCreationProgressLocalesV1": {
+      "description": "🈯️ Artifact-creation progress copy keyed by locale. English and German are both required — the shell has no default language.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "$ref": "#/$defs/ArtifactCreationProgressCopyV1"
+        },
+        "de": {
+          "$ref": "#/$defs/ArtifactCreationProgressCopyV1"
+        }
+      }
+    },
+    "ArtifactCreationProgressCaseV1": {
+      "description": "🌱️ One rendered artifact-creation progress state: which phase it is in, whether cancellation was already requested, and the accessibility role, liveness, cancellability and opening it projects.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "locale",
+        "phase",
+        "cancelRequested",
+        "openingDisposition",
+        "role",
+        "live",
+        "cancellable",
+        "opens",
+        "retryable"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "maxLength": 128
+        },
+        "locale": {
+          "$ref": "#/$defs/ArtifactCreationLocaleV1"
+        },
+        "phase": {
+          "$ref": "#/$defs/ArtifactCreationProgressPhaseV1"
+        },
+        "cancelRequested": {
+          "type": "boolean"
+        },
+        "role": {
+          "$ref": "#/$defs/ArtifactCreationNoticeRoleV1"
+        },
+        "live": {
+          "$ref": "#/$defs/ArtifactCreationNoticeLiveV1"
+        },
+        "cancellable": {
+          "type": "boolean"
+        },
+        "opens": {
+          "type": "boolean"
+        },
+        "openingDisposition": {
+          "$ref": "#/$defs/ArtifactCreationOpeningDispositionV1"
+        },
+        "retryable": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ArtifactCreationCatalogCaseV1": {
+      "description": "🗂️ One rendered artifact-kind catalog state and the accessibility role and liveness it projects.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "locale",
+        "phase",
+        "effectivePhase",
+        "role",
+        "live",
+        "hasChoices"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "maxLength": 128
+        },
+        "locale": {
+          "$ref": "#/$defs/ArtifactCreationLocaleV1"
+        },
+        "phase": {
+          "$ref": "#/$defs/ArtifactCreationCatalogPhaseV1"
+        },
+        "role": {
+          "$ref": "#/$defs/ArtifactCreationNoticeRoleV1"
+        },
+        "live": {
+          "$ref": "#/$defs/ArtifactCreationNoticeLiveV1"
+        },
+        "effectivePhase": {
+          "$ref": "#/$defs/ArtifactCreationCatalogPhaseV1"
+        },
+        "hasChoices": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ArtifactCreationProgressUiV1": {
+      "description": "🌱️ The language-neutral artifact-creation progress surface: bilingual copy plus the exact accessibility projection of every progress and catalog phase.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "locales",
+        "cases",
+        "catalogCases",
+        "unsupportedLocales"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os.artifact-creation-progress-ui/v1"
+        },
+        "locales": {
+          "$ref": "#/$defs/ArtifactCreationProgressLocalesV1"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/ArtifactCreationProgressCaseV1"
+          }
+        },
+        "catalogCases": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/ArtifactCreationCatalogCaseV1"
+          }
+        },
+        "unsupportedLocales": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32
+          }
+        }
+      }
+    },
+    "DirectoryProjectionReceiptV1": {
+      "description": "📇️ The receipt a directory projection publishes once, terminally, after a bootstrap handshake. `authorizationGeneration` fences a receipt against a rotated authorization; `throughSeqInclusive` is the last event page it covers.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "sessionBindingSha256",
+        "authorizationGeneration",
+        "throughSeqInclusive",
+        "receiptSha256"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.space.home.directory-projection-receipt.v1"
+        },
+        "sessionBindingSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "authorizationGeneration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "throughSeqInclusive": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "receiptSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "DirectoryHomeIdentityV1": {
+      "description": "🪪️ The identity a directory home session is opened for. Neither field may start or end with a space, or carry a control character.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "userId",
+        "displayName"
+      ],
+      "properties": {
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\u0000-\\u001f\\u007f ](?:[^\\u0000-\\u001f\\u007f]*[^\\u0000-\\u001f\\u007f ])?$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\u0000-\\u001f\\u007f ](?:[^\\u0000-\\u001f\\u007f]*[^\\u0000-\\u001f\\u007f ])?$"
+        }
+      }
+    },
+    "DirectoryHomeBootstrapActionV1": {
+      "enum": [
+        "open",
+        "resolve",
+        "reject",
+        "mismatch",
+        "cancel",
+        "duplicate",
+        "switch-visible"
+      ]
+    },
+    "DirectoryHomeBootstrapOutcomeV1": {
+      "enum": [
+        "open",
+        "ack",
+        "reject",
+        "close",
+        "cancelled",
+        "pending",
+        "retained"
+      ]
+    },
+    "DirectoryHomeBootstrapStepV1": {
+      "description": "📇️ One step of the directory home bootstrap lifecycle: the action the shell took and the outcome the owner settled on.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "action",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "action": {
+          "$ref": "#/$defs/DirectoryHomeBootstrapActionV1"
+        },
+        "expected": {
+          "$ref": "#/$defs/DirectoryHomeBootstrapOutcomeV1"
+        }
+      }
+    },
+    "DirectoryHomeBootstrapLabelsV1": {
+      "description": "🈯️ Directory home bootstrap status copy per locale. English and German are both required — the shell has no default language.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          }
+        },
+        "de": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          }
+        }
+      }
+    },
+    "ArtifactCreationOpeningDispositionV1": {
+      "enum": [
+        "idle",
+        "opening",
+        "failed"
+      ]
+    },
+    "DirectoryEventPageBootstrapTraceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "bootstrapEpoch",
+        "initialAfter",
+        "pages",
+        "wakeups",
+        "expectedSocketSince",
+        "forgedAckFields",
+        "retainedHome",
+        "retry",
+        "cancellation",
+        "rebootstrap",
+        "terminalClose"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.directory.event-page-bootstrap-trace.v1"
+        },
+        "bootstrapEpoch": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "initialAfter": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "pages": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "afterSeqExclusive",
+              "throughSeqInclusive",
+              "hasMore",
+              "sessionBindingSha256",
+              "authorizationGeneration",
+              "receiptSha256"
+            ],
+            "properties": {
+              "afterSeqExclusive": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "throughSeqInclusive": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "hasMore": {
+                "type": "boolean"
+              },
+              "sessionBindingSha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "authorizationGeneration": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "receiptSha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          }
+        },
+        "wakeups": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "expectedSocketSince": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "forgedAckFields": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "bootstrapEpoch",
+              "sessionBindingSha256",
+              "authorizationGeneration",
+              "throughSeqInclusive",
+              "receiptSha256"
+            ]
+          }
+        },
+        "retainedHome": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "pluginId",
+            "appId",
+            "instanceId",
+            "switchedVisibleInstanceId",
+            "expectedDestroyCount"
+          ],
+          "properties": {
+            "pluginId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "appId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "instanceId": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            },
+            "switchedVisibleInstanceId": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            },
+            "expectedDestroyCount": {
+              "const": 1
+            }
+          }
+        },
+        "retry": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "transportAfter",
+            "homeRejectedReceiptSha256",
+            "expectedAfter"
+          ],
+          "properties": {
+            "transportAfter": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "homeRejectedReceiptSha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "expectedAfter": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "cancellation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "lateThroughSeqInclusive",
+            "expectedAckCount"
+          ],
+          "properties": {
+            "lateThroughSeqInclusive": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "expectedAckCount": {
+              "const": 0
+            }
+          }
+        },
+        "rebootstrap": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "nextEpoch",
+            "expectedAfter"
+          ],
+          "properties": {
+            "nextEpoch": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "expectedAfter": {
+              "const": 0
+            }
+          }
+        },
+        "terminalClose": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "code",
+            "expectedBootstrapEpoch",
+            "expectedAfter",
+            "expectedReconnects"
+          ],
+          "properties": {
+            "code": {
+              "const": 4401
+            },
+            "expectedBootstrapEpoch": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "expectedAfter": {
+              "const": 0
+            },
+            "expectedReconnects": {
+              "const": 0
+            }
+          }
+        }
+      }
+    },
+    "DirectoryArtifactBootstrapOwnerV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "cases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os.artifact-bootstrap-owner/v1"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 18,
+          "maxItems": 18,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "installed"
+            ],
+            "properties": {
+              "name": {
+                "enum": [
+                  "valid",
+                  "client-after-hash",
+                  "schema-after-hash",
+                  "space-after-hash",
+                  "attempt-after-hash",
+                  "socket-after-hash",
+                  "assembler-after-hash",
+                  "client-during-progress",
+                  "chunked-assembler-after-hash",
+                  "chunked-socket-after-hash",
+                  "lease-valid",
+                  "lease-descriptor",
+                  "lease-aggregate",
+                  "lease-baseline",
+                  "lease-missing-checkpoint",
+                  "lease-scope",
+                  "lease-kind",
+                  "lease-drop-after-hash"
+                ]
+              },
+              "installed": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "DocumentBrowserActorReservationV1": {
+      "description": "A private, non-wire document owner reserves the fixed child only from a live verified lease and its exchanged socket grant. The exact state/lease/runtime key and generation are rechecked after boot; no body route or activation is introduced.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "cases",
+        "lifecycle",
+        "bodyRequests",
+        "loadedActors"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os.document-browser-actor-reservation/v1"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 16,
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "expected",
+              "created"
+            ],
+            "properties": {
+              "name": {
+                "enum": [
+                  "closed",
+                  "none",
+                  "no-lease",
+                  "dropped-lease",
+                  "ungranted-lease",
+                  "expired-grant",
+                  "foreign-scope",
+                  "stale-state",
+                  "duplicate",
+                  "close-during-reserve",
+                  "replace-during-reserve",
+                  "factory-failure",
+                  "foreign-origin",
+                  "foreign-schema",
+                  "foreign-surface",
+                  "grant-expired-during-reserve"
+                ]
+              },
+              "expected": {
+                "enum": [
+                  "reserved",
+                  "none",
+                  "denied"
+                ]
+              },
+              "created": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        },
+        "lifecycle": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "child-close-before-lease-wipe",
+              "scope-reopen-increases-generation",
+              "same-document-two-spaces",
+              "direct-lease-drop-closes-child",
+              "authenticated-actor-identity",
+              "single-use-private-grant",
+              "plan-expiry-closes-child"
+            ]
+          }
+        },
+        "bodyRequests": {
+          "const": 0
+        },
+        "loadedActors": {
+          "const": 0
+        }
+      }
+    },
+    "DocumentBrowserActorSessionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "progressStage",
+        "cases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os.document-browser-actor-session-activation/v1"
+        },
+        "progressStage": {
+          "const": "browser-actor"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 16,
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "bodies",
+              "loads",
+              "describes",
+              "activated"
+            ],
+            "properties": {
+              "name": {
+                "enum": [
+                  "before-session",
+                  "valid-session",
+                  "socket-close-during-body",
+                  "socket-replaced-during-load",
+                  "descriptor-mismatch",
+                  "same-document-other-space",
+                  "wrong-session",
+                  "body-hash-mismatch",
+                  "scope-change-at-headers",
+                  "client-replaced-during-load",
+                  "descriptor-noncanonical",
+                  "descriptor-result-shape",
+                  "client-change-after-describe",
+                  "duplicate-session-during-load",
+                  "socket-close-after-describe",
+                  "client-change-during-progress"
+                ]
+              },
+              "bodies": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 2
+              },
+              "loads": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 2
+              },
+              "describes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 2
+              },
+              "activated": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 2
+              }
+            }
+          }
+        }
+      }
+    },
+    "BrowserDocumentOpenTransportId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+    },
+    "BrowserDocumentOpenTransportDialectText": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^(?!\\s)(?!.*\\s$)[^\\u0000-\\u001f\\u007f-\\u009f]+$"
+    },
+    "BrowserDocumentOpenTransportHash": {
+      "type": "string",
+      "pattern": "^(?!0{64}$)[0-9a-f]{64}$"
+    },
+    "BrowserDocumentOpenTransportScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "spaceId",
+        "documentId"
+      ],
+      "properties": {
+        "spaceId": {
+          "$ref": "#/$defs/BrowserDocumentOpenTransportId"
+        },
+        "documentId": {
+          "$ref": "#/$defs/BrowserDocumentOpenTransportId"
+        }
+      }
+    },
+    "BrowserDocumentOpenTransportIntent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "version",
+        "scope",
+        "requestedSurfaceId",
+        "clientInstanceId"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.document-open-intent/v1"
+        },
+        "version": {
+          "const": 1
+        },
+        "scope": {
+          "$ref": "#/$defs/BrowserDocumentOpenTransportScope"
+        },
+        "requestedSurfaceId": {
+          "$ref": "#/$defs/BrowserDocumentOpenTransportId"
+        },
+        "clientInstanceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      }
+    },
+    "BrowserDocumentOpenTransportInstalledTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "version",
+        "scope",
+        "descriptorDigestV1",
+        "catalog",
+        "package",
+        "component",
+        "descriptor",
+        "artifact",
+        "parentDialect",
+        "surface",
+        "browserActor",
+        "grant",
+        "checkpoint",
+        "revalidation"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os.document-execution-target-lease/v1"
+        },
+        "version": {
+          "const": 1
+        },
+        "scope": {
+          "$ref": "#/$defs/BrowserDocumentOpenTransportScope"
+        },
+        "descriptorDigestV1": {
+          "$ref": "#/$defs/BrowserDocumentOpenTransportHash"
+        },
+        "catalog": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "generationId"
+          ],
+          "properties": {
+            "generationId": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportHash"
+            }
+          }
+        },
+        "package": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "pluginId",
+            "packageId",
+            "version",
+            "componentSha256",
+            "componentBlake3",
+            "descriptorByteSha256",
+            "executionProtocol"
+          ],
+          "properties": {
+            "pluginId": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportId"
+            },
+            "packageId": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportId"
+            },
+            "version": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportId"
+            },
+            "componentSha256": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportHash"
+            },
+            "componentBlake3": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportHash"
+            },
+            "descriptorByteSha256": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportHash"
+            },
+            "executionProtocol": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "appChannelVersion"
+              ],
+              "properties": {
+                "appChannelVersion": {
+                  "const": 19
+                }
+              }
+            }
+          }
+        },
+        "component": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sha256",
+            "blake3",
+            "byteLength"
+          ],
+          "properties": {
+            "sha256": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportHash"
+            },
+            "blake3": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportHash"
+            },
+            "byteLength": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 67108864
+            }
+          }
+        },
+        "descriptor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sha256",
+            "byteLength"
+          ],
+          "properties": {
+            "sha256": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportHash"
+            },
+            "byteLength": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4194304
+            }
+          }
+        },
+        "artifact": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "schema",
+            "packSchemaHash"
+          ],
+          "properties": {
+            "kind": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportId"
+            },
+            "schema": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportId"
+            },
+            "packSchemaHash": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportHash"
+            }
+          }
+        },
+        "parentDialect": {
+          "$ref": "#/$defs/BrowserDocumentOpenTransportParentDialect"
+        },
+        "surface": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "surfaceId",
+            "appId",
+            "windowKindId",
+            "role",
+            "rendererTarget"
+          ],
+          "properties": {
+            "surfaceId": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportId"
+            },
+            "appId": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportId"
+            },
+            "windowKindId": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportId"
+            },
+            "role": {
+              "enum": [
+                "viewer",
+                "editor"
+              ]
+            },
+            "rendererTarget": {
+              "enum": [
+                "react",
+                "wgpu",
+                "wasm"
+              ]
+            }
+          }
+        },
+        "browserActor": {
+          "$ref": "#/$defs/DocumentBrowserActorLease"
+        },
+        "grant": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "read",
+            "write",
+            "observe"
+          ],
+          "properties": {
+            "read": {
+              "const": true
+            },
+            "write": {
+              "type": "boolean"
+            },
+            "observe": {
+              "const": true
+            }
+          }
+        },
+        "checkpoint": {
+          "$ref": "#/$defs/BrowserDocumentOpenTransportCheckpoint"
+        },
+        "revalidation": {
+          "$ref": "#/$defs/BrowserDocumentOpenTransportRevalidation"
+        }
+      }
+    },
+    "BrowserDocumentOpenTransportPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "version",
+        "receipt",
+        "expiresAtUnixMs",
+        "scope",
+        "descriptorDigestV1",
+        "catalog",
+        "package",
+        "artifact",
+        "parentDialect",
+        "surface",
+        "browserActor",
+        "grant",
+        "checkpoint",
+        "revalidation"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.document-open-plan/v1"
+        },
+        "version": {
+          "const": 1
+        },
+        "receipt": {
+          "type": "string",
+          "pattern": "^open\\.v1\\.[A-Za-z0-9_-]{43}$"
+        },
+        "expiresAtUnixMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "scope": {
+          "$ref": "#/$defs/BrowserDocumentOpenTransportScope"
+        },
+        "descriptorDigestV1": {
+          "$ref": "#/$defs/BrowserDocumentOpenTransportHash"
+        },
+        "catalog": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "generationId"
+          ],
+          "properties": {
+            "generationId": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportHash"
+            }
+          }
+        },
+        "package": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "pluginId",
+            "packageId",
+            "version",
+            "componentSha256",
+            "componentBlake3",
+            "descriptorByteSha256",
+            "executionProtocol"
+          ],
+          "properties": {
+            "pluginId": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportId"
+            },
+            "packageId": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportId"
+            },
+            "version": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportId"
+            },
+            "componentSha256": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportHash"
+            },
+            "componentBlake3": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportHash"
+            },
+            "descriptorByteSha256": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportHash"
+            },
+            "executionProtocol": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "appChannelVersion"
+              ],
+              "properties": {
+                "appChannelVersion": {
+                  "const": 19
+                }
+              }
+            }
+          }
+        },
+        "artifact": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "schema",
+            "packSchemaHash"
+          ],
+          "properties": {
+            "kind": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportId"
+            },
+            "schema": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportId"
+            },
+            "packSchemaHash": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportHash"
+            }
+          }
+        },
+        "parentDialect": {
+          "$ref": "#/$defs/BrowserDocumentOpenTransportParentDialect"
+        },
+        "surface": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "surfaceId",
+            "appId",
+            "windowKindId",
+            "role",
+            "rendererTarget"
+          ],
+          "properties": {
+            "surfaceId": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportId"
+            },
+            "appId": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportId"
+            },
+            "windowKindId": {
+              "$ref": "#/$defs/BrowserDocumentOpenTransportId"
+            },
+            "role": {
+              "enum": [
+                "viewer",
+                "editor"
+              ]
+            },
+            "rendererTarget": {
+              "const": "react"
+            }
+          }
+        },
+        "browserActor": {
+          "$ref": "#/$defs/DocumentBrowserActorPlan"
+        },
+        "grant": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "read",
+            "write",
+            "observe"
+          ],
+          "properties": {
+            "read": {
+              "const": true
+            },
+            "write": {
+              "type": "boolean"
+            },
+            "observe": {
+              "const": true
+            }
+          }
+        },
+        "checkpoint": {
+          "$ref": "#/$defs/BrowserDocumentOpenTransportCheckpoint"
+        },
+        "revalidation": {
+          "$ref": "#/$defs/BrowserDocumentOpenTransportRevalidation"
+        }
+      }
+    },
+    "BrowserDocumentOpenTransportParentDialect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactKind",
+        "standard",
+        "subset"
+      ],
+      "properties": {
+        "artifactKind": {
+          "$ref": "#/$defs/BrowserDocumentOpenTransportDialectText"
+        },
+        "standard": {
+          "$ref": "#/$defs/BrowserDocumentOpenTransportDialectText"
+        },
+        "subset": {
+          "$ref": "#/$defs/BrowserDocumentOpenTransportDialectText"
+        }
+      }
+    },
+    "BrowserDocumentOpenTransportFrontier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "documentId",
+        "headEditOrdinal",
+        "headEditId",
+        "lastCommitSeq",
+        "chainHash"
+      ],
+      "properties": {
+        "documentId": {
+          "$ref": "#/$defs/BrowserDocumentOpenTransportId"
+        },
+        "headEditOrdinal": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "headEditId": {
+          "$ref": "#/$defs/BrowserDocumentOpenTransportId"
+        },
+        "lastCommitSeq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "chainHash": {
+          "type": "array",
+          "minItems": 32,
+          "maxItems": 32,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "contains": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "BrowserDocumentOpenTransportCheckpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "checkpointId",
+        "descriptorDigestV1",
+        "baselineFrontier",
+        "aggregateSha256"
+      ],
+      "properties": {
+        "checkpointId": {
+          "$ref": "#/$defs/BrowserDocumentOpenTransportHash"
+        },
+        "descriptorDigestV1": {
+          "$ref": "#/$defs/BrowserDocumentOpenTransportHash"
+        },
+        "baselineFrontier": {
+          "$ref": "#/$defs/BrowserDocumentOpenTransportFrontier"
+        },
+        "aggregateSha256": {
+          "$ref": "#/$defs/BrowserDocumentOpenTransportHash"
+        }
+      }
+    },
+    "BrowserDocumentOpenTransportRevalidation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "directoryRevision",
+            "membershipGeneration",
+            "sessionGeneration"
+          ],
+          "properties": {
+            "directoryRevision": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "membershipGeneration": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "sessionGeneration": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "directoryRevision",
+            "membershipGeneration",
+            "shareGeneration"
+          ],
+          "properties": {
+            "directoryRevision": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "membershipGeneration": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "shareGeneration": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        }
+      ]
+    },
+    "DocumentSocketGrantReceiptV1": {
+      "description": "The answer to a document open-plan exchange (POST /spaces/{space}/documents/{document}/socket-grants): the actor the next `semio.session.v1` upgrade of the same credential is admitted as, and until when. It carries no secret: the upgrade presents the session or share credential itself, and the hub admits the oldest pending grant of that credential's binding.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "protocol",
+        "actorId",
+        "expiresAtMs"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.document-socket-grant/v1"
+        },
+        "protocol": {
+          "const": "semio.session.v1"
+        },
+        "actorId": {
+          "type": "string",
+          "pattern": "^hub\\.v1\\.[0-9a-f]{64}$"
+        },
+        "expiresAtMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "BrowserDocumentOpenTransportV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "version",
+        "nowMs",
+        "intent",
+        "installedTarget",
+        "plan",
+        "socketGrant",
+        "expected",
+        "hostile"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os.browser-document-open-transport/v1"
+        },
+        "version": {
+          "const": 1
+        },
+        "nowMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "intent": {
+          "$ref": "#/$defs/BrowserDocumentOpenTransportIntent"
+        },
+        "installedTarget": {
+          "$ref": "#/$defs/BrowserDocumentOpenTransportInstalledTarget"
+        },
+        "plan": {
+          "$ref": "#/$defs/BrowserDocumentOpenTransportPlan"
+        },
+        "socketGrant": {
+          "$ref": "#/$defs/DocumentSocketGrantReceiptV1"
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "httpPaths",
+            "webSocketPath",
+            "protocol",
+            "helloSchema",
+            "helloPackSchemaHashByte",
+            "responseMaxBytes",
+            "rustWorkerBypassDenied",
+            "scopeIsolation",
+            "forbiddenSocketFragments"
+          ],
+          "properties": {
+            "httpPaths": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "additionalItems": false,
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "webSocketPath": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            "protocol": {
+              "const": "semio.session.v1"
+            },
+            "helloSchema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "helloPackSchemaHashByte": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "responseMaxBytes": {
+              "const": 65536
+            },
+            "rustWorkerBypassDenied": {
+              "const": true
+            },
+            "scopeIsolation": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "left",
+                "right",
+                "leftKey",
+                "rightKey",
+                "localKey"
+              ],
+              "properties": {
+                "left": {
+                  "$ref": "#/$defs/BrowserDocumentOpenTransportScope"
+                },
+                "right": {
+                  "$ref": "#/$defs/BrowserDocumentOpenTransportScope"
+                },
+                "leftKey": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1024
+                },
+                "rightKey": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1024
+                },
+                "localKey": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1024
+                }
+              }
+            },
+            "forbiddenSocketFragments": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 8,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "uniqueItems": true
+            }
+          }
+        },
+        "hostile": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 26,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "stage",
+              "expected"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "stage": {
+                "enum": [
+                  "plan",
+                  "exchange",
+                  "socket",
+                  "session"
+                ]
+              },
+              "replacePath": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "value": {},
+              "expected": {
+                "enum": [
+                  "invalid-plan",
+                  "cancelled-before-exchange",
+                  "response-too-large",
+                  "credential-free",
+                  "withheld-activation"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "DocumentOpeningAttemptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "runtime",
+        "attemptA",
+        "attemptB",
+        "cases",
+        "rebootstrapCases",
+        "sourceHostiles"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os.document-opening-attempt/v1"
+        },
+        "runtime": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "spaceId",
+            "documentId"
+          ],
+          "properties": {
+            "spaceId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "documentId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        },
+        "attemptA": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+        },
+        "attemptB": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 12,
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "current",
+              "incoming",
+              "kind",
+              "accepted",
+              "replaced",
+              "currentAfter"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "current": {
+                "enum": [
+                  null,
+                  "a",
+                  "b"
+                ]
+              },
+              "incoming": {
+                "enum": [
+                  null,
+                  "a",
+                  "b",
+                  "malformed"
+                ]
+              },
+              "kind": {
+                "enum": [
+                  "open",
+                  "event",
+                  "patch",
+                  "send",
+                  "close"
+                ]
+              },
+              "accepted": {
+                "type": "boolean"
+              },
+              "replaced": {
+                "type": "boolean"
+              },
+              "currentAfter": {
+                "enum": [
+                  null,
+                  "a",
+                  "b"
+                ]
+              }
+            }
+          }
+        },
+        "rebootstrapCases": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "currentOwner",
+              "entryClient",
+              "messageClient",
+              "messageAccepted",
+              "ownerRemoved",
+              "ownerAfter",
+              "freshBaseZeroAccepted"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "currentOwner": {
+                "enum": [
+                  null,
+                  "actor-a"
+                ]
+              },
+              "entryClient": {
+                "enum": [
+                  "a",
+                  "b"
+                ]
+              },
+              "messageClient": {
+                "enum": [
+                  "a",
+                  "b"
+                ]
+              },
+              "messageAccepted": {
+                "type": "boolean"
+              },
+              "ownerRemoved": {
+                "type": "boolean"
+              },
+              "ownerAfter": {
+                "enum": [
+                  null,
+                  "actor-a"
+                ]
+              },
+              "freshBaseZeroAccepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "sourceHostiles": {
+          "type": "array",
+          "minItems": 13,
+          "maxItems": 13,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        }
+      }
+    },
+    "ExecutionTargetBodyReadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "deadlineMs",
+        "completionMs",
+        "cases",
+        "ownership"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os.execution-target-body-read/v1"
+        },
+        "deadlineMs": {
+          "const": 80
+        },
+        "completionMs": {
+          "const": 500
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "outcome",
+              "locked",
+              "chunkWiped"
+            ],
+            "properties": {
+              "name": {
+                "enum": [
+                  "success",
+                  "short",
+                  "oversize",
+                  "pending-abort",
+                  "pending-deadline",
+                  "stale-after-read",
+                  "abort-at-eof"
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "fulfilled",
+                  "rejected"
+                ]
+              },
+              "locked": {
+                "const": false
+              },
+              "chunkWiped": {
+                "const": true
+              }
+            }
+          }
+        },
+        "ownership": {
+          "type": "array",
+          "minItems": 16,
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "outcome",
+              "lease",
+              "reservation"
+            ],
+            "properties": {
+              "name": {
+                "enum": [
+                  "component-scope",
+                  "component-origin",
+                  "component-schema",
+                  "component-surface",
+                  "component-client",
+                  "hash-abort",
+                  "hash-surface",
+                  "grant-eof-abort",
+                  "grant-eof-stale",
+                  "open-plan-pending-abort",
+                  "manifest-pending-abort",
+                  "component-pending-abort",
+                  "descriptor-pending-abort",
+                  "socket-grants-pending-abort",
+                  "superseded-open",
+                  "status-owner-change"
+                ]
+              },
+              "outcome": {
+                "const": "rejected"
+              },
+              "lease": {
+                "const": false
+              },
+              "reservation": {
+                "const": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "AgentMcpLauncherV1": {
+      "title": "AgentMcpLauncherV1",
+      "description": "🚀️ How a host starts `semio-os-mcp`: the executable plus every argument up to and including the transport.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "command",
+        "args"
+      ],
+      "properties": {
+        "command": {
+          "type": "string",
+          "minLength": 1
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "AgentCredentialInstallRequestV1": {
+      "title": "AgentCredentialInstallRequestV1",
+      "description": "📥️ A host installs one delegation's credential file owner-only where `semio-os-mcp --credential-file` reads it. `contents` is exactly the `semio.hub.agent-credential/v1` file the delegation pane renders.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "delegationId",
+        "contents"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os.agent-credential-install/v1"
+        },
+        "delegationId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,128}$"
+        },
+        "contents": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16384
+        }
+      }
+    },
+    "AgentCredentialInstallReceiptV1": {
+      "title": "AgentCredentialInstallReceiptV1",
+      "description": "🧾️ The absolute path of the installed owner-only credential file and the host's MCP launcher.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "credentialPath",
+        "launcher"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os.agent-credential-install-receipt/v1"
+        },
+        "credentialPath": {
+          "type": "string",
+          "pattern": "^(/|[A-Za-z]:[\\\\/])"
+        },
+        "launcher": {
+          "$ref": "#/$defs/AgentMcpLauncherV1"
+        }
+      }
+    },
+    "AgentMcpServerEntryV1": {
+      "title": "AgentMcpServerEntryV1",
+      "description": "🧩️ One stdio server entry in the shape MCP clients read from `.mcp.json` / `claude_desktop_config.json`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "command",
+        "args"
+      ],
+      "properties": {
+        "type": {
+          "const": "stdio"
+        },
+        "command": {
+          "type": "string",
+          "minLength": 1
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 9
+        }
+      }
+    },
+    "AgentMcpClientConfigV1": {
+      "title": "AgentMcpClientConfigV1",
+      "description": "📄️ The MCP client configuration one agent delegation produces: exactly one `semio-<agent slug>` server, bound to the delegation's hub and space by `--hub`/`--space`, authenticated by `--credential-file` (never the token itself), granted the scopes its audience admits.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mcpServers"
+      ],
+      "properties": {
+        "mcpServers": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 1,
+          "propertyNames": {
+            "pattern": "^semio-[a-z0-9-]{1,48}$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/AgentMcpServerEntryV1"
+          }
+        }
+      }
+    },
+    "AgentMcpClientConfigLawV1": {
+      "title": "AgentMcpClientConfigLawV1",
+      "description": "⚖️ Language-agnostic law: a delegation receipt, a hub origin and a host install receipt determine exactly one MCP client configuration; an unsafe delegation id is refused before anything is written.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "law",
+        "cases",
+        "refusals"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os.agent-mcp-client-config-law/v1"
+        },
+        "law": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "receipt",
+              "hubOrigin",
+              "installed",
+              "fileName",
+              "expected"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "receipt": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "delegationId",
+                  "agentPrincipalId",
+                  "agentLabel",
+                  "spaceId",
+                  "audience",
+                  "expiresAtMs",
+                  "token"
+                ],
+                "properties": {
+                  "delegationId": {
+                    "type": "string"
+                  },
+                  "agentPrincipalId": {
+                    "type": "string"
+                  },
+                  "agentLabel": {
+                    "type": "string"
+                  },
+                  "spaceId": {
+                    "type": "string"
+                  },
+                  "audience": {
+                    "enum": [
+                      "read",
+                      "edit"
+                    ]
+                  },
+                  "expiresAtMs": {
+                    "type": "integer"
+                  },
+                  "token": {
+                    "type": "string"
+                  }
+                }
+              },
+              "hubOrigin": {
+                "type": "string"
+              },
+              "installed": {
+                "$ref": "#/$defs/AgentCredentialInstallReceiptV1"
+              },
+              "fileName": {
+                "type": "string"
+              },
+              "expected": {
+                "$ref": "#/$defs/AgentMcpClientConfigV1"
+              }
+            }
+          }
+        },
+        "refusals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "delegationId",
+              "error"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "delegationId": {
+                "type": "string"
+              },
+              "error": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -69,7 +69,7 @@ async fn kit_fixture_holding(document: &EpwSnapshot) -> KitFixtureApp {
 #[semio_framework_async_macros::async_test]
 async fn set_cell_reaches_the_document_through_the_registered_native_factory() {
     use semio_framework_plugin::PluginApp;
-    let snapshot = EpwSnapshot { records: vec![crate::standards::energyplus::subsets::any::schema::snapshot::EpwRecord::default()], ..Default::default() };
+    let snapshot = crate::standards::energyplus::subsets::any::schema::blank_epw_snapshot();
     let mut app = kit_fixture_holding(&snapshot).await;
     let revision = epw_row_revision(&snapshot.records[0]);
     let args = dsl::DslValue::object([

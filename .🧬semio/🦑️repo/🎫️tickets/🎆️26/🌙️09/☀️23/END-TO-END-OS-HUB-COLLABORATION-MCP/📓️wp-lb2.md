@@ -5,6 +5,37 @@ Scripts + prepared patches `wp-lb2/`, captures `wp-lb2/generated/` (expendable),
 `.🧬semio/🌐hub/s14-lb2-*`. Native cargo only via `wp-lb2/cargo-lane.sh` (native lane, build-fleet-b, nice 15); overlay builds via the
 overlay lane with a private build-dir. Landing rows: `📓️landing.md` § Session 14.
 
+## Session 15
+
+Successor (2026-09-29 19:2x). The predecessor died ~18:45 with proof `p17-s1` holding the overlay lane. Guest freeze stays ON, so p17 is a
+prepared set (t6-queue T7d, last set of round 4). Captures: `.🧬semio/🌐hub/s14-lb2-captures/`.
+
+| # | Item | Status |
+|---|---|---|
+| 0 | Reconcile `p17-s1`, the orphan proof (mutex 70960, overlay lane 19:02–19:27) | Ended by itself, LANE-EXIT 0 (`p17-s1-proof.txt`). **check**: rc 101, only because stdio's `native_openable_provider` test cannot read a `🌎️hub` fixture (the scratch had no `🌎️hub`); every other crate compiled. **fleet** 7/8: law (f) red in 7 of 10 packages (below). **oracle** 43 answers, 0 failures. **registry** 7/8: `descriptor_is_fresh` is the expected describe-regen red. **framework**: the kernel lib test cannot read a `🌎️hub` fixture (scratch closure). Scratch now also clones `🌎️hub` |
+| 1 | Law (f) reds: `artifact codec schema resolves more than one app of the same role` for the 13 schemas subset surfaces share (stdio json, xml; image jpg, svg, tiff; cad dwg, step; bim ifc 2x3; pdf 1.7; office docx, pptx, xlsx; binary zip), plus pdf `stdio.pdf` owned by no app | **Real guest defect, not a law defect.** `codec.*` resolves ONE app per schema, and the rule refused every schema that a subset editor shares with its whole-standard editor. The same fault would follow p17 onto every mounted component. **p17 grows** (framework, same set): (a) `artifact_codec_owner` picks the most general dialect within a role: `<kind>@<std>/*` covers the subsets of its own standard. It still refuses two whole-standard owners of different standards (dwg ac1018/ac1024). (b) `codec.pack-schema-hash` is a property of the SCHEMA: every owner, of both roles and all standards, must agree, and that value answers (so dwg is identified). Disagreement gets a named refusal. (c) Law (f) rows are each app's own `io.artifactSchema` (what a host registers component codecs for), not hosted descriptor rows. `stdio.pdf` is a hosted row that no app opens (p12's pdf native mapping follow-up). (d) Framework fixture law `a_shared_schema_is_created_by_its_most_general_editor_and_identified_only_by_agreement` + a channel identity in the fixture macro. Dry run on live **117 files / 0 problems** (19:4x). Re-proof `p17-s2` queued on the overlay lane 19:52. Re-queued 20:01 on the coordinator's priority stamp `FLEET_TICKET_STAMP=20260929194445`: next after S20's holding job, ahead of c13/sh2/wg11 (run pid 41781, mutex 41787; the old waiter 33212 was mine and was stopped, LANE-EXIT 143) |
+| 2 | Coordinator A15: p2/p2b never entered a train | p2 re-anchored on the live bridge law (peer P8 added export/import skip ids and required-toggle staging; kept as one `staged_declared_arguments`). Dry runs clean on live: p2 1 file / 0, p2b 38 files / 0. t6-queue rows **23 / 23b**, marked NOT for R4: the census law never ran behaviourally, so landing it turns plugins with real undeclared reads red. Told main to drop them from R4 |
+| 4 | 62 stdio example loaders fall back silently (`parse_dsl(PRIMARY_TEXT).unwrap_or_default()`, `Default` for every other id) | **Moved to EX1 (coordinator 20:0x).** EX1 owns every example-loader fallback with ONE SDK resolver, `semio_framework_plugin::example_snapshot::<S>(&examples, id)`, raising the framework codes `app.example.unknown` / `app.example.unreadable` {example}. LB2 does not queue or prove p18. `wp-lb2/lb2-p18-example-refusal.py` (74 files, dry run 0 problems on live 19:5x) stays as EX1's input: the 62 loader sites and their `setActiveExample` `?` propagation, the genesis rule (the empty id opens `initial_snapshot`, not `Default`), the 11 unit-test files, and the editor-catalog law "every published example parses and is a pack fixed point". Its stdio-local helper and `stdio.example.*` codes must become EX1's SDK resolver and codes; no stdio-specific codes. vcs's loader was left out (vcs removal, t6-queue row 2) |
+| 5 | ~312 dead docx/xlsx diff items (14c `c1-check-docx-xlsx.txt`) | Re-measure pending. The `p17-s1` check shows only 5 xlsx `never used` + 39 `unnecessary qualification` in docx/xlsx, but s1 stopped early (no `--keep-going`). `p17-s2` has `--keep-going` and decides it |
+| 6 | T7d proof `p17-s2` (coordinator 20:36: registry `--lib` 7/1) | The red is `descriptor_is_fresh`: the committed stdio `🛂️.descriptor.semio` lacks the format rows of p9's runtime roots (`.bin .bmp .epw .gif .ifc .semio …` appear only on the fresh side). It is expected in the T6 describe regen, and p17 changes no descriptor field. **Measured 21:03** (`p17-p19-scratch.txt`, scratch with p17 reverted): stdio lib 7/1 with the same `descriptor_is_fresh` red, so it is the live baseline. T7d row updated: **PROVEN 20:36**. p17 `--revert` now restores every backed-up file: the old one missed the 29 factories and 26 manifests, whose anchors vanish once written |
+| 7 | os-mcp `search::long` audit (coordinator: stdio families' ~1 100 verbs have no en/de description and remove/replace/set-snapshot verbs aren't destructive) | **Prepared p19** (t6-queue **T7e**, 6 files, dry run 0 problems on live, rustfmt-stable). The oracle `lb2-p19-census.py` reproduces the Rust census exactly on the committed descriptors (1 116 missing / 320 unmarked). **PROVEN 21:21** `p19-s1`: check rc 0, contract 62/62, units 83/83, census 0 on every class over the natively described descriptors, shipped_fleet 8/8. Not stdio, for other owners: norm (60 missing + 15 `removeItem`, Cursor peer area), forms (`updateForm` schema cell, `exportFixture`/`exportResponses` user-path writes), raster `exportPng`, space `deleteVirtualFileSystemNode`, gis `setCamera`, trinity 1 |
+| 8 | P1 (coordinator 21:1x, from H14's census): every stdio kind with an editor openable + creatable on the hub | **Prepared p20** (t6-queue **T7f**, 26 files; dry-run clean on the p17 post-state). Details in the row: 28 new linked owner rows, pdf moved to 1.7, genesis by dialect coordinate (RELAY H14: the hub passes `parent_dialect.to_coordinate()`), hub pins, publisher multi-schema ownership, laws (g) + fixture + TS twin. Proof `p20-s1` queued 21:32. The semio `s.stdio.semio.<x>` → `stdio.semio.<x>` rename is split out as **p21** (coordinator agreed): ~1 150 occurrences in 574 files over 18 plugins + 17 binary assets, every occurrence role-checked, assets regenerated; after p20 and EX1 |
+| 9 | T7f proof `p20-s1` (21:52–22:16) | Not all green, despite the relay. Green: check rc 0, framework 3/3, native descriptor dump + TS check (88 editors, 56 rows, 0 unowned, 0 duplicate coordinates), fleet 9/9 including LAW (g), hub 6/6. Red: `receipts` 7/1 (the native kind count 29 vs 36 lives in the surface fixture `codecCount`) and `registry` 6/2 (capability-ledger pin codecs 35/29/29 → 62/56/56, plus the baseline `descriptor_is_fresh`). **p20 grown to 32 files**: surface fixture + owning schema `kindCount` 36 (and the enum drift `name`→`label` that made the fixture fail its own schema, measured with Ajv), the ledger pin, the hub publisher oracles (frontier 59, provider fixture 56, bootstrap 56 / limit 58) + their 3 fixtures. New pin oracle `lb2-p20-pin-check.mjs` (every pin = the tree's real count; the surface fixture validates). Re-proof `p20-s2` queued 22:28, with the jpg/gltf probe chained |
+| 10 | jpg ×2 (DSL round trip) / gltf (pack round trip), found by EX1's example law | Root cause pending the probe `lb2-p22-probe.py` (scratch-only; both sides as JSON + codec bytes into `s14-lb2-captures/p22-probe/`). jpg's DSL and pack both go through `engine::encode_jpg`/`decode_jpg`; `print_dsl` swallows an encode error (`unwrap_or_default()`: an empty DSL). gltf's pack is the real `.glb` (`encode_glb`/`decode_glb`), its DSL the `.gltf` JSON. Oracles: PIL 11.3 for the JPEG bytes; a hand-rolled GLB chunk reader for gltf (no pygltflib installed) |
+| 3 | Session-14 items now landed | p1 (T1), p6 (T1; its `publish_declared_catalogs` also lives on in p9), p7 (T1), xml demo regen (T1), p8 (14c), p9–p16 + p10 (T6 round 2). Open: p3/WG11 (T3 landed), p2/p2b (row 23) |
+
+#### Log 15
+
+- 19:2x read preambles 15/14, report, t6-queue T7d; reconciled `p17-s1` (above).
+- 19:3x traced the runtime path (hub trusted catalog, publish script, wgpu host `create_app`). Linked stdio rows are natively bound on the
+  hub (`native-artifact-execution` is a default feature of os-hub), so the hub never guest-verifies them. Guest `codec.*` is asked by:
+  (1) hosts that mount a component and register a component document codec per app schema (wgpu `create_app`, the MCP/gateway write
+  path G12 hit), and (2) hub genesis, which goes to the row owner's component (`GuestArtifactCodecBinding`) for EVERY row.
+- Finding for the hub (not in p17, relayed): the hub creation selection (`owner_preferred_creation`) needs exactly one editor, so
+  multi-subset kinds (json, xml, jpg, …) are never offered for creation. Hosted kinds' genesis would also go to the `stdio` component,
+  which ships no family apps, and would answer UNOWNED. Proposal: the same most-general-dialect narrowing on the hub, and genesis asked of
+  the creation selection's own package component.
+
 ### Session 14c
 
 Successor agent (2026-09-28 16:5x, after the 14:37 usage cut + app restart). Guest freeze ON (chain relaunched 16:55:46) → non-test
@@ -210,7 +241,7 @@ families descriptors, SDK builder `--test-threads 1`, schema/registry/contract l
   png typed-source (replaced itself); U6's relayed items (png, epw set-cell, pptx honesty after the demo writer) are covered.
   Pre-existing and NOT in my sets: bmp `ops_grammar` (set-snapshot grammar drift, p14's class), epw render, pdf kind roster, zip ×4.
 - **p15** (coordinator 11:4x, publish-all refused the 9 families: "component codec probe requires at least one declared artifact
-  kind"): hosted kinds end to end — `PluginManifest.hostedArtifactKinds` (framework manifest + TS projection, typegen 198),
+  kind"): hosted kinds end to end — `PluginManifest.hostedArtifactKinds` (framework manifest + TS projection; typegen law without a pinned count),
   `ArtifactDeclaration::hosted_kinds`, hub trusted-catalog pairing + `open_target_codec_package` (owner present, declared
   dependency, exact codec; named refusals; bundle validation, load, manifest check, creation selection), publish script
   (`trustedBootstrapHostedKindsV1`: a hosting package skips the probe, binds the owner's rows; a hosted pair without an owner
@@ -219,6 +250,64 @@ families descriptors, SDK builder `--test-threads 1`, schema/registry/contract l
   (scratch + 🌎️hub/gis/vcs, p15 applied; job `p15-s1`).
 - **p16** (coordinator: "you own the Part21 decision"): see the script docstring; IfcOpenShell 0.8.4 is installed → oracle over
   the 43 committed IFC 2x3 fixtures (ids, types, argument counts, instance count, FILE_SCHEMA). Proof in scratch1 (job `p9-s16`).
+
+- **s16 → s17 / p15-s2 → p15-s3** (16:0x, coordinator: prove p9+p15 and p9–p14 + p16, rows 3–5c current):
+  - s16 reds of mine and their fixes:
+    - jpg large-raster law: an `InsertValue` of the absent quality on a 2 MiB raster projected the whole container past the
+      validation frontier. p11 now gives the raster a PRESENT quality (`Some(80)`) and keeps `SetValue`.
+    - png typed-source law: with the demo as the current document the editor emits granular mutations, not one
+      `SetSnapshot`. The law now folds the emitted mutations over the demo and asserts `== base`.
+    - After that, png's `vpAg` chunk was dropped on encode: the law pushed the chunk without a `chunk_order` slot, and the
+      encoder writes exactly the chunks the order lists. The law now inserts `Unknown { index }` before `Idat`.
+    - ifc2x3 diff fixture `upsertedInstances` was still in the old tuple/external-tag encoding. p16 now converts
+      `upsertedInstances` and the diff `header`.
+    - Schema-first gap: six payload schemas (`upsert-instance`, `set-header`, `set-snapshot` of base/sav/cv20/cobie) carried
+      local copies of the OLD encoding. They now `$ref` the base artifact/snapshot contract (the jpg/svg/bmp precedent).
+    - ifc2x3 artifact contract and artifact TS parser had the same `schema`/`document` swap as the snapshot contract. p11 swaps
+      both back.
+    - `crate::pack::json` produced "unnecessary qualification" warnings; the laws now use `pack::json`.
+    - Diff facets still type `header`/`upsertedInstances` opaquely (`string`/`unknown`/`Bytes`, all four twins agree).
+      Reported, not changed.
+  - p15 hub reds:
+    - The 21 `missing field label` reds are on live too: the unit fixture's kind spec says `name` since `ArtifactKindSpec.label`
+      landed. p15 now writes the `LocalizedLabel` map. They blocked p15's own hosted case, which now passes.
+    - The census `every_committed_editor_that_edits_a_document_opens_a_kind_through_the_one_rule` (79/91) reads the COMMITTED
+      binary descriptors. p15 only adds hosted rows, which those descriptors do not have yet, so the result is the same with or
+      without p15. It needs the T6 describe regen. Native equivalent: the shipped_fleet hosted-descriptor law, 7/7.
+  - Typegen: `SEMIO_TYPEGEN_OUT` regeneration in scratch2 passes the law. Committed+p15 vs regenerated: 0 lines naming
+    hosted, and every p15 line is present. The rest is drift from other sets (`@emoji` docstrings ×78, inference payload contract,
+    `accessibilityLabel`, `rowExtent`), so T6 regenerates the file (runbook). Capture: `p15-typegen-derivation.txt`.
+  - Results:
+    - s17 (catalog, schema, roots, part21): editor_catalog 80/90 (pdf ×10 = U6 6b), shipped_fleet 6/6, stdio lib 7/8
+      (`descriptor_is_fresh` waits on describe regen), schema crates green.
+    - Roots green: ifc 180, jpg 139, png 159 (s17b), pptx 124. Left red: bmp 1, epw render 1, pdf kind roster 1, zip 4. All are
+      on the live baseline.
+    - part21 16/16, ifc fixture law ok, IfcOpenShell 42/0/1.
+    - New jsonschema oracle `lb2-p16-part21-oracle.py --schemas <tree>`: 0 failures (live: 6).
+    - p15-s3: check ok, hub 57/58, fleet 7/7.
+    - No compiler warning falls on a line these sets add. Checked by intersecting warning snippets with the added lines
+      (backup vs scratch); all 7 textual matches sit in untouched live files.
+  - Scratch deltas: `lb2-scratch-delta.py` re-applies one set's revised edit functions file by file, starting from the set's
+    backup or the live original. It does not revert shared files. Incident: the jpg/png p11 backups for scratch1 were missing,
+    so the first delta took the already-edited scratch text as the backup. Reset from live (== HEAD) and re-applied.
+  - Rows 3–5c: PROVEN (📓️t6-queue.md). Relayed to L1 and the coordinator.
+  - Scratches dropped 16:2x: `s14-lb2-scratch` and `s14-lb2-scratch2`, 24G each, freed with the disk at 93%. Captures and
+    backups stay under `.🧬semio/🌐hub/s14-lb2-{captures,backup}`. Re-proofs re-clone with `lb2-p9-scratch.sh setup`.
+- **T6 round 2 hotfix** (L1 17:0x: landed p9, p15, p11, p12, p13, p14, p16, p10 at 16:13–16:23; native check red twice outside
+  the scratch closure):
+  - note → png serializer still imported `empty_png_snapshot`, which p11 renamed to `blank_png_snapshot`. The scratch
+    workspace never built note. Fixed in tree, together with 4 stale `empty_{jpg,tiff,gif}_snapshot` mentions in io comments.
+    Recorded in p11 (`RENAMED_MENTIONS`); the tree-wide grep shows no other importer.
+  - p15's `artifact_kinds` anchor matched the FIRST field in the literal body. In host-unit that was the nested
+    `AppDefinition` inside `apps` → E0560 there, and the manifest missed its field → E0063. The script now anchors on the
+    literal's OWN fields (`depths`/`own_field`, strings skipped); the `..spread` and already-present checks are own-level too.
+    All 14 literal files on live were audited with the fixed logic: host-unit was the only misplaced literal. It was rewritten
+    from its p15 backup with the fixed function.
+  - Proof: native lane `cargo check --offline --tests -p semio-framework-os -p semio-s-artifact-note-note`, EXIT 0 at 17:26
+    (236 warnings, none in the hotfixed files; `t6-hotfix-check.txt`). Pre-edit backups under
+    `s14-lb2-backup/{p11,p15}/3f08bbea4d32`. Relayed to L1.
+  - Lesson: a scratch workspace limited to stdio + framework cannot prove renames of pub items that other plugins import. Grep
+    every renamed pub item tree-wide before calling a set proven.
 
 ### Session 14b
 

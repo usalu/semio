@@ -45,6 +45,7 @@ type Spec = {
   seedInputEdits: { id: string; default: string }[];
   planChecks: { step: string; landed?: string; hold?: string; check: { id: string } & Record<string, unknown> }[];
   planSteps: { after: string; step: { id: string } & Record<string, unknown> }[];
+  planCriteriaEdits?: { check: string; add: string[] }[];
 };
 const spec = JSON.parse(readFileSync(join(HERE, "window3-spec.json"), "utf8")) as Spec;
 const [step, revertStep] = process.argv.slice(2);
@@ -175,7 +176,7 @@ function stepTargets(): void {
     const end = objectEnd(text, open) - 1;
     const lastBrace = text.lastIndexOf("}", end - 1);
     const block = missing.map((target) => {
-      const body = { executor: "nx:run-commands", cache: target.cache, ...(target.dependsOn ? { dependsOn: target.dependsOn } : {}), options: { cwd: dirname(relative), command: target.command, ...(target.forwardAllArgs ? { forwardAllArgs: true } : {}) }, ...(target.configurations ? { configurations: target.configurations } : {}) };
+      const body = { executor: "nx:run-commands", cache: target.cache, ...(target.dependsOn ? { dependsOn: target.dependsOn } : {}), options: { ...(dirname(relative) === "." ? {} : { cwd: dirname(relative) }), command: target.command, ...(target.forwardAllArgs ? { forwardAllArgs: true } : {}) }, ...(target.configurations ? { configurations: target.configurations } : {}) };
       return `    ${JSON.stringify(target.name)}: ${JSON.stringify(body, null, 2).replaceAll("\n", "\n    ")}`;
     }).join(",\n");
     text = `${text.slice(0, lastBrace + 1)},\n${block}${text.slice(lastBrace + 1)}`;
@@ -301,6 +302,21 @@ async function stepPlan(): Promise<void> {
     const close = text.indexOf("\n      ]", checksAt);
     text = `${text.slice(0, close)},\n        ${JSON.stringify(check)}${text.slice(close)}`;
     console.log(`plan check ${check.id}: added to ${stepId}`);
+  }
+  for (const edit of spec.planCriteriaEdits ?? []) {
+    const heads = [...text.matchAll(new RegExp(`\\{\\s*"id":\\s*${JSON.stringify(edit.check)},`, "gu"))];
+    if (heads.length !== 1) throw new Error(`plan check ${edit.check} found ${heads.length}× (need exactly 1)`);
+    const at = heads[0]!.index!;
+    const end = objectEnd(text, at);
+    const missing = edit.add.filter((criterion) => !(JSON.parse(text.slice(at, end)) as { criteria: string[] }).criteria.includes(criterion));
+    if (!missing.length) {
+      console.log(`plan check ${edit.check}: criteria ${edit.add.join(",")} present`);
+      continue;
+    }
+    const close = text.indexOf("]", text.indexOf('"criteria":', at));
+    const spaced = text.slice(text.indexOf('"criteria":', at), close).includes(", ");
+    text = `${text.slice(0, close)}${missing.map((criterion) => `,${spaced ? " " : ""}${JSON.stringify(criterion)}`).join("")}${text.slice(close)}`;
+    console.log(`plan check ${edit.check}: criteria += ${missing.join(",")}`);
   }
   const preview = join(STATE, "preview-plan.json");
   writeFileSync(preview, text);

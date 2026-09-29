@@ -1,4 +1,4 @@
-//! 🖼️ CAD play app commands — the per-pane reference overlays: patch, select, hover.
+//! 🖼️ CAD play app commands — the per-pane reference overlays: patch, set a flag, select, hover.
 
 use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::editor::cad::CadDispatchCtx;
@@ -60,6 +60,55 @@ pub mod patch_cad_play_reference {
     }
 }
 //#endregion 🔖️PatchCadPlayReference
+
+//#region 🙈️SetReferenceFlag
+/// 🔎️ The reference a set-verb addresses, if the document holds it.
+fn addressed_reference<'a>(document: &'a CadSnapshot, model_definition_id: &str, reference_id: &str) -> Option<&'a crate::CadReference> {
+    document.references_by_model_definition_id.get(model_definition_id).and_then(|references| references.iter().find(|reference| reference.id == reference_id))
+}
+
+/// 🙈️ `setReferenceHidden{hidden}` — the reference row's show/hide toggle, set to exactly the value its target carries; a
+/// reference already in that state emits nothing, so a replayed click leaves the one edit the first one made.
+pub mod set_reference_hidden {
+    use super::*;
+
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[dsl(keyword = "set-reference-hidden")]
+    pub struct SetReferenceHidden {
+        pub model_definition_id: String,
+        pub reference_id: String,
+        pub hidden: bool,
+    }
+
+    pub fn handle(payload: &SetReferenceHidden, doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+        Ok(match addressed_reference(doc.snapshot, &payload.model_definition_id, &payload.reference_id) {
+            Some(reference) if reference.hidden != payload.hidden => Emit::mutations(vec![CadMutation::ChangeReferenceHidden(ChangeReferenceHidden { model_definition_id: payload.model_definition_id.clone(), reference_id: payload.reference_id.clone(), new_hidden: payload.hidden })]),
+            _ => Emit::default(),
+        })
+    }
+}
+
+/// 🔒️ `setReferenceLocked{locked}` — the reference row's lock toggle, set to exactly the value its target carries; a
+/// reference already in that state emits nothing, so a replayed click leaves the one edit the first one made.
+pub mod set_reference_locked {
+    use super::*;
+
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[dsl(keyword = "set-reference-locked")]
+    pub struct SetReferenceLocked {
+        pub model_definition_id: String,
+        pub reference_id: String,
+        pub locked: bool,
+    }
+
+    pub fn handle(payload: &SetReferenceLocked, doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+        Ok(match addressed_reference(doc.snapshot, &payload.model_definition_id, &payload.reference_id) {
+            Some(reference) if reference.locked != payload.locked => Emit::mutations(vec![CadMutation::ChangeReferenceLocked(ChangeReferenceLocked { model_definition_id: payload.model_definition_id.clone(), reference_id: payload.reference_id.clone(), new_locked: payload.locked })]),
+            _ => Emit::default(),
+        })
+    }
+}
+//#endregion 🙈️SetReferenceFlag
 
 //#region 🔖️SetReferenceSelection
 pub mod set_reference_selection {

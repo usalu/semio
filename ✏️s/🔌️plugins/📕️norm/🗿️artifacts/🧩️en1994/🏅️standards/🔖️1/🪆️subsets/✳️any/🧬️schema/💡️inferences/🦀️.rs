@@ -141,8 +141,22 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
         format!("Querschnittsklasse {class} aus c/t_f und h_w/t_w (t_w={:.1} mm, t_f={:.1} mm).", beam.steel.tw_m * 1000.0, beam.steel.tf_m * 1000.0),
     ));
     if class > 3 {
-        cls = cls.remedy(Remedy::at_least(beam_ref(&beam, "steel.twM"), Quantity::length_m(beam.steel.tw_m), Quantity::length_m(beam.steel.tw_m * 1.2),
-            lc("Increase web/flange thickness to improve class.", "Steg-/Flanschdicke erhöhen, um die Klasse zu verbessern.")));
+        if SteelSection::from_catalogue(&beam.steel.designation).is_some() {
+            let clearing: Vec<String> = SteelSection::heavier_heb_options(&beam.steel.designation)
+                .into_iter()
+                .filter(|d| SteelSection::from_catalogue(d).is_some_and(|sec| part_1_1::section_class(&sec, f_y) <= 3))
+                .collect();
+            if !clearing.is_empty() {
+                cls = cls.remedy(Remedy::one_of(
+                    beam_ref(&beam, "steel.designation"),
+                    clearing,
+                    lc("Select a catalogue section of class 1–3. Plate thickness is overwritten from the designation.", "Katalogquerschnitt der Klasse 1–3 wählen. Die Blechdicke wird aus der Bezeichnung überschrieben."),
+                ));
+            }
+        } else {
+            cls = cls.remedy(Remedy::at_least(beam_ref(&beam, "steel.twM"), Quantity::length_m(beam.steel.tw_m), Quantity::length_m(beam.steel.tw_m * 1.2),
+                lc("Increase web/flange thickness to improve class.", "Steg-/Flanschdicke erhöhen, um die Klasse zu verbessern.")));
+        }
     }
     report.push(cls.build());
 
@@ -180,10 +194,20 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
             })
             .remedy(Remedy::at_least(beam_ref(&beam, "slabThicknessM"), Quantity::length_m(beam.slab_thickness_m), Quantity::length_m((beam.slab_thickness_m * m_ed / m_rd.max(1.0)).min(0.30)),
                 lc("Increase slab thickness.", "Plattendicke erhöhen.")));
-        let heavier = SteelSection::heavier_heb_options(&beam.steel.designation);
+        let clearing: Vec<String> = SteelSection::heavier_heb_options(&beam.steel.designation)
+            .into_iter()
+            .filter(|d| {
+                let Some(sec) = SteelSection::from_catalogue(d) else { return false };
+                let mut trial = beam.clone();
+                trial.steel = sec;
+                let trial_b = part_1_1::effective_width_m(trial.span_m, trial.steel.width_m, trial.spacing_m);
+                part_1_1::full_plastic_moment_nm(&trial, trial_b, f_y, annex) >= m_ed
+            })
+            .collect();
+        let heavier = if clearing.is_empty() { SteelSection::heavier_heb_options(&beam.steel.designation) } else { clearing };
         if !heavier.is_empty() {
             bending = bending.remedy(Remedy::one_of(beam_ref(&beam, "steel.designation"), heavier,
-                lc("Select a heavier steel section from the catalogue.", "Schwereren Stahlquerschnitt aus dem Katalog wählen.")));
+                lc("Select a heavier steel section. The first option covers M_Ed when a catalogue section can.", "Schwereren Stahlquerschnitt wählen. Die erste Option deckt M_Ed, wenn ein Katalogquerschnitt das kann.")));
         }
     }
     report.push(bending.build());
@@ -287,8 +311,56 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
         format!("Maßgebend {}: V_Ed = {:.1} kN, V_pl,Rd = {:.1} kN (A_v aus t_w), h_w/t_w-Ausn. = {sb_util:.2}.", uls.label_de, v_ed / 1e3, v_pl / 1e3),
     ));
     if v_ed > v_pl || sb_util > 1.0 {
-        vchk = vchk.remedy(Remedy::at_least(beam_ref(&beam, "steel.twM"), Quantity::length_m(beam.steel.tw_m), Quantity::length_m(beam.steel.tw_m * (v_ed / v_pl.max(1.0)).max(sb_util)),
-            lc("Increase web thickness t_w.", "Stegdicke t_w erhöhen.")));
+        if SteelSection::from_catalogue(&beam.steel.designation).is_some() {
+            let clearing: Vec<String> = SteelSection::heavier_heb_options(&beam.steel.designation)
+                .into_iter()
+                .filter(|d| {
+                    let Some(sec) = SteelSection::from_catalogue(d) else { return false };
+                    let mut trial = beam.clone();
+                    trial.steel = sec;
+                    let trial_v = part_1_1::vertical_shear_resistance_n(&trial, f_y, annex);
+                    let trial_sb = part_1_1::shear_buckling_util(&trial.steel, f_y);
+                    v_ed <= trial_v && trial_sb <= 1.0
+                })
+                .collect();
+            if !clearing.is_empty() {
+                vchk = vchk.remedy(Remedy::one_of(
+                    beam_ref(&beam, "steel.designation"),
+                    clearing,
+                    lc("Select a catalogue section whose web covers V_Ed. t_w is taken from the designation.", "Katalogquerschnitt wählen, dessen Steg V_Ed deckt. t_w kommt aus der Bezeichnung."),
+                ));
+            } else if v_ed > v_pl {
+                let q_leaf = if beam.actions.iter().any(|a| a.id == "Q-office") {
+                    "actions[id=Q-office].qAreaPa".to_string()
+                } else if let Some(a) = beam.actions.iter().find(|a| a.q_area_pa.abs() > 1e-9) {
+                    format!("actions[id={}].qAreaPa", a.id)
+                } else {
+                    "spanM".into()
+                };
+                if q_leaf.ends_with("qAreaPa") {
+                    let q_cur = beam.actions.iter().find(|a| a.q_area_pa.abs() > 1e-9).map(|a| a.q_area_pa.abs()).unwrap_or(0.0);
+                    let q_req = q_cur * (v_pl / v_ed.max(1.0)) * 0.98;
+                    vchk = vchk.remedy(Remedy::at_most(
+                        beam_ref(&beam, &q_leaf),
+                        Quantity::new(QuantityKind::Dimensionless, q_cur),
+                        Quantity::new(QuantityKind::Dimensionless, q_req),
+                        lc("Reduce the area load so V_Ed ≤ V_pl,Rd.", "Flächenlast senken, damit V_Ed ≤ V_pl,Rd."),
+                    ));
+                }
+            } else if sb_util > 1.0 {
+                let hw_over_tw = beam.steel.h_w_m() / beam.steel.tw_m.max(1e-6);
+                let fy_req = 235e6 / (hw_over_tw / 72.0).powi(2) * 0.98;
+                vchk = vchk.remedy(Remedy::at_most(
+                    SubjectRef::new(beam.id.clone(), "steelFYPa", beam_label(&beam)),
+                    Quantity::new(QuantityKind::Dimensionless, f_y),
+                    Quantity::new(QuantityKind::Dimensionless, fy_req.min(f_y)),
+                    lc("Lower f_y so h_w/t_w stays inside the shear-buckling limit.", "f_y senken, damit h_w/t_w innerhalb der Schubbeulgrenze bleibt."),
+                ));
+            }
+        } else {
+            vchk = vchk.remedy(Remedy::at_least(beam_ref(&beam, "steel.twM"), Quantity::length_m(beam.steel.tw_m), Quantity::length_m(beam.steel.tw_m * (v_ed / v_pl.max(1.0)).max(sb_util)),
+                lc("Increase web thickness t_w.", "Stegdicke t_w erhöhen.")));
+        }
     }
     report.push(vchk.build());
 
@@ -413,8 +485,24 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
         } else {
             "spanM".into()
         };
-        stress = stress.remedy(Remedy::at_most(beam_ref(&beam, &q_owned), Quantity::new(QuantityKind::Dimensionless, sigma_a), Quantity::new(QuantityKind::Dimensionless, sigma_lim),
-            lc("Reduce load or span so σ_a ≤ 0.9 f_y.", "Last oder Spannweite reduzieren, damit σ_a ≤ 0.9 f_y.")));
+        let scale = (sigma_lim / sigma_a.max(1.0)) * 0.98;
+        if q_owned.ends_with("qAreaPa") {
+            let q_cur = beam.actions.iter().find(|a| a.q_area_pa.abs() > 1e-9).map(|a| a.q_area_pa.abs()).unwrap_or(0.0);
+            stress = stress.remedy(Remedy::at_most(
+                beam_ref(&beam, &q_owned),
+                Quantity::new(QuantityKind::Dimensionless, q_cur),
+                Quantity::new(QuantityKind::Dimensionless, q_cur * scale),
+                lc("Reduce the area load so σ_a ≤ 0.9 f_y.", "Flächenlast senken, damit σ_a ≤ 0.9 f_y."),
+            ));
+        } else {
+            let span_req = beam.span_m * scale.sqrt();
+            stress = stress.remedy(Remedy::at_most(
+                beam_ref(&beam, "spanM"),
+                Quantity::length_m(beam.span_m),
+                Quantity::length_m(span_req),
+                lc("Shorten the span so σ_a ≤ 0.9 f_y.", "Spannweite verkürzen, damit σ_a ≤ 0.9 f_y."),
+            ));
+        }
     }
     report.push(stress.build());
 

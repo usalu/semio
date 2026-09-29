@@ -6,7 +6,7 @@
 
 use crate::viewer::pdf17x::modes::view;
 use crate::viewer::pdf17x::modes::view::windows::main;
-use crate::{PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF_DOCUMENT_SCHEMA};
+use crate::{PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF17_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
     built_to_component_tree, ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Dialect, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, ViewEmit, Viewer,
 };
@@ -52,10 +52,10 @@ impl ArtifactViewer for Pdf17XViewer {
     type Command = Pdf17XViewCommand;
 
     const DIALECT: Dialect = PDF17X_DIALECT;
-    const DOCUMENT_SCHEMA: &'static str = STDIO_PDF_DOCUMENT_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = STDIO_PDF17_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> PdfSnapshot {
-        PdfSnapshot::default()
+        crate::standards::v1_7::subsets::base::schema::snapshot::blank_pdf_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change. Kept as a

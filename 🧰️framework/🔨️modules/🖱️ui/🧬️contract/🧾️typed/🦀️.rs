@@ -10,7 +10,8 @@ macro_rules! ui_typed_field_catalog {
         $visitor!(DropOverlaySpec { 0 => title: Label, 1 => hint: Label, 2 => accept: Option<UiText> });
         $visitor!(SelectItem { 0 => value: UiText, 1 => label: Label });
         $visitor!(KeyValueEntry { 0 => label: Label, 1 => value: UiText });
-        $visitor!(RowAction { 0 => icon: UiText, 1 => label: Option<Label>, 2 => action: ActionBinding, 3 => placement: RowActionPlacement });
+        $visitor!(RowAction { 0 => icon: UiText, 1 => label: Option<Label>, 2 => verb: UiText, 3 => placement: RowActionPlacement, 4 => disabled: bool });
+        $visitor!(RowTarget { 0 => scope: UiText, 1 => version: u16, 2 => args: Option<UiMap>, 3 => activation: Option<UiText> });
         $visitor!(ContainerProps { 0 => role: ContainerRole, 1 => label: Option<Label>, 2 => description: Option<UiText>, 3 => required: Option<bool>, 4 => error: Option<UiText>, 5 => default_open: Option<bool>, 6 => drop_overlay: Option<DropOverlaySpec> });
         $visitor!(TextProps { 0 => value: Label, 1 => emphasize: Option<bool>, 2 => data_attributes: Option<UiFixedMap<UiText>> });
         $visitor!(ButtonProps { 0 => icon: UiText, 1 => label: Label });
@@ -27,9 +28,9 @@ macro_rules! ui_typed_field_catalog {
         $visitor!(TreeWindow { 0 => total: u32, 1 => offset: u32, 2 => row_extent: TreeWindowRowExtent });
         $visitor!(TreeProps { 0 => interaction_domain: Option<UiText>, 1 => presentation: TreePresentation });
         $visitor!(TreeSectionProps { 0 => label: Option<Label>, 1 => default_open: Option<bool>, 2 => header_toolbar: Option<UiNodeId>, 3 => window: Option<TreeWindow> });
-        $visitor!(TreeItemProps { 0 => label: Label, 1 => description: Option<UiText>, 2 => icon: Option<UiText>, 3 => default_open: Option<bool>, 4 => draggable: Option<bool>, 5 => drag_data: Option<UiFixedMap<UiText>>, 6 => dimmed: Option<bool>, 7 => window: Option<TreeWindow>, 8 => granularity: Option<UiText>, 9 => inline_toolbar: Option<UiNodeId>, 10 => row_actions: UiFixedList<RowAction>, 11 => detail: Option<UiNodeId> });
+        $visitor!(TreeItemProps { 0 => label: Label, 1 => description: Option<UiText>, 2 => icon: Option<UiText>, 3 => default_open: Option<bool>, 4 => draggable: Option<bool>, 5 => drag_data: Option<UiFixedMap<UiText>>, 6 => dimmed: Option<bool>, 7 => window: Option<TreeWindow>, 8 => granularity: Option<UiText>, 9 => inline_toolbar: Option<UiNodeId>, 10 => row_actions: UiFixedList<RowAction>, 11 => detail: Option<UiNodeId>, 12 => target: Option<RowTarget> });
         $visitor!(TableProps { 0 => label: Label, 1 => columns: UiFixedList<Label>, 2 => actions_label: Option<Label>, 3 => window: Option<TreeWindow>, 4 => row_label: Option<Label>, 5 => column_label: Option<Label>, 6 => column_window: Option<TreeWindow> });
-        $visitor!(TableRowProps { 0 => cells: UiFixedList<UiText>, 1 => row_actions: UiFixedList<RowAction> });
+        $visitor!(TableRowProps { 0 => cells: UiFixedList<UiText>, 1 => row_actions: UiFixedList<RowAction>, 2 => target: Option<RowTarget> });
         $visitor!(ImageProps { 0 => src: UiText, 1 => alt: Option<Label> });
         $visitor!(ExtensionProps { 0 => extension: UiText, 1 => props: UiValue });
         $visitor!(SurfaceProps { 0 => kind: SurfaceKind, 1 => doc_schema: UiText, 2 => doc: SurfaceDoc, 3 => bindings: UiNodeBindings });

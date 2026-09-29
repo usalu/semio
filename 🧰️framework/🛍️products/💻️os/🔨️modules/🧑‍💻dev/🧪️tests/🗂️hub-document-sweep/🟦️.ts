@@ -108,6 +108,17 @@ const indexRows = (page: Page): Promise<{ id: string | null; text: string }[]> =
       .slice(0, 60),
   );
 
+/** 🪪️ Whether the space index lists a row naming the document within the deadline (a kind whose genesis waits on a cold
+ * component install lists its row only once the guest answered). */
+async function awaitIndexRow(page: Page, name: string, ms: number): Promise<boolean> {
+  const deadline = Date.now() + ms;
+  for (;;) {
+    if ((await indexRows(page)).some((entry) => entry.text.includes(name))) return true;
+    if (Date.now() >= deadline) return false;
+    await page.waitForTimeout(3_000);
+  }
+}
+
 /** 🗄️ The device's persisted plugin module store: record keys, blob count, and whether its service worker controls the page. */
 const storeState = (page: Page): Promise<unknown> =>
   page
@@ -237,7 +248,6 @@ async function sweepKind(page: Page, kind: { kindId: string; plugin: string; val
     return row;
   }
   const noticeCursor = (await notices(page)).length;
-  const rowsBefore = await indexRows(page);
   await unfoldActionsRail(page);
   row.documentName = `Hub Sweep ${kind.kindId} ${Date.now() % 100000}`;
   row.submitted = await createKind(page, kind.value, String(row.documentName));
@@ -248,14 +258,7 @@ async function sweepKind(page: Page, kind: { kindId: string; plugin: string; val
     await page.waitForTimeout(8_000);
     row.afterCancel = { windows: await windowIds(page), store: await storeState(page) };
   }
-  const rowDeadline = Date.now() + 120_000;
-  let rowsAfter = rowsBefore;
-  while (Date.now() < rowDeadline) {
-    rowsAfter = await indexRows(page);
-    if (rowsAfter.some((entry) => entry.text.includes(String(row.documentName)))) break;
-    await page.waitForTimeout(3_000);
-  }
-  row.created = rowsAfter.some((entry) => entry.text.includes(String(row.documentName)));
+  row.created = await awaitIndexRow(page, String(row.documentName), 120_000);
   const sagaMs = kind.kindId.includes("puzzle") ? options.puzzleSagaMs : options.sagaMs;
   const sagaDeadline = Date.now() + sagaMs;
   while (Date.now() < sagaDeadline && !options.signal.aborted) {
@@ -301,6 +304,10 @@ async function sweepKind(page: Page, kind: { kindId: string; plugin: string; val
   }
   await page.screenshot({ path: join(options.outDir, `${kind.kindId.replace(/[^A-Za-z0-9]+/gu, "-")}.png`) }).catch(() => undefined);
   row.store = await storeState(page);
+  if (row.created !== true && options.cancel === null) {
+    row.createdLate = (await openSweepSpace(page, options, row)) === null && (await awaitIndexRow(page, String(row.documentName), 60_000));
+    row.created = row.createdLate;
+  }
   row.notices = (await notices(page)).slice(noticeCursor);
   row.faults = faults.slice(faultCursor, faultCursor + 8);
   row.totalMs = Date.now() - started;

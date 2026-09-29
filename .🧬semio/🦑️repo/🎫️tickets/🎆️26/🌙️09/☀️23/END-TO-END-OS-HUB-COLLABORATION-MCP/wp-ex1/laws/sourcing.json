@@ -1,0 +1,22 @@
+{
+ "plugin": "sourcing",
+ "dir": "🪵️sourcing",
+ "apps": [
+  {
+   "app": "s.sourcing.curation@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "crate::editor::sourcing::SourcingCurationApp",
+   "create": "crate::editor::sourcing::create_sourcing_curation_app",
+   "app": "s.sourcing.curation@1/*#editor"
+  }
+ ]
+}

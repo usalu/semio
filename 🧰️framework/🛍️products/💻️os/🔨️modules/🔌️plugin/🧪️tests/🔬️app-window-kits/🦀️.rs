@@ -169,12 +169,15 @@ mod window_kits_tests {
         let view = TableView { columns: vec!["Sheet".into(), "Value".into()], rows: vec![vec!["Sheet 1".into(), "before".into()]] };
         let node = TableWindowKit::render_editable_cells(&view, "s.stdio.xlsx@ecma-376/*#editor", &[EditableTableCell::new(0, 1, "set-cell", UiValue::Map(args.finish()))]).expect("editable table scene");
         let Component::Surface(props) = &node.component else { panic!("expected Surface") };
-        let scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(props).expect("table scene");
+        let mut scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(props).expect("table scene");
+        for carrier in &node.children {
+            assert!(semio_framework_ui_scene::SceneDoc::merge_lane(&mut scene, carrier.key.as_str(), artifact_app_laws::built_carrier_text(carrier)));
+        }
         let rows: serde_json::Value = serde_json::from_str(&scene.rows_json).expect("rows json");
         assert_eq!(rows[0]["1"]["kind"], "editableText");
         assert_eq!(rows[0]["1"]["action"]["args"]["sheetName"], "Sheet 1");
-        assert_eq!(rows[0]["1"]["action"]["args"]["row"], 41);
-        assert_eq!(rows[0]["1"]["action"]["args"]["column"], 7);
+        assert_eq!(rows[0]["1"]["action"]["args"]["row"].as_f64(), Some(41.0), "a UiValue number travels as its f64");
+        assert_eq!(rows[0]["1"]["action"]["args"]["column"].as_f64(), Some(7.0), "a UiValue number travels as its f64");
         assert_eq!(rows[0]["1"]["action"]["args"]["revision"], "0123456789abcdef");
     }
 
@@ -193,10 +196,9 @@ mod window_kits_tests {
     }
 
     fn table_fixture_row(index: &usize) -> UiAssemblyResult<BuiltNode> {
-        let open = || ActionId::try_v1("s.space.home", "openSpace").expect("bounded action");
         let key = format!("space:{index}");
         let name = format!("Studio {index}");
-        table_window_row(&key, &[name.as_str(), "atelier"], [table_row_action(IconName::FolderOpen.as_str(), "Open", (open(), None))?], Some((open(), None)))
+        table_window_row(&key, &[name.as_str(), "atelier"], [row_action(IconName::FolderOpen.as_str(), "Open", "openSpace", RowActionPlacement::Row)?], Some(row_target("s.space.home", None, Some("openSpace"))?))
     }
 
     fn table_fixture(windows: &TreeWindows<'_>, total: usize) -> BuiltNode {
@@ -227,10 +229,11 @@ mod window_kits_tests {
         let row = node.children.get(0).expect("row");
         let Component::TableRow(props) = &row.component else { panic!("expected TableRow") };
         let action = props.row_actions.get(0).expect("row action");
-        assert_eq!(action.action.action.name.as_str(), "openSpace");
+        assert_eq!(action.verb.as_str(), "openSpace");
         assert_eq!(action.label.as_ref().map(|label| label.0.as_str()), Some("Open"));
-        let activate = row.bindings.iter().find(|binding| binding.trigger == Trigger::Activate).expect("row activation");
-        assert_eq!(activate.action.name.as_str(), "openSpace");
+        let target = props.target.as_ref().expect("the row's one target");
+        assert_eq!((target.scope.as_str(), target.activation.as_ref().map(|verb| verb.as_str())), ("s.space.home", Some("openSpace")));
+        assert!(row.bindings.iter().all(|binding| binding.trigger != Trigger::Activate), "a row's activation is its target verb, never a record binding");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -257,8 +260,9 @@ mod window_kits_tests {
             let mut remove_args = UiMapBuilder::try_new().expect("remove arguments");
             remove_args.try_insert("row".into(), UiValue::Number(row as f64)).expect("row");
             remove_args.try_insert("revision".into(), UiValue::Text(UiText::try_from_str("0123456789abcdef").unwrap())).expect("revision");
-            let remove = table_row_action("trash-2", "Remove row", (ActionId::try_v1("s.stdio.csv@rfc4180/*#editor", "remove-row").expect("action"), Some(UiValue::Map(remove_args.finish()))))?;
-            editable_table_window_row(&format!("row-{row}"), "s.stdio.csv@rfc4180/*#editor", Locale::En, [WindowedEditableTableCell::new(format!("value-{row}"), "Value", "set-cell", UiValue::Map(args.finish()))], [remove])
+            let remove = row_action("trash-2", "Remove row", "remove-row", RowActionPlacement::Row)?;
+            let target = row_target("s.stdio.csv@rfc4180/*#editor", Some(UiValue::Map(remove_args.finish())), None)?;
+            editable_table_window_row(&format!("row-{row}"), "s.stdio.csv@rfc4180/*#editor", Locale::En, [WindowedEditableTableCell::new(format!("value-{row}"), "Value", "set-cell", UiValue::Map(args.finish()))], [remove], Some(target))
         })
         .expect("windowed editable table");
         let Component::Table(props) = &node.component else { panic!("expected table") };
@@ -275,7 +279,7 @@ mod window_kits_tests {
         let mut row_actions = row_props.row_actions.iter();
         let (Some(action), None) = (row_actions.next(), row_actions.next()) else { panic!("the row carries exactly its remove action, as a prop") };
         assert_eq!(action.label.as_ref().map(|label| label.0.as_str()), Some("Remove row"));
-        let binding = &action.action;
+        let binding = row_props.target.as_ref().expect("the row's one target").binding(&action.verb).expect("credited remove binding");
         assert_eq!(binding.trigger, Trigger::Activate);
         assert_eq!(binding.action.name.as_str(), "remove-row");
         let Some(UiValue::Map(arguments)) = &binding.args else { panic!("remove address is a map") };
@@ -321,7 +325,7 @@ mod window_kits_tests {
                         Ok(WindowedEditableTableCell::new(format!("r{row}c{column}"), format!("Column {}", column + 1), "set-cell", UiValue::Map(args.finish())))
                     })
                     .collect::<UiAssemblyResult<Vec<_>>>()?;
-                editable_table_window_row_at(&format!("row-{row}"), "s.stdio.csv@rfc4180/*#editor", Locale::En, offset, cells, Vec::new())
+                editable_table_window_row_at(&format!("row-{row}"), "s.stdio.csv@rfc4180/*#editor", Locale::En, offset, cells, Vec::new(), None)
             },
         )
         .expect("two-axis table");
@@ -353,21 +357,18 @@ mod window_kits_tests {
         assert_eq!(node.children.len(), TREE_WINDOW_DEFAULT_ROWS as usize, "an unhosted first paint serves one default viewport of rows");
     }
 
-    /// 📊️ A Home-shaped row: six cells, five row actions and a row activation, each binding carrying its own
+    /// 📊️ A Home-shaped row: six cells, five row actions and a row activation, all verbs on ONE target carrying the
     /// `spaceId` argument map.
     fn heavy_table_row(index: &usize) -> UiAssemblyResult<BuiltNode> {
         let key = format!("space:{index}");
-        let action = |name: &str| -> UiAssemblyResult<(ActionId, Option<UiValue>)> {
-            let mut args = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("fixture.args"))?;
-            args.push("spaceId".to_owned(), UiValue::Text(UiText::try_from_str(&key).ok_or_else(|| ui_assembly_error("fixture.arg"))?)).map_err(|_| ui_assembly_error("fixture.arg"))?;
-            Ok((ActionId::try_v1("s.space.home", name).expect("bounded action"), Some(UiValue::Map(args.finish()))))
-        };
+        let mut args = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("fixture.args"))?;
+        args.push("spaceId".to_owned(), UiValue::Text(UiText::try_from_str(&key).ok_or_else(|| ui_assembly_error("fixture.arg"))?)).map_err(|_| ui_assembly_error("fixture.arg"))?;
         let name = format!("Studio {index}");
         let actions = [("folder-open", "openSpace"), ("pencil", "renameSpace"), ("link", "shareSpace"), ("trash-2", "deleteSpace"), ("users", "manageSpace")]
             .into_iter()
-            .map(|(icon, verb)| table_row_action(icon, verb, action(verb)?))
+            .map(|(icon, verb)| row_action(icon, verb, verb, RowActionPlacement::Row))
             .collect::<UiAssemblyResult<Vec<_>>>()?;
-        table_window_row(&key, &[name.as_str(), "Atelier", "Private", "1", "2026-09-25 23:05", "Hub"], actions, Some(action("openSpace")?))
+        table_window_row(&key, &[name.as_str(), "Atelier", "Private", "1", "2026-09-25 23:05", "Hub"], actions, Some(row_target("s.space.home", Some(UiValue::Map(args.finish())), Some("openSpace"))?))
     }
 
     fn requested(rows: u32) -> ViewModel {
@@ -399,14 +400,13 @@ mod window_kits_tests {
         assert!(windows.items_remaining() > 0);
     }
 
-    /// 🏠️ Row actions travel ONLY as `RowAction` props — the one representation every renderer paints in the table's
-    /// trailing actions column — never as `row-action-<i>` child records. A Home-shaped row (six cells, five labelled row
-    /// actions and a row activation, each binding carrying its own argument map) is census-priced at ~120 reconcile items,
-    /// so the body budget serves ⌊budget / row cost⌋ rows of the default window (27 of 48, measured 2026-09-29) and the
-    /// window stamp carries the full extent: the host caps its viewport at the served capacity and pages the rest
-    /// (ticket 26/09/23 S18, host-side). Filling all 48 at once needs a cheaper row representation or a larger body budget. Fixture and schema
-    /// `🪟️window-kits/📊️table/🧫️fixtures/🏠️row-capacity`; oracle: the rows read back are compared with the fixture as
-    /// serde_json values.
+    /// 🏠️ Row actions travel ONLY as `RowAction` verbs on the row's ONE `RowTarget` — the one representation every
+    /// renderer paints in the table's trailing actions column — never as `row-action-<i>` child records nor as one argument
+    /// map per action. A Home-shaped row (six cells, five labelled row actions and a row activation) costs at most the
+    /// fixture's `maxRowItems` reconcile items (68, down from ~120 when every action carried its own map), so the body
+    /// budget serves the whole default window (48 rows; 27 before, ticket 26/09/23 session 14 U6 T4) and the window stamp
+    /// still carries the full extent the host pages. Fixture and schema `🪟️window-kits/📊️table/🧫️fixtures/🏠️row-capacity`;
+    /// oracle: the rows read back are compared with the fixture as serde_json values.
     #[semio_framework_async_macros::async_test]
     async fn home_shaped_rows_carry_actions_as_props_and_fill_the_default_window() {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🪟️window-kits/📊️table/🧫️fixtures/🏠️row-capacity/🔣️.json")).expect("row-capacity fixture");
@@ -420,13 +420,11 @@ mod window_kits_tests {
         let columns = fixture["columns"].as_array().expect("columns").iter().map(text).collect::<Vec<_>>();
         let build = |index: &usize| -> UiAssemblyResult<BuiltNode> {
             let id = format!("{index:0id_length$}");
-            let bind = |verb: &str| -> UiAssemblyResult<(ActionId, Option<UiValue>)> {
-                let mut args = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("fixture.args"))?;
-                args.push(argument.clone(), UiValue::Text(UiText::try_from_str(&id).ok_or_else(|| ui_assembly_error("fixture.arg"))?)).map_err(|_| ui_assembly_error("fixture.arg"))?;
-                Ok((ActionId::try_v1(&controller, verb).ok_or_else(|| ui_assembly_error("fixture.action"))?, Some(UiValue::Map(args.finish()))))
-            };
-            let row_actions = actions.iter().map(|action| table_row_action(action["icon"].as_str().expect("icon"), action["label"].as_str().expect("label"), bind(action["action"].as_str().expect("verb"))?)).collect::<UiAssemblyResult<Vec<_>>>()?;
-            table_window_row(&format!("{}{id}", text(&row["keyPrefix"])), &cells.iter().map(String::as_str).collect::<Vec<_>>(), row_actions, Some(bind(row["activation"].as_str().expect("activation"))?))
+            let mut args = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("fixture.args"))?;
+            args.push(argument.clone(), UiValue::Text(UiText::try_from_str(&id).ok_or_else(|| ui_assembly_error("fixture.arg"))?)).map_err(|_| ui_assembly_error("fixture.arg"))?;
+            let row_actions = actions.iter().map(|action| row_action(action["icon"].as_str().expect("icon"), action["label"].as_str().expect("label"), action["verb"].as_str().expect("verb"), RowActionPlacement::Row)).collect::<UiAssemblyResult<Vec<_>>>()?;
+            let target = row_target(&controller, Some(UiValue::Map(args.finish())), row["activation"].as_str())?;
+            table_window_row(&format!("{}{id}", text(&row["keyPrefix"])), &cells.iter().map(String::as_str).collect::<Vec<_>>(), row_actions, Some(target))
         };
         let rows = fixture["window"]["rows"].as_u64().expect("window rows") as u32;
         assert_eq!(rows, TREE_WINDOW_DEFAULT_ROWS, "the fixture pins the host's default window");
@@ -435,16 +433,21 @@ mod window_kits_tests {
         let entries: Vec<usize> = (0..fixture["window"]["total"].as_u64().expect("total") as usize).collect();
         let node = TableWindowKit::render_rows(&windows, &text(&fixture["tableLabel"]), &columns.iter().map(String::as_str).collect::<Vec<_>>(), Some(text(&fixture["actionsLabel"]).as_str()), &entries, &build).expect("windowed table");
         let row_cost = semio_framework_ui_runtime::surface_subtree_items(node.children.iter().next().expect("a served Home row")).expect("row census");
+        assert!(row_cost as u64 <= fixture["expect"]["maxRowItems"].as_u64().expect("max row items"), "a Home-shaped row costs {row_cost} reconcile items");
         let admitted = (TREE_WINDOW_BODY_ITEM_BUDGET / row_cost).min(rows as usize);
         assert_eq!(node.children.len(), admitted, "the window serves every Home-shaped row the body's reconcile budget admits");
+        assert!(node.children.len() as u64 >= fixture["expect"]["minRowsPerWindow"].as_u64().expect("min rows per window"), "one default window serves {} Home rows", node.children.len());
         let Component::Table(table) = &node.component else { panic!("expected Table") };
         assert_eq!(table.window.map(|window| (window.total, window.offset)), Some((entries.len() as u32, 0)), "the stamp carries the full extent, so the host pages the rest (S18's served-capacity cap)");
         for row_node in node.children.iter() {
             assert_eq!(row_node.children.len() as u64, fixture["expect"]["rowChildren"].as_u64().expect("row children"), "{}: cells and row actions are props, never child records", row_node.key.as_str());
             let Component::TableRow(props) = &row_node.component else { panic!("expected TableRow") };
             assert_eq!(serde_json::Value::from(props.cells.iter().map(|cell| cell.as_str()).collect::<Vec<_>>()), row["cells"], "cells read back as the fixture's");
-            let read_back = props.row_actions.iter().map(|action| serde_json::json!({ "icon": action.icon.as_str(), "label": action.label.as_ref().map(|label| label.0.as_str()), "action": action.action.action.name.as_str() })).collect::<Vec<_>>();
+            let read_back = props.row_actions.iter().map(|action| serde_json::json!({ "icon": action.icon.as_str(), "label": action.label.as_ref().map(|label| label.0.as_str()), "verb": action.verb.as_str() })).collect::<Vec<_>>();
             assert_eq!(serde_json::Value::from(read_back), row["actions"], "every row action keeps its icon, accessible label and verb");
+            let target = props.target.as_ref().expect("the row's one target");
+            assert_eq!((target.scope.as_str(), target.activation.as_ref().map(|verb| verb.as_str())), (controller.as_str(), row["activation"].as_str()), "the target names the controller and the activation verb");
+            assert_eq!(target.args.as_ref().map(|args| args.len()), Some(1), "one argument map, shared by every verb");
         }
     }
 

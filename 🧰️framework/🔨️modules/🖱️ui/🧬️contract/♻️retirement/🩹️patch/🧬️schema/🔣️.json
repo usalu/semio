@@ -33,11 +33,11 @@
         },
         "native64": {
           "const": {
-            "operationBytes": 6416,
+            "operationBytes": 6592,
             "descriptorBytes": 24,
             "directoryBytes": 27672,
-            "firstPayloadBytes": 6416,
-            "firstBackingBytes": 34088
+            "firstPayloadBytes": 6592,
+            "firstBackingBytes": 34264
           }
         },
         "physicalGrant": {
@@ -55,8 +55,8 @@
           "const": [
             0,
             4096,
-            6415,
-            6416,
+            6591,
+            6592,
             32768
           ]
         },
@@ -65,8 +65,8 @@
             0,
             0,
             0,
-            6416,
-            6416
+            6592,
+            6592
           ]
         },
         "operations": {

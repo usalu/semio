@@ -91,7 +91,7 @@ pub fn render(document: &XlsxSnapshot, locale: Locale, windows: &TreeWindows<'_>
                     })
                 })
                 .collect::<semio_framework_plugin::UiAssemblyResult<Vec<_>>>()?;
-            editable_table_window_row_at(&format!("workbook-cell-{ordinal}"), controller_id, locale, columns.start, cells, Vec::new())
+            editable_table_window_row_at(&format!("workbook-cell-{ordinal}"), controller_id, locale, columns.start, cells, Vec::new(), None)
         },
     )
 }

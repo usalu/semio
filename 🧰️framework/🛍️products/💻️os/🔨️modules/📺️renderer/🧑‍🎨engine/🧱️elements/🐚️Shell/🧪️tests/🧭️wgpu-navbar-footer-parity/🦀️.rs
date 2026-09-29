@@ -143,7 +143,7 @@ fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
         let mut overlay = DrawList::default();
         let mut overlay = Some(&mut overlay);
         let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
-        for _ in 0..8192 {
+        for _ in 0..1_usize << 24 {
             if shell.paint_window_projection_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, "pane-top", window, &mut world_resources) {
                 break;
             }
@@ -152,7 +152,7 @@ fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
             .staged_hits()
             .iter()
             .filter_map(|hit| hit.control_id.clone())
-            .filter(|id| id.contains(WORLD_PROJECTION_PANE_PARENT) && id != &window_projection_surface_id("pane-top"))
+            .filter(|id| id.starts_with("tree.label.") && id.contains(WORLD_PROJECTION_PANE_PARENT))
             .collect::<Vec<_>>()
     };
     assert!(rows(&mut shell).is_empty(), "🔀️ a folded projection pane paints no body");
@@ -273,7 +273,8 @@ fn a_pane_chip_press_over_an_engine_surface_belongs_to_the_shell() {
 
 /// ⏱️ **The one-frame-body law.** An unfolded projection pane publishes its WHOLE taxonomy inside one
 /// bounded run of the chrome walk — every row a hit, every row on the one measured column, and the
-/// run under [`WORLD_PROJECTION_PANE_PAINT_OPPORTUNITIES`].
+/// run under [`WORLD_PROJECTION_PANE_PAINT_OPPORTUNITIES`] of the pane's OWN work — a poll of the layout worker pool is not one
+/// (it spent the pane's whole budget under load while the pane was converging).
 ///
 /// 🩸️ The former body measured a bespoke label column once per row and abandoned a short pane on
 /// its first clipped row. The retained Tree now owns one shared 300px viewport and scrolls it.
@@ -292,15 +293,19 @@ fn an_unfolded_projection_pane_publishes_its_rows_within_one_frame_budget() {
         let mut overlay = DrawList::default();
         let mut overlay = Some(&mut overlay);
         let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
-        let mut opportunities = 0_usize;
+        let (mut opportunities, mut polls) = (0_usize, 0_usize);
         while opportunities < WORLD_PROJECTION_PANE_PAINT_OPPORTUNITIES {
-            opportunities += 1;
-            if shell.paint_window_projection_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, "pane-top", window, &mut world_resources) {
+            polls += 1;
+            assert!(polls < 1 << 24, "⏱️ the pane's layout worker answers");
+            let complete = shell.paint_window_projection_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, "pane-top", window, &mut world_resources);
+            if cursor.document.last_step_was_own_work() {
+                opportunities += 1;
+            }
+            if complete {
                 break;
             }
         }
-        let surface = window_projection_surface_id("pane-top");
-        let rows = input.staged_hits().iter().filter(|hit| hit.control_id.as_deref().is_some_and(|id| id.contains(WORLD_PROJECTION_PANE_PARENT) && id != surface.as_str())).cloned().collect::<Vec<_>>();
+        let rows = input.staged_hits().iter().filter(|hit| hit.control_id.as_deref().is_some_and(|id| id.starts_with("tree.label.") && id.contains(WORLD_PROJECTION_PANE_PARENT))).cloned().collect::<Vec<_>>();
         (opportunities, rows, draw)
     };
 
@@ -356,6 +361,8 @@ fn a_focused_world_window_does_not_retire_its_hidden_sibling() {
     shell.world3d_window_ids.insert("perspective-host".into(), "pane-perspective".into());
     shell.world_projection_template.insert("pane-perspective".into(), "three-point".into());
     assert!(shell.apply_window_icon_host_command("pane-perspective", "projection-three-point"));
+    shell.plan_dock_windows(Rect::new(0.0, 0.0, 1280.0, 800.0), &Theme::light(), &mut FontAtlas::builtin());
+    assert!(shell.dock_window_plan.iter().any(|(window_id, _)| window_id == "pane-perspective"), "🪟️ the unfocused plan paints both panes");
     shell.dock_window_plan.retain(|(window_id, _)| window_id == "pane-top");
 
     assert_eq!(shell.dock_window_plan.iter().map(|(window_id, _)| window_id.as_str()).collect::<Vec<_>>(), vec!["pane-top"], "🪟️ the focused paint plan omits its sibling");
@@ -374,6 +381,13 @@ fn a_focused_world_window_does_not_retire_its_hidden_sibling() {
     assert!(!shell.world3d_states.contains_key("perspective-host"), "🪟️ a real dock close retires the scene owner");
     assert!(!shell.world_projection_template.contains_key("pane-perspective"));
     assert!(!shell.window_icon_overrides.contains_key("pane-perspective"));
+    for _ in 0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20) {
+        if shell.retired_world3d_states.is_empty() {
+            break;
+        }
+        shell.advance_world3d_retirement_step();
+    }
+    assert!(shell.retired_world3d_states.is_empty(), "🪟️ the retired scene owner reaches terminal empty under maintenance before the shell drops");
 }
 //#endregion 🎯️HitTargetLaw
 

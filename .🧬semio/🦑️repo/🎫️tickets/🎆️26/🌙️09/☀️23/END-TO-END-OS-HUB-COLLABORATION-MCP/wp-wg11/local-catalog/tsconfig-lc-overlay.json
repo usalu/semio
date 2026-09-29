@@ -1,0 +1,14 @@
+{
+ "extends": "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-wg11-overlay/🧰️framework/🛍️products/💻️os/tsconfig.json",
+ "compilerOptions": {
+  "noEmit": true,
+  "incremental": false
+ },
+ "include": [],
+ "files": [
+  "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-wg11-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx",
+  "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-wg11-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗂️local-catalog/🟦️.ts",
+  "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-wg11-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📣️replay-refusal/🟦️.ts",
+  "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-wg11-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts"
+ ]
+}

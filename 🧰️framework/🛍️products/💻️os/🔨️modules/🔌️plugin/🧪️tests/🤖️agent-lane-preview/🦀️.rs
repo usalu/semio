@@ -135,4 +135,46 @@ mod agent_lane_preview_tests {
             }
         }
     }
+
+    /// 🚧️ LAW: the agent lane fails closed — every case of the language-agnostic carriage fixture, its host effects decoded
+    /// from the kernel `Effect`'s wire form, answers exactly its uncarried lanes and its verdict, and the fixture names
+    /// every lane the preview refuses in the order it names them, and the presentation lanes.
+    #[test]
+    fn agent_lane_carriage_matches_the_language_agnostic_fixture() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🤖️agent-lane-carriage.json")).expect("agent-lane carriage fixture parses");
+        let lanes = fixture["lanes"].as_array().expect("lanes").iter().map(|lane| lane.as_str().expect("lane name")).collect::<Vec<_>>();
+        assert_eq!(lanes, AGENT_LANE_UNCARRIED_LANES, "the fixture names every uncarried lane in refusal order");
+        let presentation = fixture["presentation"].as_array().expect("presentation").iter().map(|lane| lane.as_str().expect("lane name")).collect::<Vec<_>>();
+        assert_eq!(presentation, AGENT_LANE_PRESENTATION_LANES, "the fixture names the presentation lanes");
+        let interaction_verbs = fixture["interactionVerbs"].as_array().expect("interactionVerbs").iter().map(|verb| verb.as_str().expect("verb")).collect::<Vec<_>>();
+        assert_eq!(interaction_verbs, INTERACTION_ACTION_IDS, "the fixture names the framework's interaction verbs");
+        let cases = fixture["cases"].as_array().expect("cases");
+        assert!(cases.len() >= 15, "the fixture keeps every lane family's case");
+        for case in cases {
+            let name = case["name"].as_str().expect("case name");
+            let publication = &case["publication"];
+            let effects = serde_json::from_value::<Vec<Effect>>(publication["effects"].clone()).expect(name);
+            let count = |key: &str| publication[key].as_u64().expect(key) as usize;
+            let publication = AgentLanePublication {
+                carried_ops: count("carriedOps"),
+                effects: &effects,
+                window_config_ops: count("windowConfigOps"),
+                extension_calls: count("extensionCalls"),
+                events: count("events"),
+                selection_writes: count("selectionWrites"),
+                tasks: count("tasks"),
+                presence: count("presence"),
+                transient: count("transient"),
+                window_transient: count("windowTransient"),
+            };
+            let expected = case["uncarried"].as_array().expect("uncarried").iter().map(|lane| lane.as_str().expect("lane")).collect::<Vec<_>>();
+            assert_eq!(agent_lane_uncarried_lanes(&publication), expected, "{name}");
+            let verdict = match agent_lane_carriage(&publication) {
+                AgentLaneCarriage::Carried => "carried",
+                AgentLaneCarriage::NoEffect => "noEffect",
+                AgentLaneCarriage::Uncarried(_) => "uncarried",
+            };
+            assert_eq!(Some(verdict), case["verdict"].as_str(), "{name}");
+        }
+    }
 }

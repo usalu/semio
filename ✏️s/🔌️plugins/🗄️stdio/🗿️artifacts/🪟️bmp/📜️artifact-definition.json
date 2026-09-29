@@ -81,7 +81,71 @@
       "fixtures": []
     }
   ],
-  "runtime_capabilities": [],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.bmp.composer.dialect-s-stdio-bmp-v3.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.bmp@v3/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.bmp@v3/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.bmp.inference.schema-s-stdio-bmp-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.bmp.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.bmp.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.bmp.schema.schema-s-stdio-bmp.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.bmp",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.bmp"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.bmp.standard.v3.codec.codec-stdio-bmp-extension-bmp.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:9:stdio.bmp:bmp|codec:stdio.bmp",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.bmp"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "9:stdio.bmp:bmp"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.bmp.standard.v3.representation.mime-image-bmp-extension-bmp",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:image/bmp|extension:.bmp",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "image/bmp"
+        },
+        {
+          "namespace": "extension",
+          "value": ".bmp"
+        }
+      ]
+    }
+  ],
   "support_ledger": {
     "normative_source": null,
     "publication_date": null,

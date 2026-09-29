@@ -283,7 +283,7 @@ fn retained_paged_list_copy_matches_vec_serde_and_closes_page_by_page() {
         }
         assert!(close_turns < 100_000, "spent cursor close terminates");
     }
-    assert!(close_turns > 1);
+    assert_eq!(close_turns, 1, "a spent cursor whose output was taken holds only its source binding and closes in one step");
     let mut retirement = crate::os_store::retirement::owned_retirement(copied);
     let mut retirement_turns = 0usize;
     while !retirement.terminal_is_empty() {

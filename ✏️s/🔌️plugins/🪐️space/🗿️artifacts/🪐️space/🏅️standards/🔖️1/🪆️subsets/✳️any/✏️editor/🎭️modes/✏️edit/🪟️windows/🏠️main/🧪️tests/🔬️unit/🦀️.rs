@@ -20,9 +20,12 @@ fn observe<R>(node: semio_framework_plugin::BuiltNode, inspect: impl FnOnce(&sem
     }
 }
 
-fn buttons(node: &semio_framework_plugin::BuiltNode) -> Vec<&semio_framework_ui_contract::ActionBinding> {
+/// 🎬️ The bindings a Space row's actions dispatch — each its verb on the row's ONE target.
+fn buttons(node: &semio_framework_plugin::BuiltNode) -> Vec<semio_framework_ui_contract::ActionBinding> {
     let semio_framework_ui_contract::Component::TableRow(props) = &node.component else { panic!("a Space row is one TableRow record") };
-    props.row_actions.iter().map(|action| &action.action).collect()
+    let target = props.target.as_ref().expect("a Space row carries its one target");
+    assert_eq!(target.activation.as_ref().map(|verb| verb.as_str()), Some("openArtifact"), "a Space row's activation opens the artifact");
+    props.row_actions.iter().map(|action| target.binding(&action.verb).expect("credited row binding")).collect()
 }
 
 fn text_arg(binding: &semio_framework_ui_contract::ActionBinding, key: &str) -> String {

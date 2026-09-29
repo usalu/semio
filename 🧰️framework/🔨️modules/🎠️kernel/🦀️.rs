@@ -1801,9 +1801,15 @@ pub struct HistoryEntry {
     pub label: dsl::LocalizedLabel,
     pub kind: String,
     pub timestamp: String,
+    /// 📜️ The newest forward operations of this row's edit, newest last — a bounded preview; `op_count` says how many the
+    /// edit holds.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub op_lines: Vec<String>,
+    /// 🔢️ Forward operations of this row's edit; more than `op_lines` holds means the preview omits the older ones.
+    #[serde(default)]
+    #[value(default)]
+    pub op_count: u64,
     #[serde(default)]
     #[value(default)]
     pub applied: bool,

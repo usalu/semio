@@ -1,0 +1,4 @@
+{
+  "mutation": "setQuery",
+  "value": "MATCH (a:Piece) RETURN a.name"
+}

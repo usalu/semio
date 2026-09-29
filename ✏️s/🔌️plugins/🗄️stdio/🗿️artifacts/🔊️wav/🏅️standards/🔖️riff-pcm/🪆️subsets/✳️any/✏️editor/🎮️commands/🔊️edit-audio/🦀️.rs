@@ -53,10 +53,10 @@ pub fn from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<EditAud
             Ok(EditAudio::SetSample { frame: edit.row, channel: edit.column, revision: edit.revision, value: edit.value })
         }
         semio_s_artifact_stdio_contract::ADD_TABLE_ROW_ACTION_ID => Ok(EditAudio::AppendFrame { revision: revision()? }),
-        INSERT_FRAME_ACTION_ID => Ok(EditAudio::InsertFrame { frame: semio_s_artifact_stdio_contract::window_kit_required_index_argument(args, "frame")?, revision: revision()? }),
+        INSERT_FRAME_ACTION_ID => Ok(EditAudio::InsertFrame { frame: semio_s_artifact_stdio_contract::window_kit_required_index_argument(args, "row")?, revision: revision()? }),
         semio_s_artifact_stdio_contract::REMOVE_TABLE_ROW_ACTION_ID => Ok(EditAudio::RemoveFrame { frame: semio_s_artifact_stdio_contract::window_kit_required_index_argument(args, "row")?, revision: revision()? }),
         semio_s_artifact_stdio_contract::ADD_TABLE_COLUMN_ACTION_ID => Ok(EditAudio::AppendChannel { revision: revision()? }),
-        INSERT_CHANNEL_ACTION_ID => Ok(EditAudio::InsertChannel { channel: semio_s_artifact_stdio_contract::window_kit_required_index_argument(args, "channel")?, revision: revision()? }),
+        INSERT_CHANNEL_ACTION_ID => Ok(EditAudio::InsertChannel { channel: semio_s_artifact_stdio_contract::window_kit_required_index_argument(args, "column")?, revision: revision()? }),
         semio_s_artifact_stdio_contract::REMOVE_TABLE_COLUMN_ACTION_ID => Ok(EditAudio::RemoveChannel { channel: semio_s_artifact_stdio_contract::window_kit_required_index_argument(args, "column")?, revision: revision()? }),
         SET_SAMPLE_RATE_ACTION_ID => Ok(EditAudio::SetSampleRate { revision: revision()?, value: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "value")? }),
         _ => Err(fault("stdio.wav.audio-action", format!("unknown WAV audio action {action}"))),
@@ -357,10 +357,10 @@ fn revision_arg() -> ActionArgDef {
 pub fn extra_actions() -> Vec<ActionDefinition> {
     [
         ActionDefinition::bounded_catalog(INSERT_FRAME_ACTION_ID, LocalizedLabel::native("Insert frame", "Frame einfügen"), ActionKind::Mutation)
-            .with_args([number_arg("frame", "Frame", "Frame", 0.0, u32::MAX as f64), revision_arg()])
+            .with_args([number_arg("row", "Frame", "Frame", 0.0, u32::MAX as f64), revision_arg()])
             .in_palette(false),
         ActionDefinition::bounded_catalog(INSERT_CHANNEL_ACTION_ID, LocalizedLabel::native("Insert channel", "Kanal einfügen"), ActionKind::Mutation)
-            .with_args([number_arg("channel", "Channel", "Kanal", 0.0, u16::MAX as f64), revision_arg()])
+            .with_args([number_arg("column", "Channel", "Kanal", 0.0, u16::MAX as f64), revision_arg()])
             .in_palette(false),
         ActionDefinition::bounded_catalog(SET_SAMPLE_RATE_ACTION_ID, LocalizedLabel::native("Set sample rate", "Abtastrate setzen"), ActionKind::Mutation)
             .with_args([revision_arg(), ActionArgDef::text("value", LocalizedLabel::native("Sample rate (Hz)", "Abtastrate (Hz)")).required()])
@@ -643,7 +643,7 @@ mod tests {
     #[test]
     fn addressed_actions_require_exact_frame_channel_and_revision_arguments() {
         let revision = "0123456789abcdef";
-        let insert_frame = dsl::DslValue::Object(vec![("frame".into(), dsl::DslValue::uint(7)), ("revision".into(), dsl::DslValue::String(revision.into()))]);
+        let insert_frame = dsl::DslValue::Object(vec![("row".into(), dsl::DslValue::uint(7)), ("revision".into(), dsl::DslValue::String(revision.into()))]);
         assert_eq!(from_action(INSERT_FRAME_ACTION_ID, Some(&insert_frame)).expect("addressed frame action"), EditAudio::InsertFrame { frame: 7, revision: revision.into() });
         let remove_channel = dsl::DslValue::Object(vec![("column".into(), dsl::DslValue::uint(3)), ("revision".into(), dsl::DslValue::String(revision.into()))]);
         assert_eq!(

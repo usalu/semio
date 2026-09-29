@@ -3,12 +3,12 @@
   "owner": "CadPlayApp",
   "documentSchema": "cad.scene",
   "payloadSchema": "cad.scene.tool-command.v1",
-  "routeCount": 37,
+  "routeCount": 39,
   "excludedFrameworkRoutes": [],
   "activation": {
     "controller": "s.cad.cad@1/*#editor",
     "factory": "CadRetainedCommandJobFactory",
-    "proofRows": 32,
+    "proofRows": 39,
     "injectedTool": "addNode",
     "closeItems": 1,
     "closeBytes": 4096
@@ -25,6 +25,8 @@
     "addNode",
     "renameNode",
     "patchCadPlayReference",
+    "setReferenceHidden",
+    "setReferenceLocked",
     "addObject",
     "patchObject",
     "patchSelection",
@@ -53,7 +55,12 @@
     "setSunIntensity",
     "setContributions",
     "setActiveExample",
-    "loadRawRequest"
+    "loadRawRequest",
+    "applyTransformation",
+    "importCadFile",
+    "saveSelected",
+    "saveInPlay",
+    "saveCurrent"
   ],
   "routes": [
     {
@@ -142,8 +149,8 @@
       "intendedLanes": [
         "artifact"
       ],
-      "disposition": "batchOnlyPendingRewrite",
-      "blocker": "artifactPreparationFactoryMissing"
+      "disposition": "migrated",
+      "blocker": "none"
     },
     {
       "id": "importCadFile",
@@ -151,11 +158,27 @@
         "artifact",
         "child"
       ],
-      "disposition": "batchOnlyPendingRewrite",
-      "blocker": "persistentDecodeJobMissing"
+      "disposition": "migrated",
+      "blocker": "none"
     },
     {
       "id": "patchCadPlayReference",
+      "intendedLanes": [
+        "artifact"
+      ],
+      "disposition": "migrated",
+      "blocker": "none"
+    },
+    {
+      "id": "setReferenceHidden",
+      "intendedLanes": [
+        "artifact"
+      ],
+      "disposition": "migrated",
+      "blocker": "none"
+    },
+    {
+      "id": "setReferenceLocked",
       "intendedLanes": [
         "artifact"
       ],
@@ -330,24 +353,24 @@
       "intendedLanes": [
         "hostDownload"
       ],
-      "disposition": "batchOnlyPendingRewrite",
-      "blocker": "persistentSerializationJobMissing"
+      "disposition": "migrated",
+      "blocker": "none"
     },
     {
       "id": "saveInPlay",
       "intendedLanes": [
         "hostDownload"
       ],
-      "disposition": "batchOnlyPendingRewrite",
-      "blocker": "persistentSerializationJobMissing"
+      "disposition": "migrated",
+      "blocker": "none"
     },
     {
       "id": "saveCurrent",
       "intendedLanes": [
         "hostDownload"
       ],
-      "disposition": "batchOnlyPendingRewrite",
-      "blocker": "persistentSerializationJobMissing"
+      "disposition": "migrated",
+      "blocker": "none"
     },
     {
       "id": "loadRawRequest",

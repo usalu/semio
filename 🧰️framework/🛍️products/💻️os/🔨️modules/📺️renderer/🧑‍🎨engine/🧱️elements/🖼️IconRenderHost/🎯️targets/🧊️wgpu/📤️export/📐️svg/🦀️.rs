@@ -655,8 +655,10 @@ fn project(point: [f32; 4], dimensions: (u32, u32)) -> [f32; 3] {
     [point[0] * inverse_w * dimensions.0 as f32 * 0.5, -point[1] * inverse_w * dimensions.1 as f32 * 0.5, point[2] * inverse_w]
 }
 
+/// 🔄️ three's `Projector.checkBackfaceCulling` judges winding in NDC, y up (`< 0` is a front face); [`project`] writes y-down
+/// SVG space, which mirrors every winding, so a front face is positive here.
 fn front_facing(points: [[f32; 3]; 3]) -> bool {
-    (points[2][0] - points[0][0]) * (points[1][1] - points[0][1]) - (points[2][1] - points[0][1]) * (points[1][0] - points[0][0]) < 0.0
+    (points[2][0] - points[0][0]) * (points[1][1] - points[0][1]) - (points[2][1] - points[0][1]) * (points[1][0] - points[0][0]) > 0.0
 }
 
 fn visible(points: [[f32; 3]; 3], dimensions: (u32, u32)) -> bool {

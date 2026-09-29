@@ -2640,7 +2640,7 @@ impl ArtifactEditor for FlowPlayApp {
             "addGeneration" => Ok(FlowCommand::AddGeneration(add_generation::AddGeneration {})),
             "removeGeneration" => Ok(FlowCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: str_arg(&["id"]).unwrap_or_default() })),
             "selectGeneration" => Ok(FlowCommand::SelectGeneration(select_generation::SelectGeneration { id: str_arg(&["id"]).unwrap_or_default() })),
-            "renameGeneration" => Ok(FlowCommand::RenameGeneration(rename_generation::RenameGeneration { id: str_arg(&["id"]).unwrap_or_default(), name: str_arg(&["name"]).unwrap_or_default() })),
+            "renameGeneration" => Ok(FlowCommand::RenameGeneration(rename_generation::RenameGeneration { id: str_arg(&["id"]).unwrap_or_default(), name: str_arg(&["name", "value"]).unwrap_or_default() })),
             "updateGenerationValues" => Ok(FlowCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues {
                 generation_id: str_arg(&["generationId", "generation_id"]),
                 question_id: str_arg(&["questionId", "question_id"]).unwrap_or_default(),

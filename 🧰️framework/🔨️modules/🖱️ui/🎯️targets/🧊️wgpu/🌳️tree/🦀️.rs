@@ -511,7 +511,7 @@ impl UiTree {
         None
     }
 
-    pub(crate) fn disclosure_open(&self, id: NodeId) -> Option<bool> {
+    pub fn disclosure_open(&self, id: NodeId) -> Option<bool> {
         let node = self.node(id)?;
         if let UiNode::Section(section) = &node.spec.0 {
             return Some(node.state.disclosure_open.unwrap_or(section.default_open.unwrap_or(true)));
@@ -589,14 +589,14 @@ impl UiTree {
     /// 🪟️ The WALK origin an open overlay root replaces its in-flow parent offset with, so that
     /// adding the node's own accepted layout lands it exactly on its resolved placement. `None` for
     /// every node that is not an open overlay root, which is the in-flow rule unchanged.
-    pub(crate) fn overlay_walk_origin(&self, id: NodeId) -> Option<(f32, f32)> {
+    pub fn overlay_walk_origin(&self, id: NodeId) -> Option<(f32, f32)> {
         let (_, x, y) = self.overlay_origins.iter().copied().find(|(node, _, _)| *node == id)?;
         let layout = self.accepted_layout(id)?;
         Some((x - layout.x, y - layout.y))
     }
 
     /// 📜️ Resolves a parent's content origin from its placed walk origin and live viewport offset.
-    pub(crate) fn child_walk_origin(&self, parent: NodeId, origin: (f32, f32)) -> Option<(f32, f32)> {
+    pub fn child_walk_origin(&self, parent: NodeId, origin: (f32, f32)) -> Option<(f32, f32)> {
         let layout = self.accepted_layout(parent)?;
         let node = self.node(parent)?;
         let scroll = if node.flags.contains(NodeFlags::SCROLLABLE) { node.state.scroll_offset } else { (0.0, 0.0) };
@@ -670,7 +670,7 @@ impl UiTree {
         self.document_nodes.binary_search_by_key(&id, |(document, _)| *document).ok().and_then(|index| self.document_nodes.get(index)).map(|(_, node)| *node)
     }
 
-    pub(crate) fn document_id(&self, node: NodeId) -> Option<UiNodeId> {
+    pub fn document_id(&self, node: NodeId) -> Option<UiNodeId> {
         self.node(node)?.document_id
     }
 

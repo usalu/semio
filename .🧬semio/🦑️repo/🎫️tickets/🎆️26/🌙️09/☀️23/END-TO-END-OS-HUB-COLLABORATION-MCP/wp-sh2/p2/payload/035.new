@@ -1,0 +1,32 @@
+//! 👥️ Replaces the live presence row of one artifact of this space in the Space index transient projection.
+//!
+//! Non-invertible by declaration: presence is ephemeral shared state the host re-reports, never an edit anyone undoes.
+
+use super::{outcome, SpaceIndexTransient, SpaceIndexTransientMutation};
+
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[value(rename_all = "camelCase")]
+#[dsl(keyword = "set-artifact-presence")]
+#[mutation_leaf(contract = ::protocol)]
+pub struct SetArtifactPresence {
+    /// 🪪️ The artifact whose documents the actors are on.
+    pub artifact_id: String,
+    /// 👥️ The live actor ids, comma-separated; empty when nobody is on the artifact.
+    pub actors_csv: String,
+}
+
+impl protocol::MutationKind<SpaceIndexTransient, SpaceIndexTransientMutation> for SetArtifactPresence {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "artifact-presence", kind: "set-artifact-presence", record: "SetArtifactPresence" };
+    fn diff(&self, base: &SpaceIndexTransient) -> protocol::MutationOutcome<SpaceIndexTransient> {
+        outcome(&SpaceIndexTransientMutation::SetArtifactPresence(self.clone()), base, "presence", "The artifact's presence row already lists exactly these actors.")
+    }
+    fn inverse(&self, _base: &SpaceIndexTransient) -> Vec<SpaceIndexTransientMutation> {
+        Vec::new()
+    }
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Artifact Presence", "Artefakt-Anwesenheit festlegen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["presence".into()]
+    }
+}

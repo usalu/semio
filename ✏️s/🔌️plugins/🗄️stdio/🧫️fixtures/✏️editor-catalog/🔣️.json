@@ -50,12 +50,19 @@
   ],
   "snapshotEdits": {
     "png": {
-      "path": "/gama",
-      "value": 50000
+      "path": "/pixels",
+      "value": [
+        0,
+        0,
+        0,
+        255
+      ]
     },
     "txt": {
-      "path": "/trailingNewline",
-      "value": true
+      "path": "/lines",
+      "value": [
+        "Edited"
+      ]
     },
     "md": {
       "path": "/blocks",
@@ -72,8 +79,17 @@
       ]
     },
     "csv": {
-      "path": "/hasHeader",
-      "value": false
+      "path": "/records",
+      "value": [
+        {
+          "fields": [
+            {
+              "value": "Edited",
+              "quoted": false
+            }
+          ]
+        }
+      ]
     },
     "tsv": {
       "path": "/trailingNewline",
@@ -81,15 +97,20 @@
     },
     "json": {
       "path": "/value",
-      "value": true
+      "value": {
+        "kind": "bool",
+        "value": true
+      }
     },
     "xml": {
-      "path": "/doc/root",
+      "path": "/doc",
       "value": {
-        "kind": "element",
-        "name": "root",
-        "attrs": [],
-        "children": []
+        "root": {
+          "kind": "element",
+          "name": "root",
+          "attrs": [],
+          "children": []
+        }
       }
     },
     "html": {
@@ -97,38 +118,64 @@
       "value": "DOCTYPE HTML"
     },
     "xlsx": {
-      "path": "/workbook/sharedStrings",
-      "value": [
-        "Edited"
-      ]
+      "path": "/xmlParts/0/document/root",
+      "value": {
+        "kind": "element",
+        "name": "sst",
+        "attrs": [
+          {
+            "name": "xmlns",
+            "value": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+          },
+          {
+            "name": "count",
+            "value": "1"
+          },
+          {
+            "name": "uniqueCount",
+            "value": "1"
+          }
+        ],
+        "children": [
+          {
+            "kind": "element",
+            "name": "si",
+            "attrs": [],
+            "children": [
+              {
+                "kind": "element",
+                "name": "t",
+                "attrs": [],
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "Edited"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
     },
     "docx": {
-      "path": "/xmlParts/0/document/root/attrs/0/value",
-      "value": "urn:semio:docx:catalog:base"
-    },
-    "s.stdio.docx@ecma-376/*#editor": {
-      "path": "/xmlParts/0/document/root/attrs/0/value",
-      "value": "urn:semio:docx:catalog:any"
-    },
-    "s.stdio.docx@ecma-376/strict#editor": {
-      "path": "/xmlParts/0/document/root/attrs/0/value",
-      "value": "urn:semio:docx:catalog:strict"
-    },
-    "s.stdio.docx@ecma-376/transitional#editor": {
-      "path": "/xmlParts/0/document/root/attrs/0/value",
-      "value": "urn:semio:docx:catalog:transitional"
-    },
-    "pptx": {
-      "path": "/presentation/slides",
+      "path": "/xmlParts/0/document/root/children/0/children",
       "value": [
         {
-          "shapes": []
+          "kind": "element",
+          "name": "w:p",
+          "attrs": [],
+          "children": []
         }
       ]
     },
-    "pdf": {
-      "path": "/pages/0/text",
+    "pptx": {
+      "path": "/opc/comment",
       "value": "Edited"
+    },
+    "pdf": {
+      "path": "/declaredVersion",
+      "value": "1.6"
     },
     "zip": {
       "path": "/comment",
@@ -155,40 +202,12 @@
       "path": "/location/city",
       "value": "Hannover"
     },
-    "s.stdio.pdf@1.7/*#editor": {
-      "path": "/metadata",
-      "value": "<xmp>Edited</xmp>"
-    },
-    "s.stdio.pdf@1.7/a#editor": {
-      "path": "/metadata",
-      "value": "<xmp>Edited</xmp>"
-    },
-    "s.stdio.pdf@1.7/e#editor": {
-      "path": "/metadata",
-      "value": "<xmp>Edited</xmp>"
-    },
-    "s.stdio.pdf@1.7/h#editor": {
-      "path": "/metadata",
-      "value": "<xmp>Edited</xmp>"
-    },
-    "s.stdio.pdf@1.7/ua#editor": {
-      "path": "/metadata",
-      "value": "<xmp>Edited</xmp>"
-    },
-    "s.stdio.pdf@1.7/vt#editor": {
-      "path": "/metadata",
-      "value": "<xmp>Edited</xmp>"
-    },
-    "s.stdio.pdf@1.7/x#editor": {
-      "path": "/metadata",
-      "value": "<xmp>Edited</xmp>"
-    },
     "jpg": {
-      "path": "/reEncodeQuality",
-      "value": 80
+      "path": "/jfifXDensity",
+      "value": 72
     },
     "gif": {
-      "path": "/loopCount",
+      "path": "/backgroundColorIndex",
       "value": 1
     },
     "s.stdio.gif@87a/*#editor": {
@@ -213,7 +232,132 @@
         "raw": [
           84,
           65,
-          71
+          71,
+          69,
+          100,
+          105,
+          116,
+          101,
+          100,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
         ]
       }
     },
@@ -226,8 +370,14 @@
       "value": true
     },
     "obj": {
-      "path": "/mtllib",
-      "value": "materials.mtl"
+      "path": "/vertices",
+      "value": [
+        {
+          "x": 1.5,
+          "y": 2.25,
+          "z": -3.5
+        }
+      ]
     },
     "stl": {
       "path": "/solidName",
@@ -240,8 +390,8 @@
       ]
     },
     "gltf": {
-      "path": "/document/asset/generator",
-      "value": "semio-editor"
+      "path": "/sourceForm",
+      "value": "glb"
     },
     "dwg": {
       "path": "/maintenanceVersion",
@@ -280,24 +430,10 @@
       }
     },
     "ifc": {
-      "path": "/edmPreamble",
+      "path": "/document/header/fileName/0",
       "value": {
-        "producer": "semio-editor",
-        "module": "",
-        "creationDate": "",
-        "host": "",
-        "database": "",
-        "databaseVersion": "",
-        "databaseCreationDate": "",
-        "schema": "",
-        "model": "",
-        "modelCreationDate": "",
-        "headerModel": "",
-        "headerModelCreationDate": "",
-        "user": "",
-        "group": "",
-        "license": "",
-        "options": ""
+        "kind": "str",
+        "value": "edited.ifc"
       }
     },
     "s.stdio.semio@v1/*#editor": {
@@ -305,8 +441,18 @@
       "value": 1
     },
     "s.stdio.semio@v1/brep#editor": {
-      "path": "/nextLabel",
-      "value": 1
+      "path": "/vertices",
+      "value": [
+        {
+          "id": "v1",
+          "point": {
+            "x": 1.0,
+            "y": 2.0,
+            "z": 3.0
+          },
+          "tol": 0.125
+        }
+      ]
     },
     "s.stdio.semio@v1/object#editor": {
       "path": "/transform/translation/x",
@@ -490,6 +636,15 @@
           },
           "metallic": 0.0,
           "roughness": 0.5
+        }
+      ]
+    },
+    "s.stdio.xml@1.0/valid#editor": {
+      "path": "/doc/root/children",
+      "value": [
+        {
+          "kind": "text",
+          "text": "Edited"
         }
       ]
     }

@@ -58,7 +58,7 @@ pub use derived_composition::*;
 // `register`/`register_artifact_inferences`/`register_pilot_languages`/`register_schema_specs`
 // kept together here (not dead: `register()` is reached by stdio's protected imperative
 // `crate::engine::register()` plugin-root call via this standard's own inline
-// `engine` barrel). `empty_gif_snapshot`/`demo_gif_snapshot` moved to `../🧬️schema`.
+// `engine` barrel). `blank_gif_snapshot`/`demo_gif_snapshot` moved to `../🧬️schema`.
 use crate::standards::v87a::subsets::any::schema::{
     mutations::GifMutation,
     snapshot::{GifColorTable, GifImage, GifRgb, GifSnapshot},

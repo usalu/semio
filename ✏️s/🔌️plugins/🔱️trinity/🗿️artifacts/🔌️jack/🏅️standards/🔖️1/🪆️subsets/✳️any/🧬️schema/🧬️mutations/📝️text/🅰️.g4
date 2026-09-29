@@ -7,7 +7,7 @@ grammar Trinity_jack_mutations;
 
 DOCUMENT: 'schema' [ ]+ 'trinity.jack.mutations' ;
 
-line: createNode | deleteNode | createEdge | deleteEdge | renameNode | moveNode | changeDataProperty | removeDataProperty ;
+line: createNode | deleteNode | createEdge | deleteEdge | renameNode | moveNode | changeDataProperty | removeDataProperty | setQuery ;
 createNode: 'create-node' SP id SP text SP text SP number SP number SP number SP number SP portTable ;
 deleteNode: 'delete-node' SP id ;
 createEdge: 'create-edge' SP id SP text SP text SP text SP propertyBag ;
@@ -16,6 +16,7 @@ renameNode: 'rename-node' SP id SP text ;
 moveNode: 'move-node' SP id SP number SP number ;
 changeDataProperty: 'change-data-property' SP entity SP text SP value ;
 removeDataProperty: 'remove-data-property' SP entity SP text ;
+setQuery: 'set-query' SP text ;
 entity: 'node' ':' id | 'edge' ':' id ;
 portTable: '{' NL portRow* '}' ;
 portRow: OCTET+ ;

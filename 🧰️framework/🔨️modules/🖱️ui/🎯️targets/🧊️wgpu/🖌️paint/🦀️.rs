@@ -187,12 +187,14 @@ fn paint_retained_glyph_step_inner(value: &str, bounds: Rect, size: f32, color: 
         cursor.pen_x = 0.0;
         return RetainedGlyphStep::Pending;
     }
+    let mut kerning = if cursor.pen_x > 0.0 { atlas.kerning_at(value, cursor.byte, size) } else { 0.0 };
     if matches!(flow, RetainedTextFlow::Wrap) && cursor.pen_x > 0.0 && crate::wgpu::text::is_break_opportunity(value, cursor.byte) {
         let run = atlas.measure_range(value, cursor.byte, crate::wgpu::text::unbreakable_run_end(value, cursor.byte), size);
-        if cursor.pen_x + run > bounds.w.max(1.0) + RETAINED_TEXT_FIT_EPSILON {
+        if cursor.pen_x + kerning + run > bounds.w.max(1.0) + RETAINED_TEXT_FIT_EPSILON {
             let Some(next_line) = cursor.line.checked_add(1) else { return RetainedGlyphStep::Fault };
             cursor.line = next_line;
             cursor.pen_x = 0.0;
+            kerning = 0.0;
         }
     }
     let strikes = weight.strikes();
@@ -205,13 +207,13 @@ fn paint_retained_glyph_step_inner(value: &str, bounds: Rect, size: f32, color: 
     let (atlas_x, atlas_y, width, height, advance, bearing_x, bearing_y) = (glyph.atlas_x, glyph.atlas_y, glyph.width, glyph.height, glyph.advance, glyph.bearing_x, glyph.bearing_y);
     let (logical_w, logical_h) = (glyph.logical_width(), glyph.logical_height());
     let hangs = matches!(flow, RetainedTextFlow::Wrap) && crate::wgpu::text::is_wrap_space(ch);
-    let overflows = !hangs && cursor.pen_x > 0.0 && cursor.pen_x + advance > bounds.w.max(1.0) + RETAINED_TEXT_FIT_EPSILON;
+    let overflows = !hangs && cursor.pen_x > 0.0 && cursor.pen_x + kerning + advance > bounds.w.max(1.0) + RETAINED_TEXT_FIT_EPSILON;
     if overflows && matches!(flow, RetainedTextFlow::Clip) {
         if draw.finish_retained_output().is_err() {
             return RetainedGlyphStep::Fault;
         }
         cursor.byte = next_byte;
-        cursor.pen_x += advance;
+        cursor.pen_x += kerning + advance;
         return RetainedGlyphStep::Pending;
     }
     if overflows {
@@ -221,7 +223,9 @@ fn paint_retained_glyph_step_inner(value: &str, bounds: Rect, size: f32, color: 
         };
         cursor.line = next_line;
         cursor.pen_x = 0.0;
+        kerning = 0.0;
     }
+    cursor.pen_x += kerning;
     let line_height = crate::wgpu::text::line_height(size);
     let baseline = match flow {
         RetainedTextFlow::Wrap => bounds.y + line_height * (cursor.line as f32 + 1.0),
@@ -409,7 +413,7 @@ fn retained_stepper_text_step(value: &str, mut bounds: Rect, color: Rgba, theme:
     }
     if let Some(scalar) = value[cursor.measure_byte..].chars().next() {
         let end = cursor.measure_byte + scalar.len_utf8();
-        cursor.measure_width += atlas.measure_text(&value[cursor.measure_byte..end], theme.font_size_body).0;
+        cursor.measure_width += atlas.pen_advance(value, cursor.measure_byte, theme.font_size_body);
         cursor.measure_byte = end;
         return RetainedNodePaintStep::Pending;
     }
@@ -436,7 +440,7 @@ fn retained_caret_step(value: &str, caret: usize, bounds: Rect, size: f32, align
     }
     if let Some(scalar) = value[cursor.measure_byte..].chars().next() {
         let end = cursor.measure_byte + scalar.len_utf8();
-        let width = atlas.measure_text(&value[cursor.measure_byte..end], size).0;
+        let width = atlas.pen_advance(value, cursor.measure_byte, size);
         cursor.measure_width += width;
         if end <= caret {
             cursor.caret_width += width;
@@ -525,7 +529,7 @@ fn retained_tree_text_step(value: &str, mut bounds: Rect, size: f32, color: Rgba
     if inline.is_rtl() {
         if let Some(scalar) = value[cursor.measure_byte..].chars().next() {
             let end = cursor.measure_byte + scalar.len_utf8();
-            cursor.measure_width += atlas.measure_text(&value[cursor.measure_byte..end], size).0;
+            cursor.measure_width += atlas.pen_advance(value, cursor.measure_byte, size);
             cursor.measure_byte = end;
             return RetainedNodePaintStep::Pending;
         }
@@ -547,7 +551,7 @@ fn retained_text_end_step(value: &str, mut bounds: Rect, size: f32, color: Rgba,
     if !inline.is_rtl() {
         if let Some(scalar) = value[cursor.measure_byte..].chars().next() {
             let end = cursor.measure_byte + scalar.len_utf8();
-            cursor.measure_width += atlas.measure_text(&value[cursor.measure_byte..end], size).0;
+            cursor.measure_width += atlas.pen_advance(value, cursor.measure_byte, size);
             cursor.measure_byte = end;
             return RetainedNodePaintStep::Pending;
         }
@@ -993,7 +997,9 @@ fn retained_tree_node_step(
             let result = retained_fixed_output(draw, |draw| {
                 if let Some(icons) = icons {
                     let on_hover_fill = item.presence.state == UiState::Previewed || item.presence.hover;
-                    push_icon(draw, icons, action.icon_id.as_str(), row.x + slot.x, row.y + slot.y, slot.w, foreground_on_fill(theme, theme.text_element, item.presence.selected, on_hover_fill));
+                    let color = foreground_on_fill(theme, theme.text_element, item.presence.selected, on_hover_fill);
+                    let color = if action.disabled { color.with_alpha(color.a * 0.5) } else { color };
+                    push_icon(draw, icons, action.icon_id.as_str(), row.x + slot.x, row.y + slot.y, slot.w, color);
                 }
             });
             if result.is_err() {
@@ -2940,8 +2946,8 @@ fn paint_input(node: &UiInputNode, edit: Option<&EditState>, bounds: Rect, flags
     if let Some(edit) = focused.then_some(edit).flatten() {
         let (start, end) = edit_selection_bounds(edit.anchor, edit.caret);
         if start != end {
-            let (x0, _) = atlas.measure_text(&edit.text[..start], theme.font_size_body);
-            let (x1, _) = atlas.measure_text(&edit.text[..end], theme.font_size_body);
+            let x0 = atlas.pen_at(&edit.text, start, theme.font_size_body);
+            let x1 = atlas.pen_at(&edit.text, end, theme.font_size_body);
             let sel_h = theme.font_size_body * 1.2;
             let sel_y = bounds.y + (bounds.h - sel_h) * 0.5;
             draw.push_solid([text_x + x0, sel_y, (x1 - x0).max(1.0), sel_h], theme.accent.with_alpha(0.3));
@@ -2951,7 +2957,7 @@ fn paint_input(node: &UiInputNode, edit: Option<&EditState>, bounds: Rect, flags
             display.insert_str(edit.caret, composition);
         }
         draw_text_on(draw, atlas, &display, text_x, text_baseline_y, theme.font_size_body, theme.text);
-        let (caret_x, _) = atlas.measure_text(&edit.text[..edit.caret], theme.font_size_body);
+        let caret_x = atlas.pen_at(&edit.text, edit.caret, theme.font_size_body);
         let caret_h = theme.font_size_body * 1.2;
         let caret_y = bounds.y + (bounds.h - caret_h) * 0.5;
         draw.push_solid([text_x + caret_x, caret_y, 1.0, caret_h], theme.accent);
@@ -3318,7 +3324,9 @@ fn paint_tree_item(item: &UiTreeItemNode, x: f32, width: f32, y: f32, depth: u32
                 continue;
             }
             actions_x -= TREE_ICON_SIZE + theme.padding_standard;
-            push_icon(draw, icons, action.icon_id.as_str(), actions_x, row.y + (metrics.row_height - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, foreground_on_fill(theme, theme.text_element, selected, on_hover_fill));
+            let color = foreground_on_fill(theme, theme.text_element, selected, on_hover_fill);
+            let color = if action.disabled { color.with_alpha(color.a * 0.5) } else { color };
+            push_icon(draw, icons, action.icon_id.as_str(), actions_x, row.y + (metrics.row_height - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, color);
         }
     }
     // 🎛️ An inline per-row control (e.g. a small toggle/select embedded in a tree row), static data
@@ -3806,7 +3814,7 @@ pub(crate) fn retained_overlay_chrome_step(draw: &mut DrawList, viewport: Rect, 
 /// 💡️ A hover tooltip's own surface size for `label`, measured the way the popup will draw it —
 /// `🧱️elements/💡️ChromeControlHint/🟦️.tsx`'s `p-single text-xs` glass surface.
 pub fn tooltip_surface_size(label: &str, theme: &Theme, atlas: &mut FontAtlas) -> (f32, f32) {
-    let advance = label.chars().map(|ch| atlas.ensure_glyph(ch, theme.font_size_small).advance).sum::<f32>();
+    let advance = atlas.measure_text(label, theme.font_size_small).0;
     (advance + theme.padding_standard * 2.0, theme.font_size_small + theme.padding_standard * 2.0)
 }
 

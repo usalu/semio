@@ -816,24 +816,18 @@ function computeModeDropZone(pointerX: number, pointerY: number, stackTargets: R
 function applyModeDrop(layout: WindowLayoutNode, drag: ModeDragState, zone: ModeDropZone): WindowLayoutNode {
   const { dragKind, windowId, stackPath: sourcePath } = drag;
   if (dragKind === "stack") {
-    const targetStack = zone.kind === "tab" ? readLayoutAtPath(layout, zone.stackPath) : null;
-    const targetAnchorId = targetStack?.kind === "stack" ? (targetStack.activeId ?? targetStack.children[0]?.id) : undefined;
     const { layout: withoutSource, stack } = extractStackFromLayout(layout, sourcePath);
     if (!stack) return layout;
     const base = withoutSource ?? { kind: "stack", children: [] };
     if (zone.kind === "root-split") return splitRootWithStack(base, stack, zone.side);
-    if (zone.stackPath === sourcePath) return layout;
-    if (zone.kind === "split") {
-      const splitTargetPath = targetAnchorId !== undefined ? (resolveStackPathForWindowId(base, targetAnchorId) ?? zone.stackPath) : zone.stackPath;
-      return splitWithStack(base, splitTargetPath, stack, zone.side);
-    }
-    const mergeTargetPath = targetAnchorId !== undefined ? (resolveStackPathForWindowId(base, targetAnchorId) ?? zone.stackPath) : zone.stackPath;
-    return mergeStackTabsIntoStack(base, mergeTargetPath, stack, zone.index, zone.corner);
+    if (readLayoutAtPath(base, zone.stackPath)?.kind !== "stack") return layout;
+    if (zone.kind === "split") return splitWithStack(base, zone.stackPath, stack, zone.side);
+    return mergeStackTabsIntoStack(base, zone.stackPath, stack, zone.index, zone.corner);
   }
   if (zone.kind === "root-split") return splitRootWithWindow(layout, windowId, zone.side);
-  if (zone.kind === "split") return splitWithWindow(layout, zone.stackPath, windowId, zone.side);
   const without = removeWindowFromLayout(layout, windowId);
-  if (!without) return layout;
+  if (!without || readLayoutAtPath(without, zone.stackPath)?.kind !== "stack") return layout;
+  if (zone.kind === "split") return splitWithWindow(layout, zone.stackPath, windowId, zone.side);
   return insertWindowAsTabAtCorner(without, zone.stackPath, windowId, zone.corner, zone.index < 0 ? undefined : zone.index);
 }
 

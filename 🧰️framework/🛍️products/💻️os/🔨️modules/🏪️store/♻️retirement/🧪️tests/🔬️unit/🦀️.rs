@@ -22,7 +22,7 @@ fn drain(mut retirement: Box<dyn ErasedSnapshotRetirement>, items: usize, bytes:
 #[test]
 fn owned_retirement_matches_neutral_exact_byte_grants() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
-    assert_eq!(fixture["cases"].as_array().unwrap().len(), 9);
+    assert_eq!(fixture["cases"].as_array().unwrap().len(), 11);
     for row in fixture["cases"].as_array().unwrap() {
         for budget in fixture["budgets"].as_array().unwrap() {
             let retirement = match row["kind"].as_str().unwrap() {
@@ -32,11 +32,37 @@ fn owned_retirement_matches_neutral_exact_byte_grants() {
                 "pair" => owned_retirement(serde_json::from_value::<(String, String)>(row["value"].clone()).unwrap()),
                 "stringMap" => owned_retirement(serde_json::from_value::<std::collections::BTreeMap<String, String>>(row["value"].clone()).unwrap()),
                 "value" => owned_retirement(crate::os_pack::json::from_json_str::<crate::DslValue>(&row["value"].to_string()).unwrap()),
+                "bytes" => owned_retirement(serde_json::from_value::<Vec<u8>>(row["value"].clone()).unwrap()),
+                "words" => owned_retirement(serde_json::from_value::<Vec<u32>>(row["value"].clone()).unwrap()),
                 _ => panic!("unknown neutral case"),
             };
             assert_eq!(drain(retirement, budget["items"].as_u64().unwrap() as usize, budget["bytes"].as_u64().unwrap() as usize), row["bytes"].as_u64().unwrap() as usize, "{}", row["id"]);
         }
     }
+}
+
+/// ♻️ A collection without drop glue retires a page per step: a 2 MiB byte buffer under one item and 64 KiB per step releases
+/// exactly its bytes in at most 36 steps (32 pages, the push, the pop, the root), a grant narrower than one element still
+/// completes, and a list of strings still retires string by string.
+#[test]
+fn a_byte_buffer_retires_page_by_page_and_owned_elements_one_by_one() {
+    let mut steps = 0usize;
+    let mut released = 0usize;
+    let mut retirement = owned_retirement(vec![7u8; 2 * 1024 * 1024]);
+    loop {
+        steps += 1;
+        assert!(steps <= 36, "a 2 MiB buffer needs at most 36 steps of 64 KiB");
+        match retirement.close_step(1, 64 * 1024).unwrap() {
+            SnapshotRetirementStep::Pending { released_bytes, .. } => released += released_bytes,
+            SnapshotRetirementStep::Complete => break,
+            SnapshotRetirementStep::Blocked => panic!("an owned buffer never blocks"),
+        }
+    }
+    assert_eq!(released, 2 * 1024 * 1024);
+    assert!(retirement.terminal_is_empty());
+    assert_eq!(drain(owned_retirement(vec![1u32, 2, 3]), 1, 4), 12);
+    assert_eq!(drain(owned_retirement(vec![1u32, 2, 3]), 1, 3), 12, "a grant narrower than one element retires it element by element");
+    assert_eq!(drain(owned_retirement(vec!["ab".to_string(), "c".to_string()]), 1, 1), 3);
 }
 
 #[test]

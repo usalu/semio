@@ -41,7 +41,38 @@ fn number(value: impl ToString) -> String {
 }
 
 fn locate_frame<'a>(document: &'a LayoutSnapshot, id: &str) -> Option<(&'a str, &'a Frame)> {
-    document.pages.iter().find_map(|page| page.frames.iter().find(|frame| frame.id() == id).map(|frame| (page.id.as_str(), frame)))
+    document.pages.iter().find_map(|page| {
+        if let Some(frame) = page.frames.iter().find(|frame| frame.id() == id) {
+            return Some((page.id.as_str(), frame));
+        }
+        let parent = page.parent_page_id.as_ref().and_then(|parent_id| document.parent_pages.iter().find(|parent| parent.id == *parent_id))?;
+        parent.frames.iter().find(|frame| frame.id() == id).map(|frame| (page.id.as_str(), frame))
+    })
+}
+
+
+fn layer_select(frame_id: &str, page_id: &str, layer_id: &str, document: &LayoutSnapshot, labels: &LayoutLabels) -> UiAssemblyResult<BuiltNode> {
+    let args = ui_value_map([("field", ui_value_text("layerId")?), ("frameId", ui_value_text(frame_id)?), ("pageId", ui_value_text(page_id)?)])?;
+    let (action, args) = layout_action("patchFrame", Some(args))?;
+    let mut input = ui::select(text(layer_id)?).try_id("layout-play-inspector.patchFrame.layerId.input").map_err(|_| admit())?.try_label(labels.group_layer.as_str()).map_err(|_| admit())?;
+    if let Some(page) = document.pages.iter().find(|page| page.id == page_id) {
+        for layer in &page.layers {
+            input = input.try_item(text(&layer.id)?, ui::Label(text(&layer.name)?)).map_err(|_| admit())?;
+        }
+    }
+    let control = input.try_on_with(Trigger::Change, action, args.ok_or_else(admit)?).map_err(|_| admit())?.try_build().map_err(|_| admit())?;
+    ui::tree_item(ui::Label(text(labels.group_layer.as_str())?)).try_id("layout-play-inspector.patchFrame.layerId").map_err(|_| admit())?.try_child(control).map_err(|_| admit())?.try_build().map_err(|_| admit())
+}
+
+fn selection_frame(document: &LayoutSnapshot, page_id: &str, frame: &Frame) -> Frame {
+    let Some(page) = document.pages.iter().find(|page| page.id == page_id) else { return frame.clone() };
+    if page.frames.iter().any(|item| item.id() == frame.id()) {
+        return frame.clone();
+    }
+    let Some(page_override) = page.overrides.iter().find(|item| item.object_id == frame.id()) else { return frame.clone() };
+    let mut resolved = frame.clone();
+    crate::standards::v1::subsets::any::schema::apply_page_override(&mut resolved, page_override);
+    resolved
 }
 
 fn frame_kind_label<'a>(frame: &Frame, labels: &'a LayoutLabels) -> &'a str {
@@ -95,13 +126,25 @@ fn frame_fields(frame: &Frame, document: &LayoutSnapshot, labels: &LayoutLabels)
             rows.push(Field { key: "stroke", label: labels.stroke, value: rgba_to_hex(stroke), kind: InputKind::Color });
         }
         Frame::Text { columns, story_id, inset, .. } => {
-            let content = document.stories.iter().find(|story| story.id == *story_id).map(|story| story.content.clone()).unwrap_or_default();
+            let story = document.stories.iter().find(|story| story.id == *story_id);
+            let content = story.map(|story| story.content.clone()).unwrap_or_default();
             rows.push(Field { key: "columns", label: labels.columns, value: number(columns), kind: InputKind::Number });
-            rows.push(Field { key: "storyContent", label: labels.story, value: content, kind: InputKind::LongText });
+            rows.push(Field { key: "storyContent", label: labels.story, value: content.clone(), kind: InputKind::LongText });
             rows.push(Field { key: "insetX", label: labels.inset_x, value: number(inset.x), kind: InputKind::Number });
             rows.push(Field { key: "insetY", label: labels.inset_y, value: number(inset.y), kind: InputKind::Number });
             rows.push(Field { key: "insetWidth", label: labels.inset_width, value: number(inset.width), kind: InputKind::Number });
             rows.push(Field { key: "insetHeight", label: labels.inset_height, value: number(inset.height), kind: InputKind::Number });
+            let runs = story.map(|story| story.style_runs.as_slice()).unwrap_or(&[]);
+            let shown = if runs.is_empty() { 1 } else { runs.len().min(4) };
+            for index in 0..shown {
+                let (start, end) = runs.get(index).map(|run| (byte_chars(&content, run.start), byte_chars(&content, run.end))).unwrap_or((0, content.chars().count()));
+                if let Some(key) = crate::editor::layout::commands::patch_frame::style_range_key(index, true) {
+                    rows.push(Field { key, label: labels.style_start.clone(), value: number(start), kind: InputKind::Number });
+                }
+                if let Some(key) = crate::editor::layout::commands::patch_frame::style_range_key(index, false) {
+                    rows.push(Field { key, label: labels.style_end.clone(), value: number(end), kind: InputKind::Number });
+                }
+            }
         }
         Frame::Image { link_id, .. } => {
             let link = document.links.iter().find(|link| link.id == *link_id);
@@ -115,9 +158,20 @@ fn frame_fields(frame: &Frame, document: &LayoutSnapshot, labels: &LayoutLabels)
             rows.push(Field { key: "linkHeight", label: labels.link_height, value: height, kind: InputKind::Number });
             rows.push(Field { key: "dpi", label: labels.dpi, value: dpi, kind: InputKind::Number });
             rows.push(Field { key: "colorProfile", label: labels.color_profile, value: profile, kind: InputKind::Text });
+            if crate::mutations::set_drawing_text::is_drawing_kind(&link.map(|link| link.artifact_kind.as_str()).unwrap_or("")) {
+                for (index, text) in crate::mutations::set_drawing_text::drawing_labels(document).into_iter().enumerate() {
+                    let Some(key) = crate::mutations::set_drawing_text::drawing_text_field(index) else { break };
+                    rows.push(Field { key, label: labels.drawing_text.clone(), value: text, kind: InputKind::Text });
+                }
+            }
         }
     }
     rows
+}
+
+
+fn byte_chars(content: &str, byte: usize) -> usize {
+    content.get(..byte.min(content.len())).unwrap_or(content).chars().count()
 }
 
 fn field_row(command: &str, field: &Field, frame_id: Option<&str>, page_id: Option<&str>) -> UiAssemblyResult<BuiltNode> {
@@ -294,6 +348,13 @@ fn guide_input(page_id: &str, index: usize, key: &str, label: LabelText, value: 
     ui::tree_item(ui::Label(text(label.as_str())?)).try_id(format!("layout-play-inspector.patchPage.{field}")).map_err(|_| admit())?.try_child(control).map_err(|_| admit())?.try_build().map_err(|_| admit())
 }
 
+fn frame_button(frame_id: &str, page_id: &str, field: &str, label: LabelText) -> UiAssemblyResult<BuiltNode> {
+    let args = ui_value_map([("field", ui_value_text(field)?), ("frameId", ui_value_text(frame_id)?), ("pageId", ui_value_text(page_id)?), ("value", ui_value_text("true")?)])?;
+    let (action, args) = layout_action("patchFrame", Some(args))?;
+    let control = ui::button(ui::Label(text(label.as_str())?)).try_id(format!("layout-play-inspector.patchFrame.{field}.input")).map_err(|_| admit())?.try_on_with(Trigger::Activate, action, args.ok_or_else(admit)?).map_err(|_| admit())?.try_build().map_err(|_| admit())?;
+    ui::tree_item(ui::Label(text(label.as_str())?)).try_id(format!("layout-play-inspector.patchFrame.{field}")).map_err(|_| admit())?.try_child(control).map_err(|_| admit())?.try_build().map_err(|_| admit())
+}
+
 fn page_button(page_id: &str, field: &str, label: LabelText) -> UiAssemblyResult<BuiltNode> {
     let args = ui_value_map([("field", ui_value_text(field)?), ("pageId", ui_value_text(page_id)?), ("value", ui_value_text("true")?)])?;
     let (action, args) = layout_action("patchPage", Some(args))?;
@@ -359,6 +420,7 @@ pub fn render(document: &LayoutSnapshot, config: &LayoutWindowConfig, interactio
         if document.pages.len() > 1 {
             page_rows.try_push(page_button(&page.id, "delete", labels.delete_page)?).map_err(|_| admit())?;
         }
+        page_rows.try_push(page_button(&page.id, "addLayer", labels.add_layer)?).map_err(|_| admit())?;
         for layer in &page.layers {
             page_rows.try_push(layer_name(&page.id, &layer.id, &layer.name, labels)?).map_err(|_| admit())?;
             page_rows.try_push(layer_flag(&page.id, &layer.id, "visible", layer.visible, labels.visible)?).map_err(|_| admit())?;
@@ -367,22 +429,31 @@ pub fn render(document: &LayoutSnapshot, config: &LayoutWindowConfig, interactio
         builder = builder.section("layout-play-inspector.page", Some(ui_label(labels.group_page.as_str())?), true, page_rows)?;
     }
     let Some(frame_id) = interaction.ids.first() else { return builder.build() };
-    let Some((page_id, frame)) = locate_frame(document, frame_id) else {
+    let Some((page_id, source)) = locate_frame(document, frame_id) else {
         let missing = ui_node_list([tree_item_desc("layout-play-inspector.missing", ui_label(labels.selection_not_found.as_str())?, None)])?;
         return builder.section("layout-play-inspector.frame", Some(ui_label(labels.group_frame.as_str())?), true, missing)?.build();
     };
-    let mut frame_rows = rows(&frame_fields(frame, document, labels), "patchFrame", Some(frame_id), Some(page_id))?;
-    frame_rows.try_push(tree_item_desc("layout-play-inspector.frame.kind", ui_label(labels.kind.as_str())?, Some(frame_kind_label(frame, labels).to_string()))?).map_err(|_| admit())?;
-    if let Frame::Text { wrap_mode, story_id, thread_next, .. } = frame {
+    let frame = selection_frame(document, page_id, source);
+    let mut frame_rows = rows(&frame_fields(&frame, document, labels), "patchFrame", Some(frame_id), Some(page_id))?;
+    if document.pages.iter().any(|page| page.id == page_id && page.frames.iter().any(|item| item.id() == frame.id())) {
+        frame_rows.try_push(layer_select(frame_id, page_id, frame.layer_id(), document, labels)?).map_err(|_| admit())?;
+        frame_rows.try_push(frame_button(frame_id, page_id, "forward", labels.bring_forward)?).map_err(|_| admit())?;
+        frame_rows.try_push(frame_button(frame_id, page_id, "backward", labels.send_backward)?).map_err(|_| admit())?;
+    }
+    frame_rows.try_push(tree_item_desc("layout-play-inspector.frame.kind", ui_label(labels.kind.as_str())?, Some(frame_kind_label(&frame, labels).to_string()))?).map_err(|_| admit())?;
+    if let Frame::Text { wrap_mode, story_id, thread_next, .. } = &frame {
         frame_rows.try_push(wrap_row(frame_id, page_id, wrap_mode, labels)?).map_err(|_| admit())?;
         frame_rows.try_push(story_select(frame_id, page_id, story_id, document, labels)?).map_err(|_| admit())?;
         frame_rows.try_push(story_style_select(frame_id, page_id, story_id, document, labels)?).map_err(|_| admit())?;
         frame_rows.try_push(thread_select(frame_id, page_id, thread_next, document, labels)?).map_err(|_| admit())?;
     }
-    if let Frame::Image { link_id, .. } = frame {
+    if let Frame::Image { link_id, .. } = &frame {
         if let Some(link) = document.links.iter().find(|link| link.id == *link_id) {
             if !link.artifact_kind.is_empty() {
                 frame_rows.try_push(tree_item_desc("layout-play-inspector.frame.artifact", ui_label(labels.artifact.as_str())?, Some(format!("{} {}", link.artifact_kind, link.artifact_ref)))?).map_err(|_| admit())?;
+            }
+            if crate::editor::layout::panels::catalogue::native_open(&link.artifact_kind).is_some() && !link.artifact_ref.trim().is_empty() {
+                frame_rows.try_push(frame_button(frame_id, page_id, "open", labels.open_source)?).map_err(|_| admit())?;
             }
         }
     }

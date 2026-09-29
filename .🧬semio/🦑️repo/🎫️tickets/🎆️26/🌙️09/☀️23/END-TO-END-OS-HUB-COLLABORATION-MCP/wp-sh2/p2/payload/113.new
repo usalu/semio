@@ -1,0 +1,6 @@
+{
+  "SetArtifactPresence": {
+    "artifactId": "artifact-1",
+    "actorsCsv": "user:u-1#s1,user:u-2#s1"
+  }
+}

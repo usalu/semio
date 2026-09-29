@@ -669,10 +669,24 @@ fn an_independent_decoder_job_preserves_its_exact_response_through_cancellation(
     close_owned_decoder_fixture(authority, recovered);
 }
 
-/// 🎟️ Session saturation returns the unchanged decoder response while rejected metadata closes separately.
+/// 🧫️ Marks the child process that runs [`an_independent_decoder_job_recovers_its_response_from_an_exact_rejected_session`] alone.
+#[cfg(not(target_arch = "wasm32"))]
+const WORKER_SESSION_SATURATION_CHILD: &str = "SEMIO_RENDERER_WORKER_SESSION_SATURATION_CHILD";
+
+/// 🎟️ Session saturation returns the unchanged decoder response while rejected metadata closes separately. The law owns every
+/// process-wide [`semio_framework_job::WORKER_JOB_SESSION_SLOTS`] admission at once, so it runs alone in a child process of this
+/// test binary: beside it, parallel laws of the same process admit sessions too — one lost race refused a neighbour's admission,
+/// the other dropped a rejected admission mid-unwind and aborted the whole binary.
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn an_independent_decoder_job_recovers_its_response_from_an_exact_rejected_session() {
+    if std::env::var_os(WORKER_SESSION_SATURATION_CHILD).is_none() {
+        let law = format!("{}::an_independent_decoder_job_recovers_its_response_from_an_exact_rejected_session", module_path!().split_once("::").expect("crate-rooted test module").1);
+        let output = std::process::Command::new(std::env::current_exe().unwrap()).args([law.as_str(), "--exact", "--test-threads=1"]).env(WORKER_SESSION_SATURATION_CHILD, "1").output().unwrap();
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        assert!(output.status.success() && stdout.contains("test result: ok. 1 passed"), "the isolated saturation law passes alone: {stdout}{}", String::from_utf8_lossy(&output.stderr));
+        return;
+    }
     use semio_framework_job::*;
     struct Occupied;
     impl InteractiveJob for Occupied {
@@ -2195,7 +2209,7 @@ fn the_swapchain_is_acquired_written_and_presented_in_one_prepared_opportunity()
     assert!(!GPU_SOURCE.contains("PreparedGpuPresentPhase::CreateView"), "and so is viewing it in its own phase");
 
     let present = ladder.split("PreparedGpuPresentPhase::Present =>").nth(1).expect("the terminal present phase");
-    let present = &present[..present.find("PreparedGpuPresentPhase::Complete").unwrap_or(present.len())];
+    let present = &present[..present.find("PreparedGpuPresentPhase::Complete =>").unwrap_or(present.len())];
     let acquire = present.find("get_current_texture").expect("the acquire");
     let blit = present.find("blit_prepared_composite").expect("the composite blit onto the acquired texture");
     let submit = present.find("self.queue.submit").expect("the submit");
@@ -2322,8 +2336,9 @@ fn the_present_watchdog_signature_carries_within_item_upload_progress() {
     assert!(GPU_SOURCE.contains("pub fn prepared_upload_progress(&self) -> (u32, u32, usize)"), "the GPU context joins it with the atlas page cursor");
     assert!(LIBRARY_SOURCE.contains("let upload_progress = self.gpu.prepared_upload_progress();"), "and the presenter reads it every step");
     assert!(LIBRARY_SOURCE.contains("cursor.gpu_cursor.as_ref().map(ui_wgpu::wgpu::PreparedGpuPresentCursor::progress)"), "the signature retains exact GPU cursor progress");
-    assert!(
-        LIBRARY_SOURCE.contains("upload_progress,") && LIBRARY_SOURCE.contains("cursor.raster_keep_steps,") && LIBRARY_SOURCE.contains("cursor.input_progress,"),
-        "upload, raster-ownership, and bounded input progress are independent signature terms"
-    );
+    let stall = LIBRARY_SOURCE.split("fn note_present_stall(").nth(1).expect("the presenter's stall watch");
+    let stall = &stall[..stall.find("\n    }\n").expect("the stall watch closes")];
+    let signature = &stall[stall.find("(cursor.phase").expect("the stall signature tuple") + 1..];
+    let terms: Vec<&str> = signature.split(", ").map(|term| term.trim_end_matches([')', ',', '\n', ' '])).collect();
+    assert!(["upload_progress", "cursor.raster_keep_steps", "cursor.input_progress"].iter().all(|term| terms.contains(term)), "upload, raster-ownership, and bounded input progress are independent signature terms: {terms:?}");
 }

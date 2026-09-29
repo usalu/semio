@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/ShellHost/local-catalog/component.ts
-/** @emoji 🗂️ The shell's host-owned local document catalog — `os.config.local-catalog`, persisted local-only in the device's
+/** 🗂️ The shell's host-owned local document catalog — `os.config.local-catalog`, persisted local-only in the device's
  * data folder (`${S_DATA_DIR}/os`) — and the guest route to it. A guest runs without a filesystem (every wasm32 shell), so a
  * document it wants kept on this device (a studio persisted into a folder, bound to a file, or imported) reaches the host as
  * `replayShellCommand os.local-catalog.admit` with the document's own pack/spr pair: the host writes the document into its

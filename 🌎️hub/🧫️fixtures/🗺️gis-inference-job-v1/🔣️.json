@@ -12,7 +12,7 @@
     "documentId": "dddddddddddddddddddddddddddddddd",
     "descriptorDigest": "1111111111111111111111111111111111111111111111111111111111111111",
     "binding": {
-      "digest": "1643c1ddc80caf3505f5a9650272a940dc31ceb6731ca134d6058f22dfd2fbbd",
+      "digest": "7416e14dfc2c21a42c68f11053c7f98eb30a5e857736b82bb85976de80f66515",
       "catalogGenerationId": "0101010101010101010101010101010101010101010101010101010101010101",
       "packageId": "semio:gis",
       "packageVersion": "0.1.0",

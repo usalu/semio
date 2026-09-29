@@ -6,6 +6,124 @@ serves 6510–6519. Private cargo target: `.tmp-ticket/wp-h13/target` (build-dir
 [📓️wp-h11.md](📓️wp-h11.md) (Session 13 table + B3 wave), [📓️wp-db1.md](📓️wp-db1.md) (Session 13 log),
 [📓️audit-s13-hub.md](📓️audit-s13-hub.md), [📓️acceptance-s13.md](📓️acceptance-s13.md) §2.
 
+## Session 15
+
+| # | Item | Status |
+|---|------|--------|
+| 1 | Reconcile predecessor (died ~18:45) | **DONE 19:3x** — tree clean (draft only in `.🧬semio/🌐hub/s14-h13-work/wal-writer-model/edit`, base == tree); stray `🌎️hub/🏗️bootstrap/🦀️.rs.orig` (hubassets2 `patch` backup) removed |
+| 2 | P1 WAL writer slot per open document (set A) (hub caps at ~32 live documents; gates MCP coverage: A15 p33-4 = 17/63 e2e, 41/63 opens ≥ 10 s) — coordinator APPROVED 19:3x | in progress: writer held only while a document writes, parked (LRU-reclaimable) at rest, declared capacity + FIFO typed wait; set `.🧬semio/🌐hub/s14-h13-work/wal-writer-lease/` |
+| 3 | Component assets + hub stream rule live on t6 | waits for W4 'T6 HUB READY' |
+| 4 | G12 ack-timeout re-check | after item 2 lands + hub rebuild |
+| 6 | Set B (P0 coordinator 21:4x): ack never without a durable WAL record — pages reserved before apply, diverged engine fail-stop, FIFO submit admission; law fs + sqlite + recovery == acked | after set A lands |
+| 7 | Set C: declared state-residency budget, idle-document unload/reload, typed bounded page wait; law 1 000 docs × 50 clients | after set B |
+| 5 | pg/neo4j backend gates (row 2.4, was session-14 item 5 — stale: needed a channel-19 catalog) on the t6 hub | after 'T6 HUB READY' (coordinator 19:3x); all-driver binary to rebuild after item 2 |
+
+### Session 15 log
+
+- 19:3x **reconcile.** Predecessor's last step: drafting the writer-residency set out of tree (`wal-writer-model/edit`, 10 files, 18:45–18:50:
+  per-commit acquire + release after every actor turn, FIFO admission wait); never applied (base == tree for all 10 files), never compiled.
+  Tree hunks of kernel-db/hub newer than 18:00: none of mine (`🗿️artifact` foreign-transition refusal = a peer's). Stray `.orig` from the
+  17:52 hubassets2 `patch` removed. Draft reviewed: releasing after every turn costs a fresh writer per commit (fs flock + 2 verify tasks;
+  Postgres = a NEW TCP session + advisory lock per commit; Neo4j = a lease claim + renewal task per commit) and its admission queue leaks
+  a dropped waiter's ticket at the head (every later waiter starves) → redesigned (item 2).
+
+- 19:4x **item 2 set prepared** (`.🧬semio/🌐hub/s14-h13-work/wal-writer-lease/`: base/edit copies of 14 kernel-db files + `wal-writer-lease.patch`,
+  dry-run clean on the live tree 19:44; runner `wp-h13/h13-land-wal-writer-lease.sh`). Design (root fix, kernel-db only, hub code unchanged):
+  - **lease** (`🔐️writer/🔔️release`): each writer's signal cell carries `Held | Parked{since} | Reclaimed`; `park`/`resume`/`reclaim` are
+    linearized on the cell mutex (a holder never writes with a writer its backend is releasing); per-backend park clock orders LRU.
+  - **table** (`🔐️writer`): `ensure_capacity(document)` = retired predecessor's slot, else a free one, else reclaim the least recently parked
+    writer (no pinned op, not releasing; local guards finish inline within 4 steps, remote unlocks finish on the release controller);
+    Postgres/Neo4j call it BEFORE opening a lock session / claiming a lease, so a full table never costs a session. A parked writer still
+    owns its document (same-document acquisition = `Conflict`, as before).
+  - **admission** (`🔐️writer` 🚦️Admission): every storage's `acquire_writer` goes through `admitted_acquire`: FIFO line per backend
+    (tickets, head-only retry on a capacity epoch bumped by every freed slot AND every park), RAII place (a dropped/cancelled waiter leaves
+    and hands the turn on), deadline on the backend's own pool timer (`wake_after`), elapsed wait / waiter beyond the bound =
+    `DbError::Unavailable(WAL_WRITER_ADMISSION_REFUSAL)` → hub `hub.unavailable` transient refusal (client resends); census
+    (waited/refused/waiting). Declared (schema-first): writer schema `WriterAuthorityV1` gains `admission` (waitMs 10 000, waiters 4 096,
+    FIFO, unavailable), `lease` (reclaim-order vectors) and `residency` (1 000 docs / 50 clients / 2 rounds); fixture Ajv-valid (strict,
+    third-party oracle), the old fixture is refused by the new schema.
+  - **WAL** (`📝️wal`): `begin_write` (resume, else await the reclaimed release, re-acquire, verify active segment still Active at exactly
+    `flushed_len` → else `Conflict`, nothing appended), `park_writer` (only without a pending group commit); submit/force_flush/compaction
+    delete call `begin_write`. **Engine** (`🗿️artifact`): `submit` secures the writer before `commit_one` mutates state; the runner parks the
+    writer after construction and after every turn.
+  - Laws: writer unit (declared policy + FIFO line), registered-backend lease law (LRU order, held never reclaimed, reclaimed key fenced,
+    release terminal) + admission law (arrival order, parked writer to head only, cancel hands on, 50 ms wait refused on the pool timer),
+    WAL law (reclaimed writer re-acquired: append continues tx 2 in one segment; foreign seal → `Conflict`, segment untouched), engine laws
+    (1 000 docs × 50 clients × 2 rounds on memory: all acked at exact heads, census waited > 0 / refused 0, 32 fresh docs acquire at once;
+    96 fs docs × 8 clients × 2 rounds with real sidecar locks + reopen replays head 2). Written, **not run yet**.
+  - 19:44 window queued: `fleet-mutex.sh native h13 -- h13-land-wal-writer-lease.sh lease1` (pid 27211, capture
+    `s14-h13-logs/lease1-window.txt`; 4 ahead). Main told (chain hub-build timing).
+- 19:4x coordinator PRIORITY GRANTED → own waiter 27211 stopped, re-queued with `FLEET_TICKET_STAMP=20260929183254` (pid 27596, 2nd behind
+  g12). Post-landing hold prepared: `wp-h13/h13-hold-18.sh` (full kernel-db lib sqlite, `os-hub:test-all-features`, all-driver os-hub →
+  `s14-h13-bin/os-hub-all-drivers-<HHMM>`). 19:56 turn ended while queued (rule 32); main watches `lease1-window.txt`.
+- 20:00–20:06 **window lease1 RED → RESTORED** (`s14-h13-logs/lease1-window-red.txt`, tree clean, re-diffed = base): Ajv VALID, kernel-db
+  check default + all features EXIT 0, semio-hub all-features check EXIT 0; laws 22/24 — both residency laws failed while OPENING
+  documents, not at the writers: `document 64 opens beside the others: Unavailable("artifact runner retirement capacity exhausted")`
+  (memory) and `document 63 …: Unavailable("artifact runner retirement maintenance admission: Capacity")` (fs; `lease1-laws.txt`).
+  **Second hub ceiling (root cause):** every live `ArtifactAuthority` reserves at spawn a static retirement slot
+  (`ARTIFACT_RUNNER_RETIREMENT_SLOTS` = 64 per PROCESS) AND installs its own pool maintenance hook (`WORKER_MAINTENANCE_CAPACITY` = 64
+  per pool, shared with every backend controller) → a hub holds < 64 open documents in all, whatever the writers — the next wall
+  right behind the 32-writer one (G12's 63-document space cannot be open at once).
+  **Fix (kernel-db only; the async crate stays frozen):** the retirement slot stays a fixed cell (so a drop can always hand its runner
+  over) but is never a hook: ONE shared maintenance hook per pool (`ARTIFACT_RUNNER_RETIREMENT_HOOKS`, 256 pool rows), joined by every
+  reservation on that pool, installed with its first and removed/retired with its last; its turn advances every committed cursor of that
+  pool one close step (same per-cursor Absent/Waiting/Faulted/Retired logic as before); slots 64 → 4 096 (declared live authorities per
+  process). Laws rewritten: `retirement_turn_before_its_commit_keeps_the_hook_for_the_committed_cursor` (two reservations share one
+  hook; it stays until the pool's last slot), `more_live_authorities_than_pool_maintenance_hooks_retire_through_one_shared_hook` (65 live
+  authorities on one pool with 64 hooks, each retires within its turn budget + releases its writer, all 64 hooks free after).
+  Residency laws now resend a commit refused as transient like a hub client (the process-wide 64-slot submit admission refuses the
+  65th concurrent submit as `Unavailable` — noted as follow-up: queue it FIFO like the writers instead of refusing); census claim relaxed
+  to refused 0 / waiting 0 (the FIFO order is proven deterministically by the registered-backend admission law). Landing window now
+  runs the FULL kernel-db lib (40–130 s; only the load-bound throughput wall-ratio laws tolerated) instead of a filter.
+- 20:15 **window lease2 queued** first in the native lane (stamp 20260929183254, pid 54431, capture `s14-h13-logs/lease2-window.txt`;
+  lw1 holds since 20:09).
+- 20:31–20:43 **window lease2 RED → RESTORED** (`lease2-window.txt`; tree re-diffed = base): checks + semio-hub check green, TS gates
+  no new failure; full kernel-db lib **730/734**: `more_live_authorities…` and the 1 000-doc law failed at document 64 with
+  `Unavailable("memory WAL fixed owner capacity exhausted")` — the MEMORY backend is fixed-capacity by design (`DB_IO_MEMORY_OWNERS` = 64
+  WAL owners per backend; not a hub production store) → the 1 000-doc law now runs on the hub's own SQLite file storage
+  (`Profile::Prod`, `#[cfg(feature = "sqlite")]`, census via new `SqliteStorage::writer_admission_census`), the shared-hook law spreads
+  its 65 authorities over two memory backends. The fs law (96 docs) failed without any printed cause (no panic text in the capture —
+  like the tolerated throughput law) → the window now first runs each of the 3 heavy laws in-process (`SEMIO_DB_ISOLATED_LAW`,
+  `--nocapture`) so a red shows its cause, then the full lib. Only the tolerated sqlite throughput wall-ratio law failed otherwise.
+- 20:46 **window lease3** queued first (stamp 20260929183254, pid 84417; h14 holds since 20:43). Coordinator 20:2x: the process-wide
+  64-slot submit admission becomes a FIFO typed bounded wait (own window, law N concurrent submits > capacity committed in order) —
+  planned after lease lands: generic FIFO admission line in `🎚️policy` shared by writers + submits.
+- 20:56–21:09 **lease3 RED → RESTORED** (checks green; shared-hook law PASS in-process 0.12 s — 65 live authorities on a 64-hook
+  pool). The SQLite 1 000-doc law STALLED (DB idle, 4 workers parked, test thread resending; killed my own pid 94361 after 11 min);
+  the fs 96-doc law: round 2 acked `residency-fs-0001` at head 1 = **durability bug** (see below).
+- 21:29–21:39 **diag1** (`h13-diag-residency.sh`: apply, laws in-process with deadlines + refusal tallies, always reverse; tree clean):
+  fs 96 docs × 64 in flight: round 2 29/96 failed `retained state admission failed: unavailable: state page admission rejected`
+  (typed as InvalidArgument = permanent!); tallies: `DB I/O process aggregate credit exhausted` 57, writer admission refused 150
+  (census waited 254 / refused 150 / waiting 12), submit item capacity 1 085. SQLite 1 000 docs: round 1 **878/1000 failed**, same
+  state-page refusal; writer census waited 562 / refused 172 / waiting 271 (holders wait for pages, so waiters hit 10 s).
+  **Next hub ceiling (measured):** every document's state VALUE holds ≥ 1 DB I/O page (16 KiB) of the process's 1 024 pages
+  (`DB_IO_TOTAL_PAGES`, `🔘️state` `StateEntry::try_admit`) → ~120 single-value documents resident per process, far fewer real ones;
+  the writer/hook fixes move the wall, this one needs a residency redesign.
+  **Durability bug (P0):** `ArtifactEngine::submit` applies (`commit_one`) before `ArtifactWal::submit`; a transient failure inside the
+  WAL write (tail-window / flush-copy page admission `try_reserve`) returns `Unavailable`, the client resends, dedupe finds the edit
+  in `applied` and acks a receipt at the OLD head without any WAL record — an ack for an edit never made durable.
+- 21:4x **coordinator GO A → B → C**: A = land now (writers + shared hook + transient kind); B (P0) = WAL pages reserved before
+  apply, diverged engine fail-stops, FIFO submit admission, law "transient WAL failure after apply + resend never yields an ack
+  without a durable record (fs + sqlite), recovery replay == acked set"; C = declared state-residency budget, idle documents unload +
+  reload through the verified path, page shortage transient with typed bounded wait, law 1 000 docs × 50 clients all committed.
+- 21:41 **set A = lease4** queued first (pid 24985): the 1 000-doc law moved to set C; residency law = fs 96 docs / 8 clients /
+  48 in flight / 2 rounds (fixture `residency` + schema `inFlight`, Ajv VALID); `apply_entries` keeps a page shortage transient
+  (`Unavailable`, was `InvalidArgument`); the Submit turn parks the writer right after the WAL write (before index maintenance).
+- 21:46–21:51 **lease4 RED → RESTORED:** fs law (96 docs / 48 in flight) — 443 662 `artifact state retirement pressure refused admission`:
+  **livelock** — each resident state value holds one DB I/O ledger operation (128 per process), page-refused stagings parked their
+  cursors in all 192 retirement slots and no refused apply ever ran the maintenance that retires them → set A: `apply_entries` runs
+  retirement maintenance FIRST (and after a refused staging); law rescaled to 72 docs / 8 in flight.
+- 21:52–21:56 **lease5 RED → RESTORED:** everything passed except the fs law's teardown `pool.shutdown()` (Busy: the reopened fs backend's
+  pool use) → coordinator: keep the unwrap, close backends explicitly → law opens both fs backends itself and `DbBackend::close`s them.
+- 22:16 **lease6 RED → RESTORED:** kernel-db lib 732/733 — the pinned law `artifact_staging_retirement_…_max_plus_one_are_lossless`
+  expected an apply refused when all tiers hold RETIRABLE owners (the livelock) → law updated: parked owners are retired first and the
+  apply commits; the refusal is proven with every reservation held by in-flight applies (bitmaps full).
+- 22:17–22:39 **lease7 RED → RESTORED:** the full lib hung 20 min in `wal_writer_admission_serves_waiters…` (sample: every thread
+  parked, test task never woken; killed my own pid 50203). **Root cause (real bug):** the admission wait checked its deadline on
+  `Instant` but armed its single wake on the pool clock with two truncations → the timer could fire < 1 ms early and never re-arm =
+  silent stall. **Fix:** deadline measured and armed on the backend's own pool clock (`release::controller_pool`, `pool.now_ms()`,
+  `callback_at(deadline_ms)`; `wake_after` removed).
+- 22:40 **lease8** has the lane.
 ## Session 14
 
 | # | Item | Status |
@@ -393,3 +511,40 @@ Successor agent (2026-09-28 16:5x, after the 14:37 usage cut + app restart; chai
 - 08:48 **hold 17 — transport-refill kernel law (L1 T1a) PASS:** `cargo test -p semio-framework-os-kernel --locked --lib --features
   sync,ureq -- an_exhausted_directory_byte_budget_names_itself_and_refills_on_the_pools_own_turn` → 1 passed (log
   `.🧬semio/🌐hub/s14-h13-logs/hold17-refill-law.txt`); with the os-mcp TS oracle 5/5 (22:2x) the refill set is proven on both sides.
+- **Source-gate reds (coordinator, PARKED for the os-mcp priority):** LANDED (TS host tooling, in place): walker skips
+  generated dirs; `interactivityCfgTestItemSpans` same-line/negated `cfg(test)` fix (+ law, rustc oracle); isolated db lanes read
+  production + test evidence; kernel verbs (compaction/mount/shutdown) green; P1w + P1x green; b1b6 part of `p1q-b1-b6` green
+  (re-anchored: typed `DbIoResultHandback`, generation-token timer retry, validate-all writer transition, boxed fixed memory
+  owners, backend-registered pool, `submit_db_io_task_admitted` order, driver-runtime pool close, typed capacity fault).
+  Still red, TRUTHFULLY (real lost guarantees, not wording): P1y — actor-route compaction has no retained lease-release witness
+  (retained `DatabaseCompactionFuture` has no production caller) + index budget refill yields the OS thread; P1z — hello tail
+  decodes envelopes without cumulative ledger pre-debit. Open: 32 `p1q-r4` items (22 of them the artifact WAL retained
+  decoder/adapter that 40a2736e66 replaced by bounded whole-record `decode_wal_command` + `WalTurn` yields — to re-anchor;
+  retirement overflow/quarantine, index decode, WAL segment close yield, compaction page close — to triage).
+- 16:0x–16:5x **os-mcp remote budget + settle (coordinator P1, G12 coverage on p33) — LANDED 16:35 (budget2), gateway staged
+  `s14-h13-bin/semio-os-mcp-budget`.** Measured root: per-refresh descriptor refetch (16.7 MB in the 63-doc space, 4.6 MB unique) ×
+  one refresh per directory event; failed refresh = empty catalog = every later open/export "cannot be matched". Fix + laws: see the
+  landing row. Live probe (`h13-mcp-open-probe.ts`, `s14-h13-logs/mcp-open-probe-1.txt`): 33/33 first opens (one per plugin) ok,
+  budget waits with progress for component-bearing opens (codec from the component); re-opens took ~10 s each (read delegation's
+  live link never went live — observation for G12, not the budget); the last 4 re-opens hit the probe's own 900 s delegation TTL.
+- 17:1x–18:25 **Component delivery as a static-asset class (coordinator) — LANDED + LIVE.** Hub rule landed 17:53 (`hubassets2`,
+  hub lane): `HubStreamLimiterV1` in `🔐️auth/🚦️rate-limit` (32 streams hub-wide, 4 per principal, FIFO wait 5 s, then the typed 429
+  `RateLimitRefusalV1` class `execution-target-asset` + `retry-after`; the permit rides the body stream), schema
+  `AuthStreamLimitClassV1`/`AuthStreamLimitPolicyV1`, route law (held slot → 429, freed slot → 200, slot released at body end), browser
+  retry contract treats the typed 429 as transient. Live on 7800 only after the next hub rebuild. Client landed 18:19 (`assets4`,
+  native lane, after two reversals: a peer's transient `RowTarget` half-edit (assets2), an Ajv strict-mode `required`-in-`not` in the
+  eviction schema (assets3); rebased onto G12's in-tree paged-window change): kernel `ExecutionTargetModuleStore` LRU-bounded
+  (verified reads, touch, evict, stale-stage sweep) + `execution_target_component_stream`; os-mcp `HubComponentAssets` (store first,
+  own unmetered pool, 1 stream, typed progress, busy = wait, ≤ 4 attempts, off-lease refused); no in-memory component copies. Laws:
+  kernel eviction corpus, os-mcp component-asset corpus over a loopback hub, TS Ajv + node:crypto models. **Live 7800/p33**
+  (`h13-mcp-asset-probe.ts`, `s14-h13-logs/asset-probe-run{1,2}.txt`, store `.🧬semio/🌐hub/s14-h13-assets-store`): run 1 33/33,
+  every first open streamed with 101 progress notices, 0.3–1.6 s per component (norm 53 MiB 1.3 s, was 78 s budget-paced); run 2
+  (new gateway, same store) 33/33, 0 component bytes, store unchanged. G12 + main told 18:3x.
+- 18:2x **G12 Ack timeouts (graph.wires, norm.iso16757) — ROOT CAUSE (not load, not a lost Ack, not the budget):** every document
+  socket holds `state.ensure_document` (`🏗️bootstrap` ~5631) = one kernel-db WAL writer slot, and `WAL_WRITER_CAPACITY` = 32 per backend
+  (`🛢️db/🗄️storage/🔐️writer`, static signal tables, u8 slot). With ~32 live document sockets hub-wide (all clients together), the next
+  socket gets `error_frame("storage", "limit exceeded: WAL writer capacity")` → client link backoff (8 s) → `artifact_open` returns after
+  its 10 s wait unlinked → the commit's Ack wait expires. Reproduced live with `h13-mcp-link-probe.ts` (`s14-h13-logs/link-probe-2.txt`:
+  `sync.lastFault` = that string; the ceiling hit after 16 / 12 / 9 / 3 opens as other clients held documents). Also explains every
+  ~10 s open in G12's p33 latency table. Proposed fix (awaiting coordinator): writer capacity as a declared per-backend policy sized
+  for the hub, typed retryable capacity refusal at the socket.

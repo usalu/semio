@@ -119,11 +119,11 @@ describe("hub hostile-input oracle", () => {
     for (const message of refusals.batchLimitInvalidMessages) expect(validate(message), JSON.stringify(message)).toBe(false);
   });
 
-  it("a rate-limited request's body is a valid RateLimitRefusalV1 for every non-auth class, and no near miss is", () => {
+  it("a rate-limited request's body is a valid RateLimitRefusalV1 for every non-auth rate class and every stream class, and no near miss is", () => {
     const auth = read(hubRoot, "🔐️auth", "🧬️schema", "🔣️.json");
     const refusals = read(hubRoot, "🔐️auth", "🧫️fixtures", "🚦️rate-limit-refusal-v1", "🔣️.json");
     const validate = compileDef(auth, "RateLimitRefusalV1");
-    expect(new Set(refusals.valid.map((body: any) => body.class))).toEqual(new Set(auth.$defs.AuthRateLimitClassV1.enum.filter((name: string) => name !== "auth")));
+    expect(new Set(refusals.valid.map((body: any) => body.class))).toEqual(new Set([...auth.$defs.AuthRateLimitClassV1.enum.filter((name: string) => name !== "auth"), ...auth.$defs.AuthStreamLimitClassV1.enum]));
     for (const body of refusals.valid) expect(validate(body), JSON.stringify(validate.errors)).toBe(true);
     expect(refusals.invalid.length).toBeGreaterThanOrEqual(6);
     for (const body of refusals.invalid) expect(validate(body), JSON.stringify(body)).toBe(false);

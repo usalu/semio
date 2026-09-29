@@ -1,0 +1,75 @@
+{
+  "host": {
+    "pluginId": "space",
+    "instanceId": 77,
+    "appId": "studio",
+    "controllerId": "space.studio",
+    "windowId": "main"
+  },
+  "spawned": {
+    "pluginId": "model",
+    "instanceId": 41,
+    "appId": "model.editor",
+    "controllerId": "model.editor",
+    "windowId": "spawned-model"
+  },
+  "cases": [
+    {
+      "id": "host-body",
+      "surface": "main",
+      "controllerId": "space.studio",
+      "ownerPath": "/host"
+    },
+    {
+      "id": "spawned-body",
+      "surface": "spawned",
+      "controllerId": "model.editor",
+      "ownerPath": "/spawned"
+    },
+    {
+      "id": "spawned-concrete-window",
+      "surface": "spawned-model",
+      "controllerId": "model.editor",
+      "ownerPath": "/spawned"
+    },
+    {
+      "id": "spawned-deferred-action",
+      "surface": null,
+      "controllerId": "model.editor",
+      "ownerPath": "/spawned"
+    },
+    {
+      "id": "foreign-controller",
+      "surface": "spawned",
+      "controllerId": "foreign",
+      "ownerPath": null
+    },
+    {
+      "id": "host-controller-on-spawned",
+      "surface": "spawned",
+      "controllerId": "space.studio",
+      "ownerPath": null
+    },
+    {
+      "id": "retired-spawned",
+      "surface": "spawned",
+      "controllerId": "model.editor",
+      "ownerPath": null,
+      "retired": true
+    },
+    {
+      "id": "equal-controller-spawned",
+      "surface": "spawned",
+      "controllerId": "space.studio",
+      "ownerPath": "/spawned",
+      "sharedController": true
+    },
+    {
+      "id": "same-app-distinct-instance",
+      "surface": "spawned",
+      "controllerId": "space.studio",
+      "ownerPath": "/spawned",
+      "sharedApp": true
+    }
+  ]
+}

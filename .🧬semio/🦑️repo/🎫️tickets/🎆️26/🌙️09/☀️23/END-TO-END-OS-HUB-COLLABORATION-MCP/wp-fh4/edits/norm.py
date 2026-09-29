@@ -1,0 +1,35 @@
+"""📕️ norm (P2-X): en1992 refusals named no element (empty target) — each now names the member / layer / action / anchor / grade
+it could not find; iso16757 retire refusals keep their id target. No test, fixture or twin names these drift codes."""
+EN1992 = "📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/"
+
+OVERRIDES = {
+    (EN1992 + '#️⃣change-bar-layer-count/🔺️diff/🦀️.rs', 8): {"target": '[payload.member_id.clone()]'},
+    (EN1992 + '#️⃣change-bar-layer-count/🔺️diff/🦀️.rs', 11): {"target": '[payload.member_id.clone(), payload.layer_id.clone()]'},
+    (EN1992 + '↔️change-member-width/🔺️diff/🦀️.rs', 8): {"target": '[payload.member_id.clone()]'},
+    (EN1992 + '↕️change-member-height/🔺️diff/🦀️.rs', 8): {"target": '[payload.member_id.clone()]'},
+    (EN1992 + '↘️change-action-v-ed/🔺️diff/🦀️.rs', 8): {"target": '[payload.member_id.clone()]'},
+    (EN1992 + '↘️change-action-v-ed/🔺️diff/🦀️.rs', 11): {"target": '[payload.member_id.clone(), payload.action_id.clone()]'},
+    (EN1992 + '➕️insert-member/🔺️diff/🦀️.rs', 7): {"target": '[payload.member.id.clone()]'},
+    (EN1992 + '➖️remove-member/🔺️diff/🦀️.rs', 7): {"target": '[payload.member_id.clone()]'},
+    (EN1992 + '⤴️change-action-mk/🔺️diff/🦀️.rs', 8): {"target": '[payload.member_id.clone()]'},
+    (EN1992 + '⤴️change-action-mk/🔺️diff/🦀️.rs', 11): {"target": '[payload.member_id.clone(), payload.action_id.clone()]'},
+    (EN1992 + '⭕change-bar-layer-diameter/🔺️diff/🦀️.rs', 8): {"target": '[payload.member_id.clone()]'},
+    (EN1992 + '⭕change-bar-layer-diameter/🔺️diff/🦀️.rs', 11): {"target": '[payload.member_id.clone(), payload.layer_id.clone()]'},
+    (EN1992 + '🌉️change-member-span/🔺️diff/🦀️.rs', 8): {"target": '[payload.member_id.clone()]'},
+    (EN1992 + '🌦change-member-exposure/🔺️diff/🦀️.rs', 8): {"target": '[payload.member_id.clone()]'},
+    (EN1992 + '🏋️change-action-n-ed/🔺️diff/🦀️.rs', 8): {"target": '[payload.member_id.clone()]'},
+    (EN1992 + '🏋️change-action-n-ed/🔺️diff/🦀️.rs', 11): {"target": '[payload.member_id.clone(), payload.action_id.clone()]'},
+    (EN1992 + '📍change-anchor-h-ef/🔺️diff/🦀️.rs', 8): {"target": '[payload.anchor_id.clone()]'},
+    (EN1992 + '📐️change-member-effective-depth/🔺️diff/🦀️.rs', 8): {"target": '[payload.member_id.clone()]'},
+    (EN1992 + '🔀️reorder-members/🔺️diff/🦀️.rs', 8): {"target": '[payload.from_index.to_string()]'},
+    (EN1992 + '🔥change-member-axis-distance/🔺️diff/🦀️.rs', 8): {"target": '[payload.member_id.clone()]'},
+    (EN1992 + '🔥change-member-axis-distance/🔺️diff/🦀️.rs', 11): {"target": '[payload.member_id.clone(), "fire".to_string()]'},
+    (EN1992 + '🔥️change-member-fire-rating/🔺️diff/🦀️.rs', 8): {"target": '[payload.member_id.clone()]'},
+    (EN1992 + '🔥️change-member-fire-rating/🔺️diff/🦀️.rs', 11): {"target": '[payload.member_id.clone(), "fire".to_string()]'},
+    (EN1992 + '🔩change-reinforcement-f-yk/🔺️diff/🦀️.rs', 8): {"target": '[payload.grade_id.clone()]'},
+    (EN1992 + '🛡️change-member-cover/🔺️diff/🦀️.rs', 8): {"target": '[payload.member_id.clone()]'},
+    (EN1992 + '🧱change-concrete-f-ck/🔺️diff/🦀️.rs', 8): {"target": '[payload.grade_id.clone()]'},
+    (EN1992 + '🧷change-anchor-a-s/🔺️diff/🦀️.rs', 8): {"target": '[payload.anchor_id.clone()]'},
+    (EN1992 + '🪢change-member-stirrup-spacing/🔺️diff/🦀️.rs', 8): {"target": '[payload.member_id.clone()]'},
+    (EN1992 + '🪢change-member-stirrup-spacing/🔺️diff/🦀️.rs', 11): {"target": '[payload.member_id.clone(), "stirrups".to_string()]'},
+}

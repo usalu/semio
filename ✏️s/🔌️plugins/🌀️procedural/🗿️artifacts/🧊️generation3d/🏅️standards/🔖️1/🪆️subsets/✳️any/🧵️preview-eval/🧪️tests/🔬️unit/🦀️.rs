@@ -405,6 +405,7 @@ fn a_history_verb_owes_the_previews_the_evaluation_a_gesture_would_have() {
         config_edit_id: None,
         child_edit_ids: Vec::new(),
         op_lines: Vec::new(),
+        op_count: 0,
         applied,
         revertible: true,
         count: 1,

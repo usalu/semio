@@ -1,0 +1,57 @@
+{
+  "schema": "semio.os-mcp.hub-component-asset-corpus/v1",
+  "component": { "byteLength": 262144, "sha256": "88a27acc92907475c5f16c76b14633def7715e1a1f7672fd362564229c05ce96" },
+  "busyRetryAfterMs": 40,
+  "streamAttempts": 4,
+  "cases": [
+    {
+      "id": "a-first-open-streams-the-component-with-progress-and-a-restarted-gateway-costs-no-network",
+      "store": "empty",
+      "runs": [
+        { "hub": ["exact"], "expected": { "outcome": "hub", "componentRequests": 1, "phases": ["receiving"] } },
+        { "hub": [], "expected": { "outcome": "store", "componentRequests": 0, "phases": [] } }
+      ]
+    },
+    {
+      "id": "a-verified-store-copy-costs-no-network",
+      "store": "verified",
+      "runs": [{ "hub": [], "expected": { "outcome": "store", "componentRequests": 0, "phases": [] } }]
+    },
+    {
+      "id": "a-busy-hub-is-a-wait-never-a-failure",
+      "store": "empty",
+      "runs": [{ "hub": ["busy", "busy", "exact"], "expected": { "outcome": "hub", "componentRequests": 3, "phases": ["awaiting-stream", "receiving"] } }]
+    },
+    {
+      "id": "an-interrupted-stream-is-asked-again",
+      "store": "empty",
+      "runs": [{ "hub": ["short", "exact"], "expected": { "outcome": "hub", "componentRequests": 2, "phases": ["receiving", "retrying", "receiving"] } }]
+    },
+    {
+      "id": "a-hub-short-of-time-at-every-attempt-fails-retryably",
+      "store": "empty",
+      "runs": [{ "hub": ["unavailable", "unavailable", "unavailable", "unavailable"], "expected": { "outcome": "unavailable", "componentRequests": 4, "phases": ["retrying"] } }]
+    },
+    {
+      "id": "bytes-off-the-lease-are-refused-and-never-kept",
+      "store": "empty",
+      "runs": [
+        { "hub": ["wrong"], "expected": { "outcome": "refused", "componentRequests": 1, "phases": ["receiving"] } },
+        { "hub": ["exact"], "expected": { "outcome": "hub", "componentRequests": 1, "phases": ["receiving"] } }
+      ]
+    },
+    {
+      "id": "a-tampered-store-copy-is-fetched-again-and-replaced",
+      "store": "tampered",
+      "runs": [
+        { "hub": ["exact"], "expected": { "outcome": "hub", "componentRequests": 1, "phases": ["receiving"] } },
+        { "hub": [], "expected": { "outcome": "store", "componentRequests": 0, "phases": [] } }
+      ]
+    },
+    {
+      "id": "a-refused-session-is-final",
+      "store": "empty",
+      "runs": [{ "hub": ["unauthorized"], "expected": { "outcome": "denied", "componentRequests": 1, "phases": [] } }]
+    }
+  ]
+}

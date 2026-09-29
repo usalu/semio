@@ -5,7 +5,7 @@ use semio_s_artifact_stdio_txt::TxtSnapshot;
 pub fn register() {}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize(from: &TxtSnapshot) -> Result<IfcSnapshot, store::TextError> {
-    let document = semio_s_artifact_stdio_step::engine::part21::parse_part21(from.to_body().trim()).map_err(|e| store::TextError::new(format!("ifc parse: {e}"), dsl::TextSpan::at(1, 1)))?;
+    let document = semio_s_artifact_stdio_contract::part21::parse_part21(from.to_body().trim()).map_err(|e| store::TextError::new(format!("ifc parse: {e}"), dsl::TextSpan::at(1, 1)))?;
     Ok(crate::schema::snapshot::from_part21_document(STDIO_IFC_DOCUMENT_SCHEMA, &document))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

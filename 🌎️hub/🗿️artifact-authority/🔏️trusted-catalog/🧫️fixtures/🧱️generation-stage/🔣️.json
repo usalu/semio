@@ -2,10 +2,10 @@
   "schema": "semio.hub.generation-stage.v1",
   "componentHex": "616263",
   "descriptors": {
-    "gis": { "packageId": "semio:gis", "manifest": { "pluginId": "gis", "version": "0.1.0", "dependencies": [{ "pluginId": "stdio", "version": "=0.1.0" }] }, "executionProtocol": { "appChannelVersion": 19 } },
-    "stdio": { "packageId": "semio:stdio", "manifest": { "pluginId": "stdio", "version": "0.1.0", "dependencies": [] }, "executionProtocol": { "appChannelVersion": 19 } }
+    "gis": { "packageId": "semio:gis", "manifest": { "pluginId": "gis", "version": "0.1.0", "dependencies": [{ "pluginId": "stdio", "version": "=0.1.0" }] }, "executionProtocol": { "appChannelVersion": 20 } },
+    "stdio": { "packageId": "semio:stdio", "manifest": { "pluginId": "stdio", "version": "0.1.0", "dependencies": [] }, "executionProtocol": { "appChannelVersion": 20 } }
   },
-  "executionProtocol": { "appChannelVersion": 19 },
+  "executionProtocol": { "appChannelVersion": 20 },
   "cases": [
     { "change": "none", "accepted": true },
     { "change": "component", "accepted": false },

@@ -129,6 +129,10 @@ impl dsl::ToValue for SemioKitSnapshot {
     }
 }
 impl dsl::FromValue for SemioKitSnapshot {
+    fn edit_value_at_path(&mut self, path: &[&str], edit: dsl::ValueEdit) -> Result<(), dsl::ValueError> {
+        dsl::edit_through_value(self, path, edit)
+    }
+
     fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
         let entries = dsl::DslValue::into_object(value)?;
         let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());

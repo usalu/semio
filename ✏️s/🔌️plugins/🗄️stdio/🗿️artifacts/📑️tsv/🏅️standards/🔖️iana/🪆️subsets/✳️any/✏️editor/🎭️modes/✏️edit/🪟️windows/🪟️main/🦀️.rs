@@ -4,8 +4,8 @@
 //! the positional columns.
 
 use crate::TsvSnapshot;
-use semio_framework_plugin::app::{editable_table_window_row_at, table_row_action, TableWindowKit, WindowKit, WindowedEditableTableCell};
-use semio_framework_plugin::{BuiltNode, UiLabel, Locale, LocalizedLabel, TreeWindows, WindowKindDefinition};
+use semio_framework_plugin::app::{editable_table_window_row_at, row_action, row_target, TableWindowKit, WindowKit, WindowedEditableTableCell};
+use semio_framework_plugin::{BuiltNode, UiLabel, Locale, LocalizedLabel, RowActionPlacement, TreeWindows, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
@@ -72,18 +72,17 @@ pub fn render_revisioned(document: &TsvSnapshot, revision: &str, locale: Locale,
                     }
                 })
                 .collect::<semio_framework_plugin::UiAssemblyResult<Vec<_>>>()?;
-            let remove = table_row_action(
+            let remove = row_action(
                 "trash-2",
                 match locale {
                     Locale::De => "Zeile entfernen",
                     Locale::En => "Remove row",
                 },
-                (
-                    semio_framework_plugin::ActionId::try_v1(controller_id, semio_s_artifact_stdio_contract::REMOVE_TABLE_ROW_ACTION_ID).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("stdio.tsv.remove-row", "invalid action"))?,
-                    Some(semio_s_artifact_stdio_contract::window_kit_indexed_revision_arguments("row", row, revision)?),
-                ),
+                semio_s_artifact_stdio_contract::REMOVE_TABLE_ROW_ACTION_ID,
+                RowActionPlacement::Row,
             )?;
-            editable_table_window_row_at(&format!("row-{row}"), controller_id, locale, column_offset, cells, [remove])
+            let target = row_target(controller_id, Some(semio_s_artifact_stdio_contract::window_kit_indexed_revision_arguments("row", row, revision)?), None)?;
+            editable_table_window_row_at(&format!("row-{row}"), controller_id, locale, column_offset, cells, [remove], Some(target))
         },
     );
     semio_s_artifact_stdio_contract::render_structural_table(width, column_name, false, controller_id, revision, locale, windows, table)

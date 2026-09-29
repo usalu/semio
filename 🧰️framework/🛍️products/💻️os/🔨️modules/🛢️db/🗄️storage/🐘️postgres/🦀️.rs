@@ -887,6 +887,7 @@ impl PostgresDbIoExecutor {
         self.active_operation = operation;
         match task {
             DbIoTask::WalWriterAcquire { backend, document } => {
+                self.writer_table()?.ensure_capacity(document)?;
                 let session = PostgresWalWriterSession::open(&self.pool, document).await?;
                 let backend = *backend;
                 let permit = self.writer_table()?.acquire_with(document, move || Ok(PostgresWalWriterGuard::Held { session: Some(session), backend }))?;
@@ -1157,10 +1158,14 @@ fn postgres_list(result: DbIoResult) -> Result<DbIoU64List, DbError> {
 
 impl WalStorage for PostgresStorage {
     async fn acquire_writer(&self, document: &ArtifactId) -> Result<crate::db_storage::WalWriterPermit, DbError> {
-        match self.execute(DbIoTask::WalWriterAcquire { backend: self.control, document: postgres_document(document)? }).await? {
-            DbIoResult::WalWriter(writer) => Ok(writer),
-            _ => Err(DbError::Internal("remote WAL writer result taxonomy".to_string())),
-        }
+        let document = postgres_document(document)?;
+        crate::db_storage::writer::admitted_acquire(self.control, std::time::Duration::from_millis(crate::db_storage::writer::WAL_WRITER_ADMISSION_WAIT_MS), || async {
+            match self.execute(DbIoTask::WalWriterAcquire { backend: self.control, document: document.clone() }).await? {
+                DbIoResult::WalWriter(writer) => Ok(writer),
+                _ => Err(DbError::Internal("remote WAL writer result taxonomy".to_string())),
+            }
+        })
+        .await
     }
     async fn create_segment(&self, writer: &crate::db_storage::WalWriterPermit, index: u64) -> Result<(), DbError> {
         postgres_unit(self.execute(DbIoTask::WalCreate { backend: self.control, document: writer.document().clone(), writer: writer.key(), index }).await?)

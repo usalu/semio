@@ -54,6 +54,9 @@ fn retained_clock_publication_preserves_the_live_frame_and_uses_its_completion_w
     }
     assert_eq!(wakes.load(std::sync::atomic::Ordering::SeqCst), 0, "deadline publication rides the existing frame completion; generic Wake would supersede this build");
     assert!(runtime.retained_control_deadline(0.0).is_none());
+    let mut candidate = Some(witness);
+    assert!(crate::discard_frame_input_candidate(&runtime, &mut candidate));
+    assert!(candidate.is_none());
 }
 
 fn frozen_clock() -> Option<u64> {

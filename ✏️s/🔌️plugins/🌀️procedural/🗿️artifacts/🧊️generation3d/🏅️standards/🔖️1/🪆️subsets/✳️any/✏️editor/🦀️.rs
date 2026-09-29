@@ -9,7 +9,7 @@ use crate::editor::generation3d::commands::navigate_graph::{activate_selection, 
 use crate::editor::generation3d::commands::{
     add_generation, add_widget, cycle_lod_mode, cycle_show_mode, delete_selection, export_document, flow_eval_release, flow_eval_resolve, flow_eval_tick, flow_tessellate_cancel_resolve, flow_tessellate_resolve, import_document, import_document_request, node_graph_edit, node_graph_viewport, patch_flow_widgets, remove_generation, remove_widget, rename_generation, reorganize, rotate_selection,
     scale_selection, select_generation, set_active_example, set_camera, set_contributions, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun, translate_selection,
-    update_generation_values,
+    update_generation_values, set_widget_input,
 };
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use crate::editor::generation3d::modes::edit::windows::{flow as flow_window, preview as edit_preview};
@@ -112,7 +112,8 @@ semio_framework_plugin::app_commands! {
         "selectDownstreamNode" as "select-downstream-node" => select_downstream_node::SelectDownstreamNode,
         "activateSelection" as "activate-selection" => activate_selection::ActivateSelection,
         "editMeshSelection" as "edit-mesh-selection" => edit_mesh_selection::EditMeshSelection,
-        "knifeMeshSelection" as "knife-mesh-selection" => knife_mesh_selection::KnifeMeshSelection}
+        "knifeMeshSelection" as "knife-mesh-selection" => knife_mesh_selection::KnifeMeshSelection,
+        "setWidgetInput" as "set-widget-input" => set_widget_input::SetWidgetInput}
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
@@ -341,6 +342,7 @@ const GENERATION3D_RETAINED_TOOL_IDS: &[&str] = &[
     "removeWidget",
     "addWidget",
     "patchFlowWidgets",
+    "setWidgetInput",
     "reorganize",
     "translateSelection",
     "rotateSelection",
@@ -907,6 +909,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation3dBounded
         ArtifactToolPublicationContract { tool_id: "removeWidget", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "addWidget", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "patchFlowWidgets", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setWidgetInput", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "reorganize", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Interaction] },
         ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Interaction] },
@@ -2016,7 +2019,14 @@ impl ArtifactEditor for Generation3dPlayApp {
             })),
             "deleteSelection" => Ok(Generation3dCommand::DeleteSelection(delete_selection::DeleteSelection {})),
             "removeWidget" => Ok(Generation3dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: str_arg(&["widgetId", "widget_id", "id"]).unwrap_or_default() })),
-            "addWidget" => Ok(Generation3dCommand::AddWidget(add_widget::AddWidget { kind: str_arg(&["kind"]).unwrap_or_else(|| "inputSlider".into()), x: f64_arg(&["x"]), y: f64_arg(&["y"]) })),
+            "addWidget" => Ok(Generation3dCommand::AddWidget(add_widget::AddWidget { kind: str_arg(&["kind"]).unwrap_or_else(|| "inputSlider".into()), neuron_kind: str_arg(&["neuronKind"]), format: str_arg(&["format"]), action: str_arg(&["action"]), x: f64_arg(&["x"]), y: f64_arg(&["y"]) })),
+            "setWidgetInput" => Ok(Generation3dCommand::SetWidgetInput(set_widget_input::SetWidgetInput {
+                widget_id: str_arg(&["widgetId"]).ok_or_else(|| Fault::from("Choose a widget"))?,
+                channel: str_arg(&["channel"]).ok_or_else(|| Fault::from("Choose an input"))?,
+                value: args.get("value").map(|value| value.as_str().map(str::to_string).unwrap_or_else(|| dsl::json::to_json_string(value))).ok_or_else(|| Fault::from("Input value is missing"))?,
+                component: str_arg(&["component"]),
+                gesture: str_arg(&["gesture"]),
+            })),
             "patchFlowWidgets" => Ok(Generation3dCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets {
                 widget_ids: {
                     let mut ids = string_list("widgetIds");
@@ -2448,6 +2458,7 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
             .action_destructive("removeWidget")
             .action_with(categorized_action("addWidget", LocalizedLabel::native("Add Widget", "Element hinzufügen"), ActionKind::Mutation, "create"))
             .action_with(categorized_action("patchFlowWidgets", LocalizedLabel::native("Patch Flow Widgets", "Flow-Elemente aktualisieren"), ActionKind::Mutation, "methods"))
+            .action_with(categorized_action("setWidgetInput", LocalizedLabel::native("Edit Widget Input", "Elementeingabe bearbeiten"), ActionKind::Mutation, "methods"))
             .action_with(categorized_action("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation, "transform"))
             .action_with(categorized_action("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"), ActionKind::Mutation, "transform"))
             .action_with(categorized_action("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"), ActionKind::Mutation, "transform"))
@@ -2506,6 +2517,7 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("removeWidget", InteractiveJobClassification::Migrated)
             .action_interactive_job("addWidget", InteractiveJobClassification::Migrated)
             .action_interactive_job("patchFlowWidgets", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setWidgetInput", InteractiveJobClassification::Migrated)
             .action_interactive_job("reorganize", InteractiveJobClassification::Migrated)
             .action_interactive_job("translateSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("rotateSelection", InteractiveJobClassification::Migrated)
@@ -2566,6 +2578,15 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
                     ActionArgOption::new("inputNote", LocalizedLabel::native("Note", "Notiz")),
                     ActionArgOption::new("outputPreview", LocalizedLabel::native("Preview", "Vorschau")),
                 ]).default_value(&"inputSlider"),
+                ActionArgDef::text("neuronKind", LocalizedLabel::native("Operator", "Operator")),
+                ActionArgDef::text("format", LocalizedLabel::native("Export Format", "Exportformat")),
+                ActionArgDef::text("action", LocalizedLabel::native("Action", "Aktion")),
+            ])
+            .action_args("setWidgetInput", vec![
+                ActionArgDef::text("widgetId", LocalizedLabel::native("Widget", "Element")).required(),
+                ActionArgDef::text("channel", LocalizedLabel::native("Input", "Eingabe")).required(),
+                ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).required(),
+                ActionArgDef::text("component", LocalizedLabel::native("Coordinate", "Koordinate")),
             ])
             // 📤️ One option per `document_io::EXPORT_FORMATS` row, in that table's order — asserted
             // equal to it by `export_document_action_offers_every_declared_format`, so a format this

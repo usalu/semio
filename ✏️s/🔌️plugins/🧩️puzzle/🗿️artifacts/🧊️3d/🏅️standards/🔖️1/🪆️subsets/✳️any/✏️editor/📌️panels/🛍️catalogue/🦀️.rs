@@ -12,7 +12,7 @@ use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
 use crate::editor::puzzle3d::{ui_label, Puzzle3dScene, PUZZLE3D_INTERACTION_DOMAIN, PUZZLE3D_PLAY_CONTROLLER_ID};
 use dsl::json;
 use dsl::os_pack::json::Value;
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, Trigger};
+use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase};
 use semio_framework_plugin::{
     tree_window_item, ActionFactory, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
 };
@@ -87,17 +87,13 @@ fn object_kind_item(entry: &dsl::DslValue, windows: &TreeWindows<'_>) -> semio_f
         .or_else(|| entry.get("representations").and_then(dsl::DslValue::as_array).into_iter().flatten().filter_map(|rep| rep.get("url").and_then(dsl::DslValue::as_str)).find(|url| !url.is_empty()).map(str::to_string));
     let draggable = mesh_url.is_some();
     let action_args = ui_map_value([("objectKind", ui_text_value(&kind_id)?)])?;
-    let (action, args) = ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action("addObjectKind", Some(action_args))?;
+    let add = ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action("addObjectKind", Some(action_args))?;
     let mut builder = ui::tree_item(ui_label(catalog_entry_label(entry))?)
         .try_id(&kind_id)
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.object", "object id admission failed"))?
         .description(semio_framework_plugin::UiText::try_from_string(kind_id.clone()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.object", "object description admission failed"))?)
         .icon(semio_framework_plugin::UiText::try_from_str("box").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.object", "object icon admission failed"))?);
-    builder = match args {
-        Some(args) => builder.try_on_with(Trigger::Activate, action, args),
-        None => builder.try_on(Trigger::Activate, action),
-    }
-    .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.object", "object action admission failed"))?;
+    builder = builder.target(semio_framework_plugin::activation_target(add)?);
     if draggable {
         let mut payload = json!({ "objectKind": kind_id });
         if let Some(url) = mesh_url {

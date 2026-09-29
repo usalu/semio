@@ -28,12 +28,12 @@ pub(super) struct IconExportBatch {
     format: IconExportFormat,
     phase: Phase,
     asset: Option<IconExportAssetRequest>,
-    preparing: Option<IconExportScenePreparation>,
+    preparing: Option<Box<IconExportScenePreparation>>,
     scene_rejected: Option<IconExportSceneRejected>,
-    scene: Option<IconExportPreparedScene>,
+    scene: Option<Box<IconExportPreparedScene>>,
     initializing: Option<ShellDetached<Result<GpuContext, String>>>,
-    source: Option<GpuContext>,
-    rendering: Option<IconGpuPngExport>,
+    source: Option<Box<GpuContext>>,
+    rendering: Option<Box<IconGpuPngExport>>,
     gpu_rejected: Option<IconGpuPngRejected>,
     vector: Option<IconSvgExport>,
     vector_rejected: Option<IconSvgRejected>,
@@ -99,7 +99,7 @@ impl IconExportBatch {
                         Err(rejected) => { self.fail(rejected.fault().to_string()); self.vector_rejected = Some(rejected); }
                     },
                     Ok(asset) => match IconExportScenePreparation::new(std::mem::take(&mut self.request), asset) {
-                        Ok(preparation) => { self.preparing = Some(preparation); self.phase = Phase::Prepare; }
+                        Ok(preparation) => { self.preparing = Some(Box::new(preparation)); self.phase = Phase::Prepare; }
                         Err(rejected) => { self.fail(rejected.fault().to_string()); self.scene_rejected = Some(rejected); }
                     },
                     Err(fault) => self.fail(fault),
@@ -109,7 +109,7 @@ impl IconExportBatch {
                 let Some(preparation) = self.preparing.as_mut() else { return self.fail("icon export preparation was missing".into()) };
                 match preparation.advance() {
                     Ok(true) => {
-                        self.scene = preparation.take_prepared();
+                        self.scene = preparation.take_prepared().map(Box::new);
                         self.preparing = None;
                         if self.scene.is_some() { self.phase = Phase::Device; } else { self.fail("icon export scene was missing".into()); }
                     }
@@ -190,7 +190,7 @@ impl IconExportBatch {
                 let Some(answer) = initializing.take() else { return };
                 self.initializing = None;
                 match answer {
-                    Ok(source) => self.source = Some(source),
+                    Ok(source) => self.source = Some(Box::new(source)),
                     Err(fault) => return self.fail(fault),
                 }
             } else {
@@ -200,8 +200,8 @@ impl IconExportBatch {
         }
         let (width, height) = scene.dimensions();
         let Some(packet) = scene.take_packet() else { return self.fail("icon export packet was already transferred".into()) };
-        match IconGpuPngExport::new(self.source.as_ref().expect("accepted device"), width, height, packet) {
-            Ok(rendering) => { self.rendering = Some(rendering); self.phase = Phase::Render; }
+        match IconGpuPngExport::new(self.source.as_deref().expect("accepted device"), width, height, packet) {
+            Ok(rendering) => { self.rendering = Some(Box::new(rendering)); self.phase = Phase::Render; }
             Err(rejected) => { self.fail(rejected.fault.clone()); self.gpu_rejected = Some(rejected); }
         }
     }
@@ -226,7 +226,9 @@ impl IconExportBatch {
         if let Some(initializing) = self.initializing.as_ref() {
             let Some(answer) = initializing.take() else { return false };
             self.initializing = None;
-            if let Ok(source) = answer { self.source = Some(source); }
+            if let Ok(source) = answer {
+                self.source = Some(Box::new(source));
+            }
             return false;
         }
         if let Some(rendering) = self.rendering.as_mut() {
@@ -320,8 +322,8 @@ impl IconExportBatch {
         };
         let phase = shell_chrome_string(phase_key, is_de);
         let step = self.current.min(self.total);
-        let detail = self.rendering.as_ref().map(IconGpuPngExport::progress)
-            .or_else(|| self.preparing.as_ref().map(IconExportScenePreparation::progress))
+        let detail = self.rendering.as_deref().map(IconGpuPngExport::progress)
+            .or_else(|| self.preparing.as_deref().map(IconExportScenePreparation::progress))
             .or_else(|| self.vector.as_ref().map(|vector| { let (phase, done, total) = vector.progress(); (phase, done, total, 0) }));
         let progress = detail.filter(|(_, _, total, _)| *total > 1).map(|(_, done, total, _)| format!(" · {done}/{total}")).unwrap_or_default();
         let status = format!("{phase} {step}/{} · {}{progress}", self.total, self.filename);

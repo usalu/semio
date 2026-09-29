@@ -1,0 +1,141 @@
+[package]
+name = "semio-s-artifact-stdio-semio"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Stdio semio artifact"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+default = []
+component-app-assembly = []
+conversion-animation = ["dep:semio-s-artifact-stdio-gif", "dep:semio-s-artifact-stdio-gltf", "dep:semio-s-artifact-stdio-mp4"]
+conversion-audio = ["dep:semio-s-artifact-stdio-mp3", "dep:semio-s-artifact-stdio-wav"]
+conversion-brep = ["dep:semio-s-artifact-stdio-dwg", "dep:semio-s-artifact-stdio-step"]
+conversion-cad = ["dep:semio-s-artifact-stdio-dwg", "dep:semio-s-artifact-stdio-dxf", "dep:semio-s-artifact-stdio-step"]
+conversion-document = ["dep:semio-s-artifact-stdio-docx", "dep:semio-s-artifact-stdio-md", "dep:semio-s-artifact-stdio-pdf", "dep:semio-s-artifact-stdio-txt", "dep:semio-s-artifact-stdio-zip"]
+conversion-drawing = ["dep:semio-s-artifact-stdio-dwg", "dep:semio-s-artifact-stdio-dxf", "dep:semio-s-artifact-stdio-pdf", "dep:semio-s-artifact-stdio-png", "dep:semio-s-artifact-stdio-svg", "dep:semio-s-artifact-stdio-xml"]
+conversion-flow = ["dep:semio-s-artifact-stdio-json"]
+conversion-image = ["dep:semio-s-artifact-stdio-bmp", "dep:semio-s-artifact-stdio-gif", "dep:semio-s-artifact-stdio-jpg", "dep:semio-s-artifact-stdio-png", "dep:semio-s-artifact-stdio-tiff"]
+conversion-mesh = ["conversion-drawing", "dep:semio-s-artifact-stdio-dwg", "dep:semio-s-artifact-stdio-gltf", "dep:semio-s-artifact-stdio-las", "dep:semio-s-artifact-stdio-obj", "dep:semio-s-artifact-stdio-ply", "dep:semio-s-artifact-stdio-stl"]
+conversion-model = ["dep:semio-s-artifact-stdio-bcf", "dep:semio-s-artifact-stdio-ifc", "dep:semio-s-artifact-stdio-step"]
+conversion-presentation = ["dep:semio-s-artifact-stdio-pptx", "dep:semio-s-artifact-stdio-xml", "dep:semio-s-artifact-stdio-zip"]
+conversion-value = ["dep:semio-s-artifact-stdio-csv", "dep:semio-s-artifact-stdio-json", "dep:semio-s-artifact-stdio-xml"]
+conversion-video = ["dep:semio-s-artifact-stdio-avi", "dep:semio-s-artifact-stdio-mp4"]
+
+[dependencies]
+pack = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-3d = { workspace = true }
+semio-framework-geometry = { workspace = true }
+semio-framework-graph = { workspace = true }
+semio-framework-hash = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-math = { workspace = true }
+semio-framework-mesh-engine = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-contract = { workspace = true }
+semio-s-artifact-stdio-avi = { workspace = true, optional = true }
+semio-s-artifact-stdio-bcf = { workspace = true, optional = true }
+semio-s-artifact-stdio-bmp = { workspace = true, optional = true }
+semio-s-artifact-stdio-csv = { workspace = true, optional = true }
+semio-s-artifact-stdio-docx = { workspace = true, optional = true }
+semio-s-artifact-stdio-dwg = { workspace = true, optional = true }
+semio-s-artifact-stdio-dxf = { workspace = true, optional = true }
+semio-s-artifact-stdio-gif = { workspace = true, optional = true }
+semio-s-artifact-stdio-gltf = { workspace = true, optional = true }
+semio-s-artifact-stdio-ifc = { workspace = true, optional = true }
+semio-s-artifact-stdio-jpg = { workspace = true, optional = true }
+semio-s-artifact-stdio-json = { workspace = true, optional = true }
+semio-s-artifact-stdio-las = { workspace = true, optional = true }
+semio-s-artifact-stdio-md = { workspace = true, optional = true }
+semio-s-artifact-stdio-mp3 = { workspace = true, optional = true }
+semio-s-artifact-stdio-mp4 = { workspace = true, optional = true }
+semio-s-artifact-stdio-obj = { workspace = true, optional = true }
+semio-s-artifact-stdio-pdf = { workspace = true, optional = true }
+semio-s-artifact-stdio-ply = { workspace = true, optional = true }
+semio-s-artifact-stdio-png = { workspace = true, optional = true }
+semio-s-artifact-stdio-pptx = { workspace = true, optional = true }
+semio-s-artifact-stdio-step = { workspace = true, optional = true }
+semio-s-artifact-stdio-stl = { workspace = true, optional = true }
+semio-s-artifact-stdio-svg = { workspace = true, optional = true }
+semio-s-artifact-stdio-tiff = { workspace = true, optional = true }
+semio-s-artifact-stdio-txt = { workspace = true, optional = true }
+semio-s-artifact-stdio-wav = { workspace = true, optional = true }
+semio-s-artifact-stdio-xml = { workspace = true, optional = true }
+semio-s-artifact-stdio-zip = { workspace = true, optional = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+# 🔮 Test-only geometry ORACLE (never a `[dependencies]` entry, never reachable from a
+# production target) — same crate and version `semio-framework-3d` already uses as its collision
+# oracle. `🧲️procedural-example-booleans` measures the tessellated boolean result with parry3d's
+# own signed-volume integrator to cross-check this kernel's `solid_volume`.
+parry3d = "0.17"
+# 🔮 Test-only EXACT-ARITHMETIC oracle for `🧊️brep/…/➡️vector/⚖️predicates` (never a
+# `[dependencies]` entry, never reachable from a production target). The predicates' exact path is
+# nonoverlapping floating-point expansion arithmetic (Shewchuk error-free transformations); this
+# recomputes the SAME determinants in arbitrary-precision rationals — a completely different
+# representation and a completely different algorithm, written by someone else — so the claim "the
+# expansion path returns the exact sign" rests on an independent derivation rather than on the
+# expansion code agreeing with itself (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+# `📓️kernel-performance-2026-09-13.md`).
+num-rational = "0.4"
+# 🔮 Test-only RASTER oracle (never a `[dependencies]` entry): resvg renders the svg leaf's output
+# of the same drawing the `🖊️drawing → 📷️png` rasterizer paints, and hayro renders the pdf leaf's
+# output, so neither raster expectation is computed by this repository's own code.
+resvg = "0.45.1"
+hayro = "0.4.0"
+semio-framework-async-macros = { workspace = true }
+semio-s-artifact-stdio-csv = { workspace = true }
+semio-s-artifact-stdio-json = { workspace = true }
+
+[[test]]
+name = "flow_retained_decode"
+path = "../../🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/💾️binary/🧪️tests/💾️binary/🦀️.rs"
+
+[[test]]
+name = "brep_procedural_example_booleans"
+path = "../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/🧲️procedural-example-booleans/🦀️.rs"
+
+# 📦️ Extrude/sweep prism ORIENTATION laws — ticket 26/09/09/PROCEDURAL-3D-END-TO-END. Two profile
+# shapes × both windings × both sweep directions × both profile-coedge senses, each held to outward
+# face normals and a POSITIVE tessellated signed volume equal to the closed form, with `parry3d` as
+# the third-party integrator.
+[[test]]
+name = "brep_extrude_orientation"
+path = "../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/📦️extrude-orientation/🦀️.rs"
+
+# ⏱️ Resumable tessellator + validate-gate laws — ticket 26/09/09/PROCEDURAL-3D-END-TO-END. Declared
+# as its own `[[test]]` (rather than a `#[cfg(test)]` module) so the interactive-job contract stays
+# runnable from the crate's PUBLIC surface alone, independent of the lib's own test target.
+[[test]]
+name = "brep_tessellation_jobs"
+path = "../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/⏱️tessellation-jobs/🦀️.rs"
+
+# 🎨️ ANALYTIC blend laws — ticket 26/09/09/PROCEDURAL-3D-END-TO-END. Constant-radius rolling-ball
+# fillets as `Surface::Cylinder` edge patches and `Surface::Sphere` corner patches, chamfers as
+# planar cut faces, over the full 12-edge box and every partial selection, each held to χ = 2, a
+# silent `validate_body`, an outward shell, its Steiner closed-form volume, and `parry3d`'s own
+# integration of the tessellated result — plus the interactive wall-clock budget the NURBS patches
+# this rewrite replaced could not meet.
+[[test]]
+name = "brep_analytic_blend"
+path = "../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/🎨️analytic-blend/🦀️.rs"
+
+[[test]]
+name = "brep_shell_orientation"
+path = "../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/🐚️shell-orientation/🦀️.rs"

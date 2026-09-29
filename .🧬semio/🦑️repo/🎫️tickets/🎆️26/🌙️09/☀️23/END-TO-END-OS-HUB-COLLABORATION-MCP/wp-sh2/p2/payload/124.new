@@ -1,0 +1,81 @@
+/**
+ * 📇️ The directory history one mounted space index folds, and the bounded batches it is fed in. The space index is the
+ * shell's projection of a space's directory, not a hub document: its guest folds the space's events into its transient
+ * projection (`👁️viewer/🫧️transient`) through the canonical kernel fold, one bounded batch at a time, each continuing the
+ * frontier the previous one left (`afterSeqExclusive`; `0` restarts from the origin). This history collects every event
+ * of its space from every lane that carries one — the worker's space lane (sealed history, then live), the global stream,
+ * command receipts — once each by `seq`, and answers them in ascending order; {@link spaceDirectoryBatchesV1} cuts what a
+ * surface has not been fed yet into batches of at most one hub page, so a space with any number of check-ins is fed in
+ * bounded steps and one check-in reaches the table in the one batch that carries it.
+ * @see ../../../../../🏪️store/👷️worker/🟦️.ts
+ * @see ../../../../../../../../../✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🦀️.rs
+ */
+import type { DirectoryEvent } from "../../../../../📇️directory/🟦️.ts";
+
+/** 📏️ The events one batch carries at most — one hub page's rows (`DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS`). */
+export const SPACE_DIRECTORY_BATCH_MAX_EVENTS = 128;
+/** 📏️ The UTF-8 bytes one batch's `eventsJson` carries at most — one hub page (`DIRECTORY_EVENT_PAGE_MAX_BYTES`). */
+export const SPACE_DIRECTORY_BATCH_MAX_BYTES = 64 * 1024;
+
+/** 📇️ One space's directory history, deduplicated by `seq`. */
+export class SpaceDirectoryHistoryV1 {
+  private readonly bySeq = new Map<number, DirectoryEvent>();
+  private ordered: readonly DirectoryEvent[] = [];
+
+  constructor(readonly spaceId: string) {}
+
+  /** Adds every event of this space; answers whether the history changed. */
+  add(events: readonly DirectoryEvent[]): boolean {
+    let changed = false;
+    for (const event of events) {
+      if (event.spaceId !== this.spaceId || this.bySeq.has(event.seq)) continue;
+      this.bySeq.set(event.seq, event);
+      changed = true;
+    }
+    if (changed) this.ordered = [...this.bySeq.values()].sort((left, right) => left.seq - right.seq);
+    return changed;
+  }
+
+  /** Every event of the space, in ascending `seq`. */
+  events(): readonly DirectoryEvent[] {
+    return this.ordered;
+  }
+}
+
+/** 📥️ One bounded `foldDirectoryEvents` batch: the space, the frontier it continues, its events' JSON and its own frontier. */
+export type SpaceDirectoryBatchV1 = Readonly<{
+  spaceId: string;
+  afterSeqExclusive: number;
+  throughSeqInclusive: number;
+  eventsJson: string;
+}>;
+
+/** 📦️ The events of `history` strictly after `afterSeqExclusive`, cut into batches of at most
+ * {@link SPACE_DIRECTORY_BATCH_MAX_EVENTS} events and {@link SPACE_DIRECTORY_BATCH_MAX_BYTES} bytes of JSON, each
+ * continuing the previous one's frontier. Empty when nothing new is held. */
+export function spaceDirectoryBatchesV1(history: SpaceDirectoryHistoryV1, afterSeqExclusive: number): SpaceDirectoryBatchV1[] {
+  const encoder = new TextEncoder();
+  const batches: SpaceDirectoryBatchV1[] = [];
+  let after = afterSeqExclusive;
+  let chunk: string[] = [];
+  let bytes = 2;
+  let through = after;
+  const flush = (): void => {
+    if (chunk.length === 0) return;
+    batches.push({ spaceId: history.spaceId, afterSeqExclusive: after, throughSeqInclusive: through, eventsJson: `[${chunk.join(",")}]` });
+    after = through;
+    chunk = [];
+    bytes = 2;
+  };
+  for (const event of history.events()) {
+    if (event.seq <= afterSeqExclusive) continue;
+    const json = JSON.stringify(event);
+    const eventBytes = encoder.encode(json).length;
+    if (chunk.length === SPACE_DIRECTORY_BATCH_MAX_EVENTS || (chunk.length > 0 && bytes + 1 + eventBytes > SPACE_DIRECTORY_BATCH_MAX_BYTES)) flush();
+    bytes += eventBytes + (chunk.length === 0 ? 0 : 1);
+    chunk.push(json);
+    through = event.seq;
+  }
+  flush();
+  return batches;
+}

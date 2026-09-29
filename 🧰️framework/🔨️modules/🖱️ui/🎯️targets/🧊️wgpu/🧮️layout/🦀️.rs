@@ -1,7 +1,7 @@
 // #region layout
 //! 🧮️ Flex stack layout for widget trees.
 
-use crate::wgpu::component::ui::{UiControlNode, UiTreeActionPlacement, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+use crate::wgpu::component::ui::{UiControlNode, UiTreeActionPlacement, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiTreeWindow, UiTreeWindowRowExtent};
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::theme::Theme;
 use ui_contract::SpaceToken;
@@ -369,6 +369,29 @@ pub fn table_column_rect(row_width: f32, row_height: f32, column: usize, columns
     let offset = metrics.gap + column as f32 * (width + metrics.gap);
     let x = if metrics.inline.is_rtl() { row_width - offset - width } else { offset };
     Rect::new(x, 0.0, width, row_height)
+}
+
+/// 🪟️ The closed-row pitch one windowed container prices an unmaterialised row at — `treeWindowRowExtentPx`
+/// (`🧱️elements/🌳️Tree/🟦️.tsx`): the ONE geometry the immediate painter's spacer bands, the retained layout's spacers and the
+/// tree window observer's measurement share.
+pub fn tree_window_row_extent_px(extent: UiTreeWindowRowExtent) -> f32 {
+    match extent {
+        UiTreeWindowRowExtent::Standard => crate::wgpu::widgets::TREE_ROW_HEIGHT,
+        UiTreeWindowRowExtent::CompactText => crate::wgpu::chrome::SIZE_TINY * 1.5,
+        UiTreeWindowRowExtent::CompactSmallControl => (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::chrome::CONTROL_HEIGHT_SMALL_UI_SPACING) as f32,
+        UiTreeWindowRowExtent::CompactControl => (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::chrome::CONTROL_HEIGHT_UI_SPACING) as f32,
+    }
+}
+
+/// 🪟️ The `(leading, trailing)` spacer pitch one windowed container paints around its `materialised` children: `offset`
+/// unmaterialised rows before them and `total − offset − materialised` after, each [`tree_window_row_extent_px`] tall. An
+/// unwindowed container (`None`) pitches nothing. There is no `+N` continuation row — the spacer IS the unloaded rows, which
+/// is what makes the scrollbar span the whole list and a scroll land on the real row index.
+pub fn tree_window_spacer_px(window: Option<&UiTreeWindow>, materialised: usize) -> (f32, f32) {
+    window.map_or((0.0, 0.0), |window| {
+        let pitch = tree_window_row_extent_px(window.row_extent);
+        (window.leading_rows() as f32 * pitch, window.trailing_rows(materialised) as f32 * pitch)
+    })
 }
 //#endregion 🌳️TreeRowGeometry
 

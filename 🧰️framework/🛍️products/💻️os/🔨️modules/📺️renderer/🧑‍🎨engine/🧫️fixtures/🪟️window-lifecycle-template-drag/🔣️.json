@@ -196,23 +196,23 @@
     "staleGeneration": 6,
     "viewport": { "x": 0, "y": 368, "w": 300, "h": 72 },
     "section": {
-      "id": "framework.display.windows.puzzle3d-main",
+      "id": "framework.display.windows.puzzle3dMain",
       "defaultOpen": false,
       "rows": [
-        { "id": "framework.display.windows.puzzle3d-main.kind", "branch": false, "rect": { "x": 0, "y": 344, "w": 300, "h": 24 } },
-        { "id": "framework.display.windows.puzzle3d-main.projection.parallel", "branch": true, "defaultOpen": false, "rect": { "x": 0, "y": 368, "w": 300, "h": 24 } },
-        { "id": "framework.display.windows.puzzle3d-main.projection.perspective", "branch": false, "rect": { "x": 0, "y": 392, "w": 300, "h": 24 } }
+        { "id": "framework.display.windows.puzzle3dMain.kind", "branch": false, "rect": { "x": 0, "y": 344, "w": 300, "h": 24 } },
+        { "id": "framework.display.windows.puzzle3dMain.projection.parallel", "branch": true, "defaultOpen": false, "rect": { "x": 0, "y": 368, "w": 300, "h": 24 } },
+        { "id": "framework.display.windows.puzzle3dMain.projection.perspective", "branch": false, "rect": { "x": 0, "y": 392, "w": 300, "h": 24 } }
       ],
       "headerRect": { "x": 0, "y": 416, "w": 300, "h": 24 }
     },
     "closedPublishedIds": [
-      "section.chevron.framework.display.windows.puzzle3d-main"
+      "section.chevron.framework.display.windows.puzzle3dMain"
     ],
     "openedPublishedIds": [
-      "tree.label.framework.display.windows.puzzle3d-main.projection.parallel",
-      "tree.chevron.framework.display.windows.puzzle3d-main.projection.parallel",
-      "tree.label.framework.display.windows.puzzle3d-main.projection.perspective",
-      "section.chevron.framework.display.windows.puzzle3d-main"
+      "tree.label.framework.display.windows.puzzle3dMain.projection.parallel",
+      "tree.chevron.framework.display.windows.puzzle3dMain.projection.parallel",
+      "tree.label.framework.display.windows.puzzle3dMain.projection.perspective",
+      "section.chevron.framework.display.windows.puzzle3dMain"
     ],
     "rules": {
       "publishedOnlyIfPaintedInViewport": true,
@@ -224,22 +224,22 @@
     "direction": "up",
     "windowKindId": "puzzle3d-main",
     "topToBottomIds": [
-      "framework.display.windows.puzzle3d-main.kind",
-      "framework.display.windows.puzzle3d-main.projection.parallel.orthographic",
-      "framework.display.windows.puzzle3d-main.projection.parallel.axonometric.axonometric-isometric",
-      "framework.display.windows.puzzle3d-main.projection.parallel.axonometric.axonometric-dimetric",
-      "framework.display.windows.puzzle3d-main.projection.parallel.axonometric.axonometric-trimetric",
-      "framework.display.windows.puzzle3d-main.projection.parallel.axonometric",
-      "framework.display.windows.puzzle3d-main.projection.parallel.oblique.oblique-cabinet",
-      "framework.display.windows.puzzle3d-main.projection.parallel.oblique.oblique-cavalier",
-      "framework.display.windows.puzzle3d-main.projection.parallel.oblique.oblique-military",
-      "framework.display.windows.puzzle3d-main.projection.parallel.oblique",
-      "framework.display.windows.puzzle3d-main.projection.parallel",
-      "framework.display.windows.puzzle3d-main.projection.perspective.one-point",
-      "framework.display.windows.puzzle3d-main.projection.perspective.two-point",
-      "framework.display.windows.puzzle3d-main.projection.perspective.three-point",
-      "framework.display.windows.puzzle3d-main.projection.perspective.curvilinear",
-      "framework.display.windows.puzzle3d-main.projection.perspective"
+      "framework.display.windows.puzzle3dMain.kind",
+      "framework.display.windows.puzzle3dMain.projection.parallel.orthographic",
+      "framework.display.windows.puzzle3dMain.projection.parallel.axonometric.axonometricIsometric",
+      "framework.display.windows.puzzle3dMain.projection.parallel.axonometric.axonometricDimetric",
+      "framework.display.windows.puzzle3dMain.projection.parallel.axonometric.axonometricTrimetric",
+      "framework.display.windows.puzzle3dMain.projection.parallel.axonometric",
+      "framework.display.windows.puzzle3dMain.projection.parallel.oblique.obliqueCabinet",
+      "framework.display.windows.puzzle3dMain.projection.parallel.oblique.obliqueCavalier",
+      "framework.display.windows.puzzle3dMain.projection.parallel.oblique.obliqueMilitary",
+      "framework.display.windows.puzzle3dMain.projection.parallel.oblique",
+      "framework.display.windows.puzzle3dMain.projection.parallel",
+      "framework.display.windows.puzzle3dMain.projection.perspective.onePoint",
+      "framework.display.windows.puzzle3dMain.projection.perspective.twoPoint",
+      "framework.display.windows.puzzle3dMain.projection.perspective.threePoint",
+      "framework.display.windows.puzzle3dMain.projection.perspective.curvilinear",
+      "framework.display.windows.puzzle3dMain.projection.perspective"
     ]
   }
 }

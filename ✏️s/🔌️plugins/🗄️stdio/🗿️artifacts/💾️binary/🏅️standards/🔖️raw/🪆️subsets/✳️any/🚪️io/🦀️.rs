@@ -65,11 +65,8 @@ pub mod io_registry {
 //#endregion 🚪️DerivedIoRegistry
 
 //#region 🔖️Register
-/// 🗂️ Registers codecs, the artifact schema descriptor, and every composer entry — dissolved out
-/// of the former `⚙️engine::register()` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-
-/// MACHINES). `binary` is one of stdio's 10 deliberate imperative-`register()` artifacts (never
-/// converted to the `ArtifactDeclaration` builder pattern. The Binary package contribution invokes
-/// this function directly with the established call order and behavior.
+/// 🗂️ Registers codecs, the artifact schema descriptor and every composer entry imperatively, outside any plugin assembly —
+/// the twin of [`crate::declaration`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {
     semio_framework_plugin::register_composer_entries(io_registry::entries()).expect("static Stdio registration must be available and conflict-free");

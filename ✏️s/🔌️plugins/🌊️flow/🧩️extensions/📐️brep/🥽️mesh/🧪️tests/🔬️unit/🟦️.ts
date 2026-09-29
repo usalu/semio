@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { BoxGeometry, Box3, IcosahedronGeometry, Line3, Matrix4, Plane, ShapeUtils, Triangle, Vector2, Vector3 } from "three";
 import Ajv from "ajv/dist/2020.js";
-import { analyzePolygonMesh, componentVertexIds, knifeCutMesh, loopCutMesh, parsePolygonMesh, transformMeshComponents, type PolygonMesh } from "../../🟦️.ts";
+import { inspectMeshComponent, analyzePolygonMesh, componentVertexIds, knifeCutMesh, loopCutMesh, parsePolygonMesh, transformMeshComponents, type PolygonMesh } from "../../🟦️.ts";
 
 const fixtures = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 const knives = JSON.parse(readFileSync(new URL("../../../../../../../../🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧫️fixtures/✂️knife-cut/🔣️.json", import.meta.url), "utf8"));
@@ -238,4 +238,64 @@ for (const fixture of modeling.polygons) for (const scale of modeling.scales) te
   expect(area / (scale * scale)).toBeCloseTo(fixture.area, 6);
   expect(triangles.length * 3).toBe(fixture.expectedFaces);
   expect(fixture.vertices.length + triangles.length).toBe(fixture.expectedVertices);
+});
+
+const inspections = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔎️inspection/🔣️.json", import.meta.url), "utf8"));
+const validateInspection = new Ajv().compile(JSON.parse(readFileSync(new URL("../../🧬️schema/🔎️inspection/🔣️.json", import.meta.url), "utf8")));
+for (const fixture of inspections.cases) test(`mesh inspection and Three.js oracle: ${fixture.query.kind}`, () => {
+  expect(validateInspection(fixture.query)).toBe(true);
+  const input = structuredClone(inspections.mesh), result = inspectMeshComponent(input, fixture.query);
+  expect(input).toEqual(inspections.mesh);
+  for (const [key, expected] of Object.entries(fixture.expected)) {
+    if (Array.isArray(expected)) expected.forEach((value, axis) => expect((result[key] as number[])[axis]).toBeCloseTo(value, 6));
+    else expect(result[key]).toBe(expected);
+  }
+  const points = input.vertices.map((point: number[]) => new Vector3(...point as [number, number, number]));
+  if (fixture.query.kind === "vertex") expect(result.point).toEqual(points[fixture.query.index].toArray());
+  if (fixture.query.kind === "edge") {
+    const edge = new Line3(points[fixture.query.index], points[(fixture.query.index + 1) % points.length]);
+    expect(result.start).toEqual(edge.start.toArray()); expect(result.end).toEqual(edge.end.toArray()); expect(result.length).toBe(edge.distance());
+  }
+  if (fixture.query.kind === "face") {
+    const center = points.reduce((sum: Vector3, point: Vector3) => sum.add(point), new Vector3()).divideScalar(points.length);
+    for (let axis = 0; axis < 3; axis++) expect(result.center![axis]).toBeCloseTo(center.getComponent(axis), 6);
+    const normal = points.reduce((sum: Vector3, point: Vector3, index: number) => sum.add(new Vector3().crossVectors(point.clone().sub(points[0]), points[(index + 1) % points.length].clone().sub(points[0]))), new Vector3()).normalize();
+    expect(result.normal).toEqual(normal.toArray());
+  }
+});
+test("mesh inspection rejects invalid queries", () => {
+  for (const query of inspections.invalid) expect(() => inspectMeshComponent(inspections.mesh, query)).toThrow();
+});
+
+const channelContract = JSON.parse(readFileSync(new URL("../../../🧬️schema/🪪️channels/🔣️.json", import.meta.url), "utf8"));
+const channelFixtures = JSON.parse(readFileSync(new URL("../../../🧫️fixtures/🪪️channels/🔣️.json", import.meta.url), "utf8"));
+test("packaged BRep channels satisfy typed schema and portable identities", () => {
+  const descriptor = JSON.parse(readFileSync(new URL("../../../🔣️.json", import.meta.url), "utf8"));
+  const validate = new Ajv().compile(channelContract);
+  for (const topic of descriptor.manifest.topicContributions) {
+    const manifest = JSON.parse(topic.payload.manifestJson);
+    for (const operator of manifest.contributes.operators) for (const direction of ["inputs", "outputs"]) {
+      const channels = operator[direction];
+      for (const channel of channels) expect(validate(channel), `${operator.id} ${direction} ${channel.name}: ${JSON.stringify(validate.errors)}`).toBe(true);
+      for (const key of ["code", "abbreviation", "name", "fullName"]) expect(new Set(channels.map((channel: Record<string, unknown>) => channel[key])).size, `${operator.id} ${direction} ${key}`).toBe(channels.length);
+    }
+    for (const fixture of channelFixtures.cases) {
+      const operator = manifest.contributes.operators.find((operator: { id: string }) => operator.id === fixture.operator);
+      for (const [key, fields] of Object.entries(fixture.expected)) {
+        const channel = operator[fixture.direction].find((channel: { name: string }) => channel.name === key);
+        for (const [field, expected] of Object.entries(fields as object)) expect(channel[field]).toEqual(expected);
+      }
+    }
+    for (const kind of ["Vertex", "Edge", "Face"]) expect(manifest.contributes.operators.some((operator: { id: string }) => operator.id === `brep.mesh.inspect${kind}`)).toBe(true);
+  }
+});
+
+const mergedFaces = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🧵️merge-faces/🔣️.json", import.meta.url), "utf8"));
+for (const fixture of mergedFaces.cases) test(`merge faces Three.js surface oracle: ${fixture.operation}`, () => {
+  const points = mergedFaces.mesh.vertices.map((point: [number, number, number]) => new Vector3(...point));
+  const original = mergedFaces.mesh.faces.reduce((area: number, face: number[]) => area + new Triangle(...face.map(id => points[id]) as [Vector3, Vector3, Vector3]).getArea(), 0);
+  const triangles = ShapeUtils.triangulateShape(points.map((point: Vector3) => new Vector2(point.x, point.y)), []);
+  const merged = triangles.reduce((area, face) => area + new Triangle(...face.map(id => points[id]) as [Vector3, Vector3, Vector3]).getArea(), 0);
+  expect(original).toBe(fixture.expected.area); expect(merged).toBe(fixture.expected.area);
+  expect(new Set(triangles.flat()).size).toBe(fixture.expected.vertices);
 });

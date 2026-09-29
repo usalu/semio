@@ -272,3 +272,38 @@ export function analyzePolygonMesh(input: PolygonMesh): MeshAnalysis {
   const inconsistentEdges = [...edges.values()].filter(edge => edge.count === 2 && edge.orientation !== 0).length;
   return { vertices: mesh.vertices.length, faces: mesh.faces.length, edges: edges.size, triangles, boundaryEdges, nonManifoldEdges, inconsistentEdges, degenerateTriangles, area, ...(!boundaryEdges && !nonManifoldEdges && !inconsistentEdges && !degenerateTriangles ? { volume: Math.abs(volume) } : {}), minimum, maximum };
 }
+
+export interface MeshInspectionQuery { kind: "vertex" | "edge" | "face"; index: number }
+export interface MeshInspection { point?: MeshPoint; start?: MeshPoint; end?: MeshPoint; length?: number; vertices?: number[]; normal?: MeshPoint; center?: MeshPoint }
+
+/** 🔎️ Inspects zero-based polygon components; edge indices use the preview halfedge convention. */
+export function inspectMeshComponent(mesh: PolygonMesh, query: MeshInspectionQuery): MeshInspection {
+  mesh = parsePolygonMesh(JSON.stringify(mesh));
+  if (!query || Object.keys(query).some(key => key !== "kind" && key !== "index") || !Number.isInteger(query.index) || query.index < 0) throw new Error("invalid mesh inspection query");
+  const point = (id: number): MeshPoint => {
+    if (!mesh.vertices[id]) throw new Error("vertex index out of range");
+    return mesh.vertices[id].map(Math.fround) as MeshPoint;
+  };
+  if (query.kind === "vertex") return { point: point(query.index) };
+  if (query.kind === "edge") {
+    let offset = 0;
+    for (const face of mesh.faces) {
+      if (query.index < offset + face.length) {
+        const index = query.index - offset, start = point(face[index]), end = point(face[(index + 1) % face.length]);
+        return { start, end, length: Math.hypot(...sub(end, start)) };
+      }
+      offset += face.length;
+    }
+    throw new Error("edge index out of range");
+  }
+  if (query.kind !== "face" || !mesh.faces[query.index]) throw new Error("face index out of range");
+  const vertices = mesh.faces[query.index], points = vertices.map(point), sum: MeshPoint = [0, 0, 0], center: MeshPoint = [0, 0, 0];
+  for (let index = 0; index < points.length; index++) {
+    const a = points[index], b = points[(index + 1) % points.length];
+    sum[0] += (a[1] - b[1]) * (a[2] + b[2]); sum[1] += (a[2] - b[2]) * (a[0] + b[0]); sum[2] += (a[0] - b[0]) * (a[1] + b[1]);
+    for (let axis = 0; axis < 3; axis++) center[axis] += a[axis] / points.length;
+  }
+  const length = Math.hypot(...sum);
+  if (!length) throw new Error("face normal is degenerate");
+  return { vertices: [...vertices], normal: sum.map(value => value / length) as MeshPoint, center };
+}

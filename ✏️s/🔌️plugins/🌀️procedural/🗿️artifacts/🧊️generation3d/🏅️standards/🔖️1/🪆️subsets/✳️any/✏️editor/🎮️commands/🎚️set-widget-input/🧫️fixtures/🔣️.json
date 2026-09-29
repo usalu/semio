@@ -1,0 +1,181 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "number",
+      "types": [
+        "number"
+      ],
+      "current": {
+        "$schema": "number",
+        "value": 1
+      },
+      "value": "2.5",
+      "expected": {
+        "$schema": "number",
+        "value": 2.5
+      }
+    },
+    {
+      "id": "default-number",
+      "types": [
+        "number"
+      ],
+      "current": null,
+      "value": "-3",
+      "expected": {
+        "$schema": "number",
+        "value": -3
+      }
+    },
+    {
+      "id": "text",
+      "types": [
+        "text"
+      ],
+      "current": {
+        "$schema": "text",
+        "value": ""
+      },
+      "value": "[0,2]",
+      "expected": {
+        "$schema": "text",
+        "value": "[0,2]"
+      }
+    },
+    {
+      "id": "point-component",
+      "types": [
+        "point",
+        "vector"
+      ],
+      "current": {
+        "$schema": "point",
+        "x": 1,
+        "y": 2,
+        "z": 3
+      },
+      "component": "y",
+      "value": "4.5",
+      "expected": {
+        "$schema": "point",
+        "x": 1,
+        "y": 4.5,
+        "z": 3
+      }
+    },
+    {
+      "id": "vector-component",
+      "types": [
+        "vector"
+      ],
+      "current": {
+        "$schema": "vector",
+        "x": 0,
+        "y": 0,
+        "z": 1
+      },
+      "component": "x",
+      "value": "-2",
+      "expected": {
+        "$schema": "vector",
+        "x": -2,
+        "y": 0,
+        "z": 1
+      }
+    },
+    {
+      "id": "boolean",
+      "types": [
+        "boolean"
+      ],
+      "current": {
+        "$schema": "boolean",
+        "value": true
+      },
+      "value": "false",
+      "expected": {
+        "$schema": "boolean",
+        "value": false
+      }
+    },
+    {
+      "id": "invalid-number",
+      "types": [
+        "number"
+      ],
+      "current": null,
+      "value": "oops",
+      "error": true
+    },
+    {
+      "id": "empty-number",
+      "types": [
+        "number"
+      ],
+      "current": null,
+      "value": "",
+      "error": true
+    },
+    {
+      "id": "nonfinite-number",
+      "types": [
+        "number"
+      ],
+      "current": null,
+      "value": "1e999",
+      "error": true
+    },
+    {
+      "id": "invalid-boolean",
+      "types": [
+        "boolean"
+      ],
+      "current": null,
+      "value": "yes",
+      "error": true
+    },
+    {
+      "id": "unsupported-geometry",
+      "types": [
+        "geometry"
+      ],
+      "current": null,
+      "value": "{}",
+      "error": true
+    },
+    {
+      "id": "scalar-component",
+      "types": [
+        "number"
+      ],
+      "current": null,
+      "component": "x",
+      "value": "1",
+      "error": true
+    },
+    {
+      "id": "invalid-component",
+      "types": [
+        "vector"
+      ],
+      "current": null,
+      "component": "w",
+      "value": "1",
+      "error": true
+    },
+    {
+      "id": "mismatched-schema",
+      "types": [
+        "number"
+      ],
+      "current": {
+        "$schema": "text",
+        "value": "x"
+      },
+      "value": "1",
+      "error": true
+    }
+  ]
+}
+

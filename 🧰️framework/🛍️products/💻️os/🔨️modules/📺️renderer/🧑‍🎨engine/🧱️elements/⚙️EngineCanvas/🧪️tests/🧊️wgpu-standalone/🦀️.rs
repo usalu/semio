@@ -254,6 +254,8 @@ fn drive_engine_surface_close(registry: &mut EngineSurfaceRegistry, token: Engin
 
 #[cfg(test)]
 #[test]
+/// ♻️ The ladder closes one fuel turn at a time AND page by page: its 8 KiB buffers cost a grant each (not 8 192), so the whole
+/// populated surface takes more than one turn per owner and far fewer than one per scalar.
 fn populated_graph_map_editor_surface_closes_one_fuel_turn_at_a_time() {
     let mut registry = EngineSurfaceRegistry::default();
     let token = registry.reserve("all-cpu-owners").expect("fixed surface reservation");
@@ -271,7 +273,7 @@ fn populated_graph_map_editor_surface_closes_one_fuel_turn_at_a_time() {
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     assert!(!with_engine_close_context(0, |context| registry.close_step(token, context, &mut input)));
     let turns = drive_engine_surface_close(&mut registry, token, &mut input);
-    assert!(turns > 24_576);
+    assert!((16..8_192).contains(&turns), "a populated surface closes owner by owner, a page per grant: {turns}");
     assert!(registry.terminal_nonopaque_is_empty(token));
     assert!(!registry.begin_close(token));
 }

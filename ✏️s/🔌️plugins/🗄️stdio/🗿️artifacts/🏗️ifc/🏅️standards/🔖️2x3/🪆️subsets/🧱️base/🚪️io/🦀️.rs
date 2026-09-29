@@ -6,11 +6,11 @@
 //!
 //! 📐️ IFC2X3 is buildingSMART Coordination View 2.0-era IFC, ISO/PAS 16739:2005 schema,
 //! physically-encoded identically to `📐️step`'s AP214 (`FILE_SCHEMA(('IFC2X3'))` in place of
-//! `FILE_SCHEMA(('AUTOMOTIVE_DESIGN'))`). Reuses `step::engine::part21`'s tokenizer/writer
+//! `FILE_SCHEMA(('AUTOMOTIVE_DESIGN'))`). Reuses `semio_s_artifact_stdio_contract::part21`'s tokenizer/writer
 //! functions directly — PARSING-CODE reuse; what's NOT reused is `Part21Document`'s type IDENTITY
 //! as this standard's snapshot type.
 use crate::standards::v2x3::subsets::base::schema::snapshot::{Ifc2x3EdmPreamble, Ifc2x3Snapshot, STDIO_IFC2X3_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_step::engine::part21::{parse_part21, write_part21_with, Part21Preamble, Part21WriteOptions};
+use semio_s_artifact_stdio_contract::part21::{parse_part21, write_part21_with, Part21Preamble, Part21WriteOptions};
 use std::fmt::Write as _;
 
 //#region 🔖️Codec

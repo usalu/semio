@@ -27,3 +27,5 @@ record change-data-property tag=6
 field payload bytes
 record remove-data-property tag=7
 field payload bytes
+record set-query tag=8
+field payload bytes

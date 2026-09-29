@@ -525,26 +525,30 @@ return vec4<f32>(world3d_attachment_output(color), in.color.a);
 /// duplicating its BRDF/normal/ACES implementation. Paint PNG bytes live in the shared sRGB raster
 /// table, so applying the OETF once recovers their `NoColorSpace` byte values before lighting.
 pub fn world3d_painted_shader() -> String {
-    WORLD3D_SHADER
-        .replacen(
-            "@group(1) @binding(1) var shadow_sampler: sampler_comparison;",
-            "@group(1) @binding(1) var shadow_sampler: sampler_comparison;\n@group(2) @binding(0) var paint_map: texture_2d<f32>;\n@group(2) @binding(1) var paint_sampler: sampler;",
-            1,
-        )
-        .replacen("@location(2) color: vec4<f32>,\n}", "@location(2) color: vec4<f32>,\n@location(9) uv: vec2<f32>,\n}", 1)
-        .replacen("@location(4) emissive_cutoff: vec4<f32>,\n}", "@location(4) emissive_cutoff: vec4<f32>,\n@location(5) uv: vec2<f32>,\n}", 1)
-        .replacen("out.emissive_cutoff = instance.emissive_cutoff;\nreturn out;", "out.emissive_cutoff = instance.emissive_cutoff;\nout.uv = vertex.uv;\nreturn out;", 1)
-        .replacen(
-            "let emissive = globals.material_emissive.rgb * globals.material.z + in.color.rgb * max(in.flags.y, 0.0);",
-            "let sampled = textureSample(paint_map, paint_sampler, in.uv);\nlet authored_texture = (u32(in.flags.x) & 4u) != 0u;\nlet paint_color = select(world3d_linear_to_srgb(sampled.rgb), sampled.rgb, authored_texture);\nlet lit_color = in.color.rgb * paint_color;\nif (in.emissive_cutoff.w >= 0.0 && sampled.a * in.color.a < in.emissive_cutoff.w) { discard; }\nlet emissive = globals.material_emissive.rgb * globals.material.z + in.color.rgb * max(in.flags.y, 0.0) + in.emissive_cutoff.rgb;",
-            1,
-        )
-        .replacen(
-            "let color = world3d_lighting(n, v, in.color.rgb, metalness, roughness, shadow_visibility) + emissive;\nreturn vec4<f32>(world3d_attachment_output(color), in.color.a);",
-            "let color = world3d_lighting(n, v, lit_color, metalness, roughness, shadow_visibility) + emissive;\nreturn vec4<f32>(world3d_attachment_output(color), sampled.a * in.color.a);",
-            1,
-        )
+    WORLD3D_PAINTED_SHADER_EDITS.iter().fold(WORLD3D_SHADER.to_string(), |shader, (anchor, edit)| shader.replacen(anchor, edit, 1))
 }
+
+/// 🎨️ The ordered edits that turn [`WORLD3D_SHADER`] into [`world3d_painted_shader`]: the paint map bindings, the UV
+/// varyings, the sampled albedo with its mask test, and the sampled alpha. Every anchor occurs EXACTLY once in the lit
+/// shader (law `every_painted_shader_edit_finds_its_anchor_in_the_lit_shader_once`) — an anchor that stopped matching once
+/// dropped the `lit_color` declaration silently and every GPU context refused the painted shader module.
+pub const WORLD3D_PAINTED_SHADER_EDITS: [(&str, &str); 6] = [
+    (
+        "@group(1) @binding(1) var shadow_sampler: sampler_comparison;",
+        "@group(1) @binding(1) var shadow_sampler: sampler_comparison;\n@group(2) @binding(0) var paint_map: texture_2d<f32>;\n@group(2) @binding(1) var paint_sampler: sampler;",
+    ),
+    ("@location(2) color: vec4<f32>,\n}", "@location(2) color: vec4<f32>,\n@location(9) uv: vec2<f32>,\n}"),
+    ("@location(4) emissive_cutoff: vec4<f32>,\n}", "@location(4) emissive_cutoff: vec4<f32>,\n@location(5) uv: vec2<f32>,\n}"),
+    ("out.emissive_cutoff = instance.emissive_cutoff;\nreturn out;", "out.emissive_cutoff = instance.emissive_cutoff;\nout.uv = vertex.uv;\nreturn out;"),
+    (
+        "let emissive = globals.material_emissive.rgb * globals.material.z + in.color.rgb * max(in.flags.y, 0.0) + in.emissive_cutoff.rgb;",
+        "let sampled = textureSample(paint_map, paint_sampler, in.uv);\nlet authored_texture = (u32(in.flags.x) & 4u) != 0u;\nlet paint_color = select(world3d_linear_to_srgb(sampled.rgb), sampled.rgb, authored_texture);\nlet lit_color = in.color.rgb * paint_color;\nif (in.emissive_cutoff.w >= 0.0 && sampled.a * in.color.a < in.emissive_cutoff.w) { discard; }\nlet emissive = globals.material_emissive.rgb * globals.material.z + in.color.rgb * max(in.flags.y, 0.0) + in.emissive_cutoff.rgb;",
+    ),
+    (
+        "let color = world3d_lighting(n, v, in.color.rgb, metalness, roughness, shadow_visibility) + emissive;\nreturn vec4<f32>(world3d_attachment_output(color), in.color.a);",
+        "let color = world3d_lighting(n, v, lit_color, metalness, roughness, shadow_visibility) + emissive;\nreturn vec4<f32>(world3d_attachment_output(color), sampled.a * in.color.a);",
+    ),
+];
 
 pub const WORLD3D_CELEBRATION_SHADER: &str = r#"
 struct Globals {

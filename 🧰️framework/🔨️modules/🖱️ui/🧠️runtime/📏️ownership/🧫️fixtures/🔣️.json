@@ -2,7 +2,7 @@
   "version": 1,
   "componentCopy": { "allocationGrant": 32768, "workGrant": 4096, "payloadBytes": 32768, "cancelFrontiers": [0, 1, 2, 3, 4, 5, 8, 12, 16, 32] },
   "existingComponent": { "allocationGrant": 32768, "workGrant": 4096, "payloadBytes": 32768, "minimumTurns": 8, "rejectionAllocationBytes": 0, "oldRootCopied": false },
-  "patchAllocation": { "maximumBytesPerTurn": 32768, "directoryBytes": 27672, "operationBytes": 6416 },
+  "patchAllocation": { "maximumBytesPerTurn": 32768, "directoryBytes": 27672, "operationBytes": 6592 },
   "bindingClone": { "items": 32, "elementBytes": 2072, "wholeBackingBytes": 66304, "maximumBytesPerTurn": 32768, "cancelFrontiers": [0, 1, 2, 3, 4, 5, 12, 64, 100, 132], "unwindRetainsRoots": true },
   "inlineCases": [
     { "name": "tree-item-icon", "before": 0, "after": 1, "backingCapacity": 0, "additionalOwnedBytes": 0 },

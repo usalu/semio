@@ -6,7 +6,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
 import userEvent from "@testing-library/user-event";
-import { Tree, type PanelTabLeaf } from "@semio-tech/ui-react";
+import { Tree, isElementId, type PanelTabLeaf } from "@semio-tech/ui-react";
 import type { Rgba8 } from "@semio-tech/ui-styling";
 import type { ReactElement } from "react";
 
@@ -154,6 +154,7 @@ describe("Display window taxonomy order", () => {
     }
     const ids = Array.from(mounted.container.querySelectorAll<HTMLElement>('[role="treeitem"]')).map((row) => row.id);
     expect(ids).toEqual(fixture.displayResolvedOrder.topToBottomIds);
+    expect(ids.filter((id) => !isElementId(id)), "every Display row id is one element id").toEqual([]);
   });
 });
 

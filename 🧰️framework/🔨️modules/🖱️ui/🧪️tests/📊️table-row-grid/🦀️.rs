@@ -265,3 +265,64 @@ fn every_row_action_is_an_announced_button_that_fires_its_own_binding() {
     let commands = router.dispatch_accessibility_row_action(&mut tree, row, index, &AccessibilityUiEvent::Activate);
     assert_eq!(fired(&commands), vec![activation["fires"].as_str().expect("fires").to_string()]);
 }
+
+/// 🎯️ LAW (ticket 26/09/23 session 14, U6 T4): a tree row and a table row with the same `RowTarget` dispatch identically —
+/// the activation and every row action fire their verb with the target's scope, version and ONE argument map, whichever row
+/// carries them. Oracle: the contract's `🎯️row-target` fixture, shared with the React host's law.
+#[test]
+fn a_tree_row_and_a_table_row_with_one_target_dispatch_identically() {
+    let fixture: Value = serde_json::from_str(include_str!("../../🧬️contract/🧫️fixtures/🎯️row-target/🔣️.json")).expect("🎯️ the row-target fixture parses");
+    let row = |case: &str| fixture["rows"].as_array().expect("fixture rows").iter().find(|row| row["case"] == case).unwrap_or_else(|| panic!("fixture row {case}"))["component"].clone();
+    let stack = serde_json::json!({ "kind": "stack", "axis": "vertical", "gap": "none", "padding": { "all": "none" }, "align": "stretch", "justify": "start", "wrap": false, "grow": false });
+    let record = |id: u64, key: &str, component: Value, children: Vec<u64>| serde_json::json!({ "id": id, "key": key, "component": component, "children": children, "layout": stack, "style": {}, "activity": "idle", "accessibility": {} });
+    let document = serde_json::json!({
+        "document": {
+            "surface": "row.target", "revision": 1, "root": 0, "layoutEpoch": 0, "controller": fixture["target"]["scope"],
+            "nodes": [
+                record(0, "root", serde_json::json!({ "type": "container" }), vec![1, 4]),
+                record(1, "tree", serde_json::json!({ "type": "tree" }), vec![2]),
+                record(2, "section", serde_json::json!({ "type": "treeSection", "label": "Spaces" }), vec![3]),
+                record(3, "tree-row", row("tree-row"), vec![]),
+                record(4, "table", serde_json::json!({ "type": "table", "label": "Spaces", "columns": ["Name", "Kind"], "actionsLabel": "Actions" }), vec![5]),
+                record(5, "table-row", row("table-row"), vec![]),
+            ]
+        },
+        "viewport": { "width": 800.0, "height": 600.0 }
+    });
+    let (mut tree, _) = mounted(&document);
+    let fired = |commands: Vec<UiCommand>| -> Vec<Value> {
+        commands
+            .iter()
+            .filter_map(|command| match command {
+                UiCommand::App { intent, .. } => Some(serde_json::json!({
+                    "verb": intent.action.name.as_str(),
+                    "binding": { "trigger": "activate", "action": { "scope": intent.action.scope.as_str(), "name": intent.action.name.as_str(), "version": intent.action.version }, "args": intent.args.clone().map(Value::from) }
+                })),
+                _ => None,
+            })
+            .collect()
+    };
+    let dispatched = |tree: &mut UiTree, id: u64| -> Vec<Value> {
+        let node = tree.document_node(UiNodeId(id)).unwrap_or_else(|| panic!("row {id} mounted"));
+        let mut router = EventRouter::new("main");
+        let mut outcomes = fired(router.dispatch_accessibility(tree, node, &AccessibilityUiEvent::Activate));
+        for (index, action) in fixture["rowActions"].as_array().expect("fixture row actions").iter().enumerate() {
+            let commands = fired(router.dispatch_accessibility_row_action(tree, node, index, &AccessibilityUiEvent::Activate));
+            if action["disabled"] == true {
+                assert!(commands.is_empty(), "row {id}: a disabled row action dispatches nothing: {commands:?}");
+                outcomes.push(serde_json::json!({ "verb": action["verb"], "refusal": "disabled" }));
+            } else {
+                outcomes.extend(commands);
+            }
+        }
+        outcomes
+    };
+    let tree_row = dispatched(&mut tree, 3);
+    let table_row = dispatched(&mut tree, 5);
+    assert_eq!(tree_row, table_row, "one target dispatches identically from a tree row and a table row");
+    assert_eq!(Value::from(tree_row), fixture["dispatch"], "the activation and every row action fire the fixture's bindings, a disabled one nothing");
+    let projection = accessibility_projection(&tree);
+    let disabled = fixture["rowActions"].as_array().expect("fixture row actions").iter().position(|action| action["disabled"] == true).expect("the fixture's disabled row action");
+    let button = projection.iter().find(|node| node.key == format!("table-row::row-action::{disabled}")).expect("the disabled action is announced");
+    assert!(button.disabled && !button.actionable && !button.focusable, "a disabled row action is announced disabled and unreachable: {button:?}");
+}

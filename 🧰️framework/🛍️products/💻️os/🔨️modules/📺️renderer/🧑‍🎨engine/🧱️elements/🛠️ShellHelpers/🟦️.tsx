@@ -75,6 +75,8 @@ import {
     type PluginUiRefreshRequest,
     type PluginUiRefreshResponse,
     type PluginUiRefreshSectionResponse,
+    type UiRefreshSectionKey,
+    UI_REFRESH_SECTIONS,
     type PluginViewState,
     RECORD_TUTORIAL_ACTION_ID,
     resolvePluginHostConfig,
@@ -204,7 +206,7 @@ import {
 import { builtNodeToSnapshot, UiDocumentStore } from "../📃️UiDocumentStore/🟦️.tsx";
 import type { BrowserActorUiPatchVerdictV1 } from "../../../../🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts";
 import { segmentedDownloadSinkFactory, type SegmentedDownloadSinkFactory } from "../📤️SegmentedDownload/🟦️.ts";
-import { loadPluginModule, pluginLoadProgressAt, pluginLoadRemainingMs, PLUGIN_LOAD_IDLE_TIMEOUT_MS, type PluginWasmHandle } from "../🔌️PluginRuntime/🟦️.tsx";
+import { loadPluginModule, pluginLoadProgressAt, pluginLoadRemainingMs, PLUGIN_LOAD_IDLE_TIMEOUT_MS, retainedSectionValueV1, type PluginWasmHandle } from "../🔌️PluginRuntime/🟦️.tsx";
 import {
     InterpretedUiNode,
     TreeWindowContext,
@@ -454,9 +456,27 @@ export function isShellOwnedCommandId(commandId: string): boolean {
 /** 🎨️ The program action the navbar example picker dispatches. */
 export const SET_ACTIVE_EXAMPLE_ACTION_ID = "setActiveExample";
 
-/** 📚️ Whether an app can switch its document to an example at all — only then may the shell offer its examples or announce a boot example. */
+/** 📚️ Whether the app itself declares `setActiveExample`. The navbar no longer uses this as the
+ * visibility gate: an editor loads its registered catalogue even when the action was never declared. */
 export function appSwitchesExamples(appId: string, windowKinds: readonly WindowKindActionDeclaration[], appActions: readonly { readonly id: string }[] = []): boolean {
   return undeclaredActionDiagnostic(appId, SET_ACTIVE_EXAMPLE_ACTION_ID, windowKinds, null, appActions) === null;
+}
+
+/** 📚️ Whether the navbar lists registered examples. An editor always does when the catalogue is
+ * non-empty — the framework loads the body. A viewer lists them only when it declares the action,
+ * because it does not own the editor's example documents. */
+export function appOffersRegisteredExamples(
+  app: { readonly id: string; readonly role?: string; readonly windowKinds: readonly WindowKindActionDeclaration[]; readonly actions?: readonly { readonly id: string }[] },
+  exampleCount: number,
+): boolean {
+  if (exampleCount <= 0) return false;
+  if (app.role === "editor") return true;
+  return appSwitchesExamples(app.id, app.windowKinds, app.actions ?? []);
+}
+
+/** 🎨️ An editor may dispatch `setActiveExample` without declaring it. The guest loads the registered catalogue. */
+export function frameworkOwnsExampleSwitch(role: string | undefined, action: string): boolean {
+  return role === "editor" && action === SET_ACTIVE_EXAMPLE_ACTION_ID;
 }
 
 /** 🎨️ Builds the `setActiveExample` descriptor the navbar example picker dispatches through the standard
@@ -2227,26 +2247,32 @@ export function browserActorPanelKeysV1(app: Pick<AppDefinition, "panelTabs">): 
   return new Set(flattenPanelTabLeaves(app.panelTabs).flatMap((tab) => (tab.bodyKey ? [panelTabKindId(tab.kind)] : [])));
 }
 
-export type BrowserActorUiStoresV1 = Readonly<{ windows: Map<string, UiDocumentStore>; panels: Map<string, UiDocumentStore> }>;
+export type BrowserActorUiStoresV1 = Readonly<{ windows: Map<string, UiDocumentStore>; panels: Map<string, UiDocumentStore>; sections: Map<string, UiDocumentStore> }>;
+
+/** 🧩️ The reserved refresh-section surfaces an actor renders beside its windows and panels, each keyed by its reserved body
+ * key (`framework.section.*`) — the local refresh's own section binding (`UI_REFRESH_SECTIONS`). */
+export const BROWSER_ACTOR_SECTION_KEYS: ReadonlySet<string> = new Set(UI_REFRESH_SECTIONS.map(({ bodyKey }) => bodyKey));
 
 /** 🩹️ Applies one browser-actor patch offer surface by surface and answers one verdict per patch, in offer order
  * — the guest acknowledges and resends per surface (`patch-ack` / `patch-rejected`), so one stale panel never
- * costs a window its frame. Every window kind of the app and every bodied panel is a surface: an actor-bound document
- * renders all of its windows from its one actor. A patch for a surface this app does not render is refused
- * `unknown-surface`; a patch that does not apply resets its store to the empty document (see `UiDocumentStore.reset`),
- * which is what the guest's full resend assumes. The FIRST offer of an opening must paint a window, or nothing is
- * retained and every surface is refused `window-surface-unpainted` so the guest resends them all. */
+ * costs a window its frame. Every window kind of the app, every bodied panel and every reserved refresh section is a
+ * surface: an actor-bound document renders all of its windows and their chrome from its one actor. A patch for a
+ * surface this app does not render is refused `unknown-surface`; a patch that does not apply resets its store to the
+ * empty document (see `UiDocumentStore.reset`), which is what the guest's full resend assumes. The FIRST offer of an
+ * opening must paint a window, or nothing is retained and every surface is refused `window-surface-unpainted` so the
+ * guest resends them all. `sectionsChanged` says an acknowledged patch moved a section the shell must re-dispatch. */
 export function applyBrowserActorUiPatchesV1(
   patches: readonly UiPatch[],
   windowKeys: ReadonlySet<string>,
   panelKeys: ReadonlySet<string>,
   retained: BrowserActorUiStoresV1 | null,
-): Readonly<{ verdicts: readonly BrowserActorUiPatchVerdictV1[]; stores: BrowserActorUiStoresV1 | null; surfacesAdded: boolean }> {
+): Readonly<{ verdicts: readonly BrowserActorUiPatchVerdictV1[]; stores: BrowserActorUiStoresV1 | null; surfacesAdded: boolean; sectionsChanged: boolean }> {
   const windows = retained?.windows ?? new Map<string, UiDocumentStore>(),
-    panels = retained?.panels ?? new Map<string, UiDocumentStore>();
+    panels = retained?.panels ?? new Map<string, UiDocumentStore>(),
+    sections = retained?.sections ?? new Map<string, UiDocumentStore>();
   let surfacesAdded = false;
   const verdicts = patches.map((patch): BrowserActorUiPatchVerdictV1 => {
-    const owner = windowKeys.has(patch.surface) ? windows : panelKeys.has(patch.surface) ? panels : null;
+    const owner = windowKeys.has(patch.surface) ? windows : panelKeys.has(patch.surface) ? panels : BROWSER_ACTOR_SECTION_KEYS.has(patch.surface) ? sections : null;
     if (owner === null) return { surface: patch.surface, outcome: "rejected", revision: 0, reason: "unknown-surface" };
     let store = owner.get(patch.surface);
     if (store === undefined) {
@@ -2259,12 +2285,37 @@ export function applyBrowserActorUiPatchesV1(
     store.reset();
     return { surface: patch.surface, outcome: "rejected", revision: 0, reason: applied.rejection.type };
   });
-  if (retained !== null || verdicts.some((verdict) => windowKeys.has(verdict.surface) && verdict.outcome === "acknowledged")) return { verdicts, stores: { windows, panels }, surfacesAdded };
+  if (retained !== null || verdicts.some((verdict) => windowKeys.has(verdict.surface) && verdict.outcome === "acknowledged"))
+    return { verdicts, stores: { windows, panels, sections }, surfacesAdded, sectionsChanged: verdicts.some((verdict) => BROWSER_ACTOR_SECTION_KEYS.has(verdict.surface) && verdict.outcome === "acknowledged") };
   return {
     verdicts: verdicts.map((verdict): BrowserActorUiPatchVerdictV1 => (verdict.outcome === "acknowledged" ? { surface: verdict.surface, outcome: "rejected", revision: 0, reason: "window-surface-unpainted" } : verdict)),
     stores: null,
     surfacesAdded: false,
+    sectionsChanged: false,
   };
+}
+
+/** 🧩️ The reserved refresh sections an actor-bound document's section stores hold now, keyed like the local refresh's
+ * cache (`engagements`/`measures`/`tools`/`catalogue`), each with the store revision it was read at; a section whose store
+ * has no root is absent. Decoded by the local refresh's own `retainedSectionValueV1`, so both paths read one carrier. */
+export function browserActorSectionValuesV1(sections: ReadonlyMap<string, UiDocumentStore>, producer: string): ReadonlyMap<UiRefreshSectionKey, Readonly<{ revision: number; value: unknown }>> {
+  const values = new Map<UiRefreshSectionKey, Readonly<{ revision: number; value: unknown }>>();
+  for (const section of UI_REFRESH_SECTIONS) {
+    const store = sections.get(section.bodyKey);
+    if (store === undefined) continue;
+    const value = retainedSectionValueV1(section.bodyKey, store.getState(), producer);
+    if (value !== undefined) values.set(section.key, { revision: store.getRevisionSnapshot(), value });
+  }
+  return values;
+}
+
+/** 🧩️ `request` without its reserved sections — for a session an actor serves, whose engagements, measures, tool measures
+ * and catalogue come from the actor's section surfaces (its local instance never sees the hub document); `null` when
+ * nothing is left to fetch. */
+export function withoutUiRefreshSectionsV1(request: PluginUiRefreshRequest | null): PluginUiRefreshRequest | null {
+  if (request === null) return null;
+  const stripped: PluginUiRefreshRequest = { ...request, engagements: undefined, measures: undefined, tools: undefined, catalogue: undefined };
+  return (stripped.windows ?? []).length === 0 && (stripped.panels ?? []).length === 0 && stripped.labels === undefined ? null : stripped;
 }
 
 export function resolveCanvasBodyKey(app: AppDefinition): string {

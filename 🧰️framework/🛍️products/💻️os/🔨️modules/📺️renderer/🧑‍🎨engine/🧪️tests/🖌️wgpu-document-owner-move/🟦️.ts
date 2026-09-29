@@ -52,16 +52,23 @@ describe("wgpu retained document owner move", () => {
     const phases = Object.entries(fixture.terminalCursor).filter(([phase]) => !phase.startsWith("$"));
     const holders = phases.filter(([, verdict]) => verdict === "hold").map(([phase]) => phase);
     const release = `${laws.terminalCursorRelease}()`;
+    const helper = `${laws.terminalCursorReleaseHelper}(`;
+    const helperStart = shell.indexOf(`fn ${helper}`);
+    expect(helperStart, "the shared opportunity helper exists").toBeGreaterThan(0);
+    const helperBody = shell.slice(helperStart, shell.indexOf("\n}", helperStart));
+    expect(helperBody).toContain(`!cursor.document.${release}`);
+    expect(helperBody).toContain("cursor.document.last_step_was_own_work()");
+    expect(helperBody).toContain("cursor.scalar < budget");
     let walkReleases = 0;
     for (const walk of laws.terminalCursorWalks) {
       const start = shell.indexOf(`fn ${walk}(`);
       expect(start, `the ${walk} chrome walk exists`).toBeGreaterThan(0);
       const end = shell.indexOf("\n    fn ", start + 1);
       const body = shell.slice(start, end < 0 ? undefined : end);
-      expect(body, `the ${walk} chrome walk releases a terminal cursor`).toContain(release);
+      expect(body.includes(release) || body.includes(helper), `the ${walk} chrome walk releases a terminal cursor directly or through the bounded opportunity helper`).toBe(true);
       walkReleases += body.split(release).length - 1;
     }
-    expect(shell.split(release).length - 1, "every terminal-cursor release sits in a named chrome walk").toBe(walkReleases);
+    expect(shell.split(release).length - 1, "every terminal-cursor release sits in a named chrome walk or its shared opportunity helper").toBe(walkReleases + helperBody.split(release).length - 1);
     expect(holders.length).toBe(phases.length - 2);
     const interpreter = source("interpreterSource");
     for (const phase of holders) expect(interpreter, `the cursor must still have a ${phase} phase to hold on`).toContain(`UiDocumentFramePhase::${phase[0]!.toUpperCase()}${phase.slice(1)}`);

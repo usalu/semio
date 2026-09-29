@@ -8,7 +8,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{change_data_property, create_edge, create_node, delete_edge, delete_node, move_node, remove_data_property, rename_node};
+use crate::standards::v1::subsets::any::schema::mutations::{change_data_property, create_edge, create_node, delete_edge, delete_node, move_node, remove_data_property, rename_node, set_query};
 use crate::standards::v1::subsets::any::schema::snapshot::text::{port_dsl_to_port, port_to_port_dsl, PortDsl};
 use crate::{Edge, EntityRef, JackSnapshot, Node, Port, PropertyBag, PropertyDef, PropertyValue};
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
@@ -100,6 +100,9 @@ enum TrinityGraphOperationDsl {
         entity: EntityRefDsl,
         key: String,
     },
+    SetQuery {
+        value: String,
+    },
 }
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
@@ -149,6 +152,7 @@ fn trinity_graph_operation_to_dsl(operation: &TrinityGraphMutation) -> TrinityGr
         TrinityGraphMutation::MoveNode(payload) => TrinityGraphOperationDsl::MoveNode { id: payload.id.clone(), x: payload.x, y: payload.y },
         TrinityGraphMutation::ChangeDataProperty(payload) => TrinityGraphOperationDsl::ChangeDataProperty { entity: (&payload.entity).into(), key: payload.key.clone(), value: payload.new_value.clone() },
         TrinityGraphMutation::RemoveDataProperty(payload) => TrinityGraphOperationDsl::RemoveDataProperty { entity: (&payload.entity).into(), key: payload.key.clone() },
+        TrinityGraphMutation::SetQuery(payload) => TrinityGraphOperationDsl::SetQuery { value: payload.value.clone() },
     }
 }
 
@@ -162,6 +166,7 @@ fn trinity_graph_operation_from_dsl(operation: TrinityGraphOperationDsl) -> Trin
         TrinityGraphOperationDsl::MoveNode { id, x, y } => move_node(id, x, y),
         TrinityGraphOperationDsl::ChangeDataProperty { entity, key, value } => change_data_property(entity.into(), key, value),
         TrinityGraphOperationDsl::RemoveDataProperty { entity, key } => remove_data_property(entity.into(), key),
+        TrinityGraphOperationDsl::SetQuery { value } => set_query(value),
     }
 }
 //#endregion 🔖️DslMirrors
@@ -214,6 +219,7 @@ enum JackMutationFields {
     MoveNode(String),
     ChangeDataProperty { entity: Option<EntityRef>, key: String, value: Option<PropertyValue> },
     RemoveDataProperty { entity: Option<EntityRef>, key: String },
+    SetQuery(String),
 }
 
 enum JackRetirementOwner {
@@ -404,6 +410,7 @@ impl JackOwnedRetirement {
                     self.phase = 13;
                     store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
                 }
+                13 => Self::phased_string_step(&mut value.query, &mut self.phase, 14, maximum_items, maximum_bytes),
                 _ => {
                     drop(self.owner.take());
                     store::SnapshotRetirementStep::Complete
@@ -452,6 +459,7 @@ impl JackOwnedRetirement {
                     TrinityGraphMutation::MoveNode(value) => JackMutationFields::MoveNode(value.id),
                     TrinityGraphMutation::ChangeDataProperty(value) => JackMutationFields::ChangeDataProperty { entity: Some(value.entity), key: value.key, value: Some(value.new_value) },
                     TrinityGraphMutation::RemoveDataProperty(value) => JackMutationFields::RemoveDataProperty { entity: Some(value.entity), key: value.key },
+                    TrinityGraphMutation::SetQuery(value) => JackMutationFields::SetQuery(value.value),
                 };
                 *self.owner = Some(JackRetirementOwner::MutationFields(fields));
                 store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
@@ -464,7 +472,7 @@ impl JackOwnedRetirement {
                     drop(self.owner.take());
                     store::SnapshotRetirementStep::Complete
                 }
-                JackMutationFields::DeleteNode(value) | JackMutationFields::DeleteEdge(value) | JackMutationFields::MoveNode(value) => {
+                JackMutationFields::DeleteNode(value) | JackMutationFields::DeleteEdge(value) | JackMutationFields::MoveNode(value) | JackMutationFields::SetQuery(value) => {
                     if self.phase == 0 {
                         return Self::phased_string_step(value, &mut self.phase, 1, maximum_items, maximum_bytes);
                     }
@@ -1164,7 +1172,7 @@ impl JackSnapshotCloneAuthority {
     fn with_local_owner(retain_local_owner: bool) -> Self {
         let content = store::ArtifactChild::new(String::new(), store::os_io::ArtifactRef { artifact_id: String::new(), dialect: store::os_io::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } });
         Self {
-            value: std::mem::ManuallyDrop::new(Some(JackSnapshot { schema: String::new(), name: String::new(), manifest_id: None, manifest: Default::default(), camera: Default::default(), content, root_node_id: None })),
+            value: std::mem::ManuallyDrop::new(Some(JackSnapshot { schema: String::new(), name: String::new(), manifest_id: None, manifest: Default::default(), camera: Default::default(), content, root_node_id: None, query: String::new() })),
             active: std::mem::ManuallyDrop::new(None),
             retirement: std::mem::ManuallyDrop::new(None),
             phase: 0,
@@ -1371,6 +1379,10 @@ impl JackSnapshotCloneAuthority {
                 target.root_node_id = source.root_node_id.as_deref().map(|value| Self::clone_string(value, maximum_bytes)).transpose()?;
                 source.root_node_id.as_deref().map_or(0, str::len)
             }
+            13 => {
+                target.query = Self::clone_string(&source.query, maximum_bytes)?;
+                source.query.len()
+            }
             _ => {
                 self.terminal = true;
                 return Ok(JackSnapshotCloneStep::Complete);
@@ -1395,6 +1407,7 @@ impl JackSnapshotCloneAuthority {
                 10 => digest.observe(source.content.target.dialect.standard.as_bytes()),
                 11 => digest.observe(source.content.target.dialect.subset.as_bytes()),
                 12 => digest.observe(source.root_node_id.as_deref().unwrap_or_default().as_bytes()),
+                13 => digest.observe(source.query.as_bytes()),
                 _ => {}
             }
         }

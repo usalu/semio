@@ -21,7 +21,7 @@ const silent = {
 const settled = (effect: object) => ({ type: "object", required: ["settled"], properties: { settled: effect } });
 const refused = { type: "object", required: ["refused"], properties: { refused: { type: "object" } } };
 const unreachable = { type: "object", required: ["unreachable"], properties: { unreachable: { type: "object" } } };
-const refusedOrUnreachable = { anyOf: [refused, unreachable] };
+const refusedUnreachableOrSilent = { anyOf: [refused, unreachable, settled(silent)] };
 
 /** 📜️ Every rule of the verdict as one JSON Schema over the probe's flattened view, evaluated by AJV — the third-party engine. */
 const rules = {
@@ -42,7 +42,7 @@ const rules = {
     properties: { agent: { type: "object" }, staged: { type: "array" } },
     anyOf: [
       { oneOf: [{ type: "object", properties: { staged: { type: "array", contains: settled(touches) } } }, { type: "object", properties: { agent: settled(touches) } }] },
-      { type: "object", properties: { agent: refusedOrUnreachable, staged: { type: "array", contains: settled({ type: "object", not: silent }) } } },
+      { type: "object", properties: { agent: refusedUnreachableOrSilent, staged: { type: "array", contains: settled({ type: "object", not: silent }) } } },
     ],
   }),
   argumentAudience: ajv.compile({ type: "object", required: ["audience"], properties: { audience: { not: { const: "input" } } } }),
@@ -83,7 +83,7 @@ function findings(probe: Probe): Finding[] {
 /** ⚖️ The AJV twin of `artifact_app_laws::declared_verb_findings`: every case of the language-agnostic verdict fixture answered exactly as written. */
 export function declaredVerbVerdictOracle(): number {
   const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/⚖️declared-verb-verdicts.json", import.meta.url), "utf8")) as Fixture;
-  assert(fixture.cases.length >= 28, "the fixture keeps every rule's positive and negative case");
+  assert(fixture.cases.length >= 31, "the fixture keeps every rule's positive and negative case");
   for (const { name, probe, findings: expected } of fixture.cases) assert.deepEqual(findings(probe), expected.map((finding) => (finding.argument === undefined ? { finding: finding.finding } : finding)), name);
   return fixture.cases.length;
 }

@@ -1,0 +1,44 @@
+{
+ "plugin": "fem",
+ "dir": "🏗️fem",
+ "apps": [
+  {
+   "app": "s.fem.fem3d@1/*#editor",
+   "examples": [
+    {
+     "id": "concrete-forest",
+     "document": "distinct"
+    },
+    {
+     "id": "demo",
+     "document": "distinct"
+    },
+    {
+     "id": "house",
+     "document": "distinct"
+    }
+   ]
+  },
+  {
+   "app": "s.fem.fem2d@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "semio_s_artifact_fem_3d::editor::fem3d::Fem3dPlayApp",
+   "create": "semio_s_artifact_fem_3d::editor::fem3d::create_fem3d_app",
+   "app": "s.fem.fem3d@1/*#editor"
+  },
+  {
+   "editor": "semio_s_artifact_fem_2d::editor::fem2d::Fem2dPlayApp",
+   "create": "semio_s_artifact_fem_2d::editor::fem2d::create_fem2d_app",
+   "app": "s.fem.fem2d@1/*#editor"
+  }
+ ]
+}

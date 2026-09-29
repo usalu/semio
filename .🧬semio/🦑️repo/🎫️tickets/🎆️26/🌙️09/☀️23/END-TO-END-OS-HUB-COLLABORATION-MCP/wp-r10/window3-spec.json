@@ -157,6 +157,24 @@
    "cache": false,
    "forwardAllArgs": true,
    "note": "args --serve <url> [--hub <url>] [--locale en|de] [--tag <t>] [--out <dir>]; no env; 1 browser"
+  },
+  {
+   "from": "AV2",
+   "project": "workspace",
+   "projectJson": "📋️project.json",
+   "name": "video-render-export",
+   "command": "bun ./📜️script.ts verify video-render-export",
+   "forwardAllArgs": false,
+   "cache": false
+  },
+  {
+   "from": "AV2",
+   "project": "workspace",
+   "projectJson": "📋️project.json",
+   "name": "video-render-export-native",
+   "command": "bun ./📜️script.ts verify video-render-export native",
+   "forwardAllArgs": false,
+   "cache": false
   }
  ],
  "seedRows": [
@@ -795,6 +813,72 @@
     ],
     "browsers": 1
    }
+  },
+  {
+   "from": "AV2",
+   "step": "frontend",
+   "hold": "window 5: its target lands with the root 📋️project.json (frozen)",
+   "check": {
+    "id": "video-render-export",
+    "title": {
+     "en": "Video render export laws (ffmpeg oracle)",
+     "de": "Gesetze des Videoexports (ffmpeg-Orakel)"
+    },
+    "criteria": [
+     "1.7",
+     "5.7"
+    ],
+    "project": "workspace",
+    "target": "video-render-export-native",
+    "args": [],
+    "requires": [],
+    "browsers": 0
+   }
+  },
+  {
+   "from": "F3",
+   "step": "frontend",
+   "check": {
+    "id": "interaction-latency",
+    "title": {
+     "en": "Typing, drag and hover latency within budget (s React shell)",
+     "de": "Tipp-, Zieh- und Hover-Latenz im Budget (s-React-Shell)"
+    },
+    "criteria": [
+     "1.1",
+     "5.4"
+    ],
+    "project": "@semio-tech/framework-os-dev",
+    "target": "interaction-latency",
+    "args": [
+     "{localServe}",
+     "--tag",
+     "goal"
+    ],
+    "requires": [
+     "localServe"
+    ],
+    "browsers": 1
+   }
+  },
+  {
+   "from": "G12",
+   "step": "compliance",
+   "check": {
+    "id": "channel-version-authority",
+    "title": {
+     "en": "One wire channel version across hub, kernel and every client",
+     "de": "Eine Kanalversion für Hub, Kernel und jeden Client"
+    },
+    "criteria": [
+     "2.14"
+    ],
+    "project": "@semio-tech/framework-os-dev",
+    "target": "channel-version-check",
+    "args": [],
+    "requires": [],
+    "browsers": 0
+   }
   }
  ],
  "pending": [],
@@ -1098,6 +1182,24 @@
    "order": "after b123",
    "command": "python3 .tmp-ticket/wp-z4/devcontainer-lifecycle/apply.py /Users/ueli/Documents/semio (dry) → --apply",
    "then": "refresh + taxonomy for …/🐳️containers/{🔁️lifecycle,🧪️tests/🔁️lifecycle,🧫️fixtures/🔁️lifecycle}; root 📜️script.ts `setup devcontainer` verb (launch row via render); tell Z4 via main"
+  }
+ ],
+ "planCriteriaEdits": [
+  {
+   "from": "R10",
+   "check": "hub-document-sweep-en",
+   "add": [
+    "1.2"
+   ],
+   "why": "the sweep creates every hub-creatable kind live (criterion 1.2 had no check)"
+  },
+  {
+   "from": "R10",
+   "check": "hub-image-build",
+   "add": [
+    "2.9"
+   ],
+   "why": "the image build compiles the hub natively on Linux (criterion 2.9 had no check)"
   }
  ]
 }

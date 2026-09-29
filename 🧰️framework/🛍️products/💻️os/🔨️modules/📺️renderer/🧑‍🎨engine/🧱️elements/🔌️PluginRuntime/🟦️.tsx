@@ -1,3 +1,4 @@
+import { mediaTransportPort } from "../../🎬️media/📡️channel/🟦️.ts";
 /// <reference types="vitest/importMeta" />
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🔌️PluginRuntime/component.tsx
@@ -2160,6 +2161,13 @@ function sectionValueFromBuiltNode(bodyKey: string, node: BuiltNode, producer: s
   }
 }
 
+/** 🧩️ One reserved section's value from its retained document (`undefined` while it has no root) — the one decoder the
+ * local refresh and an actor-bound document's retained section stores share (C13 P1). */
+export function retainedSectionValueV1(bodyKey: string, surface: RetainedSurface, producer: string): unknown {
+  const built = retainedSurfaceToBuiltNode(surface);
+  return built === null ? undefined : sectionValueFromBuiltNode(bodyKey, built, producer);
+}
+
 /** 🪟️ The ONE host→guest view-context gate — the FULL schema admission
  * (`parseResolvedPluginViewState`, `🛂️manifest/🟦️.ts`), every field and every capacity.
  *
@@ -2287,8 +2295,8 @@ function retainedUiRefreshResponse(instanceId: number, request: PluginUiRefreshR
       sections[section.key] = { key: section.key, hash };
       continue;
     }
-    const built = retainedSurfaceToBuiltNode(surface);
-    if (built) sections[section.key] = { key: section.key, hash, value: sectionValueFromBuiltNode(section.bodyKey, built, `instance ${instanceId}`) };
+    const value = retainedSectionValueV1(section.bodyKey, surface, `instance ${instanceId}`);
+    if (value !== undefined) sections[section.key] = { key: section.key, hash, value };
   }
   return { windows: project(request.windows), panels: project(request.panels), ...sections, requestedEffects: retainedUiRefreshEffects(instanceId, effects) };
 }
@@ -3849,20 +3857,6 @@ async function readHistoryWithBoundedRetryV1(
 }
 //#endregion 🔖️HistorySnapshotRetry
 
-/** 🎞️ Requires exactly one media response and preserves the guest's fault. */
-function mediaExportReply<T>(frames: readonly AppFrameValue[], select: (frame: AppFrameValue) => T | undefined): T {
-  const fault = frames.find((frame) => "Error" in frame);
-  if (fault && "Error" in fault) throw new Error(`media-export.failed: ${faultDisplayMessage(fault.Error.fault, decodePackValue)}`);
-  const replies = frames.map(select).filter((reply): reply is T => reply !== undefined);
-  if (replies.length !== 1) throw new Error(replies.length === 0 ? "media-export.missing-reply" : "media-export.ambiguous-reply");
-  return replies[0]!;
-}
-
-/** 🪪️ Keeps every media operation attached to its exact document and activation. */
-function assertMediaExportAuthority(handle: MediaExportHandle, expected: Partial<MediaExportHandle>): void {
-  for (const field of Object.keys(expected) as (keyof MediaExportHandle)[]) if (handle[field] !== expected[field]) throw new Error("media-export.authority-mismatch");
-}
-
 /** 📡️ Wraps the framework-core `PluginWasmHandle` (the `enqueue`/`outcomes` turn ABI) behind the
  * SAME method surface the rest of this file already calls — the compatibility adapter for
  * `HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS`'s ABI flip. One `AppChannelClient` per
@@ -3965,27 +3959,7 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       const mediaFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Media: unknown }> => "Media" in frame);
       return mediaFrame ? { port: mediaFrame.Media.port, descriptor: new Uint8Array(mediaFrame.Media.descriptor), data: new Uint8Array(mediaFrame.Media.data) } : null;
     },
-    submitMediaExport: async (instanceId, port, parentDocumentId, revision) => {
-      const reply = mediaExportReply(await requireChannel(instanceId).submitMediaExport(port, parentDocumentId, revision), (frame) => "MediaExportSubmitted" in frame ? frame.MediaExportSubmitted : undefined);
-      assertMediaExportAuthority(reply.handle, { app_instance_id: instanceId, parent_document_id: parentDocumentId, base_revision: revision });
-      return reply.handle;
-    },
-    pollMediaExport: async (instanceId, authority) => {
-      assertMediaExportAuthority(authority, { app_instance_id: instanceId });
-      const { in_reply_to, ...status } = mediaExportReply(await requireChannel(instanceId).pollMediaExport(authority), (frame) => "MediaExportStatus" in frame ? frame.MediaExportStatus : undefined);
-      assertMediaExportAuthority(status.handle, authority);
-      return status;
-    },
-    cancelMediaExport: async (instanceId, authority) => {
-      assertMediaExportAuthority(authority, { app_instance_id: instanceId });
-      mediaExportReply(await requireChannel(instanceId).cancelMediaExport(authority), (frame) => "Done" in frame ? frame.Done : undefined);
-    },
-    takeMediaExportChunk: async (instanceId, authority) => {
-      assertMediaExportAuthority(authority, { app_instance_id: instanceId });
-      const reply = mediaExportReply(await requireChannel(instanceId).takeMediaExportChunk(authority), (frame) => "MediaExportChunk" in frame ? frame.MediaExportChunk : undefined);
-      assertMediaExportAuthority(reply.handle, authority);
-      return { handle: reply.handle, data: new Uint8Array(reply.data), terminal: reply.terminal };
-    },
+    ...mediaTransportPort(requireChannel),
     loadAppDocumentPack: async (instanceId, pack, spr) => {
       const frames = await requireChannel(instanceId).loadDocument(pack, spr);
       const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);

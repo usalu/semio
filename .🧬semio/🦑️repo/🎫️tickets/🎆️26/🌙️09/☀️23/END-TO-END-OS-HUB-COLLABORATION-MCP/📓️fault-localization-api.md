@@ -164,3 +164,78 @@ of other families, no git.
 - Pass 2 (coordinator decision 11:3x): mutation reports (`MutationOutcome::error/fatal`, `MutationMessage::*`, builder
   `.warn/.info`, ~3.7k sites) localized by code — constructors take `FaultCode` only (the `MutationMessageCode` literal
   arm removed), codemod, family declarations, host renders reports by code, law scope extended. Its own set, same helpers.
+
+## 6. Pass 2 — mutation reports by code (frozen 2026-09-29 20:4x, S20; coordinator decision 20:0x)
+
+**Scope.** Every mutation report (`MutationOutcome::{error,fatal}`, `MutationMessage::{info,warn,error,fatal}`, the outcome
+builders `.info/.warn`, the framework's apply rejection) — 3 780 sites incl. tests; 3 584 already use one of the 7 FROZEN
+codes of contract C2 (`MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/📋️contract-freeze.md`: generic,
+gate-enforced, no per-plugin codes), 196 use drift codes (`mutation.missing`, `mutation.duplicate`, `mutation.missing-target`,
+`mutation.child-identity`, `mutation.content-gap`, `wfc3d.slot.missing`, forwarded `error.code`, …).
+
+**API (framework, `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs`, re-exported wherever `MutationOutcome` is):**
+
+```rust
+/// The frozen report codes (contract C2) — catalogued once in the framework fault catalog (en/de).
+pub enum MutationCode { TargetMissing, NoOp, Partial, Clamped, DuplicateId, Invariant, Cascade }
+impl MutationCode { pub fn code(self) -> FaultCode /* literal FaultCode::new("mutation.target-missing") … per arm */ }
+pub struct MutationMessage { pub level: Severity, pub code: FaultCode, pub target: Vec<String>, pub op_index: Option<u32> }
+MutationMessage::{info, warn, error, fatal}(code: MutationCode) -> Self;  .at(target)  .at_op(i)
+MutationOutcome::fatal(code: MutationCode, target) / ::error(code: MutationCode, target);  .info(code)  .warn(code)
+pub struct MutationApplyError { pub code: MutationCode, pub target: Vec<String> }   // apply_to → Fatal with error.code
+```
+
+- Every public constructor takes `MutationCode` (apps can only report the frozen set); `code: FaultCode` on the record so
+  framework-internal reports (document-link terminal status, conflict grading) carry their CATALOGUED framework codes.
+- NO `message` anywhere (a report is a code + its target; the person reads the catalog text in their locale; the target
+  names the element). NO parameters (the 7 texts are generic). NO per-plugin report codes; a new variant needs a contract
+  amendment by the coordinator.
+- Removed: `MutationMessageCode` (+ its `&'static str` arm) and the census exclusion `FAULT_PASS2_BRIDGE` — in the SAME
+  landing. Levels stay explicit at every site (merge-policy semantics unchanged).
+- Wire (`ToValue`/`FromValue` + serde twin + schema-first JSON Schema of the outcome record + TS twin):
+  `{level, code: "mutation.<frozen>", target?, opIndex?}` — `message` removed; decoding refuses a code outside the set.
+- Hosts render a report BY CODE from the framework catalog (React `faultTextV1` path for a non-app origin, wgpu shell,
+  MCP outcome messages `{level, code, target, texts: {en, de}}`).
+- Law: the 7 `MutationCode::code()` arms are framework raises (catalogued); new census rule `app-mutation-code`: an app crate
+  never raises a `mutation.*` code (the namespace is the framework's).
+
+**Work split.**
+- P2-F1 (S20): framework API + catalog texts + wire/schema/TS + hosts + census rule; P2-F2 (S20): codemod
+  `wp-s20/s20-p2/p2-codemod.py` rewrites every frozen-code site (drops the message, maps the literal to the variant, adds
+  the `MutationCode` import next to the `MutationOutcome` one) and writes the drift-site ledger
+  `.🧬semio/🌐hub/s14-s20-sets/p2/drift-sites.json` (path, line, code, level, message).
+- P2-F3 (helpers, source-only, static): every drift site → the frozen code that MEANS the same (target gone → TargetMissing;
+  would break a rule / capacity / malformed payload → Invariant; nothing to do → NoOp; value adjusted → Clamped; only part
+  applied → Partial; id taken → DuplicateId; dependents changed → Cascade) — never a new code; the target must name the
+  element; forwarded codes (`error.code`, `issue.code`) become the variant the producer maps to; tests assert `code`/`target`,
+  never message text. Overlay `.🧬semio/🌐hub/s14-s20-overlay-faults-p2/` (clone of the rebased pass-1 overlay, baseline
+  `…-p2.baseline.json`, tools `S20_SET=p2 python3 wp-s20/s20-overlay-land.py …`). Done = no drift site left in the family
+  (ledger re-run), `verify faults` 0 on the p2 overlay.
+- Landing: after row 12 lands, `S20_SET=p2 … rebase` onto live, compile proof in the overlay lane, then its own T7 row.
+
+## 7. Fault classes (row 12, frozen 2026-09-29 21:0x, S20; coordinator decision 20:5x)
+
+Every declared code carries ONE class (schema-first enum `FaultClass`, kebab on the wire). Hosts and os-mcp answer a fault
+BY ITS CLASS — no per-code map, no fallback (an undeclared code at runtime is itself a defect: `internal`).
+
+| class | meaning (who fixes what) | os-mcp `GatewayErrorCode` |
+|---|---|---|
+| `input-invalid` | the request itself is wrong (argument, value, file content, unknown action/kind); correcting the input fixes it | `InputInvalid` |
+| `precondition-failed` | the input is fine but the current state does not allow it (nothing selected, element gone, window not open, locked, already done) | `PreconditionFailed` |
+| `conflict` | someone else changed it concurrently (stale revision/generation); reload and redo | `RevisionConflict` |
+| `permission-denied` | the person or agent lacks the right (read-only, revoked) | `PermissionDenied` |
+| `unavailable` | transient: busy, not ready, offline, budget/timeout; retrying unchanged later can succeed | `PluginUnavailable` (retryable) |
+| `cancelled` | the person or the system cancelled the operation | `Cancelled` |
+| `internal` | a defect: broken invariant, internal routing/ownership/registry, lost page — the person can only reload/report | `Internal` |
+
+- Declaration: `.fault(code, FaultClass::InputInvalid, LocalizedLabel::native(en, de))`; framework catalog entry
+  `{"code", "class", "en", "de"}` (schema `semio.fault-catalog.v1` gains the required `class` enum).
+- `FaultDefinition { code, class, text, parameters }` (+ owned TS projection); record v3 `semio.typed-operation-fault.v1` gains
+  the required `class`, stamped by the producer from the app's declarations (app origin) or the catalog (any other origin).
+- Law: `verify faults` rules `class-missing` (a declaration or catalog entry without a class) and `class-unknown`.
+- REVIEW (helpers, per family, work lists `.🧬semio/🌐hub/s14-s20-sets/class/family-{A,BD,CEFG,H}.json`, pre-classified by
+  `wp-s20/s20-class/class-heuristic.py`; `rule` shows why, `default` = no cue): correct ONLY the `class` field of each entry
+  (one entry per line; keep code/en/owner untouched), judging by what the raise sites check (read them: `verify faults`
+  census JSON lists every raise site) and by the table above. The same code raised for different reasons is reported in the
+  helper's report (never split codes now). S20's codemod `wp-s20/s20-class/class-apply.py` writes the reviewed classes into
+  every `.fault(` declaration and the catalog.

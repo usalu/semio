@@ -1609,33 +1609,32 @@
                     "de": "Jack-Abfrage bearbeiten"
                   }
                 },
-                "kind": "view",
+                "kind": "mutation",
                 "iconId": "typography",
                 "args": [],
                 "inPalette": false,
                 "semantics": {
                   "effects": {
-                    "reads": [
-                      "config:{self}"
+                    "writes": [
+                      "artifact:{self}"
                     ],
                     "external": false,
                     "destructive": false,
-                    "reversible": false
+                    "reversible": true
                   },
                   "policy": {
                     "scopes": [
-                      "artifacts.read",
-                      "shell.observe"
+                      "artifacts.write"
                     ],
-                    "approval": "never"
+                    "approval": "whenDestructive"
                   },
                   "execution": {
-                    "preview": "none",
+                    "preview": "diff",
                     "undo": {
-                      "kind": "none"
+                      "kind": "inverse"
                     },
                     "idempotency": "none",
-                    "expectedRevision": false,
+                    "expectedRevision": true,
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
@@ -1699,46 +1698,45 @@
                     "de": "Jack-Abfrage formatieren"
                   }
                 },
-                "kind": "view",
+                "kind": "mutation",
                 "iconId": "typography",
                 "args": [],
                 "inPalette": true,
                 "category": "utilities",
                 "semantics": {
                   "effects": {
-                    "reads": [
-                      "config:{self}"
+                    "writes": [
+                      "artifact:{self}"
                     ],
                     "external": false,
                     "destructive": false,
-                    "reversible": false
+                    "reversible": true
                   },
                   "policy": {
                     "scopes": [
-                      "artifacts.read",
-                      "shell.observe"
+                      "artifacts.write"
                     ],
-                    "approval": "never"
+                    "approval": "whenDestructive"
                   },
                   "execution": {
-                    "preview": "none",
+                    "preview": "diff",
                     "undo": {
-                      "kind": "none"
+                      "kind": "inverse"
                     },
                     "idempotency": "none",
-                    "expectedRevision": false,
+                    "expectedRevision": true,
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
                   "description": {
                     "native": {
-                      "en": "Reformats the Jack query in the query editor window; the graph document is not changed, and a query that does not parse is left as it is.",
-                      "de": "Formatiert die Jack-Abfrage im Abfrage-Editorfenster neu; das Graphdokument ändert sich nicht, eine nicht lesbare Abfrage bleibt wie sie ist."
+                      "en": "Reformats the document's Jack query as one undoable edit; the graph is not changed, and a query that does not parse is left as it is.",
+                      "de": "Formatiert die Jack-Abfrage des Dokuments als ein rückgängig machbarer Schritt neu; der Graph ändert sich nicht, eine nicht lesbare Abfrage bleibt wie sie ist."
                     },
                     "reuse": {
-                      "en": "Reformats the Jack query in the query editor window; the graph document is not changed, and a query that does not parse is left as it is.",
-                      "de": "Formatiert die Jack-Abfrage im Abfrage-Editorfenster neu; das Graphdokument ändert sich nicht, eine nicht lesbare Abfrage bleibt wie sie ist."
+                      "en": "Reformats the document's Jack query as one undoable edit; the graph is not changed, and a query that does not parse is left as it is.",
+                      "de": "Formatiert die Jack-Abfrage des Dokuments als ein rückgängig machbarer Schritt neu; der Graph ändert sich nicht, eine nicht lesbare Abfrage bleibt wie sie ist."
                     }
                   }
                 }
@@ -4825,12 +4823,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Runs a Jack graph query (or the editor's current one) against the component graph and shows the matches in the given results window; CREATE, SET or DELETE clauses change the graph.",
-                  "de": "Führt eine Jack-Graphabfrage (oder die aktuelle des Editors) auf dem Bauteilgraphen aus und zeigt die Treffer im angegebenen Ergebnisfenster; CREATE-, SET- oder DELETE-Klauseln ändern den Graphen."
+                  "en": "Runs a Jack graph query (or the document's own query) against the component graph and shows the matches in the given results window; CREATE, SET or DELETE clauses change the graph.",
+                  "de": "Führt eine Jack-Graphabfrage (oder die eigene Abfrage des Dokuments) auf dem Bauteilgraphen aus und zeigt die Treffer im angegebenen Ergebnisfenster; CREATE-, SET- oder DELETE-Klauseln ändern den Graphen."
                 },
                 "reuse": {
-                  "en": "Runs a Jack graph query (or the editor's current one) against the component graph and shows the matches in the given results window; CREATE, SET or DELETE clauses change the graph.",
-                  "de": "Führt eine Jack-Graphabfrage (oder die aktuelle des Editors) auf dem Bauteilgraphen aus und zeigt die Treffer im angegebenen Ergebnisfenster; CREATE-, SET- oder DELETE-Klauseln ändern den Graphen."
+                  "en": "Runs a Jack graph query (or the document's own query) against the component graph and shows the matches in the given results window; CREATE, SET or DELETE clauses change the graph.",
+                  "de": "Führt eine Jack-Graphabfrage (oder die eigene Abfrage des Dokuments) auf dem Bauteilgraphen aus und zeigt die Treffer im angegebenen Ergebnisfenster; CREATE-, SET- oder DELETE-Klauseln ändern den Graphen."
                 }
               }
             }
@@ -5021,12 +5019,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Puts one of the bundled example queries into the query editor, runs it and shows its matches in the given results window.",
-                  "de": "Setzt eine der mitgelieferten Beispielabfragen in den Abfrage-Editor, führt sie aus und zeigt ihre Treffer im angegebenen Ergebnisfenster."
+                  "en": "Makes one of the bundled example queries the document's query, runs it and shows its matches in the given results window.",
+                  "de": "Macht eine der mitgelieferten Beispielabfragen zur Abfrage des Dokuments, führt sie aus und zeigt ihre Treffer im angegebenen Ergebnisfenster."
                 },
                 "reuse": {
-                  "en": "Puts one of the bundled example queries into the query editor, runs it and shows its matches in the given results window.",
-                  "de": "Setzt eine der mitgelieferten Beispielabfragen in den Abfrage-Editor, führt sie aus und zeigt ihre Treffer im angegebenen Ergebnisfenster."
+                  "en": "Makes one of the bundled example queries the document's query, runs it and shows its matches in the given results window.",
+                  "de": "Macht eine der mitgelieferten Beispielabfragen zur Abfrage des Dokuments, führt sie aus und zeigt ihre Treffer im angegebenen Ergebnisfenster."
                 }
               }
             }
@@ -5109,12 +5107,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Replaces the whole component graph with a bundled fixture (the Nakagin capsule tower or the branch chain), by example id.",
-                  "de": "Ersetzt den gesamten Bauteilgraphen durch eine mitgelieferte Fixture (den Nakagin Capsule Tower oder die Astkette), anhand der Beispiel-Id."
+                  "en": "Replaces the whole document with a bundled fixture (the Nakagin capsule tower or the branch chain) and its example query, by example id.",
+                  "de": "Ersetzt das gesamte Dokument durch eine mitgelieferte Fixture (den Nakagin Capsule Tower oder die Astkette) samt Beispielabfrage, anhand der Beispiel-Id."
                 },
                 "reuse": {
-                  "en": "Replaces the whole component graph with a bundled fixture (the Nakagin capsule tower or the branch chain), by example id.",
-                  "de": "Ersetzt den gesamten Bauteilgraphen durch eine mitgelieferte Fixture (den Nakagin Capsule Tower oder die Astkette), anhand der Beispiel-Id."
+                  "en": "Replaces the whole document with a bundled fixture (the Nakagin capsule tower or the branch chain) and its example query, by example id.",
+                  "de": "Ersetzt das gesamte Dokument durch eine mitgelieferte Fixture (den Nakagin Capsule Tower oder die Astkette) samt Beispielabfrage, anhand der Beispiel-Id."
                 }
               }
             }
@@ -15073,7 +15071,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio trinity.jack.dsl v1\nschema=trinity.graph name=\"Nakagin Capsule Tower\" manifest-id=nakagin root-node-id=\"7dc5b737-3b6b-4068-b315-b7bacc91c2e1\" camera={\n  x=0.0 y=0.0 zoom=1.0\n}\nnodes=[ {\n  height=48.0 id=\"7dc5b737-3b6b-4068-b315-b7bacc91c2e1\" kind=\"Piece\" name=\"b\" ports=[ {\n    direction=\"out\" id=\"c5465220-19ba-4443-8f1d-617c832dd13c\" kind=\"Connector\" properties={\n    }\n  }\n {\n    direction=\"out\" id=\"d25a91ed-b124-4e5b-8e7e-af832541c953\" kind=\"Connector\" properties={\n    }\n  }\n  ] properties={\n    label=\"tower-core\" position={\n      x=0.0 y=0.0 z=0.0\n    }\n    tier=0.0\n  }\n  width=96.0 x=0.0 y=0.0\n}\n {\n  height=40.0 id=\"5f0266bc-856b-4ef2-9eb0-16ef5e1fb952\" kind=\"Piece\" name=\"t_f0_b_c0\" ports=[ {\n    direction=\"in\" id=\"7be6cfda-db1b-47e4-bcea-cd011e516e2e\" kind=\"Connector\" properties={\n    }\n  }\n {\n    direction=\"out\" id=\"e0fb5d49-9286-4a6d-88b0-043f389c6898\" kind=\"Connector\" properties={\n    }\n  }\n  ] properties={\n    label=\"floor0-left\" position={\n      x=-1.2 y=1.2 z=0.0\n    }\n    tier=0.0\n  }\n  width=88.0 x=-140.0 y=80.0\n}\n {\n  height=40.0 id=\"17d5dec8-87b2-44a9-84ff-93b7e7419bdd\" kind=\"Piece\" name=\"t_f0_b_c1\" ports=[ {\n    direction=\"in\" id=\"7be6cfda-db1b-47e4-bcea-cd011e516e2e\" kind=\"Connector\" properties={\n    }\n  }\n {\n    direction=\"out\" id=\"f1a2b3c4-d5e6-7890-abcd-ef1234567890\" kind=\"Connector\" properties={\n    }\n  }\n  ] properties={\n    label=\"floor0-right\" position={\n      x=1.2 y=1.2 z=0.0\n    }\n    tier=0.0\n  }\n  width=88.0 x=140.0 y=80.0\n}\n {\n  height=40.0 id=\"596f3f60-b634-467b-8acc-7d5b649ae0d1\" kind=\"Piece\" name=\"t_f1_b_c0\" ports=[ {\n    direction=\"in\" id=\"7be6cfda-db1b-47e4-bcea-cd011e516e2e\" kind=\"Connector\" properties={\n    }\n  }\n {\n    direction=\"out\" id=\"e0fb5d49-9286-4a6d-88b0-043f389c6898\" kind=\"Connector\" properties={\n    }\n  }\n  ] properties={\n    label=\"floor1-shaft\" position={\n      x=-1.2 y=2.4 z=0.0\n    }\n    tier=1.0\n  }\n  width=88.0 x=-140.0 y=180.0\n}\n {\n  height=40.0 id=\"f2edea5c-960e-46bd-932d-aae5ecad72d8\" kind=\"Piece\" name=\"t_f8_b_c0\" ports=[ {\n    direction=\"in\" id=\"e0fb5d49-9286-4a6d-88b0-043f389c6898\" kind=\"Connector\" properties={\n    }\n  }\n {\n    direction=\"out\" id=\"c5465220-19ba-4443-8f1d-617c832dd13c\" kind=\"Connector\" properties={\n    }\n  }\n  ] properties={\n    label=\"floor8-shaft\" position={\n      x=-1.2 y=9.6 z=0.0\n    }\n    tier=8.0\n  }\n  width=88.0 x=-140.0 y=280.0\n}\n {\n  height=44.0 id=\"6947a41b-8c6d-4291-bdd8-96cd535c78fc\" kind=\"Piece\" name=\"ci_t_f8_b_c0\" ports=[ {\n    direction=\"in\" id=\"4ba51a88-2a7f-4b78-b119-0f02eacdb702\" kind=\"Connector\" properties={\n    }\n  }\n  ] properties={\n    label=\"capsule-instance\" position={\n      x=-1.2 y=11.2 z=0.0\n    }\n    tier=8.0\n  }\n  width=96.0 x=-140.0 y=380.0\n}\n {\n  height=40.0 id=\"a8f3e2d1-4b5c-6d7e-8f90-a1b2c3d4e5f6\" kind=\"Piece\" name=\"jack_orphan\" ports=[ {\n    direction=\"in\" id=\"d4e5f6a7-b8c9-0123-def4-567890abcdef\" kind=\"Connector\" properties={\n    }\n  }\n  ] properties={\n    label=\"jack-orphan\" tier=0.0\n  }\n  width=88.0 x=300.0 y=200.0\n}\n {\n  height=40.0 id=\"b9f4e3d2-5c6d-7e8f-90a1-b2c3d4e5f6a7\" kind=\"Piece\" name=\"jack_prune\" ports=[ {\n    direction=\"in\" id=\"e5f6a7b8-c9d0-1234-ef56-7890abcdef01\" kind=\"Connector\" properties={\n    }\n  }\n  ] properties={\n    label=\"jack-prune\" tier=0.0\n  }\n  width=88.0 x=300.0 y=80.0\n}\n {\n  height=40.0 id=\"caf5e4d3-6d7e-8f90-a1b2-c3d4e5f6a7b8\" kind=\"Piece\" name=\"jack_spare\" ports=[ {\n    direction=\"out\" id=\"f6a7b8c9-d0e1-2345-f678-90abcdef0123\" kind=\"Connector\" properties={\n    }\n  }\n  ] properties={\n    label=\"jack-spare\" tier=0.0\n  }\n  width=88.0 x=300.0 y=300.0\n}\n] edges=[ {\n  id=\"cc0d14f5-11b2-4258-ac52-287d0d46b23b\" kind=\"Connection\" properties={\n    gap=0.0 rise=0.0 rotation=270.0 shift=0.0 tilt=0.0 turn=0.0 u=-1.2 v=1.2\n  }\n  source=\"7dc5b737-3b6b-4068-b315-b7bacc91c2e1@c5465220-19ba-4443-8f1d-617c832dd13c\" target=\"5f0266bc-856b-4ef2-9eb0-16ef5e1fb952@7be6cfda-db1b-47e4-bcea-cd011e516e2e\"\n}\n {\n  id=\"8684b51c-94f5-4a50-be16-526ac8e0892a\" kind=\"Connection\" properties={\n    gap=0.0 rise=0.0 rotation=90.0 shift=0.0 tilt=0.0 turn=0.0 u=1.2 v=1.2\n  }\n  source=\"7dc5b737-3b6b-4068-b315-b7bacc91c2e1@d25a91ed-b124-4e5b-8e7e-af832541c953\" target=\"17d5dec8-87b2-44a9-84ff-93b7e7419bdd@7be6cfda-db1b-47e4-bcea-cd011e516e2e\"\n}\n {\n  id=\"e-shaft-1\" kind=\"Connection\" properties={\n    gap=0.0 rise=0.0 rotation=0.0 shift=0.0 tilt=0.0 turn=0.0 u=0.0 v=1.2\n  }\n  source=\"5f0266bc-856b-4ef2-9eb0-16ef5e1fb952@e0fb5d49-9286-4a6d-88b0-043f389c6898\" target=\"596f3f60-b634-467b-8acc-7d5b649ae0d1@7be6cfda-db1b-47e4-bcea-cd011e516e2e\"\n}\n {\n  id=\"e-shaft-8\" kind=\"Connection\" properties={\n    gap=0.0 rise=0.0 rotation=0.0 shift=0.0 tilt=0.0 turn=0.0 u=0.0 v=7.2\n  }\n  source=\"596f3f60-b634-467b-8acc-7d5b649ae0d1@e0fb5d49-9286-4a6d-88b0-043f389c6898\" target=\"f2edea5c-960e-46bd-932d-aae5ecad72d8@e0fb5d49-9286-4a6d-88b0-043f389c6898\"\n}\n {\n  id=\"fdae9f64-398f-45ad-8496-453e72c31512\" kind=\"Connection\" properties={\n    gap=0.0 rise=0.0 rotation=90.0 shift=0.0 tilt=0.0 turn=0.0 u=0.0 v=1.6\n  }\n  source=\"f2edea5c-960e-46bd-932d-aae5ecad72d8@c5465220-19ba-4443-8f1d-617c832dd13c\" target=\"6947a41b-8c6d-4291-bdd8-96cd535c78fc@4ba51a88-2a7f-4b78-b119-0f02eacdb702\"\n}\n {\n  id=\"e-jack-prune\" kind=\"Connection\" properties={\n    gap=0.0 rise=0.0 rotation=0.0 shift=0.0 tilt=0.0 turn=0.0 u=1.2 v=0.0\n  }\n  source=\"17d5dec8-87b2-44a9-84ff-93b7e7419bdd@f1a2b3c4-d5e6-7890-abcd-ef1234567890\" target=\"b9f4e3d2-5c6d-7e8f-90a1-b2c3d4e5f6a7@e5f6a7b8-c9d0-1234-ef56-7890abcdef01\"\n}\n]\n",
+        "artifactJson": "semio trinity.jack.dsl v1\nschema=trinity.graph name=\"Nakagin Capsule Tower\" manifest-id=nakagin root-node-id=\"7dc5b737-3b6b-4068-b315-b7bacc91c2e1\" query=\"MATCH (a:Piece)-[r:Connection]->(b:Piece) WHERE a.name = 'b' AND b.name != 'b' RETURN a.name, b.name, b.label\" camera={\n  x=0.0 y=0.0 zoom=1.0\n}\nnodes=[ {\n  height=48.0 id=\"7dc5b737-3b6b-4068-b315-b7bacc91c2e1\" kind=\"Piece\" name=\"b\" ports=[ {\n    direction=\"out\" id=\"c5465220-19ba-4443-8f1d-617c832dd13c\" kind=\"Connector\" properties={\n    }\n  }\n {\n    direction=\"out\" id=\"d25a91ed-b124-4e5b-8e7e-af832541c953\" kind=\"Connector\" properties={\n    }\n  }\n  ] properties={\n    label=\"tower-core\" position={\n      x=0.0 y=0.0 z=0.0\n    }\n    tier=0.0\n  }\n  width=96.0 x=0.0 y=0.0\n}\n {\n  height=40.0 id=\"5f0266bc-856b-4ef2-9eb0-16ef5e1fb952\" kind=\"Piece\" name=\"t_f0_b_c0\" ports=[ {\n    direction=\"in\" id=\"7be6cfda-db1b-47e4-bcea-cd011e516e2e\" kind=\"Connector\" properties={\n    }\n  }\n {\n    direction=\"out\" id=\"e0fb5d49-9286-4a6d-88b0-043f389c6898\" kind=\"Connector\" properties={\n    }\n  }\n  ] properties={\n    label=\"floor0-left\" position={\n      x=-1.2 y=1.2 z=0.0\n    }\n    tier=0.0\n  }\n  width=88.0 x=-140.0 y=80.0\n}\n {\n  height=40.0 id=\"17d5dec8-87b2-44a9-84ff-93b7e7419bdd\" kind=\"Piece\" name=\"t_f0_b_c1\" ports=[ {\n    direction=\"in\" id=\"7be6cfda-db1b-47e4-bcea-cd011e516e2e\" kind=\"Connector\" properties={\n    }\n  }\n {\n    direction=\"out\" id=\"f1a2b3c4-d5e6-7890-abcd-ef1234567890\" kind=\"Connector\" properties={\n    }\n  }\n  ] properties={\n    label=\"floor0-right\" position={\n      x=1.2 y=1.2 z=0.0\n    }\n    tier=0.0\n  }\n  width=88.0 x=140.0 y=80.0\n}\n {\n  height=40.0 id=\"596f3f60-b634-467b-8acc-7d5b649ae0d1\" kind=\"Piece\" name=\"t_f1_b_c0\" ports=[ {\n    direction=\"in\" id=\"7be6cfda-db1b-47e4-bcea-cd011e516e2e\" kind=\"Connector\" properties={\n    }\n  }\n {\n    direction=\"out\" id=\"e0fb5d49-9286-4a6d-88b0-043f389c6898\" kind=\"Connector\" properties={\n    }\n  }\n  ] properties={\n    label=\"floor1-shaft\" position={\n      x=-1.2 y=2.4 z=0.0\n    }\n    tier=1.0\n  }\n  width=88.0 x=-140.0 y=180.0\n}\n {\n  height=40.0 id=\"f2edea5c-960e-46bd-932d-aae5ecad72d8\" kind=\"Piece\" name=\"t_f8_b_c0\" ports=[ {\n    direction=\"in\" id=\"e0fb5d49-9286-4a6d-88b0-043f389c6898\" kind=\"Connector\" properties={\n    }\n  }\n {\n    direction=\"out\" id=\"c5465220-19ba-4443-8f1d-617c832dd13c\" kind=\"Connector\" properties={\n    }\n  }\n  ] properties={\n    label=\"floor8-shaft\" position={\n      x=-1.2 y=9.6 z=0.0\n    }\n    tier=8.0\n  }\n  width=88.0 x=-140.0 y=280.0\n}\n {\n  height=44.0 id=\"6947a41b-8c6d-4291-bdd8-96cd535c78fc\" kind=\"Piece\" name=\"ci_t_f8_b_c0\" ports=[ {\n    direction=\"in\" id=\"4ba51a88-2a7f-4b78-b119-0f02eacdb702\" kind=\"Connector\" properties={\n    }\n  }\n  ] properties={\n    label=\"capsule-instance\" position={\n      x=-1.2 y=11.2 z=0.0\n    }\n    tier=8.0\n  }\n  width=96.0 x=-140.0 y=380.0\n}\n {\n  height=40.0 id=\"a8f3e2d1-4b5c-6d7e-8f90-a1b2c3d4e5f6\" kind=\"Piece\" name=\"jack_orphan\" ports=[ {\n    direction=\"in\" id=\"d4e5f6a7-b8c9-0123-def4-567890abcdef\" kind=\"Connector\" properties={\n    }\n  }\n  ] properties={\n    label=\"jack-orphan\" tier=0.0\n  }\n  width=88.0 x=300.0 y=200.0\n}\n {\n  height=40.0 id=\"b9f4e3d2-5c6d-7e8f-90a1-b2c3d4e5f6a7\" kind=\"Piece\" name=\"jack_prune\" ports=[ {\n    direction=\"in\" id=\"e5f6a7b8-c9d0-1234-ef56-7890abcdef01\" kind=\"Connector\" properties={\n    }\n  }\n  ] properties={\n    label=\"jack-prune\" tier=0.0\n  }\n  width=88.0 x=300.0 y=80.0\n}\n {\n  height=40.0 id=\"caf5e4d3-6d7e-8f90-a1b2-c3d4e5f6a7b8\" kind=\"Piece\" name=\"jack_spare\" ports=[ {\n    direction=\"out\" id=\"f6a7b8c9-d0e1-2345-f678-90abcdef0123\" kind=\"Connector\" properties={\n    }\n  }\n  ] properties={\n    label=\"jack-spare\" tier=0.0\n  }\n  width=88.0 x=300.0 y=300.0\n}\n] edges=[ {\n  id=\"cc0d14f5-11b2-4258-ac52-287d0d46b23b\" kind=\"Connection\" properties={\n    gap=0.0 rise=0.0 rotation=270.0 shift=0.0 tilt=0.0 turn=0.0 u=-1.2 v=1.2\n  }\n  source=\"7dc5b737-3b6b-4068-b315-b7bacc91c2e1@c5465220-19ba-4443-8f1d-617c832dd13c\" target=\"5f0266bc-856b-4ef2-9eb0-16ef5e1fb952@7be6cfda-db1b-47e4-bcea-cd011e516e2e\"\n}\n {\n  id=\"8684b51c-94f5-4a50-be16-526ac8e0892a\" kind=\"Connection\" properties={\n    gap=0.0 rise=0.0 rotation=90.0 shift=0.0 tilt=0.0 turn=0.0 u=1.2 v=1.2\n  }\n  source=\"7dc5b737-3b6b-4068-b315-b7bacc91c2e1@d25a91ed-b124-4e5b-8e7e-af832541c953\" target=\"17d5dec8-87b2-44a9-84ff-93b7e7419bdd@7be6cfda-db1b-47e4-bcea-cd011e516e2e\"\n}\n {\n  id=\"e-shaft-1\" kind=\"Connection\" properties={\n    gap=0.0 rise=0.0 rotation=0.0 shift=0.0 tilt=0.0 turn=0.0 u=0.0 v=1.2\n  }\n  source=\"5f0266bc-856b-4ef2-9eb0-16ef5e1fb952@e0fb5d49-9286-4a6d-88b0-043f389c6898\" target=\"596f3f60-b634-467b-8acc-7d5b649ae0d1@7be6cfda-db1b-47e4-bcea-cd011e516e2e\"\n}\n {\n  id=\"e-shaft-8\" kind=\"Connection\" properties={\n    gap=0.0 rise=0.0 rotation=0.0 shift=0.0 tilt=0.0 turn=0.0 u=0.0 v=7.2\n  }\n  source=\"596f3f60-b634-467b-8acc-7d5b649ae0d1@e0fb5d49-9286-4a6d-88b0-043f389c6898\" target=\"f2edea5c-960e-46bd-932d-aae5ecad72d8@e0fb5d49-9286-4a6d-88b0-043f389c6898\"\n}\n {\n  id=\"fdae9f64-398f-45ad-8496-453e72c31512\" kind=\"Connection\" properties={\n    gap=0.0 rise=0.0 rotation=90.0 shift=0.0 tilt=0.0 turn=0.0 u=0.0 v=1.6\n  }\n  source=\"f2edea5c-960e-46bd-932d-aae5ecad72d8@c5465220-19ba-4443-8f1d-617c832dd13c\" target=\"6947a41b-8c6d-4291-bdd8-96cd535c78fc@4ba51a88-2a7f-4b78-b119-0f02eacdb702\"\n}\n {\n  id=\"e-jack-prune\" kind=\"Connection\" properties={\n    gap=0.0 rise=0.0 rotation=0.0 shift=0.0 tilt=0.0 turn=0.0 u=1.2 v=0.0\n  }\n  source=\"17d5dec8-87b2-44a9-84ff-93b7e7419bdd@f1a2b3c4-d5e6-7890-abcd-ef1234567890\" target=\"b9f4e3d2-5c6d-7e8f-90a1-b2c3d4e5f6a7@e5f6a7b8-c9d0-1234-ef56-7890abcdef01\"\n}\n]\n",
         "dialect": {
           "artifactKind": "s.trinity.jack",
           "standard": "1",
@@ -15356,8 +15354,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "2570376b60e1631a85d8eb7fecf926666e27345a2d4f6f8bb78cc2e1bc8d0fee",
-    "coreWasmSha256": "a59609c9f7b4bdf667595f1d3341a9877910105bd133400aef06f407770fbe6b",
-    "descriptorSha256": "ad05a77903ebe956f8c296d3cd6d243c5dde098d6e6e2591fdad204532bef458"
+    "wasmSha256": "4c451bc6e6e3657fc2189fcd7696dcc2aa8820841eba15e326d33f44df07d325",
+    "coreWasmSha256": "ab18ce95c5f72ee6a961da8300af3f58c6053da1b0aced429222f5449f4f75e5",
+    "descriptorSha256": "ff34babb5caa9bae4ba822af179919629c6a16715e73778aefd4a8a707ec3519"
   }
 }

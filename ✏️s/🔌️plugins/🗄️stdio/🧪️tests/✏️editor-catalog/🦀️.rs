@@ -76,6 +76,8 @@ async fn assert_editor<E: ArtifactEditor + SnapshotEditingEditor>(definition: Ap
     let case = edits.get(&definition.id).or_else(|| edits.get(family)).unwrap_or_else(|| panic!("{} needs a meaningful edit fixture", definition.id));
     let base = E::initial_snapshot();
     let before = snapshot_json(&base);
+    let schema_identity = |schema: &str| schema.trim_start_matches("s.").to_string();
+    assert_eq!(before["schema"].as_str().map(schema_identity), Some(schema_identity(E::DOCUMENT_SCHEMA)), "{} edits the document schema of its own snapshot model", definition.id);
     for row in fixture["rejectedActions"].as_array().unwrap() {
         let arguments: DslValue = pack::json::from_json_str(&row["arguments"].to_string()).unwrap();
         let command = E::command_from_action(row["id"].as_str().unwrap(), Some(&arguments)).expect("invalid detail is still a well-formed command");
@@ -122,6 +124,8 @@ async fn assert_editor<E: ArtifactEditor + SnapshotEditingEditor>(definition: Ap
             active_mode_id: Some(definition.default_mode_id.clone()),
             active_window_kind_id: Some(details.into()),
             window_id: Some("editor-catalog-details".into()),
+            focused_window_id: Some("editor-catalog-details".into()),
+            window_instances: vec![semio_framework::ViewWindowInstance { id: "editor-catalog-details".into(), window_kind_id: details.into() }],
             locale,
             ..Default::default()
         };

@@ -1,5 +1,5 @@
 {
-  "why": "The one surface <-> artifact-kind pairing rule (hub `app_opens_kind`, browser `surfaceOpensArtifactKindV1`): a plugin-level kind is opened only by the surfaces whose own dialect names it, even where a sibling app lists it as an input; any other kind is opened by the editor that declares it itself and by the viewers of that editor's exact dialect (kind, standard, subset); never a kind with another schema. `app` indexes `apps`, the descriptor's surface apps.",
+  "why": "The one surface <-> artifact-kind pairing rule (hub `app_opens_kind`, browser `surfaceOpensArtifactKindV1`): a plugin-level kind is opened only by the surfaces whose own dialect names it, even where a sibling app lists it as an input; a HOSTED kind (the package's `hostedArtifactKinds`) by the surfaces whose dialect names it or whose io presents it, and by the viewers of a presenting editor's exact dialect; any other kind by the editor that declares it itself and by the viewers of that editor's exact dialect (kind, standard, subset); never a kind with another schema. `app` indexes `apps`, the descriptor's surface apps; `presents` is the kind an app's io presents (null when it presents none).",
   "liveDefects": [
     "Ticket 26/09/23 S15, measured inside `s` against hub 7800 on 2026-09-25: the browser admitted on the plugin-level list alone, so a note document (declaration-tree plugin, `manifest.artifactKinds = []`, `apps[0].artifactKinds = [s.note.note / note.document]`) downloaded and hashed its 14.9 MB component and was then refused with `The document component could not be verified`.",
     "Ticket 26/09/23 C13, measured inside `s` against hub 7800 on 2026-09-28: the hub issued a Spectator the block viewer (`s.block.block2d@1/*#viewer`, which declares no kinds of its own) while the browser twin still required the opening app to declare the kind, so the verified descriptor failed (`document execution target: descriptor mismatch`), the worker dropped the hub session and the viewer window showed `The document target changed. Reopen the document.` without ever mounting."
@@ -8,6 +8,7 @@
     {
       "name": "declaration-tree plugin: the app declares the kind",
       "pluginArtifactKinds": [],
+      "hostedArtifactKinds": [],
       "apps": [
         {
           "role": "editor",
@@ -21,7 +22,8 @@
               "id": "s.note.note",
               "schema": "note.document"
             }
-          ]
+          ],
+          "presents": null
         }
       ],
       "app": 0,
@@ -39,6 +41,7 @@
           "schema": "gis.map"
         }
       ],
+      "hostedArtifactKinds": [],
       "apps": [
         {
           "role": "editor",
@@ -47,7 +50,8 @@
             "standard": "1",
             "subset": "*"
           },
-          "artifactKinds": []
+          "artifactKinds": [],
+          "presents": null
         }
       ],
       "app": 0,
@@ -65,6 +69,7 @@
           "schema": "gis.map"
         }
       ],
+      "hostedArtifactKinds": [],
       "apps": [
         {
           "role": "editor",
@@ -73,7 +78,8 @@
             "standard": "1",
             "subset": "*"
           },
-          "artifactKinds": []
+          "artifactKinds": [],
+          "presents": null
         }
       ],
       "app": 0,
@@ -91,6 +97,7 @@
           "schema": "gis.map"
         }
       ],
+      "hostedArtifactKinds": [],
       "apps": [
         {
           "role": "editor",
@@ -99,7 +106,8 @@
             "standard": "1",
             "subset": "*"
           },
-          "artifactKinds": []
+          "artifactKinds": [],
+          "presents": null
         },
         {
           "role": "editor",
@@ -113,7 +121,8 @@
               "id": "s.gis.gismap",
               "schema": "gis.map"
             }
-          ]
+          ],
+          "presents": null
         }
       ],
       "app": 1,
@@ -131,6 +140,7 @@
           "schema": "gis.map"
         }
       ],
+      "hostedArtifactKinds": [],
       "apps": [
         {
           "role": "editor",
@@ -139,7 +149,8 @@
             "standard": "1",
             "subset": "*"
           },
-          "artifactKinds": []
+          "artifactKinds": [],
+          "presents": null
         },
         {
           "role": "viewer",
@@ -148,7 +159,8 @@
             "standard": "1",
             "subset": "*"
           },
-          "artifactKinds": []
+          "artifactKinds": [],
+          "presents": null
         }
       ],
       "app": 1,
@@ -161,6 +173,7 @@
     {
       "name": "an app-declared kind opens even under a sibling dialect id",
       "pluginArtifactKinds": [],
+      "hostedArtifactKinds": [],
       "apps": [
         {
           "role": "editor",
@@ -174,7 +187,8 @@
               "id": "s.gis.gismap",
               "schema": "gis.map"
             }
-          ]
+          ],
+          "presents": null
         }
       ],
       "app": 0,
@@ -192,6 +206,7 @@
           "schema": "note.legacy"
         }
       ],
+      "hostedArtifactKinds": [],
       "apps": [
         {
           "role": "editor",
@@ -205,7 +220,8 @@
               "id": "s.note.note",
               "schema": "note.legacy"
             }
-          ]
+          ],
+          "presents": null
         }
       ],
       "app": 0,
@@ -218,6 +234,7 @@
     {
       "name": "nothing declared (a viewer with no kinds and no editor of its dialect)",
       "pluginArtifactKinds": [],
+      "hostedArtifactKinds": [],
       "apps": [
         {
           "role": "viewer",
@@ -226,7 +243,8 @@
             "standard": "1",
             "subset": "*"
           },
-          "artifactKinds": []
+          "artifactKinds": [],
+          "presents": null
         }
       ],
       "app": 0,
@@ -239,6 +257,7 @@
     {
       "name": "a viewer opens the kinds its own dialect's editor declares",
       "pluginArtifactKinds": [],
+      "hostedArtifactKinds": [],
       "apps": [
         {
           "role": "editor",
@@ -252,7 +271,8 @@
               "id": "2d.block",
               "schema": "block.2d"
             }
-          ]
+          ],
+          "presents": null
         },
         {
           "role": "viewer",
@@ -261,7 +281,8 @@
             "standard": "1",
             "subset": "*"
           },
-          "artifactKinds": []
+          "artifactKinds": [],
+          "presents": null
         }
       ],
       "app": 1,
@@ -274,6 +295,7 @@
     {
       "name": "a viewer never opens what only a sibling dialect's editor declares",
       "pluginArtifactKinds": [],
+      "hostedArtifactKinds": [],
       "apps": [
         {
           "role": "editor",
@@ -287,7 +309,8 @@
               "id": "3d.block",
               "schema": "block.3d"
             }
-          ]
+          ],
+          "presents": null
         },
         {
           "role": "viewer",
@@ -296,7 +319,8 @@
             "standard": "1",
             "subset": "*"
           },
-          "artifactKinds": []
+          "artifactKinds": [],
+          "presents": null
         }
       ],
       "app": 1,
@@ -309,6 +333,7 @@
     {
       "name": "a viewer of another subset never opens the editor's kinds",
       "pluginArtifactKinds": [],
+      "hostedArtifactKinds": [],
       "apps": [
         {
           "role": "editor",
@@ -322,7 +347,8 @@
               "id": "2d.block",
               "schema": "block.2d"
             }
-          ]
+          ],
+          "presents": null
         },
         {
           "role": "viewer",
@@ -331,7 +357,8 @@
             "standard": "1",
             "subset": "lite"
           },
-          "artifactKinds": []
+          "artifactKinds": [],
+          "presents": null
         }
       ],
       "app": 1,
@@ -344,6 +371,7 @@
     {
       "name": "a viewer of another standard never opens the editor's kinds",
       "pluginArtifactKinds": [],
+      "hostedArtifactKinds": [],
       "apps": [
         {
           "role": "editor",
@@ -357,7 +385,8 @@
               "id": "2d.block",
               "schema": "block.2d"
             }
-          ]
+          ],
+          "presents": null
         },
         {
           "role": "viewer",
@@ -366,7 +395,8 @@
             "standard": "2",
             "subset": "*"
           },
-          "artifactKinds": []
+          "artifactKinds": [],
+          "presents": null
         }
       ],
       "app": 1,
@@ -379,6 +409,7 @@
     {
       "name": "an editor never opens a kind only its sibling editor declares",
       "pluginArtifactKinds": [],
+      "hostedArtifactKinds": [],
       "apps": [
         {
           "role": "editor",
@@ -392,7 +423,8 @@
               "id": "2d.block",
               "schema": "block.2d"
             }
-          ]
+          ],
+          "presents": null
         },
         {
           "role": "editor",
@@ -401,13 +433,220 @@
             "standard": "2",
             "subset": "*"
           },
-          "artifactKinds": []
+          "artifactKinds": [],
+          "presents": null
         }
       ],
       "app": 1,
       "artifact": {
         "kind": "2d.block",
         "schema": "block.2d"
+      },
+      "opens": false
+    },
+    {
+      "name": "a hosted kind opens in the host surface whose dialect names it (a family hosting its owner's kind)",
+      "pluginArtifactKinds": [],
+      "hostedArtifactKinds": [
+        {
+          "id": "s.stdio.pdf",
+          "schema": "stdio.pdf"
+        }
+      ],
+      "apps": [
+        {
+          "role": "editor",
+          "dialect": {
+            "artifactKind": "s.stdio.pdf",
+            "standard": "1.4",
+            "subset": "*"
+          },
+          "artifactKinds": [],
+          "presents": null
+        }
+      ],
+      "app": 0,
+      "artifact": {
+        "kind": "s.stdio.pdf",
+        "schema": "stdio.pdf"
+      },
+      "opens": true
+    },
+    {
+      "name": "a hosted kind opens in the embedded editor that presents it (demonstrator's cad editor)",
+      "pluginArtifactKinds": [],
+      "hostedArtifactKinds": [
+        {
+          "id": "3d.cad",
+          "schema": "cad.scene"
+        }
+      ],
+      "apps": [
+        {
+          "role": "editor",
+          "dialect": {
+            "artifactKind": "s.cad.cad",
+            "standard": "1",
+            "subset": "*"
+          },
+          "artifactKinds": [],
+          "presents": {
+            "id": "3d.cad",
+            "schema": "cad.scene"
+          }
+        }
+      ],
+      "app": 0,
+      "artifact": {
+        "kind": "3d.cad",
+        "schema": "cad.scene"
+      },
+      "opens": true
+    },
+    {
+      "name": "a hosted kind opens in the viewer of the presenting editor's exact dialect",
+      "pluginArtifactKinds": [],
+      "hostedArtifactKinds": [
+        {
+          "id": "3d.cad",
+          "schema": "cad.scene"
+        }
+      ],
+      "apps": [
+        {
+          "role": "editor",
+          "dialect": {
+            "artifactKind": "s.cad.cad",
+            "standard": "1",
+            "subset": "*"
+          },
+          "artifactKinds": [],
+          "presents": {
+            "id": "3d.cad",
+            "schema": "cad.scene"
+          }
+        },
+        {
+          "role": "viewer",
+          "dialect": {
+            "artifactKind": "s.cad.cad",
+            "standard": "1",
+            "subset": "*"
+          },
+          "artifactKinds": [],
+          "presents": null
+        }
+      ],
+      "app": 1,
+      "artifact": {
+        "kind": "3d.cad",
+        "schema": "cad.scene"
+      },
+      "opens": true
+    },
+    {
+      "name": "a hosted kind never opens in a sibling surface that neither names nor presents it",
+      "pluginArtifactKinds": [],
+      "hostedArtifactKinds": [
+        {
+          "id": "3d.cad",
+          "schema": "cad.scene"
+        }
+      ],
+      "apps": [
+        {
+          "role": "editor",
+          "dialect": {
+            "artifactKind": "s.cad.cad",
+            "standard": "1",
+            "subset": "*"
+          },
+          "artifactKinds": [],
+          "presents": {
+            "id": "3d.cad",
+            "schema": "cad.scene"
+          }
+        },
+        {
+          "role": "editor",
+          "dialect": {
+            "artifactKind": "s.demonstrator.playground",
+            "standard": "1",
+            "subset": "*"
+          },
+          "artifactKinds": [
+            {
+              "id": "playground.document",
+              "schema": "playground.playground"
+            }
+          ],
+          "presents": {
+            "id": "playground.document",
+            "schema": "playground.playground"
+          }
+        }
+      ],
+      "app": 1,
+      "artifact": {
+        "kind": "3d.cad",
+        "schema": "cad.scene"
+      },
+      "opens": false
+    },
+    {
+      "name": "a presented kind the package does not host is never opened by presentation alone",
+      "pluginArtifactKinds": [],
+      "hostedArtifactKinds": [],
+      "apps": [
+        {
+          "role": "editor",
+          "dialect": {
+            "artifactKind": "s.cad.cad",
+            "standard": "1",
+            "subset": "*"
+          },
+          "artifactKinds": [],
+          "presents": {
+            "id": "3d.cad",
+            "schema": "cad.scene"
+          }
+        }
+      ],
+      "app": 0,
+      "artifact": {
+        "kind": "3d.cad",
+        "schema": "cad.scene"
+      },
+      "opens": false
+    },
+    {
+      "name": "a hosted kind of another schema is never opened by presentation",
+      "pluginArtifactKinds": [],
+      "hostedArtifactKinds": [
+        {
+          "id": "3d.cad",
+          "schema": "cad.scene"
+        }
+      ],
+      "apps": [
+        {
+          "role": "editor",
+          "dialect": {
+            "artifactKind": "s.cad.cad",
+            "standard": "1",
+            "subset": "*"
+          },
+          "artifactKinds": [],
+          "presents": {
+            "id": "3d.cad",
+            "schema": "cad.scene"
+          }
+        }
+      ],
+      "app": 0,
+      "artifact": {
+        "kind": "3d.cad",
+        "schema": "cad.other"
       },
       "opens": false
     }

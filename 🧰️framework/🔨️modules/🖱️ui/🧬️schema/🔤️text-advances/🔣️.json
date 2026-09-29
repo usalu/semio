@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:ui/text-advances",
+  "title": "Text advance corpus",
+  "description": "Chromium's DOM widths for a shared corpus of en and de strings in both shipped faces at every text size token — the oracle both renderers' text measurement answers to.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "oracle", "tolerancePx", "faces", "rows"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "oracle": { "type": "string", "minLength": 1 },
+    "tolerancePx": { "type": "number", "exclusiveMinimum": 0 },
+    "faces": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sans", "mono"],
+      "properties": { "sans": { "type": "string" }, "mono": { "type": "string" } }
+    },
+    "rows": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["face", "sizeToken", "sizePx", "locale", "text", "unkernedWidthPx", "kernedWidthPx"],
+        "properties": {
+          "face": { "enum": ["sans", "mono"] },
+          "sizeToken": { "enum": ["2xs", "xs", "sm", "base", "lg", "2xl"] },
+          "sizePx": { "type": "number", "exclusiveMinimum": 0 },
+          "locale": { "enum": ["en", "de"] },
+          "text": { "type": "string", "minLength": 1 },
+          "unkernedWidthPx": { "type": "number", "exclusiveMinimum": 0, "description": "Width with font-kerning: none — the advance sum." },
+          "kernedWidthPx": { "type": "number", "exclusiveMinimum": 0, "description": "Width with the default kerning — the advance sum plus every adjacent pair's kerning." }
+        }
+      }
+    }
+  }
+}

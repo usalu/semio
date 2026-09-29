@@ -28,7 +28,7 @@ use crate::model::{Construction, Fenestration, GasMaterial, GlazingMaterial, Mat
 use crate::EnergyModelSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, Label as UiLabel};
 use semio_framework_plugin::{
-    tree_item_desc, tree_window_item, ActionId, Locale, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, Trigger, UiAssemblyResult, UiText, UiValue,
+    activation_target, tree_item_desc, tree_window_item, ActionId, Locale, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiText, UiValue,
     FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, INTERACTION_SELECT_ACTION_ID,
 };
 use semio_framework_ui_contract as ui;
@@ -224,12 +224,7 @@ fn section_label(noun: &str, count: usize) -> UiAssemblyResult<UiLabel> {
 fn site_row(model: &Model, locale: Locale) -> UiAssemblyResult<BuiltNode> {
     let row_id = format!("{TREE_NAMESPACE}.site.row");
     let item = ui::tree_item(UiLabel(UiText::clipped(say(locale, "Site", "Standort")))).icon(ui_text("globe")?).description(UiText::clipped(&site_description(model))).dimmed(false).default_open(false);
-    let item = item.try_id(&row_id).map_err(|_| capacity_error("energy artifact site row id admission failed"))?;
-    let (action, args) = clear_selection_action()?;
-    let item = match args {
-        Some(args) => item.try_on_with(Trigger::Activate, action, args).map_err(|_| capacity_error("energy artifact site row binding failed"))?,
-        None => item.try_on(Trigger::Activate, action).map_err(|_| capacity_error("energy artifact site row binding failed"))?,
-    };
+    let item = item.try_id(&row_id).map_err(|_| capacity_error("energy artifact site row id admission failed"))?.target(activation_target(clear_selection_action()?)?);
     item.try_build().map_err(|_| capacity_error("energy artifact site row assembly failed"))
 }
 

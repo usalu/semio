@@ -22283,7 +22283,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "stdio.gif",
+          "artifactSchema": "stdio.gif.89a",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -22998,7 +22998,7 @@
           "variants": []
         },
         "io": {
-          "artifactSchema": "stdio.gif",
+          "artifactSchema": "stdio.gif.89a",
           "artifactMediaType": {
             "class": "data",
             "form": "value"
@@ -31793,6 +31793,43 @@
     "topicContributions": [],
     "commands": [],
     "artifactKinds": [],
+    "hostedArtifactKinds": [
+      {
+        "id": "s.stdio.png",
+        "schema": "stdio.png",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.jpg",
+        "schema": "stdio.jpg",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.bmp",
+        "schema": "stdio.bmp",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.tiff",
+        "schema": "stdio.tiff",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.gif",
+        "schema": "stdio.gif",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.gif",
+        "schema": "stdio.gif.89a",
+        "owner": "stdio"
+      },
+      {
+        "id": "s.stdio.svg",
+        "schema": "stdio.svg",
+        "owner": "stdio"
+      }
+    ],
     "dependencies": [
       {
         "pluginId": "stdio",
@@ -32268,8 +32305,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "af8a8501034a63522f5970d77e0e7b5be056e88a7cae90e7cf64c8fa2cfb1e26",
-    "coreWasmSha256": "c42decfffff1adc19c73cf191b46b3e6961c46ee9466656d3efbc3e56f2a81c9",
-    "descriptorSha256": "5b69382e47e7bb7381ac9e39042a3c8118a97ca1416b52c2669ae1261912090b"
+    "wasmSha256": "2951f04583dc26e634894e61265650915a268997dc0fcbdfd82173e383bfaec8",
+    "coreWasmSha256": "82ece31735c6e1e52d891024ec141b75aff7d53ec81f3796161bae414acfe12e",
+    "descriptorSha256": "55d439b4d2c08901b5745b1adfaf322e60a3c5fced83ab1c2e426bc5748bf2ab"
   }
 }

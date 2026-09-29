@@ -233,6 +233,7 @@ impl QueryExecutionPreparation {
                 nodes: BTreeMap::new(),
                 edges: BTreeMap::new(),
                 root_node_id: metadata.root_node_id.take(),
+                query: std::mem::take(&mut metadata.query),
             };
             self.metadata_retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackSnapshotRetirementFactory, metadata));
             self.graph = Some(graph);
@@ -561,6 +562,7 @@ impl ReturnExecution {
                         camera: graph.camera.clone(),
                         content,
                         root_node_id: if self.root_selected { graph.root_node_id.take() } else { None },
+                        query: String::new(),
                     };
                     self.phase = ReturnPhase::Complete;
                     return Ok(Some(QueryResult::graph(std::mem::take(&mut self.columns), fixture)));
@@ -790,6 +792,11 @@ impl QueryExecution {
                     None => Err(format!("edge {id} not found")),
                 },
             },
+            TrinityGraphMutation::SetQuery(value) => {
+                let previous = std::mem::replace(&mut self.graph.query, value.value.clone());
+                self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackMutationRetirementFactory, set_query(previous)));
+                Ok(())
+            }
         };
         if let Err(error) = applied {
             self.pending.push_front(operation);

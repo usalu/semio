@@ -242,8 +242,11 @@ pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 🔖️DocumentHelpers
-pub async fn empty_pptx_snapshot() -> PptxSnapshot {
-    PptxSnapshot::default()
+/// 🆕️ A new pptx document: the minimal presentation package the real writer builds (`build_minimal_pptx`, docx's
+/// precedent) — the empty `Default` package saved as a materialized package and reopened as a different document.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn blank_pptx_snapshot() -> PptxSnapshot {
+    crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_pptx(PptxPresentation::default())
 }
 
 /// 📄️ FG-wave: the demo `stdio.pptx` presentation — a genuinely non-trivial `PptxSnapshot`

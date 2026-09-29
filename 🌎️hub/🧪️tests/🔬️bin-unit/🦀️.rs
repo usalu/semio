@@ -843,6 +843,7 @@ async fn test_state_with_directory(dir: std::path::PathBuf, directory: SqliteDir
         directory_service,
         credential_sign_in: CredentialSignInPolicyV1::default(),
         rate_limits: Arc::new(HubRateLimiterV1::system()),
+        asset_streams: Arc::default(),
         admin_subjects: Arc::from([]),
         admin_cursor_key: [0x5a; 32],
         space_administration_cursor_key: [0xa5; 32],
@@ -933,6 +934,7 @@ async fn lag_test_state(directory_capacity: usize, fanout_capacity: usize) -> Hu
         directory_service,
         credential_sign_in: CredentialSignInPolicyV1::default(),
         rate_limits: Arc::new(HubRateLimiterV1::system()),
+        asset_streams: Arc::default(),
         admin_subjects: Arc::from([]),
         admin_cursor_key: [0x5a; 32],
         space_administration_cursor_key: [0xa5; 32],
@@ -3498,6 +3500,27 @@ async fn execution_target_asset_routes_revalidate_scope_role_descriptor_and_cata
     let component = raw_http_request(addr, "POST", &format!("{root}/component"), &headers, intent_body("surface.test.editor").as_bytes()).await;
     assert_eq!(component.status, 200);
     assert_eq!(component.body, TEST_EXECUTION_TARGET_COMPONENT_BYTES);
+
+    let asset_class = StreamLimitClassV1::ExecutionTargetAsset;
+    let mut ruled = state.clone();
+    ruled.asset_streams = Arc::new(HubStreamLimiterV1::with_policies([(asset_class, semio_hub::auth::rate_limit::StreamLimitPolicyV1 { hub_streams: 1, principal_streams: 1, admission_wait_ms: 50, retry_after_ms: 1_000 })]));
+    let ruled_addr = spawn_server(ruled.clone()).await;
+    let held = ruled.asset_streams.admit(asset_class, RateLimitSubjectV1::principal("another-principal")).await.expect("the one hub-wide asset stream");
+    let busy = raw_http_request(ruled_addr, "POST", &format!("{root}/component"), &headers, intent_body("surface.test.editor").as_bytes()).await;
+    assert_eq!(busy.status, 429, "a component whose stream rule stays taken is the typed refusal");
+    assert_eq!(serde_json::from_slice::<serde_json::Value>(&busy.body).expect("refusal JSON"), serde_json::to_value(RateLimitRefusalV1::streams(asset_class, 1_000)).unwrap());
+    assert!(busy.headers.to_ascii_lowercase().contains("retry-after: 1"), "{}", busy.headers);
+    assert_eq!(raw_http_request(ruled_addr, "POST", &format!("{root}/manifest"), &headers, intent_body("surface.test.editor").as_bytes()).await.status, 200, "the lease is no asset stream");
+    drop(held);
+    let admitted = raw_http_request(ruled_addr, "POST", &format!("{root}/component"), &headers, intent_body("surface.test.editor").as_bytes()).await;
+    assert_eq!((admitted.status, admitted.body.as_slice()), (200, TEST_EXECUTION_TARGET_COMPONENT_BYTES), "a freed stream slot admits the component");
+    tokio::time::timeout(std::time::Duration::from_secs(2), async {
+        while ruled.asset_streams.live_streams(asset_class) != 0 {
+            tokio::time::sleep(std::time::Duration::from_millis(5)).await;
+        }
+    })
+    .await
+    .expect("a finished component body frees its stream slot");
     let descriptor_body = raw_http_request(addr, "POST", &format!("{root}/descriptor"), &headers, intent_body("surface.test.editor").as_bytes()).await;
     assert_eq!(descriptor_body.status, 200);
     assert_eq!(descriptor_body.body, TEST_EXECUTION_TARGET_DESCRIPTOR_BYTES);
@@ -3629,7 +3652,7 @@ async fn execution_target_selection_final_fence_matches_neutral_races() {
         }
         gate.release.add_permits(1);
         let outcome = match task.await {
-            Ok(Ok((fields, assets))) => {
+            Ok(Ok((fields, assets, _))) => {
                 assert_eq!(fields.scope, scope);
                 let mut stream = assets.component.stream().expect("selected component asset streams");
                 let mut read = Vec::new();
@@ -3872,14 +3895,20 @@ async fn document_open_plan_socket_consume_revalidates_surface_descriptor_catalo
     assert!(state.socket_grants.pending_document_binding(&audience, &subject.binding(), now_ms()).is_err(), "surface substitution terminally rejects the pending grant");
 
     issue_and_exchange_document_open_plan_for_test(&state, &token, &scope, "client:checkpoint").await;
+    let checked_in = state.socket_grants.pending_document_binding(&audience, &subject.binding(), now_ms()).expect("pending grant before the Check In");
     publish_checkpoint_for_test(&state, STUDIO, &document_id).await;
-    assert!(matches!(consume_document_socket_grant(&state, &subject, audience.clone(), Some("surface.test.editor")).await, Err((StatusCode::UNAUTHORIZED, _))));
-    assert!(state.socket_grants.pending_document_binding(&audience, &subject.binding(), now_ms()).is_err(), "revision/checkpoint change terminally rejects the pending grant");
+    assert_eq!(document_plan_socket_validity(&state, &checked_in, Some("surface.test.editor")).await, SocketBindingValidityV1::Active, "a Check In changes nobody's authority");
+    assert_eq!(document_plan_bootstrap_current(&state, &checked_in).await, DocumentPlanBootstrapV1::Stale);
+    assert!(matches!(consume_document_socket_grant(&state, &subject, audience.clone(), Some("surface.test.editor")).await, Err((StatusCode::CONFLICT, "socket-grant-stale"))));
+    assert!(state.socket_grants.pending_document_binding(&audience, &subject.binding(), now_ms()).is_err(), "a checkpoint published since the exchange rejects the pending grant as stale");
 
     issue_and_exchange_document_open_plan_for_test(&state, &token, &scope, "client:catalog").await;
+    let rotated = state.socket_grants.pending_document_binding(&audience, &subject.binding(), now_ms()).expect("pending grant before the catalog publication");
     state.openable_catalog = Some(document_open_catalog_for_descriptor_with_generation(&descriptor, "77".repeat(32)));
-    assert!(matches!(consume_document_socket_grant(&state, &subject, audience.clone(), Some("surface.test.editor")).await, Err((StatusCode::UNAUTHORIZED, _))));
-    assert!(state.socket_grants.pending_document_binding(&audience, &subject.binding(), now_ms()).is_err(), "catalog change terminally rejects the pending grant");
+    assert_eq!(document_plan_socket_validity(&state, &rotated, Some("surface.test.editor")).await, SocketBindingValidityV1::Active, "a catalog generation with the same selection changes nobody's authority");
+    assert_eq!(document_plan_bootstrap_current(&state, &rotated).await, DocumentPlanBootstrapV1::Stale);
+    assert!(matches!(consume_document_socket_grant(&state, &subject, audience.clone(), Some("surface.test.editor")).await, Err((StatusCode::CONFLICT, "socket-grant-stale"))));
+    assert!(state.socket_grants.pending_document_binding(&audience, &subject.binding(), now_ms()).is_err(), "a catalog generation published since the exchange rejects the pending grant as stale");
 
     state.openable_catalog = Some(document_open_catalog_for_descriptor(&descriptor));
     issue_and_exchange_document_open_plan_for_test(&state, &token, &scope, "client:exact").await;
@@ -4126,6 +4155,94 @@ async fn document_open_plan_admin_revocation_invalidates_session_and_share_bindi
     assert_eq!(state.document_open_plans.exchange(&share_plan.receipt, &share_authority, share_now + 1, "socket-after-share-revoke"), Err(DocumentOpenPlanErrorCodeV1::Stale));
     watchdog.at("hub state teardown");
     drop(state);
+}
+
+/// 👥️ The next server frame that is not a presence roster — rosters fan out independently of a law's commands.
+async fn next_command_frame<S>(ws: &mut S, phase: &str) -> ServerFrame
+where
+    S: StreamExt<Item = Result<WsMessage, tokio_tungstenite::tungstenite::Error>> + Unpin,
+{
+    loop {
+        let frame = next_server_frame_at(ws, phase).await;
+        if !matches!(frame, ServerFrame::Presence { .. }) {
+            return frame;
+        }
+    }
+}
+
+/// 🪪️ LAW (C13, hub 7800 p33): an undo belongs to its author at the hub's socket too — a `Revert` or `Reinstate` naming an
+/// operation another actor committed is answered with the typed `history.foreign-transition` refusal, commits nothing and is
+/// relayed to nobody (on p33 the hub persisted B's crafted revert of A's note edit and only the replicas' fold refused it);
+/// the author's own undo is admitted and relayed. The replicas' fold refusal stays the second line.
+#[test]
+fn a_foreign_history_transition_is_refused_at_the_socket_and_never_relayed() {
+    run_socket_test(|| async {
+        let state = test_state().await;
+        let token_a = seed_author_token(&state).await;
+        let second = AuthSessionIssue {
+            user_id: "seed".into(),
+            identity_provider: "test-verifier".into(),
+            identity_subject_digest: identity_subject_digest("test-verifier", "seed").expect("seed subject digest"),
+            ttl_secs: 3_600,
+            device_instance_id: "seed-device-b".into(),
+            session_kind: AuthSessionKind::DevelopmentLocal,
+            correlation_id: directory::os_identity::time_ordered_id(),
+            peer_class: "test".into(),
+        };
+        let token_b = state.directory.issue_auth_session(&second).await.expect("second author session").capability.expose_once();
+        announce_document_for_test(&state, STUDIO, "undo-a").await;
+        let document = WireArtifactId("undo-a".into());
+        let url = {
+            let addr = spawn_server(state.clone()).await;
+            format!("ws://{addr}/scopes/{STUDIO}%2Fundo-a/document/ws")
+        };
+        let receipt_a = issue_document_socket_grant_fixture(Path((STUDIO.to_string(), "undo-a".to_string())), bearer_headers(&token_a), State(state.clone())).await.expect("grant a").0;
+        let (mut a, _) = connect_async(document_socket_request(&url, &token_a)).await.expect("socket a");
+        a.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("hello a");
+        assert!(matches!(next_command_frame(&mut a, "a welcome").await, ServerFrame::Welcome { .. }));
+        assert!(matches!(next_command_frame(&mut a, "a session").await, ServerFrame::Session { .. }));
+        let mut edit = sample_envelope("a-edit", &document).await;
+        edit.actor = ActorId(receipt_a.actor_id.clone());
+        a.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![edit.clone()] }, Lane::Command).await).await.expect("a edits");
+        let accepted = |frame: &ServerFrame, batch: u64| matches!(frame, ServerFrame::Ack { batch_id, stages, .. } if *batch_id == batch && matches!(stages.last(), Some(AckStage::Applied { outcome }) if matches!(outcome.as_ref(), ApplyOutcome::Accepted)));
+        let ack = next_command_frame(&mut a, "a edit ack").await;
+        assert!(accepted(&ack, 1), "{ack:?}");
+        assert!(matches!(next_command_frame(&mut a, "a edit relay").await, ServerFrame::Commands { .. }));
+        let receipt_b = issue_document_socket_grant_fixture(Path((STUDIO.to_string(), "undo-a".to_string())), bearer_headers(&token_b), State(state.clone())).await.expect("grant b").0;
+        assert_ne!(receipt_b.actor_id, receipt_a.actor_id, "two sessions are two actors");
+        let (mut b, _) = connect_async(document_socket_request(&url, &token_b)).await.expect("socket b");
+        b.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("hello b");
+        assert!(matches!(next_command_frame(&mut b, "b welcome").await, ServerFrame::Welcome { .. }));
+        assert!(matches!(next_command_frame(&mut b, "b catch-up").await, ServerFrame::Commands { .. }));
+        assert!(matches!(next_command_frame(&mut b, "b session").await, ServerFrame::Session { .. }));
+        let frontier = || async { state.db.document(&db_artifact_id(&DocumentScope::new(STUDIO, "undo-a"))).await.expect("document handle").frontier().await.expect("frontier") };
+        let before = frontier().await;
+        for (batch, transition) in [(2, protocol::HistoryTransition::Revert { mutation_ids: vec![edit.mutation_id.clone()] }), (3, protocol::HistoryTransition::Reinstate { mutation_ids: vec![edit.mutation_id.clone()] })] {
+            let crafted = protocol::history_transition_envelope(&transition, &document, &ActorId(receipt_b.actor_id.clone()), vec![edit.mutation_id.clone()], protocol::HybridLogicalTimestamp::new(batch, 0));
+            b.send(client_binary(&ClientFrame::Commands { batch_id: batch, envelopes: vec![crafted] }, Lane::Command).await).await.expect("b crafts");
+            match next_command_frame(&mut b, "crafted ack").await {
+                ServerFrame::Ack { batch_id, stages, .. } if batch_id == batch => match stages.last() {
+                    Some(AckStage::Applied { outcome }) => match outcome.as_ref() {
+                        ApplyOutcome::Rejected { messages, .. } => {
+                            let messages: serde_json::Value = serde_json::from_slice(messages).expect("rejection messages are one JSON MutationMessage array");
+                            assert!(messages.as_array().expect("message array").iter().any(|message| message["code"] == "history.foreign-transition"), "{messages}");
+                        }
+                        other => panic!("a foreign {transition:?} must be refused: {other:?}"),
+                    },
+                    other => panic!("expected an applied stage: {other:?}"),
+                },
+                other => panic!("expected the crafted batch's ack: {other:?}"),
+            }
+        }
+        assert_eq!(frontier().await.commit_seq, before.commit_seq, "a refused transition commits nothing");
+        let own = protocol::history_transition_envelope(&protocol::HistoryTransition::Revert { mutation_ids: vec![edit.mutation_id.clone()] }, &document, &ActorId(receipt_a.actor_id.clone()), vec![edit.mutation_id.clone()], protocol::HybridLogicalTimestamp::new(9, 0));
+        a.send(client_binary(&ClientFrame::Commands { batch_id: 4, envelopes: vec![own.clone()] }, Lane::Command).await).await.expect("a undoes");
+        let ack = next_command_frame(&mut a, "own undo ack").await;
+        assert!(accepted(&ack, 4), "the author's own undo is admitted: {ack:?}");
+        assert!(matches!(next_command_frame(&mut b, "own undo relay").await, ServerFrame::Commands { envelopes, .. } if envelopes[0].mutation_id == own.mutation_id), "b's first relay after the refusals is a's own undo — the refused transitions were never relayed");
+        a.close(None).await.expect("close a");
+        b.close(None).await.expect("close b");
+    });
 }
 
 #[test]
@@ -8270,13 +8387,13 @@ mod quick {
             let url = format!("ws://{addr}/scopes/{STUDIO}%2Fsocket-commit-deadline/document/ws");
             let (mut socket, _) = connect_async(document_socket_request(&url, &token)).await.expect("socket upgrade");
             socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("socket hello");
-            tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_before_welcome.acquire()).await.expect("pre-Welcome deadline").expect("pre-Welcome");
+            tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_before_welcome.acquire()).await.expect("pre-Welcome deadline").expect("pre-Welcome").forget();
             live_gate.socket_welcome_release.add_permits(1);
             assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Welcome { .. }));
-            tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_after_welcome.acquire()).await.expect("post-Welcome deadline").expect("post-Welcome");
+            tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_after_welcome.acquire()).await.expect("post-Welcome deadline").expect("post-Welcome").forget();
             live_gate.socket_bootstrap_release.add_permits(1);
             assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Session { .. }));
-            tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.document_subscribed.acquire()).await.expect("subscription deadline").expect("subscription");
+            tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.document_subscribed.acquire()).await.expect("subscription deadline").expect("subscription").forget();
             live_gate.document_release.add_permits(1);
 
             let document = db_artifact_id(&DocumentScope::new(STUDIO, "socket-commit-deadline"));
@@ -8301,6 +8418,51 @@ mod quick {
                 }
                 assert!(matches!(next_server_frame_at(&mut socket, "relay").await, ServerFrame::Commands { .. }), "the committed batch's relay follows its Ack");
             }
+        });
+    }
+
+    /// 🔌️ A document socket's authority is its session, membership and sealed plan, never the checkpoint its client seeded
+    /// from: a checkpoint published while the socket is open (a member's Check In, or the declared checkpoint policy's) leaves
+    /// it open through ten idle minutes of authorization ticks, and its next batch commits and is acknowledged (ticket
+    /// 26/09/23 session 14c: on p33 C13's probe socket and both browsers' sockets closed `4401` within one tick of every Check In).
+    #[test]
+    fn a_plan_socket_outlives_a_check_in_and_ten_idle_minutes_and_its_next_batch_commits() {
+        run_socket_test(|| async {
+            let mut state = test_state().await;
+            state.presence_clock = Some(Arc::new(TestPresenceClock::new()));
+            let token = seed_author_token(&state).await;
+            let document_id = artifact_document_id_for_test("plan-socket-idle");
+            seed_genesis_for_document_for_test(&state, &token, STUDIO, &document_id, "plan-socket-idle").await;
+            let scope = DocumentScope::new(STUDIO, &document_id);
+            let descriptor = state.directory.get_document_descriptor(&scope).await.expect("descriptor lookup").expect("descriptor");
+            install_document_open_catalog_for_test(&mut state, &descriptor);
+            let (plan, receipt) = issue_and_exchange_document_open_plan_for_test(&state, &token, &scope, "client:plan-socket-idle").await;
+            let addr = spawn_server(state.clone()).await;
+            let url = format!("ws://{addr}/scopes/{STUDIO}%2F{document_id}/document/ws?surface={}", plan.surface.surface_id);
+            let (mut socket, _) = connect_async(document_socket_request(&url, &token)).await.expect("plan socket upgrade");
+            socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("socket hello");
+            assert!(matches!(next_server_frame_at(&mut socket, "welcome").await, ServerFrame::Welcome { .. }));
+            assert!(matches!(next_server_frame_at(&mut socket, "session").await, ServerFrame::Session { actor, .. } if actor == receipt.actor_id));
+            let published = publish_checkpoint_for_test(&state, STUDIO, &document_id).await;
+            let active = state.directory.get_active_artifact_checkpoint(&scope).await.expect("active read").expect("active checkpoint");
+            assert_eq!(active.baseline_frontier, published.baseline_frontier, "the socket's plan names a superseded checkpoint");
+            tokio::time::pause();
+            for _ in 0..600 {
+                tokio::time::advance(std::time::Duration::from_secs(1)).await;
+                tokio::task::yield_now().await;
+            }
+            tokio::time::resume();
+            let document = db_artifact_id(&scope);
+            let before = state.db.document(&document).await.expect("document handle").frontier().await.expect("frontier before").head_seq;
+            let mut envelope = sample_envelope("after-ten-idle-minutes", &WireArtifactId(document_id.clone())).await;
+            envelope.actor = ActorId(receipt.actor_id.clone());
+            socket.send(client_binary(&ClientFrame::Commands { batch_id: 600, envelopes: vec![envelope] }, Lane::Command).await).await.expect("batch after ten idle minutes");
+            match next_server_frame_at(&mut socket, "Ack after ten idle minutes").await {
+                ServerFrame::Ack { batch_id: 600, stages, .. } => assert!(stages.iter().any(|stage| matches!(stage, AckStage::Applied { outcome } if matches!(outcome.as_ref(), ApplyOutcome::Accepted))), "the batch commits: {stages:?}"),
+                other => panic!("the batch after ten idle minutes was answered {other:?}"),
+            }
+            let after = state.db.document(&document).await.expect("document handle").frontier().await.expect("frontier after").head_seq;
+            assert_eq!(after, before + 1, "the batch is durable");
         });
     }
 

@@ -86,7 +86,7 @@ mod declared_verb_verdict_tests {
     fn declared_verb_verdicts_match_the_language_agnostic_fixture() {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⚖️declared-verb-verdicts.json")).expect("declared-verb verdict fixture parses");
         let cases = fixture["cases"].as_array().expect("fixture cases");
-        assert!(cases.len() >= 28, "the fixture keeps every rule's positive and negative case");
+        assert!(cases.len() >= 31, "the fixture keeps every rule's positive and negative case");
         for case in cases {
             let name = case["name"].as_str().expect("case name");
             let actual = declared_verb_findings(&probe(&case["probe"])).iter().map(|finding| finding_name(finding)).map(|(finding, argument)| (finding.to_string(), argument.map(str::to_string))).collect::<Vec<_>>();

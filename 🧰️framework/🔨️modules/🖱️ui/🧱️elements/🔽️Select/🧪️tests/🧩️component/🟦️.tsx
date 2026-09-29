@@ -1,9 +1,11 @@
 // #region 🔌️Adapters
 import * as React from "react";
+import { createMemoryStoragePort } from "@semio-tech/framework";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import Ajv2020 from "ajv/dist/2020.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectSeparator, SelectTrigger, SelectValue, resolveSelectPlacement } from "../../🟦️.tsx";
+import { ShellScopeProvider, createShellScope } from "../../../🐚️ShellScope/🟦️.tsx";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectSeparator, SelectTrigger, SelectValue, resolveSelectFrame, resolveSelectPlacement } from "../../🟦️.tsx";
 import { Dialog, DialogContent, DialogPortal, DialogTitle } from "../../../💬️Dialog/🟦️.tsx";
 import selectPopupGeometryFixture from "../../../../🧫️fixtures/🔽️select-popup-geometry/🔣️.json";
 import selectPopupGeometrySchema from "../../../../🧬️schema/🔽️select-popup-geometry/🔣️.json";
@@ -128,6 +130,60 @@ describe("Select", () => {
         view.unmount();
         root.remove();
       }
+    }
+  });
+
+  it("anchors an open listbox to a translated shell portal instead of the viewport", async () => {
+    const frame = resolveSelectFrame({
+      isolation: null,
+      host: { left: 0, top: 0, width: 1920, height: 1080, positioned: true, transformed: true },
+      viewport: { width: 1920, height: 1080 },
+    });
+    expect(frame).toEqual({ position: "absolute", originLeft: 0, originTop: 0, viewportWidth: 1920, viewportHeight: 1080 });
+    expect(resolveSelectFrame({ isolation: null, host: { left: 0, top: 0, width: 1920, height: 1080, positioned: true, transformed: false }, viewport: { width: 800, height: 600 } }).position).toBe("fixed");
+
+    const scope = createShellScope({ storage: createMemoryStoragePort() });
+    const grid = document.createElement("div");
+    const layer = document.createElement("div");
+    layer.style.position = "absolute";
+    grid.append(layer);
+    document.body.append(grid);
+    scope.portalLayerRef.current = layer;
+    const box = (x: number, y: number, width: number, height: number): DOMRect => ({ x, y, top: y, right: x + width, bottom: y + height, left: x, width, height, toJSON: () => ({}) }) as DOMRect;
+    layer.getBoundingClientRect = () => box(0, 0, 1920, 1080);
+    const computed = window.getComputedStyle.bind(window);
+    const styled = vi.spyOn(window, "getComputedStyle").mockImplementation((element: Element) => {
+      const style = computed(element);
+      if (element === grid) return new Proxy(style, { get: (target, prop, receiver) => (prop === "transform" ? "matrix(1, 0, 0, 1, -15360, -4320)" : Reflect.get(target, prop, receiver)) });
+      return style;
+    });
+    try {
+      render(
+        <ShellScopeProvider scope={scope}>
+          <Select id="select-translated-shell" defaultOpen defaultValue="alpha">
+            <SelectTrigger aria-label="Example">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="alpha">Alpha</SelectItem>
+              <SelectItem value="beta">Beta</SelectItem>
+            </SelectContent>
+          </Select>
+        </ShellScopeProvider>,
+      );
+      const trigger = screen.getByRole("combobox", { name: "Example" });
+      const content = await screen.findByRole("listbox");
+      trigger.getBoundingClientRect = () => box(846, 3, 192, 22);
+      content.getBoundingClientRect = () => box(0, 0, 192, 80);
+      fireEvent(window, new Event("resize"));
+      await waitFor(() => expect(content.style.visibility).not.toBe("hidden"));
+      expect(content.style.position).toBe("absolute");
+      expect(Number.parseFloat(content.style.left)).toBeCloseTo(846);
+      expect(Number.parseFloat(content.style.top)).toBeCloseTo(29);
+      expect(content.parentElement).toBe(layer);
+    } finally {
+      styled.mockRestore();
+      grid.remove();
     }
   });
 

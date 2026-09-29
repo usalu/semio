@@ -1,4 +1,4 @@
-use super::super::part21::Part21Instance;
+use semio_s_artifact_stdio_contract::part21::Part21Instance;
 use super::*;
 
 #[semio_framework_async_macros::async_test]

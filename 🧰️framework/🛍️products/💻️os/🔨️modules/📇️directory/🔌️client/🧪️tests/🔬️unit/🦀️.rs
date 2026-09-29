@@ -1137,6 +1137,55 @@ async fn execution_target_module_resolution_follows_the_serving_generation() {
     }
 }
 
+/// 🗄️ The execution-target store's own bound over the fixture's `eviction` corpus: components beyond the capacity are
+/// evicted least recently used first (admitting or reading uses an entry, the one just admitted stays), a read serves only
+/// bytes that still verify and removes an entry that does not, and a second store over the same root — a restarted process —
+/// serves what the first one kept. The steps pause so every use lands on a distinct file time even on a coarse clock.
+#[test]
+fn the_execution_target_store_evicts_the_least_recently_used_component_and_serves_only_verified_bytes() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/📇️directory/🧩️execution-target-module-resolution-v1.json")).expect("resolution fixture");
+    let eviction = &fixture["eviction"];
+    let capacity = eviction["componentCapacityBytes"].as_u64().expect("capacity");
+    let components: std::collections::BTreeMap<String, (Vec<u8>, DocumentExecutionTargetComponentV1)> = eviction["components"]
+        .as_object()
+        .expect("components")
+        .iter()
+        .map(|(name, component)| {
+            let bytes = vec![component["fill"].as_u64().expect("fill") as u8; component["byteLength"].as_u64().expect("length") as usize];
+            let expected = DocumentExecutionTargetComponentV1 { sha256: component["sha256"].as_str().expect("sha256").to_string(), blake3: String::new(), byte_length: bytes.len() as u64 };
+            assert_eq!(semio_framework_hash::sha256_hex(&bytes), expected.sha256, "{name}: the fixture's content address is the bytes' own");
+            (name.clone(), (bytes, expected))
+        })
+        .collect();
+    let root = std::env::temp_dir().join(format!("semio-execution-target-eviction-law-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    let mut store = ExecutionTargetModuleStore::with_component_capacity(&root, capacity);
+    for (index, step) in eviction["steps"].as_array().expect("steps").iter().enumerate() {
+        std::thread::sleep(std::time::Duration::from_millis(20));
+        let named = step.get("component").and_then(serde_json::Value::as_str).map(|name| &components[name]);
+        match step["op"].as_str().expect("op") {
+            "admit" => store.admit_component(&named.expect("admitted").1.sha256, &named.expect("admitted").0).expect("admit"),
+            "read" => {
+                let (bytes, expected) = named.expect("read");
+                let served = store.component(expected);
+                assert_eq!(served.is_some(), step["hit"].as_bool().expect("hit"), "step {index}: read");
+                assert!(served.is_none_or(|served| served == *bytes), "step {index}: a hit serves exactly the admitted bytes");
+            }
+            "tamper" => {
+                let path = store.component_path(&named.expect("tampered").1.sha256);
+                let mut bytes = std::fs::read(&path).expect("tampered entry");
+                bytes[0] ^= 0xff;
+                std::fs::write(&path, bytes).expect("tamper");
+            }
+            "restart" => store = ExecutionTargetModuleStore::with_component_capacity(&root, capacity),
+            other => panic!("unknown eviction op {other}"),
+        }
+        let resident: Vec<&str> = components.iter().filter(|(_, (_, expected))| store.component_path(&expected.sha256).exists()).map(|(name, _)| name.as_str()).collect();
+        assert_eq!(serde_json::json!(resident), step["resident"], "step {index}: resident components");
+    }
+    let _ = std::fs::remove_dir_all(&root);
+}
+
 /// 🪢️ The native pair fetch over the shared fixture: exact route and `Accept`, a transient refusal asked again, a final one
 /// named, and a pair admitted only as the checkpoint the open was authorized for.
 #[semio_framework_async_macros::async_test]

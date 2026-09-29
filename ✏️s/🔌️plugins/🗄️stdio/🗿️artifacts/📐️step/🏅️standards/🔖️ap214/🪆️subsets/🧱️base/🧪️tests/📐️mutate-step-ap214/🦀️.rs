@@ -4,7 +4,7 @@
 //! scenario was written — see the feature file's own description), so the oracle dispatcher
 //! (`../../🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🦀️oracle.rs`) performs every kind with its
 //! own from-scratch Part-21 writer against a `ruststep`-parsed document, independent of this
-//! subset's own `StepSnapshot`/`engine::part21` codec; the subject fully parses into `StepSnapshot`
+//! subset's own `StepSnapshot`/`semio_s_artifact_stdio_contract::part21` codec; the subject fully parses into `StepSnapshot`
 //! and re-serializes from it alone (no byte pass-through). Both results are read back by the
 //! INDEPENDENT `ruststep` reader (`project_step_ap214_any`) before the `semantic-step-v1` profile
 //! compares them — real third-party evidence about structure, never a byte-level differential claim
@@ -199,7 +199,7 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{inverse_spec, json_spec, json_obj, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_step::standards::v_ap214::engine::part21::{parse_part21, write_part21};
+    use semio_s_artifact_stdio_contract::part21::{parse_part21, write_part21};
     use semio_s_artifact_stdio_step::standards::v_ap214::subsets::base::schema::mutations::{
         apply_step_mutation, insert_entity, insert_entity_arg, remove_entity, remove_entity_arg, set_entity_arg, set_entity_name, set_file_description, set_file_name, set_file_schema, set_snapshot, StepMutation,
     };

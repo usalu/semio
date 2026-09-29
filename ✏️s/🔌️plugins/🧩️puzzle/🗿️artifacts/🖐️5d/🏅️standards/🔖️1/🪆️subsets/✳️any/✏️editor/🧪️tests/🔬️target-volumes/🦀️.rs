@@ -61,19 +61,48 @@ async fn set_voxel_dims_clamps_each_axis_and_sizes_the_next_paint() {
     assert_eq!(axes(&painted[0], "scale"), vec![PUZZLE5D_VOXEL_DIM_MAX * spacing, PUZZLE5D_VOXEL_DIM_MIN * spacing, 9.0 * spacing], "the clamped slider values size the paint");
 }
 
-/// 🚩️ The outliner's two row toggles write exactly one flag each, and an unknown flag writes nothing.
+/// 🚩️ The outliner's two row set-verbs write exactly one flag each, and the inspector's named-flag verb writes nothing
+/// for an unknown flag name.
 #[semio_framework_async_macros::async_test]
 async fn set_target_volume_flag_writes_one_flag_at_a_time() {
     let mut app = app();
     dispatch(&mut app, "addTargetVolume", Some(&dsl::json!({ "origin": [0.0, 0.0, 0.0] })), None).expect("addTargetVolume");
     let id = first_volume_id(&app);
-    dispatch(&mut app, "setTargetVolumeFlag", Some(&dsl::json!({ "id": id.as_str(), "flag": "hidden", "value": true })), None).expect("hide");
+    dispatch(&mut app, "setTargetVolumeHidden", Some(&dsl::json!({ "id": id.as_str(), "hidden": true })), None).expect("hide");
     assert_eq!(volumes(&app)[0].get("hidden").and_then(dsl::os_pack::json::Value::as_bool), Some(true));
     assert_ne!(volumes(&app)[0].get("locked").and_then(dsl::os_pack::json::Value::as_bool), Some(true), "hiding must not also lock");
-    dispatch(&mut app, "setTargetVolumeFlag", Some(&dsl::json!({ "id": id.as_str(), "flag": "locked", "value": true })), None).expect("lock");
+    dispatch(&mut app, "setTargetVolumeLocked", Some(&dsl::json!({ "id": id.as_str(), "locked": true })), None).expect("lock");
     assert_eq!(volumes(&app)[0].get("locked").and_then(dsl::os_pack::json::Value::as_bool), Some(true));
     dispatch(&mut app, "setTargetVolumeFlag", Some(&dsl::json!({ "id": id.as_str(), "flag": "elsewhere", "value": false })), None).expect("unknown flag");
     assert_eq!(volumes(&app)[0].get("hidden").and_then(dsl::os_pack::json::Value::as_bool), Some(true), "an unknown flag name writes nothing");
+}
+
+/// 🙈️ LAW: an outliner row's set-verbs are idempotent by value — replaying `{verb}{identity, flag: true}` (a stale view's
+/// second click) leaves exactly the first dispatch's ONE document edit and a byte-identical document, for the part verbs
+/// and the target-volume verbs alike; and a set-verb without its value is refused at the command boundary, never defaulted.
+#[semio_framework_async_macros::async_test]
+async fn outliner_set_verbs_are_idempotent_by_value_and_refuse_a_missing_value() {
+    fn edits(result: &semio_framework_plugin::InvocationResult) -> usize {
+        result.history_patch.as_ref().map_or(0, |patch| patch.upserts.iter().filter(|entry| entry.applied && !entry.op_lines.is_empty()).map(|entry| entry.seq).collect::<std::collections::BTreeSet<_>>().len())
+    }
+    let mut app = app();
+    dispatch(&mut app, "addTargetVolume", Some(&dsl::json!({ "origin": [0.0, 0.0, 0.0] })), None).expect("addTargetVolume");
+    let volume = first_volume_id(&app);
+    let part = first_part_id(&app);
+    for (verb, flag, bare, args) in [
+        ("setSelectionHidden", "hidden", dsl::json!({ "entity": PUZZLE5D_GRANULARITY_PART, "ids": [part.as_str()] }), dsl::json!({ "entity": PUZZLE5D_GRANULARITY_PART, "hidden": true, "ids": [part.as_str()] })),
+        ("setSelectionLocked", "locked", dsl::json!({ "entity": PUZZLE5D_GRANULARITY_PART, "ids": [part.as_str()] }), dsl::json!({ "entity": PUZZLE5D_GRANULARITY_PART, "ids": [part.as_str()], "locked": true })),
+        ("setTargetVolumeHidden", "hidden", dsl::json!({ "id": volume.as_str() }), dsl::json!({ "hidden": true, "id": volume.as_str() })),
+        ("setTargetVolumeLocked", "locked", dsl::json!({ "id": volume.as_str() }), dsl::json!({ "id": volume.as_str(), "locked": true })),
+    ] {
+        assert!(<Puzzle5dPlayApp as ArtifactEditor>::command_from_action(verb, Some(&dsl::os_pack::json::to_dsl_value(&bare))).is_err(), "{verb} without its {flag} value must be refused");
+        let first = dispatch(&mut app, verb, Some(&args), None).unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
+        assert_eq!(edits(&first), 1, "{verb} commits exactly one document edit");
+        let set = projection_of(&app);
+        let replay = dispatch(&mut app, verb, Some(&args), None).unwrap_or_else(|fault| panic!("{verb} replay: {fault:?}"));
+        assert_eq!(edits(&replay), 0, "replaying {verb} with the same value commits no second edit");
+        assert_eq!(projection_of(&app), set, "replaying {verb} with the same value leaves the document byte-identical");
+    }
 }
 
 /// 🚚️ The gumball pushes a whole pose in ONE gesture, and a LOCKED volume refuses the push.

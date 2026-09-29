@@ -34,13 +34,19 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 
 /// 🔌️ Builds the `stdio-mesh` bundle: every gltf/obj/stl/ply/las subset's editor and viewer (with the owner-mutation roster where
 /// the subset's mutation enum derives one), one activation per artifact kind it opens read live from that kind's own
-/// `artifact_kind().id`, and the exact-pin runtime dependency on `stdio`, which owns those kinds and their codecs.
+/// `artifact_kind().id`, the exact-pin runtime dependency on `stdio`, which owns those kinds and their codecs, and the hosted runtime of
+/// each of them (`host_artifact`: schemas, inferences, document codecs, composers, formats, subset validators) in this component.
 pub fn plugin() -> Result<Plugin<StdioMeshApps>, PluginAssemblyError> {
     Plugin::<StdioMeshApps>::builder("stdio-mesh")
         .label("Stdio Mesh")
         .version(env!("CARGO_PKG_VERSION"))
         .package_id("semio:stdio-mesh")
         .depends_on("stdio", semio_framework::tree_pin!())
+        .host_artifact(semio_s_artifact_stdio_gltf::declaration(semio_s_artifact_stdio_gltf::definition()?).map_err(PluginAssemblyError::definition)?)
+        .host_artifact(semio_s_artifact_stdio_obj::declaration(semio_s_artifact_stdio_obj::definition()?).map_err(PluginAssemblyError::definition)?)
+        .host_artifact(semio_s_artifact_stdio_stl::declaration(semio_s_artifact_stdio_stl::definition()?).map_err(PluginAssemblyError::definition)?)
+        .host_artifact(semio_s_artifact_stdio_ply::declaration(semio_s_artifact_stdio_ply::definition()?).map_err(PluginAssemblyError::definition)?)
+        .host_artifact(semio_s_artifact_stdio_las::declaration(semio_s_artifact_stdio_las::definition()?).map_err(PluginAssemblyError::definition)?)
         .editor::<semio_s_artifact_stdio_gltf::editor::gltf::GltfAnyEditor>(semio_s_artifact_stdio_gltf::editor::gltf::create_gltf_any_editor())
         .viewer::<semio_s_artifact_stdio_gltf::viewer::gltf::GltfAnyViewer>(semio_s_artifact_stdio_gltf::viewer::gltf::create_gltf_any_viewer())
         .editor::<semio_s_artifact_stdio_obj::editor::obj::ObjAnyEditor>(semio_s_artifact_stdio_obj::editor::obj::create_obj_any_editor())

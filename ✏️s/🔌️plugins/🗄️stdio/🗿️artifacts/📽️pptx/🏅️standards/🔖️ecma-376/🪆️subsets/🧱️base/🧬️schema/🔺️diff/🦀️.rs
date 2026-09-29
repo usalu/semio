@@ -24,7 +24,7 @@ use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 #[cfg(test)]
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 use semio_s_artifact_stdio_zip::opc::{OpcContentTypes, OpcPackage, OpcPart, OpcRelationship, OpcTargetMode};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 //#region 🔖️GenericCollectionTriples
 /// 🌳 Index-keyed collection triple, generic over the item type `T` and its per-field diff type
@@ -1212,7 +1212,7 @@ fn absorb_rel_list_diff(a: PptxOpcRelListDiff, b: PptxOpcRelListDiff) -> PptxOpc
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_relationships(old: &HashMap<String, Vec<OpcRelationship>>, new: &HashMap<String, Vec<OpcRelationship>>) -> Option<PptxOpcRelationshipsDiff> {
+fn diff_relationships(old: &BTreeMap<String, Vec<OpcRelationship>>, new: &BTreeMap<String, Vec<OpcRelationship>>) -> Option<PptxOpcRelationshipsDiff> {
     let mut removed = Vec::new();
     let mut modified = Vec::new();
     for (owner, list) in old {
@@ -1239,7 +1239,7 @@ fn diff_relationships(old: &HashMap<String, Vec<OpcRelationship>>, new: &HashMap
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, diff: &PptxOpcRelationshipsDiff) -> MutationApplyResult<()> {
+fn apply_relationships(rels: &mut BTreeMap<String, Vec<OpcRelationship>>, diff: &PptxOpcRelationshipsDiff) -> MutationApplyResult<()> {
     for (position, owner) in diff.removed.iter().enumerate() {
         if !rels.contains_key(owner) {
             return Err(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist"));
@@ -1281,7 +1281,7 @@ fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, diff: &
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn inverse_relationships(base: &HashMap<String, Vec<OpcRelationship>>, diff: &PptxOpcRelationshipsDiff) -> PptxOpcRelationshipsDiff {
+fn inverse_relationships(base: &BTreeMap<String, Vec<OpcRelationship>>, diff: &PptxOpcRelationshipsDiff) -> PptxOpcRelationshipsDiff {
     let removed: Vec<String> = diff.added.iter().map(|(owner, _)| owner.clone()).collect();
     let mut modified = Vec::new();
     for m in &diff.modified {

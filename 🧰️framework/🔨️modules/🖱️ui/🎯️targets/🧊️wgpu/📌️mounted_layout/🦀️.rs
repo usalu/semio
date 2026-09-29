@@ -5,10 +5,11 @@ use crate::wgpu::arena::NodeId;
 use crate::wgpu::component::ui::{UiNode, UiTreeItemNode, UiTreeNode};
 use crate::wgpu::engine::UiSurfaceToken;
 use crate::wgpu::flex::{field_chrome_metrics, section_chrome_metrics, FlexRect, FlexTree, LayoutJobStage, LayoutJobStep, LayoutNodeKind, MeasureConstraint, FIELD_DETAIL_FONT_SIZE, SECTION_TITLE_FONT_SIZE};
-use crate::wgpu::layout::{gap_for_token, padding_for_token, tree_section_header_height, TreeRowMetrics, TREE_ROW_MAX_DEPTH};
+use crate::wgpu::layout::{gap_for_token, padding_for_token, tree_section_header_height, tree_window_row_extent_px, tree_window_spacer_px, TreeRowMetrics, TREE_ROW_MAX_DEPTH};
 use crate::wgpu::text::{is_wrap_space, may_break_between};
 use crate::wgpu::theme::Theme;
 use crate::wgpu::tree::{AcceptedLayout, NodeFlags, NodeKey, UiTree};
+use crate::wgpu::tree_window::{TreeWindowContainerMeasure, TreeWindowRowMeasure};
 
 pub(crate) const LAYOUT_NODE_CREDITS: usize = 4_096;
 pub(crate) const LAYOUT_GLYPH_CREDITS: usize = 16_384;
@@ -142,7 +143,8 @@ fn tree_row_kind(tree: &UiTree, id: NodeId, parent_kind: Option<LayoutNodeKind>,
         LayoutNodeKind::Tree { reversed, .. } => {
             if document_table(tree, tree.node(id)?.parent?).is_some() {
                 let item = owner.sections.iter().find_map(|section| find_tree_item(&section.items, key, 0))?;
-                return Some(LayoutNodeKind::TableRow { height: live_tree_item_height(tree, id, item, &metrics, 0), actions: table_actions_width_of(owner, &metrics) });
+                let lead = owner.sections.first().map_or(0.0, |section| window_lead(section.window.as_ref(), section.items.first(), key));
+                return Some(LayoutNodeKind::TableRow { height: live_tree_item_height(tree, id, item, &metrics, 0), actions: table_actions_width_of(owner, &metrics), lead });
             }
             let section = owner.sections.iter().find(|section| &section.id == key)?;
             let expanded = tree.disclosure_open(id).unwrap_or_else(|| crate::wgpu::layout::tree_section_default_open(section));
@@ -163,14 +165,15 @@ fn tree_row_kind(tree: &UiTree, id: NodeId, parent_kind: Option<LayoutNodeKind>,
                 _ => false,
             };
             if matches!(parent_kind, LayoutNodeKind::TreeSection { expanded: false, .. }) {
-                return Some(LayoutNodeKind::TreeRow { row: 0.0, height: 0.0, expanded: false, reversed });
+                return Some(LayoutNodeKind::TreeRow { row: 0.0, height: 0.0, expanded: false, reversed, lead: 0.0 });
             }
             if matches!(parent_kind, LayoutNodeKind::TreeRow { expanded: false, .. }) {
-                return Some(LayoutNodeKind::TreeRow { row: 0.0, height: 0.0, expanded: false, reversed });
+                return Some(LayoutNodeKind::TreeRow { row: 0.0, height: 0.0, expanded: false, reversed, lead: 0.0 });
             }
             let height = live_tree_item_height(tree, id, item, &metrics, 0);
-            let expanded = height > 0.0 && tree.disclosure_open(id).unwrap_or(item.default_open.unwrap_or(false)) && item.items.as_deref().is_some_and(|items| !items.is_empty());
-            Some(LayoutNodeKind::TreeRow { row: if expanded { metrics.row_height } else { 0.0 }, height, expanded, reversed })
+            let expanded = height > 0.0 && tree.disclosure_open(id).unwrap_or(item.default_open.unwrap_or(false)) && tree_item_has_rows(item);
+            let lead = row_window_lead(tree, id, key, owner);
+            Some(LayoutNodeKind::TreeRow { row: if expanded { metrics.row_height } else { 0.0 }, height, expanded, reversed, lead })
         }
     }
 }
@@ -189,6 +192,8 @@ pub(crate) fn live_tree_item_height(tree: &UiTree, id: NodeId, item: &UiTreeItem
     if depth >= TREE_ROW_MAX_DEPTH || !tree.disclosure_open(id).unwrap_or(item.default_open.unwrap_or(false)) {
         return height;
     }
+    let (lead, trail) = tree_window_spacer_px(item.window.as_ref(), item.items.as_ref().map_or(0, Vec::len));
+    height += lead + trail;
     for child in item.items.iter().flatten() {
         let Some(child_id) = tree.explicit_child(id, &child.id) else { continue };
         height += live_tree_item_height(tree, child_id, child, metrics, depth + 1);
@@ -231,14 +236,16 @@ pub(crate) fn document_table_row(tree: &UiTree, id: NodeId) -> Option<&ui_contra
     Some(props)
 }
 
-/// 🎬️ The `index`-th `RowAction` the mounted tree or table row `id` declares — the exact versioned binding a click on its icon
-/// or its accessibility button fires (the retained item carries only the icon and the legacy descriptor).
-pub(crate) fn document_row_action(tree: &UiTree, id: NodeId, index: usize) -> Option<&ui_contract::RowAction> {
-    match &tree.document()?.record(tree.document_id(id)?)?.component {
-        ui_contract::Component::TreeItem(props) => props.row_actions.get(index),
-        ui_contract::Component::TableRow(props) => props.row_actions.get(index),
-        _ => None,
-    }
+/// 🎬️ The versioned action id the `index`-th `RowAction` of the mounted tree or table row `id` fires — its verb on the row's
+/// ONE target — exactly as a click on its icon or its accessibility button dispatches it (the retained item carries only the
+/// icon and the legacy descriptor). A disabled action resolves to its typed refusal, so no gesture dispatches it.
+pub(crate) fn document_row_action_id(tree: &UiTree, id: NodeId, index: usize) -> Option<Result<ui_contract::ActionId, ui_contract::RowActionRefusal>> {
+    let (row_actions, target) = match &tree.document()?.record(tree.document_id(id)?)?.component {
+        ui_contract::Component::TreeItem(props) => (&props.row_actions, props.target.as_ref()?),
+        ui_contract::Component::TableRow(props) => (&props.row_actions, props.target.as_ref()?),
+        _ => return None,
+    };
+    Some(target.action_id(row_actions.get(index)?))
 }
 
 /// 📊️ A table's trailing actions column: one `layout::tree_row_action_rect` slot per action of its widest materialised row, as
@@ -255,13 +262,38 @@ pub(crate) fn live_tree_section_height(tree: &UiTree, id: NodeId, section: &crat
     if !tree.disclosure_open(id).unwrap_or_else(|| crate::wgpu::layout::tree_section_default_open(section)) {
         return header;
     }
-    header + section.items.iter().filter_map(|item| tree.explicit_child(id, &item.id).map(|item_id| live_tree_item_height(tree, item_id, item, metrics, 0))).sum::<f32>()
+    let (lead, trail) = tree_window_spacer_px(section.window.as_ref(), section.items.len());
+    header + lead + trail + section.items.iter().filter_map(|item| tree.explicit_child(id, &item.id).map(|item_id| live_tree_item_height(tree, item_id, item, metrics, 0))).sum::<f32>()
+}
+
+/// 🪟️ Whether a row folds open onto rows: materialised children, or a window declaring rows not materialised yet
+/// (`total > 0` with no children is expandable-but-not-yet-streamed, never a leaf).
+fn tree_item_has_rows(item: &UiTreeItemNode) -> bool {
+    item.items.as_deref().is_some_and(|items| !items.is_empty()) || item.window.is_some_and(|window| window.total > 0)
+}
+
+/// 🪟️ The leading spacer a windowed container places before `key`, when `key` is its FIRST materialised child.
+fn window_lead(window: Option<&crate::wgpu::component::ui::UiTreeWindow>, first: Option<&UiTreeItemNode>, key: &str) -> f32 {
+    match (window, first) {
+        (Some(window), Some(first)) if first.id == key => tree_window_spacer_px(Some(window), 0).0,
+        _ => 0.0,
+    }
+}
+
+/// 🪟️ The leading spacer before the retained row `id` (authored key `key`): its parent is a windowed section or item.
+fn row_window_lead(tree: &UiTree, id: NodeId, key: &str, owner: &UiTreeNode) -> f32 {
+    let Some(NodeKey::Explicit(parent_key)) = tree.node(id).and_then(|node| node.parent).and_then(|parent| tree.node(parent)).map(|parent| &parent.key) else { return 0.0 };
+    if let Some(section) = owner.sections.iter().find(|section| &section.id == parent_key) {
+        return window_lead(section.window.as_ref(), section.items.first(), key);
+    }
+    owner.sections.iter().find_map(|section| find_tree_item(&section.items, parent_key, 0)).map_or(0.0, |parent| window_lead(parent.window.as_ref(), parent.items.as_deref().and_then(<[UiTreeItemNode]>::first), key))
 }
 
 pub(crate) fn retained_tree_height(tree: &UiTree, id: NodeId, node: &UiTreeNode, metrics: &TreeRowMetrics) -> f32 {
     let metrics = metrics.with_presentation(node.presentation);
     if document_table(tree, id).is_some() {
-        return metrics.header_height + node.sections.iter().flat_map(|section| section.items.iter()).filter_map(|item| tree.explicit_child(id, &item.id).map(|row| live_tree_item_height(tree, row, item, &metrics, 0))).sum::<f32>();
+        let (lead, trail) = node.sections.first().map_or((0.0, 0.0), |section| tree_window_spacer_px(section.window.as_ref(), section.items.len()));
+        return metrics.header_height + lead + trail + node.sections.iter().flat_map(|section| section.items.iter()).filter_map(|item| tree.explicit_child(id, &item.id).map(|row| live_tree_item_height(tree, row, item, &metrics, 0))).sum::<f32>();
     }
     node.sections
         .iter()
@@ -272,6 +304,144 @@ pub(crate) fn retained_tree_height(tree: &UiTree, id: NodeId, node: &UiTreeNode,
         })
         .sum()
 }
+
+//#region 🪟️TreeWindowMeasure
+/// 🪟️ Node visits one measurement pass may spend walking to a surface's trees — the surface's own document ceiling several
+/// times over; a tree's rows are walked through its spec, not the arena.
+const TREE_WINDOW_MEASURE_NODES: usize = 4 * ui_contract::UI_DOCUMENT_NODES;
+
+/// 🪟️ Every windowed container of `tree`, measured against the scroll viewport its first `Tree` paints in (content origin 0)
+/// — the wgpu twin of `treeWindowContainersUnder` (`🗣️Interpreter/🟦️.tsx`): the key is the container's WINDOW PATH (enclosing
+/// windowed containers' keys, outermost first, joined by `TREE_WINDOW_PATH_SEPARATOR`), the extent spans its spacers, rows and
+/// nested content, and the rows carry their real tops. An up-flow (`reversed`) tree is measured in MIRRORED viewport space, so
+/// its leading spacer and its row order read exactly like a down-flow list's. `None` when nothing is windowed.
+pub(crate) fn tree_window_measures(tree: &UiTree, theme: &Theme, viewport: (f32, f32), reversed: bool) -> Option<(f64, Vec<TreeWindowContainerMeasure>)> {
+    let root = tree.root?;
+    let metrics = TreeRowMetrics::from_theme(theme);
+    let mut frame = None;
+    let mut containers = Vec::new();
+    let mut pending = vec![root];
+    let mut visits = 0usize;
+    while let Some(id) = pending.pop() {
+        visits += 1;
+        if visits > TREE_WINDOW_MEASURE_NODES {
+            break;
+        }
+        let Some(node) = tree.node(id) else { continue };
+        if let UiNode::Tree(owner) = &node.spec.0 {
+            let frame = *frame.get_or_insert_with(|| scroll_frame_of(tree, id).unwrap_or(crate::wgpu::geometry::Rect::new(0.0, 0.0, viewport.0, viewport.1)));
+            measure_tree_windows(tree, id, owner, &metrics, frame, reversed, &mut containers);
+            continue;
+        }
+        let children: Vec<NodeId> = tree.children(id).collect();
+        pending.extend(children.into_iter().rev());
+    }
+    let frame = frame?;
+    (!containers.is_empty()).then(|| (f64::from(frame.h), containers))
+}
+
+/// 🪟️ The painted box of the nearest scrolling ancestor of `id` — the viewport its rows scroll through.
+fn scroll_frame_of(tree: &UiTree, id: NodeId) -> Option<crate::wgpu::geometry::Rect> {
+    let mut cursor = tree.node(id)?.parent;
+    while let Some(ancestor) = cursor {
+        let node = tree.node(ancestor)?;
+        if node.flags.contains(NodeFlags::SCROLLABLE) {
+            return tree.absolute_rect(ancestor);
+        }
+        cursor = node.parent;
+    }
+    None
+}
+
+fn measure_tree_windows(tree: &UiTree, id: NodeId, owner: &UiTreeNode, metrics: &TreeRowMetrics, frame: crate::wgpu::geometry::Rect, reversed: bool, out: &mut Vec<TreeWindowContainerMeasure>) {
+    let metrics = metrics.with_presentation(owner.presentation);
+    if document_table(tree, id).is_some() {
+        let Some(section) = owner.sections.first() else { return };
+        if let (Some(window), Some(rect)) = (section.window.as_ref().filter(|window| window.total > 0), tree.absolute_rect(id)) {
+            let rows: Vec<NodeId> = section.items.iter().filter_map(|item| tree.explicit_child(id, &item.id)).collect();
+            push_window_measure(tree, &section.id, window, section.items.len(), rect, metrics.header_height, &rows, frame, reversed, out);
+        }
+        return;
+    }
+    for section in owner.sections.iter().filter(|section| section.presence.visible()) {
+        let Some(section_id) = tree.explicit_child(id, &section.id) else { continue };
+        if !tree.disclosure_open(section_id).unwrap_or_else(|| crate::wgpu::layout::tree_section_default_open(section)) {
+            continue;
+        }
+        if let (Some(window), Some(rect)) = (section.window.as_ref().filter(|window| window.total > 0), tree.absolute_rect(section_id)) {
+            let rows: Vec<NodeId> = section.items.iter().filter_map(|item| tree.explicit_child(section_id, &item.id)).collect();
+            push_window_measure(tree, &section.id, window, section.items.len(), rect, tree_section_header_height(section, &metrics), &rows, frame, reversed, out);
+        }
+        let path = section.window.is_some().then_some(section.id.as_str());
+        for item in &section.items {
+            if let Some(item_id) = tree.explicit_child(section_id, &item.id) {
+                measure_item_windows(tree, item_id, item, path, frame, reversed, 0, out);
+            }
+        }
+    }
+}
+
+#[allow(clippy::too_many_arguments, reason = "one recursion frame of the measurement walk: the node, its spec, the path so far and the shared viewport")]
+fn measure_item_windows(tree: &UiTree, id: NodeId, item: &UiTreeItemNode, parent_path: Option<&str>, frame: crate::wgpu::geometry::Rect, reversed: bool, depth: usize, out: &mut Vec<TreeWindowContainerMeasure>) {
+    if depth >= TREE_ROW_MAX_DEPTH || !item.presence.visible() || !tree.disclosure_open(id).unwrap_or(item.default_open.unwrap_or(false)) {
+        return;
+    }
+    let children = item.items.as_deref().unwrap_or_default();
+    let path = item.window.is_some().then(|| match parent_path {
+        Some(parent) => format!("{parent}{}{}", ui_contract::TREE_WINDOW_PATH_SEPARATOR, item.id),
+        None => item.id.clone(),
+    });
+    if let (Some(window), Some(path), Some(rect)) = (item.window.as_ref().filter(|window| window.total > 0), path.as_deref(), tree.absolute_rect(id)) {
+        let rows: Vec<NodeId> = children.iter().filter_map(|child| tree.explicit_child(id, &child.id)).collect();
+        let (lead, trail) = tree_window_spacer_px(Some(window), children.len());
+        let nested = lead + trail + rows.iter().filter_map(|row| tree.absolute_rect(*row)).map(|row| row.h).sum::<f32>();
+        push_window_measure(tree, path, window, children.len(), rect, (rect.h - nested).max(0.0), &rows, frame, reversed, out);
+    }
+    let next = path.as_deref().or(parent_path);
+    for child in children {
+        if let Some(child_id) = tree.explicit_child(id, &child.id) {
+            measure_item_windows(tree, child_id, child, next, frame, reversed, depth + 1, out);
+        }
+    }
+}
+
+/// 🪟️ One container's measure: its content band below its own chrome (`band`: a section's header, a table's column header, an
+/// item's own row chrome), in viewport space — mirrored for an up-flow tree, where the chrome sits BELOW the rows.
+#[allow(clippy::too_many_arguments, reason = "one container's whole geometry, gathered by the two walks above")]
+fn push_window_measure(
+    tree: &UiTree,
+    key: &str,
+    window: &crate::wgpu::component::ui::UiTreeWindow,
+    length: usize,
+    rect: crate::wgpu::geometry::Rect,
+    band: f32,
+    rows: &[NodeId],
+    frame: crate::wgpu::geometry::Rect,
+    reversed: bool,
+    out: &mut Vec<TreeWindowContainerMeasure>,
+) {
+    let height = f64::from((rect.h - band).max(0.0));
+    let place = |y: f32, h: f32| if reversed { f64::from(frame.h) - (f64::from(y - frame.y) + f64::from(h)) } else { f64::from(y - frame.y) };
+    let top = if reversed { place(rect.y, rect.h - band) } else { place(rect.y + band, rect.h - band) };
+    let mut measured: Vec<TreeWindowRowMeasure> =
+        rows.iter().enumerate().filter_map(|(position, row)| tree.absolute_rect(*row).map(|at| TreeWindowRowMeasure { index: window.offset.saturating_add(position as u32), top: place(at.y, at.h) })).collect();
+    measured.sort_by(|left, right| left.top.total_cmp(&right.top).then(left.index.cmp(&right.index)));
+    out.push(TreeWindowContainerMeasure {
+        key: key.to_owned(),
+        total: window.total,
+        offset: window.offset,
+        length: u32::try_from(length).unwrap_or(u32::MAX),
+        top,
+        height,
+        row_px: f64::from(tree_window_row_extent_px(window.row_extent)),
+        rows: measured,
+    });
+}
+//#endregion 🪟️TreeWindowMeasure
+
+#[cfg(test)]
+#[path = "../../../🧪️tests/🪟️tree-window-streaming/🦀️.rs"]
+mod tree_window_streaming_tests;
 
 /// 🧩️ One admitted node's layout identity: where it sits in the arena, which flex box it became,
 /// and — for a `Text` node — the half-open glyph range the shaping stage filled, which is the whole
@@ -337,6 +507,8 @@ struct RetainedLine {
 pub(crate) struct RetainedGlyphPreview {
     pub scalar: char,
     pub advance: f32,
+    /// 🤝️ The pair kerning between this scalar and the next scalar of its run at the worker's size — nothing for a run's last.
+    pub kerning: f32,
     pub height: f32,
     pub generation: u64,
     pub revision: u64,
@@ -346,23 +518,25 @@ pub(crate) struct RetainedGlyphPreview {
 }
 
 trait OwnedTextWorker: Send {
-    fn shape_one(&mut self, input: RetainedGlyphInput) -> RetainedGlyphPreview;
+    fn shape_one(&mut self, input: RetainedGlyphInput, next: Option<char>) -> RetainedGlyphPreview;
 }
 
 #[derive(Default)]
 struct DeterministicTextWorker {
+    kerning: crate::wgpu::text::PairKerning,
     #[cfg(test)]
     cancel_after_shape: Option<semio_framework_job::CancelToken>,
 }
 
 impl OwnedTextWorker for DeterministicTextWorker {
-    fn shape_one(&mut self, input: RetainedGlyphInput) -> RetainedGlyphPreview {
-        let advance = if input.scalar.is_ascii() { DEFAULT_TEXT_SIZE_PX * 0.625 } else { DEFAULT_TEXT_SIZE_PX };
+    fn shape_one(&mut self, input: RetainedGlyphInput, next: Option<char>) -> RetainedGlyphPreview {
+        let advance = crate::wgpu::text::font_advance_em(crate::wgpu::text::TextFace::Sans, input.scalar) * DEFAULT_TEXT_SIZE_PX;
+        let kerning = next.map_or(0.0, |right| self.kerning.em(crate::wgpu::text::TextFace::Sans, input.scalar, right) * DEFAULT_TEXT_SIZE_PX);
         #[cfg(test)]
         if let Some(cancel) = self.cancel_after_shape.take() {
             cancel.cancel_now();
         }
-        RetainedGlyphPreview { scalar: input.scalar, advance, height: crate::wgpu::text::line_height(DEFAULT_TEXT_SIZE_PX), generation: 0, revision: 0, atlas_page: 0, atlas_offset: 0, atlas_length: 0 }
+        RetainedGlyphPreview { scalar: input.scalar, advance, kerning, height: crate::wgpu::text::line_height(DEFAULT_TEXT_SIZE_PX), generation: 0, revision: 0, atlas_page: 0, atlas_offset: 0, atlas_length: 0 }
     }
 }
 
@@ -412,7 +586,8 @@ impl RetainedAtlasCandidate {
 }
 
 /// 📏️ One text node's intrinsic size against the space the solver offers it, from the shaped
-/// advances alone — the worker thread holds no tree and no font atlas. This is CSS's own reading of
+/// advances and pair kerning alone — the worker thread holds no tree and no font atlas. A pair's
+/// kerning counts only while both scalars stay on one line, the rule the atlas and painter apply. This is CSS's own reading of
 /// a text run inside a flex item: `MaxContent` is the whole run on one line, `MinContent` is the
 /// widest unbreakable word (the floor a flex item may shrink to before it overflows), and a
 /// `Definite` width is first-fit greedy wrapping at [`may_break_between`]'s own CSS break
@@ -445,9 +620,11 @@ fn measure_glyph_range(
     let line = crate::wgpu::text::line_height(size);
     let scale = size / DEFAULT_TEXT_SIZE_PX;
     let advance = |cursor: usize| previews.get(cursor).map_or(0.0, |preview| preview.advance * scale);
+    let kerning = |cursor: usize| if cursor > start { previews.get(cursor - 1).map_or(0.0, |preview| preview.kerning * scale) } else { 0.0 };
     let scalar = |cursor: usize| glyphs.get(cursor).map_or(' ', |glyph| glyph.scalar);
+    let single_line = || (start..end).map(|cursor| kerning(cursor) + advance(cursor)).sum::<f32>();
     if clipped {
-        let width: f32 = (start..end).map(advance).sum();
+        let width = single_line();
         return (
             match constraint {
                 MeasureConstraint::Definite(available) => width.min(available.max(0.0)),
@@ -457,7 +634,7 @@ fn measure_glyph_range(
         );
     }
     match constraint {
-        MeasureConstraint::MaxContent => ((start..end).map(advance).sum(), line),
+        MeasureConstraint::MaxContent => (single_line(), line),
         MeasureConstraint::MinContent => {
             let (mut widest, mut run) = (0.0_f32, 0.0_f32);
             for cursor in start..end {
@@ -467,7 +644,7 @@ fn measure_glyph_range(
                     run = 0.0;
                 }
                 if ch != '\n' && !is_wrap_space(ch) {
-                    run += advance(cursor);
+                    run += advance(cursor) + if run > 0.0 { kerning(cursor) } else { 0.0 };
                 }
             }
             (widest.max(run), line)
@@ -486,22 +663,25 @@ fn measure_glyph_range(
                     placed += run;
                     run = 0.0;
                 }
-                let advance = advance(cursor);
+                let (advance, mut kerning) = (advance(cursor), if placed + run > 0.0 { kerning(cursor) } else { 0.0 });
                 if is_wrap_space(ch) {
-                    placed += run + advance;
+                    placed += run + kerning + advance;
                     run = 0.0;
                     continue;
                 }
-                if placed + run > 0.0 && placed + run + advance > available {
+                if placed + run > 0.0 && placed + run + kerning + advance > available {
                     widest = widest.max(ink);
                     if placed > 0.0 {
                         placed = 0.0;
                     } else {
                         run = 0.0;
                     }
+                    if run == 0.0 {
+                        kerning = 0.0;
+                    }
                     lines += 1;
                 }
-                run += advance;
+                run += kerning + advance;
                 ink = placed + run;
             }
             (widest.max(ink), line * lines as f32)
@@ -983,7 +1163,8 @@ impl MountedLayoutJob {
             self.fault = Some(MountedLayoutFault::Stale);
             return (0, 0);
         };
-        let raw_preview = self.text_worker.shape_one(input);
+        let next = self.glyphs.get(self.glyph_cursor + 1).filter(|_| self.glyph_cursor + 1 < run.glyph_end).map(|glyph| glyph.scalar);
+        let raw_preview = self.text_worker.shape_one(input, next);
         let preview = match self.atlas_candidate.retain_one(input.scalar, self.generation, self.revision, raw_preview) {
             Ok(Some(preview)) => preview,
             Ok(None) => return (0, 0),
@@ -998,7 +1179,7 @@ impl MountedLayoutJob {
             return (0, 0);
         }
         if let Some(node) = self.nodes.get_mut(input.node) {
-            node.intrinsic.width += preview.advance;
+            node.intrinsic.width += preview.advance + preview.kerning;
             node.intrinsic.height = node.intrinsic.height.max(preview.height);
         }
         self.glyph_cursor += 1;

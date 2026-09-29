@@ -26,7 +26,7 @@ use crate::standards::v1::subsets::base::schema::geometry::{SemioQuaternion, Sem
 use crate::standards::v1::subsets::model::schema::snapshot::{ElementClass, PsetValue, SemioModelSnapshot, SpatialKind};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use semio_s_artifact_stdio_ifc::IfcSnapshot;
-use semio_s_artifact_stdio_step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
+use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
 use std::collections::HashMap;
 
 //#region 🔖️Serializer

@@ -321,7 +321,7 @@ export function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
   const ownerScript = readFileSync(import.meta.filename, "utf8");
   const osHost = readSources(["🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs", "🧰️framework/🛍️products/💻️os/🖥️host/🧪️tests/🔬️workflow-unit/🦀️.rs"]);
   const exact = (editorSource: string, editorTestSource: string, viewerTestSource: string): boolean => editorSource.includes("row.role == Some(crate::DirectorySpaceRole::Author)")
-    && editorSource.includes('home_row_action(IconName::Users, labels.action_manage, "manageSpace", &row.id)')
+    && editorSource.includes('home_row_action(IconName::Users, labels.action_manage, "manageSpace")?')
     && editorTestSource.includes('assert_eq!(buttons.len(), 5')
     && editorTestSource.includes('text_arg(manage_button, "spaceId")')
     && editorTestSource.includes("spectator_and_unbound_hub_rows_only_carry_open")
@@ -350,7 +350,8 @@ export function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
   assert(homeBinary.includes("ArtifactStore::new(envelope).await") && homeBinary.includes(".dispatch(store::ArtifactCommand::Apply") && homeBinary.includes(" }).await.expect"), "Home document codec law does not await the current Store construction and dispatch boundary");
   assert(catalogGenerationSource.includes("dsl::from_dsl_value(pack::json_to_dsl_value(&json))") && !catalogGenerationSource.includes("serde_json::from_str(BEFORE)"), "Home snapshot fixture bypasses the first-party value codec");
   assert(!spaceEngine.includes("Some(&json!(") && !spaceEngine.includes("Some(&pack::json!(") && spaceEngine.match(/pack::json_to_dsl_value\(&pack::json!\(/g)?.length === 3, "Space checkpoint tests do not convert first-party JSON into the current DSL action boundary");
-  assert(editor.includes("LocalizedLabel, WindowKindDefinition") && !editor.includes("let UiNode::") && spaceEditor.includes("IconName, WindowKindDefinition") && !spaceEditor.includes("let UiNode::"), "Home or Space row tests do not use the current fixed BuiltNode projection");
+  const pluginImports = (source: string): string[] => source.match(/use semio_framework_plugin::\{([^}]*)\};/)?.[1]!.split(",").map((name) => name.trim()) ?? [];
+  assert(["LocalizedLabel", "WindowKindDefinition"].every((name) => pluginImports(editor).includes(name)) && !editor.includes("let UiNode::") && ["IconName", "WindowKindDefinition"].every((name) => pluginImports(spaceEditor).includes(name)) && !spaceEditor.includes("let UiNode::"), "Home or Space row tests do not use the current fixed BuiltNode projection");
   assert(!spaceViewer.includes("let UiNode::") && spaceViewer.includes("BuiltTreeRetirement::new"), "Space viewer rows bypass the current fixed BuiltNode projection and retirement boundary");
   assert(homeViewerApp.includes("create_home_viewer().await") && homeViewerApp.includes("project_and_retire_fixture_tree(tree)"), "Home viewer fixtures do not await and retire the current manifest/render boundaries");
   assert(spaceViewerApp.includes("let def = create_space_index_viewer();") && !spaceViewerApp.includes("create_space_index_viewer().await") && spaceViewerApp.includes("project_and_retire_fixture_tree(tree)"), "Space viewer fixtures do not use the synchronous manifest and current retained render boundary");

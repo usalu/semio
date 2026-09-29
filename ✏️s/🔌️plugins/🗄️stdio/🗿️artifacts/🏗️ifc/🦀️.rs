@@ -25,33 +25,7 @@ pub const IFC_ARTIFACT_SCHEMA_ID: &str = "s.stdio.ifc";
 /// 📜 Schema-owned package definition.
 pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
 
-/// ⚠️ **Deliberately left imperative** (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6, g4):
-/// no `declaration()` here, `engine::register()` NOT removed from the
-/// plugin root. Unlike `dwg` (which looks superficially similar — two standards, `ac1018`/
-/// `ac1024`), `ifc`'s second standard is genuinely live, not dead code: `🦀️.rs`'s `engine` shim
-/// for `ifc` locally OVERRIDES `register()` (shadowing the `v4` glob re-export) to call BOTH
-/// `standards::v4::engine::register()` AND `standards::v2x3::engine::register()` explicitly — see
-/// that shim's own doc ("registers BOTH standards' engines... same shape as pdf's own shim fix").
-/// `v2x3::engine::register()` registers a SECOND, independent `ArtifactSchemaDescriptor`
-/// (`"s.stdio.ifc.2x3"`, vs v4's `"s.stdio.ifc"`) and a SECOND, independent document codec
-/// (`Ifc2x3Snapshot`/`Ifc2x3Mutation` under `STDIO_IFC2X3_DOCUMENT_SCHEMA`, a different schema
-/// string from v4's `STDIO_IFC_DOCUMENT_SCHEMA`) plus its own 5-role `LanguageSpec` set and three
-/// subset validators (`cv20`/`sav`/`cobie`). `ArtifactDeclaration` has exactly ONE `.schema()`
-/// slot and ONE `.document_codec()`/`.document_codec_bare()` slot per declaration (mandatory
-/// single fields, not accumulating like `.inferences()`/`.languages()` are) — there is structurally
-/// no single field, and no combination of existing fields, that can hold two independent
-/// ArtifactSchemaDescriptor ids or two independent document codecs at once. Converting `v4` alone
-/// (dropping `v2x3`'s calls) would silently break `v2x3` registration, which IS live today —
-/// unlike `dwg`'s `ac1018`, this is not preserving already-dead behavior, it would be a real
-/// regression. **What would cover it**: either `ArtifactDeclaration` growing an accumulating
-/// multi-schema/multi-codec shape (analogous to how `.inferences()`/`.languages()` already
-/// accumulate), or two separate `PluginBuilder::artifact()` calls sharing one Rust module but
-/// different `kind` strings (`"s.stdio.ifc"` + `"s.stdio.ifc.2x3"`) — the latter is plausible but
-/// unverified here: `v2x3`'s composer/subset-validator `Dialect.artifact_kind` values were not
-/// confirmed to actually vary by kind vs standard, and splitting risks a silent ownership-check
-/// failure at `register_all()` build time that this pass's verification budget cannot fully rule
-/// out. Composers ARE unioned safely already (`io_registry::entries()`
-/// below merges `v4`+`v2x3`, same shape as `dwg`) but that's insufficient on its own — see above.
+/// 📜 The schema-owned definition: one kind, two independently versioned standards (`4`, `2x3`) — see [`declaration`].
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
     semio_s_artifact_stdio_contract::definition_from_schema(ARTIFACT_DEFINITION_SCHEMA)
 }
@@ -72,7 +46,25 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 /// 🗂️ This artifact's `ArtifactKindSpec`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    semio_s_artifact_stdio_contract::definition_only_assembly("ifc", definition()?)
+    semio_s_artifact_stdio_contract::runtime_assembly("ifc", definition()?, declaration)
+}
+
+/// 🧾️ The runtime `ifc` declares for both standards (`4`, `2x3`, independently versioned ids): schemas, format, inference
+/// descriptors, composers, document codecs, and the `2x3` model-view-definition validators (`cv20`, `sav`, `cobie`).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let builder = semio_framework_plugin::ArtifactDeclaration::builder(definition)
+        .schema(standards::v4::subsets::any::schema::ifc_artifact_schema_descriptor())
+        .schemas([standards::v2x3::subsets::base::schema::ifc2x3_artifact_schema_descriptor()])
+        .formats(formats()?)
+        .inferences([standards::v4::subsets::any::schema::inferences::ifc_artifact_inference_descriptor(), standards::v2x3::subsets::base::schema::inferences::ifc2x3_artifact_inference_descriptor()])
+        .composers(standards::v4::engine::io_registry::entries())
+        .composers(standards::v2x3::engine::io_registry::entries())
+        .document_codec_bare::<IfcSnapshot, IfcMutation>(STDIO_IFC_DOCUMENT_SCHEMA)
+        .document_codec_bare::<standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot, standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation>(standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA);
+    let builder = standards::v2x3::subsets::cv20::io::declare(builder);
+    let builder = standards::v2x3::subsets::sav::io::declare(builder);
+    standards::v2x3::subsets::cobie::io::declare(builder).try_build()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -450,7 +442,6 @@ pub mod engine {
     pub use super::standards::v4::engine::*;
     /// 🧱️ The ISO 10303-21 exchange structure an `IfcSnapshot` is built from, re-exported for clients
     /// that author IFC documents directly.
-    pub use semio_s_artifact_stdio_step::engine::part21;
     /// 📎 Registers BOTH standards' engines (v4 canonical + v2x3 new-this-ticket) -- a
     /// flat glob re-export can't do this (two `register` fns of the same name would
     /// collide), so this local definition shadows the glob-imported v4 one and calls both

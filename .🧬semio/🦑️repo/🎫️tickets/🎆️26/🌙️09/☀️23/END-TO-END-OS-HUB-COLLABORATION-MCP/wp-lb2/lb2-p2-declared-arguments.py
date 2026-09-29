@@ -24,9 +24,18 @@ ROOT = Path(sys.argv[sys.argv.index("--root") + 1]) if "--root" in sys.argv else
 WRITE = "--write" in sys.argv
 SDK = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs"
 
-OLD = '''        /// 🧪️ Every declared app action must bridge through `command_from_action` and round-trip `command_id`.
+OLD = '''        /// 🧪️ Every declared app action must bridge through `command_from_action` and round-trip `command_id`. A REQUIRED
+        /// toggle without a default has no unset state a submitted dispatch could carry, so it is staged `false` — the one
+        /// value that exists for every such flag — and a set-verb that refuses a missing value (`setSelectionHidden{hidden}`)
+        /// bridges exactly as a validated dispatch reaches it.
+        ///
+        /// 🧱️ Window-KIT catalog rows are framework-owned surface verbs, not app actions: the shared
+        /// `window_kind_definition` scaffold below mints them (and stamps them `Migrated`) for the
+        /// editable variants of `TextWindowKit`/`TableWindowKit`/`TreeWindowKit`, so every app that
+        /// composes one of those kits inherits an id it never authored a command row for. They belong
+        /// in this skip list for exactly the same reason the framework-reserved verbs above do.
         pub async fn assert_declared_actions_bridge_to_commands<A: ArtifactApp + Default>(manifest: fn() -> App) {
-            use semio_framework::{effective_action_args, DslValue};
+            use semio_framework::{effective_action_args, ArgSchema, DslValue};
             let definition = manifest().definition;
             let _app = A::default();
             let skip = [
@@ -47,6 +56,8 @@ OLD = '''        /// 🧪️ Every declared app action must bridge through `comm
                 "startTutorial",
                 "setActiveUtility",
                 "setActiveTool",
+                semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID,
+                semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID,
                 "interactionSelect",
                 "interactionHover",
                 "clearSelection",
@@ -58,16 +69,11 @@ OLD = '''        /// 🧪️ Every declared app action must bridge through `comm
                 if skip.contains(&action.id.as_str()) || crate::is_tool_run_action_id(&action.id) || action.id == crate::plugin_app_close_prelude::CANCEL_TYPED_OPERATION_ACTION_ID {
                     continue;
                 }
-                // 🧱️ Window-KIT catalog rows are framework-owned surface verbs, not app actions: the shared
-                // `window_kind_definition` scaffold below mints them (and stamps them `Migrated`) for the
-                // editable variants of `TextWindowKit`/`TableWindowKit`/`TreeWindowKit`, so every app that
-                // composes one of those kits inherits an id it never authored a command row for. They belong
-                // in this skip list for exactly the same reason the framework-reserved verbs above do.
                 if matches!(action.id.as_str(), "replace-text" | "set-cell" | "set-node") {
                     continue;
                 }
-                let empty_args = DslValue::Object(Vec::new());
-                let staged = effective_action_args(&action.args, &empty_args, None);
+                let required_toggles = DslValue::Object(action.args.iter().filter(|def| def.required && def.default.is_none() && matches!(def.schema, ArgSchema::Boolean)).map(|def| (def.id.clone(), DslValue::Bool(false))).collect());
+                let staged = effective_action_args(&action.args, &required_toggles, None);
                 let command = A::command_from_action(&action.id, Some(&staged)).await.unwrap_or_else(|error| panic!("action {} failed to bridge: {}", action.id, error.message));
                 assert_eq!(A::command_id(&command).await, action.id.as_str(), "command_id mismatch for action {}", action.id);
             }
@@ -97,6 +103,8 @@ NEW = '''        /// 🧱️ Verbs the framework owns rather than the app, which
             "startTutorial",
             "setActiveUtility",
             "setActiveTool",
+            semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID,
+            semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID,
             "interactionSelect",
             "interactionHover",
             "clearSelection",
@@ -114,18 +122,25 @@ NEW = '''        /// 🧱️ Verbs the framework owns rather than the app, which
             FRAMEWORK_OWNED_VERBS.contains(&id) || crate::is_tool_run_action_id(id) || id == crate::plugin_app_close_prelude::CANCEL_TYPED_OPERATION_ACTION_ID
         }
 
-        /// 🧪️ Every declared app action must bridge through `command_from_action`, round-trip `command_id`, and read
-        /// only the arguments it declares ([`declared_verbs_reading_undeclared_arguments`]).
+        /// 🧱️ What a validated dispatch of `action` carries with nothing bound: its declared defaults, and `false` for every
+        /// REQUIRED boolean toggle without a default — such a toggle has no unset state a submitted dispatch could carry, so
+        /// `false`, the one value that exists for every such flag, is staged (`effective_action_args`).
+        fn staged_declared_arguments(action: &semio_framework::ActionDefinition) -> semio_framework::DslValue {
+            use semio_framework::{effective_action_args, ArgSchema, DslValue};
+            let required_toggles = DslValue::Object(action.args.iter().filter(|def| def.required && def.default.is_none() && matches!(def.schema, ArgSchema::Boolean)).map(|def| (def.id.clone(), DslValue::Bool(false))).collect());
+            effective_action_args(&action.args, &required_toggles, None)
+        }
+
+        /// 🧪️ Every declared app action must bridge through `command_from_action` (staged by [`staged_declared_arguments`]),
+        /// round-trip `command_id`, and read only the arguments it declares ([`declared_verbs_reading_undeclared_arguments`]).
         pub async fn assert_declared_actions_bridge_to_commands<A: ArtifactApp + Default>(manifest: fn() -> App) {
-            use semio_framework::{effective_action_args, DslValue};
             let definition = manifest().definition;
             let _app = A::default();
             for action in definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)) {
                 if framework_owned_verb(&action.id) {
                     continue;
                 }
-                let empty_args = DslValue::Object(Vec::new());
-                let staged = effective_action_args(&action.args, &empty_args, None);
+                let staged = staged_declared_arguments(action);
                 let command = A::command_from_action(&action.id, Some(&staged)).await.unwrap_or_else(|error| panic!("action {} failed to bridge: {}", action.id, error.message));
                 assert_eq!(A::command_id(&command).await, action.id.as_str(), "command_id mismatch for action {}", action.id);
             }
@@ -167,7 +182,7 @@ NEW = '''        /// 🧱️ Verbs the framework owns rather than the app, which
         /// arguments and is reported as argument `*nondeterministic*`. Soundness: every reported read is observed,
         /// never inferred from source text; completeness is relative to the vocabulary.
         pub fn undeclared_argument_reads(definition: &semio_framework::AppDefinition, bridge: super::AppCommandBridge) -> Vec<UndeclaredArgumentRead> {
-            use semio_framework::{effective_action_args, DslValue};
+            use semio_framework::DslValue;
             let declared_anywhere = definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).flat_map(|action| action.args.iter().map(|argument| argument.id.as_str()));
             let vocabulary = UNDECLARED_ARGUMENT_VOCABULARY.iter().copied().chain(declared_anywhere).collect::<std::collections::BTreeSet<&str>>();
             let shapes = [serde_json::json!("undeclared-probe"), serde_json::json!(7), serde_json::json!(true), serde_json::json!(["undeclared-probe"]), serde_json::json!({ "id": "undeclared-probe" })].map(|shape| DslValue::from(&shape));
@@ -177,7 +192,7 @@ NEW = '''        /// 🧱️ Verbs the framework owns rather than the app, which
                 if !probed.insert(action.id.as_str()) || framework_owned_verb(&action.id) {
                     continue;
                 }
-                let staged = effective_action_args(&action.args, &DslValue::Object(Vec::new()), None);
+                let staged = staged_declared_arguments(action);
                 let base = bridge(&action.id, Some(&staged));
                 if bridge(&action.id, Some(&staged)) != base {
                     reads.push(UndeclaredArgumentRead { verb: action.id.clone(), argument: "*nondeterministic*".into() });
@@ -220,11 +235,11 @@ NEW = '''        /// 🧱️ Verbs the framework owns rather than the app, which
         }
 '''
 
-TABLE_OLD = """        // 🚫️async: E4 fn-pointer slot
+TABLE_OLD = """        /// 🚫️async: E4 fn-pointer slot
         pub replay_envelopes: for<'a> fn(&'a [u8], &'a [u8], &'a [u8]) -> ArtifactCodecFuture<'a, store::ArtifactPackFiles>,
     }
 """
-TABLE_NEW = """        // 🚫️async: E4 fn-pointer slot
+TABLE_NEW = """        /// 🚫️async: E4 fn-pointer slot
         pub replay_envelopes: for<'a> fn(&'a [u8], &'a [u8], &'a [u8]) -> ArtifactCodecFuture<'a, store::ArtifactPackFiles>,
         /// 🔌️ The app's command bridge, type-erased — see [`AppCommandBridge`].
         pub command_bridge: AppCommandBridge,

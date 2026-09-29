@@ -4670,6 +4670,13 @@ pub struct PluginManifest {
     #[serde(default)]
     #[value(default)]
     pub artifact_kinds: Vec<ArtifactKindSpec>,
+    /// 🏠️ Artifact kinds another package owns whose documents this plugin's apps open — one row per kind and document
+    /// schema its owner's codecs decode (`PluginBuilder::host_artifact`, or a surface of another plugin's artifact the plugin
+    /// registers). Distinct from `artifact_kinds`: the codec rows stay
+    /// the owner's, and a trusted catalog binds these kinds to the owner's codecs.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub hosted_artifact_kinds: Vec<HostedArtifactKind>,
     /// 🔗️ Direct plugin dependencies this plugin requires to load — see `PluginDependency`/
     /// `resolve_load_order`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -5713,6 +5720,18 @@ pub struct ArtifactKindSpec {
     pub export_stdio_kinds: Vec<String>,
     /// 🗄️ Stdio import source kind ids — additive peer of `import_formats`.
     pub import_stdio_kinds: Vec<String>,
+}
+
+/// 🏠️ One artifact kind a package hosts — the kind id, one document schema of its owner's codecs, and the OWNER: the plugin
+/// that owns the kind (declares it and its codec), a declared dependency of the host (see `PluginManifest::hosted_artifact_kinds`).
+/// The owner is explicit, never read off the kind id — an embedded surface's kind (`3d.cad`) names no plugin.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct HostedArtifactKind {
+    pub id: String,
+    pub schema: String,
+    pub owner: String,
 }
 //#endregion ArtifactKind
 

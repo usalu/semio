@@ -1,0 +1,585 @@
+# owner	code	class	reason (only entries reviewed; unchanged entries listed when doubtful)
+➗️mathematical	equation-command-checkpoint-capacity	internal	checkpoint target buffer is the framework's, never the caller's
+➗️mathematical	equation-command-checkpoint-cursor	internal	own checkpoint bytes; framework already checks context digest
+➗️mathematical	equation-command-checkpoint-digest	internal	own checkpoint bytes
+➗️mathematical	equation-command-checkpoint-extent	internal	own checkpoint bytes
+➗️mathematical	equation-command-checkpoint-identity	internal	own checkpoint bytes
+➗️mathematical	equation-command-checkpoint-invalid	internal	own checkpoint bytes (framework context-checked)
+➗️mathematical	equation-command-checkpoint-mismatch	internal	identity/extent/cursor differ after framework context check = defect
+➗️mathematical	equation-command-edge-cursor	internal	cursor below count but no edge = broken invariant
+➗️mathematical	equation-command-edge-reserve	input-invalid	allocation for the change's size; smaller change fixes it
+➗️mathematical	equation-command-edge-rewrite-reserve	input-invalid	allocation for the change's size
+➗️mathematical	equation-command-extent-overflow	internal	cursor past declared extent = invariant
+➗️mathematical	equation-command-json-decode	internal	raised on command-variant mismatch in the JSON phase, not on parse
+➗️mathematical	equation-command-json-phase	internal	phase/variant routing defect
+➗️mathematical	equation-command-node-cursor	internal	broken cursor invariant
+➗️mathematical	equation-command-node-reserve	input-invalid	allocation for the change's size
+➗️mathematical	equation-command-node-rewrite-reserve	input-invalid	allocation for the change's size
+➗️mathematical	equation-command-operation-phase	internal	phase routing defect
+➗️mathematical	equation-command-operation-reserve	input-invalid	allocation for the change's size
+➗️mathematical	equation-command-point-phase	internal	phase routing defect
+➗️mathematical	equation-command-point-reserve	input-invalid	allocation for the change's size
+➗️mathematical	equation-edit-delete-id-reserve	input-invalid	allocation for the selection size
+➗️mathematical	equation-set-active-example-is-not-a-phased-command	internal	source comment: reaching it is a routing defect
+➗️mathematical	equation-work-cursor-overflow	internal	u64 cursor overflow = invariant
+➗️mathematical	equation-work-extent-overflow	internal	cursor past declared extent = invariant (text misleads)
+➗️mathematical	equation-work-replay-drift	conflict	replay digest differs: the equation changed while resuming (text); reload and redo
+➗️mathematical	equation.action-block-missing	input-invalid	missing action argument block
+➗️mathematical	equation.example-invalid	internal	bundled demo text fails to parse = defect
+🀄️wfc	wfc-bitmap-command-unmapped	internal	dispatch fallthrough for a retained-only command = routing defect
+🀄️wfc	wfc-bitmap-pin-solution-extent	input-invalid	pin payload pixel count does not fit the output; new solve = new input
+🀄️wfc	wfc-bitmap-pin-solution-pixels-not-base64	input-invalid	pin payload not base64
+🀄️wfc	wfc-bitmap-stroke-outside-input	input-invalid	stroke samples outside the image are the caller's positions
+🀄️wfc	wfc-bitmap-stroke-sample-required	input-invalid	x/y argument missing
+🀄️wfc	wfc-bitmap-window-stale	precondition-failed	window instance no longer open (window gone, not a concurrent revision)
+🀄️wfc	wfc.grid3d.retained.extent	input-invalid	extent None = route capacity exceeded by the change's size
+🀄️wfc	wfc.grid3d.retained.route	internal	completed-or-route-mismatch guard = work-repeated/route defect
+🀄️wfc	wfc2d-commit-fill-payload	input-invalid	caller's fill payload does not decode
+🀄️wfc	wfc2d.edge.unknown-edge	precondition-failed	document element id not present (element gone)
+🀄️wfc	wfc2d.retained.extent	input-invalid	route capacity exceeded by the change's size
+🀄️wfc	wfc2d.retained.route	internal	completed-or-route-mismatch guard
+🀄️wfc	wfc2d.rule.unknown-rule	precondition-failed	document element id not present
+🀄️wfc	wfc2d.slot.unknown-slot	precondition-failed	document element id not present
+🀄️wfc	wfc2d.tile.unknown-pin	precondition-failed	no armed tile and document has none
+🀄️wfc	wfc2d.tile.unknown-tile	precondition-failed	document element id not present
+🀄️wfc	wfc3d-commit-fill-payload	input-invalid	caller's fill payload does not decode
+🀄️wfc	wfc3d.retained.extent	input-invalid	route capacity exceeded by the change's size
+🀄️wfc	wfc3d.retained.route	internal	completed-or-route-mismatch guard
+🀄️wfc	wfc3d.tile.unknown-pin	precondition-failed	no armed tile and document has none
+🧩️puzzle	puzzle2d-example-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle2d-example-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle2d-force-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle2d-force-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle2d-redraw-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle2d-redraw-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle3d-accept-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle3d-accept-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle3d-accept-kind-cursor	internal	cursor into same-snapshot collection missing = broken invariant
+🧩️puzzle	puzzle3d-add-kind-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle3d-add-kind-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle3d-add-kind-cursor	internal	cursor into same-snapshot collection missing = broken invariant
+🧩️puzzle	puzzle3d-brush-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle3d-brush-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle3d-brush-kind-cursor	internal	cursor into same-snapshot collection missing = broken invariant
+🧩️puzzle	puzzle3d-create-attraction-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle3d-create-attraction-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle3d-focus-selection-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle3d-focus-selection-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle3d-kind-weight-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle3d-kind-weight-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle3d-patch-inspector-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle3d-patch-inspector-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle3d-precompute-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle3d-precompute-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle3d-precompute-object-cursor	internal	cursor into same-snapshot collection missing = broken invariant
+🧩️puzzle	puzzle3d-relocate-volume-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle3d-relocate-volume-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle3d-scale-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle3d-scale-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle3d-set-active-example-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle3d-set-active-example-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle3d-window-work-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle3d-world-relocate-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle3d-world-relocate-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle3d-world-relocate-object-cursor	internal	cursor into same-snapshot collection missing = broken invariant
+🧩️puzzle	puzzle5d-add-brush-part-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle5d-add-brush-part-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle5d-add-node-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle5d-add-node-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle5d-board-events-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle5d-create-fastener-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle5d-create-fastener-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle5d-edit-fastener-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle5d-edit-fastener-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle5d-focus-selection-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle5d-focus-selection-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle5d-kind-weight-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle5d-kind-weight-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle5d-patch-fastener-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle5d-patch-fastener-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle5d-patch-grip-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle5d-patch-grip-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle5d-patch-part-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle5d-patch-part-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle5d-proximity-connect-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle5d-proximity-connect-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle5d-register-brush-mesh-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle5d-register-brush-mesh-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle5d-relocate-volume-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle5d-relocate-volume-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle5d-retarget-fastener-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle5d-retarget-fastener-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle5d-set-active-example-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle5d-set-active-example-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle5d-transform-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle5d-transform-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle5d-world-relocate-closing	internal	work stepped after begin_close (scheduler never steps a closing job); text 'wait a moment' misleads
+🧩️puzzle	puzzle5d-world-relocate-complete-repolled	internal	step after Complete = work-repeated defect
+🧩️puzzle	puzzle-command-noop-repeated	internal	noop work stepped twice = work-repeated
+🧩️puzzle	puzzle2d-command-tool-unmapped	internal	build_tool_job fallthrough = routing defect
+🧩️puzzle	puzzle2d-example-compatibility-malformed	internal	own document row fails typed decode
+🧩️puzzle	puzzle2d-example-did-not-terminate	internal	bounded loop exhausted = invariant
+🧩️puzzle	puzzle2d-export-exceeds-declared-output-budget	precondition-failed	document too large to export; retrying unchanged never succeeds
+🧩️puzzle	puzzle2d-fill-run-checkpoint	internal	own fill checkpoint unreadable
+🧩️puzzle	puzzle2d-force-edge-capacity	precondition-failed	document size exceeds the layout cap
+🧩️puzzle	puzzle2d-force-handle-capacity	precondition-failed	document size exceeds the layout cap
+🧩️puzzle	puzzle2d-force-node-capacity	precondition-failed	document size exceeds the layout cap
+🧩️puzzle	puzzle2d-force-node-id-missing	internal	own document JSON shape broken
+🧩️puzzle	puzzle2d-force-node-not-object	internal	own document JSON shape broken
+🧩️puzzle	puzzle2d-force-nodes-missing	internal	own document JSON shape broken
+🧩️puzzle	puzzle2d-redraw-byte-capacity	precondition-failed	document size exceeds the redraw cap
+🧩️puzzle	puzzle2d-redraw-handle-capacity	precondition-failed	document size exceeds the redraw cap
+🧩️puzzle	puzzle2d-redraw-handle-malformed	internal	own document handle fails typed decode
+🧩️puzzle	puzzle2d-redraw-node-capacity	precondition-failed	document size exceeds the redraw cap
+🧩️puzzle	puzzle2d-redraw-node-id-missing	internal	own document JSON shape broken
+🧩️puzzle	puzzle2d-redraw-node-not-object	internal	own document JSON shape broken
+🧩️puzzle	puzzle2d-redraw-nodes-missing	internal	own document JSON shape broken
+🧩️puzzle	puzzle2d-retained-command-mismatch	internal	reducer reached with the wrong action = routing
+🧩️puzzle	puzzle2d.delta.invalid	internal	delta between own before/after fixtures fails
+🧩️puzzle	puzzle2d.disposal.capacity	internal	close-step retirement budget contract
+🧩️puzzle	puzzle2d.import.media-required	input-invalid	import sent without a file (Action instead of Media input)
+🧩️puzzle	puzzle3d-accept-candidate-capacity	precondition-failed	kind catalog entry exceeds the per-object cap (document)
+🧩️puzzle	puzzle3d-accept-target-vortex-capacity	precondition-failed	document object exceeds the vortex cap
+🧩️puzzle	puzzle3d-add-kind-catalog-capacity	precondition-failed	document catalog entry exceeds the cap
+🧩️puzzle	puzzle3d-brush-catalog-capacity	precondition-failed	document catalog entry exceeds the cap
+🧩️puzzle	puzzle3d-create-attraction-vortex-capacity	precondition-failed	document object exceeds the vortex cap
+🧩️puzzle	puzzle3d-export-exceeds-declared-output-budget	precondition-failed	document too large to export
+🧩️puzzle	puzzle3d-fill-run-provisional	internal	framework provisional ops do not decode
+🧩️puzzle	puzzle3d-kind-weight-catalog-capacity	precondition-failed	document catalog exceeds the cap
+🧩️puzzle	puzzle3d-patch-inspector-output-capacity	precondition-failed	emitted mutations exceed the cap (selection x document)
+🧩️puzzle	puzzle3d-precompute-vortex-capacity	precondition-failed	document object exceeds the vortex cap
+🧩️puzzle	puzzle3d-precompute-work-capacity	precondition-failed	document scan exceeds the work cap
+🧩️puzzle	puzzle3d-set-active-example-catalogs-malformed	internal	bundled example fails typed decode
+🧩️puzzle	puzzle3d-set-active-example-compatibility-malformed	internal	bundled example fails typed decode
+🧩️puzzle	puzzle3d-set-active-example-object-malformed	internal	typed round trip of bundled example fails
+🧩️puzzle	puzzle3d-set-active-example-output-capacity	precondition-failed	replacing the current document exceeds the mutation cap
+🧩️puzzle	puzzle3d-set-active-example-reference-malformed	internal	typed round trip of bundled example fails
+🧩️puzzle	puzzle3d-set-active-example-volume-malformed	internal	typed round trip of bundled example fails
+🧩️puzzle	puzzle3d-world-relocate-attraction-capacity	precondition-failed	document attractions exceed the cap
+🧩️puzzle	puzzle3d-world-relocate-vortex-capacity	precondition-failed	document object exceeds the vortex cap
+🧩️puzzle	puzzle5d-add-brush-part-grip-capacity	precondition-failed	document catalog grips exceed the cap
+🧩️puzzle	puzzle5d-add-brush-part-grip2d-malformed	internal	own document catalog grip fails typed decode
+🧩️puzzle	puzzle5d-add-brush-part-grip3d-malformed	internal	own document catalog grip fails typed decode
+🧩️puzzle	puzzle5d-add-brush-part-work-capacity	precondition-failed	document scan exceeds the work cap
+🧩️puzzle	puzzle5d-add-node-grip-capacity	precondition-failed	document catalog grips exceed the cap
+🧩️puzzle	puzzle5d-add-node-grip2d-malformed	internal	own document catalog grip fails typed decode
+🧩️puzzle	puzzle5d-add-node-grip3d-malformed	internal	own document catalog grip fails typed decode
+🧩️puzzle	puzzle5d-board-brush-download-unsupported	internal	inner brush step returned a Download variant = contract defect
+🧩️puzzle	puzzle5d-board-brush-output-capacity	internal	brush emitted more than its two retained slots = contract defect
+🧩️puzzle	puzzle5d-board-events-array-unterminated	input-invalid	caller's eventsJson ends early
+🧩️puzzle	puzzle5d-board-events-event-range	internal	scanner's own byte range invalid
+🧩️puzzle	puzzle5d-board-events-input-missing	input-invalid	eventsJson argument missing
+🧩️puzzle	puzzle5d-brush-run-search-missing	internal	inner 3d build_run_job returns None only on tool/purpose mismatch
+🧩️puzzle	puzzle5d-create-fastener-work-capacity	precondition-failed	document scan exceeds the work cap
+🧩️puzzle	puzzle5d-edit-fastener-malformed	internal	own document row fails decode
+🧩️puzzle	puzzle5d-export-document-malformed	internal	own document fails decode
+🧩️puzzle	puzzle5d-export-exceeds-declared-output-budget	precondition-failed	document too large to export
+🧩️puzzle	puzzle5d-fill-run-planner-missing	internal	inner 3d build_run_job returns None only on tool mismatch
+🧩️puzzle	puzzle5d-fill-run-provisional	internal	framework provisional op of an unmapped kind
+🧩️puzzle	puzzle5d-kind-weight-catalog-capacity	precondition-failed	document catalog exceeds the cap
+🧩️puzzle	puzzle5d-patch-fastener-malformed	internal	own document row fails decode
+🧩️puzzle	puzzle5d-patch-grip-malformed	internal	own document row fails decode
+🧩️puzzle	puzzle5d-patch-grip-part-id-malformed	internal	own document row without id
+🧩️puzzle	puzzle5d-patch-grip-work-capacity	precondition-failed	document scan exceeds the work cap
+🧩️puzzle	puzzle5d-patch-part-malformed	internal	own document row fails decode
+🧩️puzzle	puzzle5d-planner-host-grip	internal	planner connect names a host grip missing from its own board
+🧩️puzzle	puzzle5d-planner-target-volume	internal	typed round trip of a document volume fails
+🧩️puzzle	puzzle5d-planner-tick	internal	tick encode/decode failure
+🧩️puzzle	puzzle5d-planner-tick-admission	unavailable	preview payload admission rejected (pool full); retry later
+🧩️puzzle	puzzle5d-planner-tick-op	internal	op encode/decode failure
+🧩️puzzle	puzzle5d-planner-tick-ops	internal	planner op count not a multiple of the placement pair
+🧩️puzzle	puzzle5d-planner-tick-page	internal	payload page missing below page_count
+🧩️puzzle	puzzle5d-planner-tick-placement	internal	planner ops not the CreateObject+Connect pair
+🧩️puzzle	puzzle5d-proximity-connect-output-capacity	precondition-failed	document-driven output cap
+🧩️puzzle	puzzle5d-proximity-connect-work-capacity	precondition-failed	document scan exceeds the work cap
+🧩️puzzle	puzzle5d-retarget-fastener-malformed	internal	own document row fails decode
+🧩️puzzle	puzzle5d-retarget-fastener-work-capacity	precondition-failed	document scan exceeds the work cap
+🧩️puzzle	puzzle5d-set-active-example-catalogs-malformed	internal	bundled example fails typed decode
+🧩️puzzle	puzzle5d-set-active-example-compatibility-malformed	internal	bundled example fails typed decode
+🧩️puzzle	puzzle5d-set-active-example-output-capacity	precondition-failed	replacing the current document exceeds the mutation cap
+🧩️puzzle	puzzle5d-set-active-example-part-malformed	internal	typed round trip of bundled example fails
+🧩️puzzle	puzzle5d-world-relocate-candidate-malformed	internal	own document row fails decode
+🧩️puzzle	puzzle5d-world-relocate-fastener-capacity	precondition-failed	document fasteners exceed the cap
+🧩️puzzle	puzzle5d-world-relocate-grip-capacity	precondition-failed	document part grips exceed the cap
+🧩️puzzle	puzzle5d-world-relocate-source-malformed	internal	own document row fails decode
+🧩️puzzle	puzzle5d.clipboard.scale-unproved	internal	raised in close_step retirement of a clipboard part
+🧩️puzzle	puzzle5d.copy.input-required	input-invalid	copy sent with a Media input instead of an Action
+🧩️puzzle	puzzle5d.cut.input-required	input-invalid	cut sent with a Media input instead of an Action
+🧩️puzzle	puzzle5d.disposal.capacity	internal	close-step retirement budget contract
+🧩️puzzle	puzzle5d.disposal.changed	internal	retirement walk invariant
+🧩️puzzle	puzzle5d.import.media-required	input-invalid	import sent without a file
+🧩️puzzle	puzzle5d.paste.input-required	input-invalid	paste sent with a Media input instead of an Action
+🧩️puzzle	puzzle5d.wire.capacity	input-invalid	caller's raw command wire exceeds the preflight size
+🌊️flow	extension.evaluate-cancel.bad-request	internal	host-built cancel request fails to parse (not a cancellation)
+🌊️flow	extension.evaluate.bad-request	internal	evaluate_invoke_json fails only on decoding the host-built request
+🌊️flow	extension.tessellate-cancel.bad-request	internal	host-built cancel request fails to parse (not a cancellation)
+🌊️flow	extension.tessellate.bad-request	internal	host-built request fails to parse
+🌊️flow	extension.tessellate.handle-missing	internal	host-built request without handle
+🌊️flow	flow-contributions-route-rejected	internal	work reached with another command = routing
+🌊️flow	flow-contributions-work-terminal	internal	step after close/complete
+🌊️flow	flow-duplicate-child-capacity	precondition-failed	document holds too many widgets (state)
+🌊️flow	flow-duplicate-content-child-required	unavailable	content child not loaded yet; retry after load (as flow.content-unavailable)
+🌊️flow	flow-eval-session-closing	unavailable	instance owner is closing (document teardown/restart), not a job stepped after close; kept per text
+🌊️flow	flow-generation-window-transient-required	unavailable	window transient not created yet ("wait until it has loaded")
+🌊️flow	flow-retained-child-group-authority	conflict	admitted child no longer matches: content changed while running
+🌊️flow	flow-retained-child-group-output-contract	internal	emit violates the route's output contract
+🌊️flow	flow-retained-child-group-terminal	internal	step after close/complete
+🌊️flow	flow-retained-content-child-required	unavailable	content child not loaded yet
+🌊️flow	flow-retained-direct-checkpoint-capacity	internal	framework checkpoint buffer
+🌊️flow	flow-retained-direct-checkpoint-invalid	internal	own checkpoint bytes
+🌊️flow	flow-retained-direct-work-terminal	internal	step after close/complete
+🌊️flow	flow-retained-extension-item-capacity	precondition-failed	extension map already at its cap (state); text says name too long -> S20
+🌊️flow	flow-retained-graph-checkpoint-capacity	internal	framework checkpoint buffer
+🌊️flow	flow-retained-graph-checkpoint-invalid	internal	own checkpoint bytes
+🌊️flow	flow-retained-graph-work-terminal	internal	step after close/complete
+🌊️flow	flow-retained-preview-off-capacity	precondition-failed	window config's preview list over cap (state)
+🌊️flow	flow-retained-preview-off-cursor	internal	scan cursor past source = invariant
+🌊️flow	flow-retained-preview-off-item-capacity	precondition-failed	preview list full (state); text says name too long -> S20
+🌊️flow	flow-retained-scene-capacity	precondition-failed	document too large for the command (state)
+🌊️flow	flow-window-stale	precondition-failed	window instance no longer open
+🌊️flow	flow.connect-incompatible	input-invalid	caller chose incompatible ports
+🌊️flow	flow.contributions-page-address-invalid	internal	host-paged contribution install out of range
+🌊️flow	flow.example-invalid	internal	bundled demo fails to parse
+🌊️flow	flow.extension-contribution-invalid	internal	installed extension contribution invalid (extension/host defect)
+🌊️flow	flow.extension-effect-unknown	internal	static automation table names an unknown effect
+🌊️flow	flow.graph-edit.connect-refused	input-invalid	requested connection refused by the host (ports)
+🌊️flow	flow.graph-edit.field-empty	input-invalid	graph-edit row field empty
+🌊️flow	flow.graph-edit.field-not-number	input-invalid	graph-edit row field not a finite number
+🌊️flow	flow.graph-edit.field-not-text	input-invalid	graph-edit row field not text
+🌊️flow	flow.graph-edit.operation-missing	input-invalid	graph-edit row without operation
+🌊️flow	flow.graph-edit.operations-not-list	input-invalid	graph-edit operations not a list
+🌊️flow	flow.graph-edit.row-fields	input-invalid	graph-edit row with unknown fields
+🌊️flow	flow.graph-edit.row-not-object	input-invalid	graph-edit row not an object
+🌊️flow	flow.graph-edit.snapshot-json-refused	input-invalid	caller's replacement snapshot JSON unreadable
+🌊️flow	flow.graph-edit.snapshot-refused	input-invalid	caller's replacement snapshot invalid
+🌊️flow	flow.widget-id-unavailable	input-invalid	new name empty or taken; choose another name (not transient)
+🧩️puzzle	puzzle3d-focus-selection-capacity	precondition-failed	interaction selection over cap (state, like nothing-selected)
+🧩️puzzle	puzzle3d-scale-object-selection-capacity	precondition-failed	interaction selection over cap (state)
+🧩️puzzle	puzzle3d-scale-volume-selection-capacity	precondition-failed	interaction selection over cap (state)
+🧩️puzzle	puzzle5d-focus-selection-capacity	precondition-failed	interaction selection over cap (state)
+🌊️flow	flow-retained-delete-selection-capacity	precondition-failed	interaction selection over cap (state)
+🌀️procedural	artifact-store.initializer-close	internal	initializer close_step failure
+🌀️procedural	flow.contributions-page-address-invalid	internal	host-paged contribution install out of range
+🌀️procedural	generation2d-command-retained-route-rejected	internal	routing
+🌀️procedural	generation2d-contributions-route-rejected	internal	routing
+🌀️procedural	generation2d-edit-preview-window-stale	precondition-failed	window no longer open
+🌀️procedural	generation2d-flow-eval-route-rejected	internal	routing
+🌀️procedural	generation2d-generate-preview-window-stale	precondition-failed	window no longer open
+🌀️procedural	generation2d-generation-command-route-rejected	internal	prepare_command None = routing
+🌀️procedural	generation2d-main-window-stale	precondition-failed	window no longer open
+🌀️procedural	generation2d.import.media-required	input-invalid	import sent without a file
+🌀️procedural	generation3d-command-retained-route-rejected	internal	routing
+🌀️procedural	generation3d-contributions-route-rejected	internal	routing
+🌀️procedural	generation3d-document-io-route-rejected	internal	routing
+🌀️procedural	generation3d-flow-eval-window-command-mismatch	internal	work reached with a non-eval command = routing
+🌀️procedural	generation3d-flow-eval-window-owner-required	unavailable	preview transient has no evaluation yet ("wait until it has loaded")
+🌀️procedural	generation3d-flow-eval-window-transient-required	unavailable	window transient not created yet
+🌀️procedural	generation3d-flow-eval-window-work-terminal	internal	step after close/complete
+🌀️procedural	generation3d-generate-preview-window-transient-required	unavailable	window transient not created yet
+🌀️procedural	generation3d-preview-command-unowned	internal	generation_command_result_for None = routing
+🌀️procedural	generation3d-preview-window-transient-required	unavailable	window transient not created yet
+🌀️procedural	generation3d-preview-work-is-terminal	internal	step after close/complete
+🌀️procedural	generation3d-view-command-retained-route-rejected	internal	routing
+🌀️procedural	generation3d-view-contributions-route-rejected	internal	routing
+🌀️procedural	generation3d-view-document-io-route-rejected	internal	routing
+🌀️procedural	generation3d-view-flow-eval-window-command-mismatch	internal	routing
+🌀️procedural	generation3d-view-flow-eval-window-owner-required	unavailable	preview transient has no evaluation yet
+🌀️procedural	generation3d-view-flow-eval-window-transient-required	unavailable	window transient not created yet
+🌀️procedural	generation3d-view-flow-eval-window-work-terminal	internal	step after close/complete
+🌀️procedural	generation3d-view-flow-resolve-route-rejected	internal	routing
+🌀️procedural	generation3d-view-preview-window-transient-required	unavailable	window transient not created yet
+🌀️procedural	generation3d-view-work-is-terminal	internal	step after close/complete
+🌀️procedural	generation3d.io.export	input-invalid	export refused for the requested format ("try another format")
+🌀️procedural	generation3d.io.import	input-invalid	imported file content unreadable
+🌀️procedural	generation3d.io.import-accept	internal	static accept filter fails to build
+🌀️procedural	generation3d.knife.point-coordinates	input-invalid	knife point argument not three numbers
+🌀️procedural	generation3d.selection.invalid	precondition-failed	selected components no longer in the model (selection state, no revision guard)
+🌀️procedural	generation3d.transform.selection-invalid	precondition-failed	interaction selection not groupable (state)
+🌀️procedural	procedural.contributions.invalid	internal	host-pushed contribution install fails
+🎬️sequence	sequence-child-publication-input-lane	internal	emit violates the child-publication lane contract
+🎬️sequence	sequence-example-route-rejected	internal	routing
+🎬️sequence	sequence-node-graph-base	internal	owner lost between stages
+🎬️sequence	sequence-node-graph-bytes	input-invalid	operations_json over the raw byte cap
+🎬️sequence	sequence-node-graph-items	input-invalid	too many graph-edit operations
+🎬️sequence	sequence-node-graph-json	input-invalid	operations_json unparsable
+🎬️sequence	sequence-node-graph-output-bytes	input-invalid	edit's output too large ("make a smaller change")
+🎬️sequence	sequence-node-graph-output-items	input-invalid	edit's output too many ("make a smaller change")
+🎬️sequence	sequence-node-graph-route	internal	routing
+🎬️sequence	sequence-node-graph-selection-capacity	precondition-failed	interaction selection over cap (state)
+🎬️sequence	sequence-node-graph-target	internal	owner lost between stages
+🎬️sequence	sequence-persistent-checkpoint-capacity	internal	framework checkpoint buffer
+🎬️sequence	sequence-persistent-checkpoint-cursor	internal	own checkpoint bytes
+🎬️sequence	sequence-persistent-checkpoint-identity	internal	own checkpoint bytes
+🎬️sequence	sequence-persistent-checkpoint-invalid	internal	own checkpoint bytes
+🎬️sequence	sequence-persistent-output-bytes	input-invalid	command output too large ("make a smaller change")
+🎬️sequence	sequence-persistent-progress-capacity	internal	completed / tool mismatch / steps past the admitted extent = defect
+🎬️sequence	sequence-persistent-publication-lane	internal	emit violates the lane contract
+🎬️sequence	sequence-persistent-replay-overrun	internal	resumed work past its end
+🎬️sequence	sequence-persistent-restore-live-workspace	internal	restore into a live workspace = restore protocol defect
+🎬️sequence	sequence-reorganize-capacity	precondition-failed	document too large to lay out
+🎬️sequence	sequence-retained-artifact-checkpoint-capacity	internal	framework checkpoint buffer
+🎬️sequence	sequence-retained-artifact-checkpoint-cursor	internal	own checkpoint bytes
+🎬️sequence	sequence-retained-artifact-checkpoint-identity	internal	own checkpoint bytes
+🎬️sequence	sequence-retained-artifact-checkpoint-invalid	internal	own checkpoint bytes
+🎬️sequence	sequence-retained-artifact-envelope	input-invalid	command admission (payload size) fails; also completed/cursor guard
+🎬️sequence	sequence-retained-artifact-output-bytes	input-invalid	edit output too large ("make a smaller change")
+🎬️sequence	sequence-retained-artifact-publication-lane	internal	emit violates the lane contract
+🎬️sequence	sequence-retained-checkpoint-capacity	internal	framework checkpoint buffer
+🎬️sequence	sequence-retained-checkpoint-cursor	internal	own checkpoint bytes
+🎬️sequence	sequence-retained-checkpoint-identity	internal	own checkpoint bytes
+🎬️sequence	sequence-retained-checkpoint-invalid	internal	own checkpoint bytes
+🎬️sequence	sequence-retained-scene-capacity	precondition-failed	document too large
+🎬️sequence	sequence-retained-scene-required	internal	scene owner lost
+🎬️sequence	sequence-retained-selection-capacity	precondition-failed	interaction selection over cap (state)
+🎬️sequence	sequence-run-effect-capacity	precondition-failed	running the document's script exceeds the effect cap
+🎬️sequence	sequence-run-repeat-capacity	precondition-failed	a repeat step's stored count exceeds the cap
+🎬️sequence	sequence-run-replay-overrun	internal	resumed run past its end / wrong tool
+🎬️sequence	sequence-run-result-capacity	precondition-failed	running the document's script exceeds the result cap
+🎬️sequence	sequence-run-scene-capacity	precondition-failed	document too large to run
+🎬️sequence	sequence-run-step-index	internal	topological order index outside the scene = invariant
+🎬️sequence	sequence-run-while-capacity	precondition-failed	a stored loop exceeds the iteration cap
+🎬️sequence	sequence-window-route-rejected	internal	routing
+🎬️sequence	sequence-window-stale	precondition-failed	window no longer open
+🎬️sequence	sequence.example-invalid	internal	bundled demo fails to parse
+🎬️sequence	sequence.import.media-required	input-invalid	import sent without a file
+🎬️sequence	sequence.retained.config-command	input-invalid	config command admission fails (size/window); also completed guard
+🎬️sequence	sequence.retained.example-command	input-invalid	example command admission fails; also completed guard
+🎬️sequence	sequence.viewport.camera-missing	input-invalid	camera argument missing
+🖨️raster	mutation.adjustment-capacity	precondition-failed	stored adjustment layer already at its parameter cap
+🖨️raster	raster.asset-capacity	precondition-failed	document already holds the maximum layer images
+🖨️raster	raster.asset-envelope-invalid	internal	document's layer-image envelope inconsistent (reload)
+🖨️raster	raster.bake-work-mismatch	internal	work reached with another command
+🖨️raster	raster.export-command-mismatch	internal	download job built for another command
+🖨️raster	raster.export-inactive	internal	export work advanced after finish/close
+🖨️raster	raster.export-job-required	internal	batch handler reached; export only runs retained = routing
+🖨️raster	raster.export-snapshot-missing	internal	export lost its snapshot owner
+🖨️raster	raster.export-snapshot-unwitnessed	internal	close_step cannot release the snapshot lease
+🖨️raster	raster.flatten-requires-retained-work	internal	batch handler reached; flatten only runs retained = routing
+🖨️raster	raster.flatten-work-complete	internal	step after complete
+🖨️raster	raster.import.media-required	input-invalid	import sent without a file
+🖨️raster	raster.mask-edit-failed	internal	own pixel-edit job fails to advance
+🖨️raster	raster.mask-encoding-failed	internal	own PNG encoder fails
+🖨️raster	raster.mask-extent-invalid	precondition-failed	layer/mask dimensions (stored) not valid for a mask
+🖨️raster	raster.mask-operation-budget	input-invalid	operation argument over 100 000 chars (not transient)
+🖨️raster	raster.mask-operation-missing	internal	operation owner lost
+🖨️raster	raster.mask-pixels-invalid	internal	decoded mask frame shorter than its own extent
+🖨️raster	raster.mask-requires-alpha-operation	input-invalid	caller's operation kind not allowed on masks
+🖨️raster	raster.mask-requires-retained-work	internal	batch handler reached = routing
+🖨️raster	raster.mask-revision-budget	input-invalid	expected-mask argument over 8 000 chars (not transient)
+🖨️raster	raster.mask-work-complete	internal	step after complete
+🖨️raster	raster.mask-work-mismatch	internal	work reached with another command
+🖨️raster	raster.merge-requires-retained-work	internal	batch handler reached = routing
+🖨️raster	raster.pixel-edit.background-only	internal	batch handler reached = routing
+🖨️raster	raster.pixel-edit.brush-hardness-missing	input-invalid	operation argument field missing
+🖨️raster	raster.pixel-edit.brush-opacity-missing	input-invalid	operation argument field missing
+🖨️raster	raster.pixel-edit.brush-size-missing	input-invalid	operation argument field missing
+🖨️raster	raster.pixel-edit.candidate-lost	internal	prepared owner lost
+🖨️raster	raster.pixel-edit.color-channels-count	input-invalid	color argument not four channels
+🖨️raster	raster.pixel-edit.eraser-flag-missing	input-invalid	operation argument field missing
+🖨️raster	raster.pixel-edit.fill-color-missing	input-invalid	operation argument field missing
+🖨️raster	raster.pixel-edit.filter-value-missing	input-invalid	operation argument field missing
+🖨️raster	raster.pixel-edit.image-changed	conflict	caller's expected_image_key no longer current = stale revision
+🖨️raster	raster.pixel-edit.layer-address-missing	internal	locate fails after find succeeded = invariant
+🖨️raster	raster.pixel-edit.layer-image-changed	conflict	image key moved between prepare and publish = concurrent change
+🖨️raster	raster.pixel-edit.stroke-points-count	input-invalid	stroke argument outside 1..2048 points
+🖨️raster	raster.pixel-edit.stroke-points-missing	input-invalid	stroke argument without points
+🖨️raster	raster.pixel-edit.value-missing	input-invalid	operation argument field missing
+🖨️raster	raster.pixel-edit.work-complete	internal	step after complete
+🖨️raster	raster.pixel-selection.dimensions-changed	input-invalid	selection size disagrees with the image after the image-key check passed
+🖨️raster	raster.pixel-selection.image-changed	conflict	caller's expected_image_key no longer current = stale revision
+🖨️raster	raster.pixel-selection.layer-unavailable	precondition-failed	selection layer missing or hidden (state, not transient)
+🖨️raster	raster.pixel-selection.overflow	input-invalid	selection span arithmetic overflows (argument)
+🖨️raster	raster.pixel-selection.spans-missing	input-invalid	selection argument not a span list
+🖨️raster	raster.pixel-selection.spans-overlap	input-invalid	selection spans unordered/outside the image at the matched image
+🖨️raster	raster.pixel-selection.target-unavailable	precondition-failed	layer has no pixels/mask for the target (state, not transient)
+📋️forms	forms-reset-try-window-stale	precondition-failed	addressed preview window no longer matches an open one
+📋️forms	forms-submit-window-context-required	internal	batch handler reached; submit always routes retained
+📋️forms	forms-try-window-retained-context-required	internal	batch handler reached; try commands always route retained
+📋️forms	forms-try-window-route-stale	precondition-failed	addressed preview window not open
+📋️forms	forms-try-window-stale	precondition-failed	window no longer open
+📋️forms	forms-try-window-transient-required	unavailable	preview transient not created yet ("wait until it has loaded")
+📋️forms	forms-window-work-terminal	internal	step after complete / tool mismatch
+📋️forms	forms.choice.duplicate-option	input-invalid	entered choice value collides; use a different value
+📋️forms	forms.patch.invalid-parameters	precondition-failed	stored question parameters are not an object
+📋️forms	forms.patch.invalid-path	precondition-failed	condition path lookup fails in the stored condition
+📋️forms	forms.patch.parameter-required	input-invalid	parameter key argument empty
+📋️forms	forms.question.duplicate-question	input-invalid	new question id already used; use another id
+📋️forms	forms.template.invalid	internal	bundled template fails to parse
+📋️forms	forms.try-value.checkpoint-invalid	conflict	continuation base revision/lease no longer current
+📋️forms	forms.try-value.input-id-required	input-invalid	input_id argument missing for a chunked value
+📋️forms	forms.try-value.input-order	internal	completed chunk buffer missing an index = invariant
+📋️forms	forms.try-value.too-many-entries	precondition-failed	preview already holds 64 values (state)
+📋️forms	forms.try-value.window-stale	precondition-failed	addressed preview window no longer open
+📋️forms	forms.try-values.input-id-required	input-invalid	input_id argument missing for chunked values
+📋️forms	forms.try-values.too-many-entries	precondition-failed	preview already at 64 values (state)
+📋️forms	forms.try-values.window-stale	precondition-failed	addressed preview window no longer open
+🔱️trinity	jack-retained-config-tool-mismatch-or-capacity	input-invalid	mixed: tool mismatch (defect) or payload over the bounded extent (caller-reachable); as rewriting-*-mismatch-or-capacity
+🔱️trinity	jack-retained-document-tool-mismatch-or-capacity	input-invalid	mixed: tool mismatch or payload over the bounded extent
+🔱️trinity	jack.lod	input-invalid	level-of-detail argument over 64 chars
+🔱️trinity	jack.query.checkpoint-capacity	internal	framework checkpoint buffer
+🔱️trinity	jack.query.checkpoint-generation	internal	own checkpoint bytes
+🔱️trinity	jack.query.checkpoint-invalid	internal	own checkpoint bytes / restore owner state
+🔱️trinity	jack.query.checkpoint-operation	internal	own checkpoint bytes
+🔱️trinity	jack.query.checkpoint-progress	internal	own checkpoint bytes
+🔱️trinity	jack.query.finished	internal	step after finish/close
+🔱️trinity	jack.query.owner-changed	conflict	step input carries a newer operation generation = superseded run
+🔱️trinity	jack.query.results-window-required	internal	non-query command reached the query job = routing
+🔱️trinity	jack.query.results-window-state-missing	unavailable	results window transient not created yet
+🔱️trinity	jack.viewport	input-invalid	viewport argument fails validation
+🔱️trinity	rewriting.lod	input-invalid	level-of-detail argument over 64 chars
+🔱️trinity	rewriting.viewport	input-invalid	viewport argument fails validation
+🔱️trinity	trinity.jack.layout-run	internal	layout job construction/resume fails
+🔱️trinity	trinity.patch-nodes.value-empty	input-invalid	value argument empty
+🪐️space	s.home.apply-local-catalog-document.mismatch	input-invalid	kept pack does not decode to the named studio (payload inconsistent)
+🪐️space	s.home.apply-local-catalog-document.not-a-studio	input-invalid	kept pack payload is not a studio
+🪐️space	s.home.apply-local-catalog-document.requires-retained-job	internal	batch handler reached; runs only retained = routing
+🪐️space	s.home.bind-space-file.requires-retained-job	internal	batch handler reached = routing
+🪐️space	s.home.bind-space-file.unknown-studio	precondition-failed	studio lookup fails (no revision guard)
+🪐️space	s.home.create-studio.filesystem-unavailable	precondition-failed	device has no filesystem: permanent, not transient
+🪐️space	s.home.create-studio.folder-path-required	input-invalid	folder path argument missing
+🪐️space	s.home.delete-vfs-node.already-retired	precondition-failed	studio already removed (already done)
+🪐️space	s.home.delete-vfs-node.requires-retained-job	internal	batch handler reached = routing
+🪐️space	s.home.delete-vfs-node.unknown-local-studio	precondition-failed	studio lookup fails
+🪐️space	s.home.directory-event-page-frontier-race	conflict	page sequence no longer follows the cursor = stale feed position
+🪐️space	s.home.directory-event-page-input-missing	input-invalid	pageJson argument missing
+🪐️space	s.home.directory-event-page.requires-retained-job	internal	batch handler reached = routing
+🪐️space	s.home.import-space.empty	input-invalid	imported file content empty
+🪐️space	s.home.import-space.not-a-studio	input-invalid	imported file content not a studio
+🪐️space	s.home.import-space.oversized	input-invalid	imported file over the single-chunk size
+🪐️space	s.home.import-space.requires-retained-job	internal	batch handler reached with a payload = routing
+🪐️space	s.home.import-space.unnamed	input-invalid	imported file has no name
+🪐️space	s.home.keep-on-device.unknown-studio	precondition-failed	studio lookup fails
+🪐️space	s.home.manage-space-requires-a-space	input-invalid	space id argument empty
+🪐️space	s.home.persist-locally.requires-retained-job	internal	batch handler reached with a path = routing
+🪐️space	s.home.persist-locally.unknown-studio	precondition-failed	studio lookup fails
+🪐️space	s.home.rename-space.requires-retained-job	internal	batch handler reached = routing
+🪐️space	s.home.session-identity-required	permission-denied	no signed-in session identity: the person lacks the right
+🪐️space	s.home.share-space.requires-retained-job	internal	batch handler reached = routing
+🪐️space	s.home.unhandled-action	input-invalid	unknown action name
+🪐️space	s.space.app-registrations-malformed	internal	host-pushed app roster JSON unreadable
+🪐️space	s.space.directory.decode	internal	host-fed directory events unreadable
+🪐️space	s.space.index.retained.route	internal	extent None = command not on this route
+🪐️space	s.space.media.export	input-invalid	export refused for the requested format ("try another format")
+🪐️space	s.space.media.import	input-invalid	imported file content unreadable
+🪐️space	s.space.media.payload	input-invalid	picked file payload not base64
+🪐️space	s.space.retained.extent	input-invalid	route capacity exceeded by the change's size
+🪐️space	s.space.retained.route	internal	command not in the bounded tool ids = routing
+🪐️space	s.space.session-identity-required	permission-denied	no signed-in session identity
+🪐️space	s.space.unhandled-action	input-invalid	unknown action name
+🪐️space	s.space.viewport-missing	input-invalid	viewport argument missing
+🪐️space	space-home-catalog-work-checkpoint-capacity	internal	framework checkpoint buffer
+🪐️space	space-home-catalog-work-checkpoint-invalid	internal	own checkpoint bytes
+🪐️space	space-home-catalog-work-command-mismatch	internal	work reached with another command
+💠️lowpoly	lowpoly-paint-stroke-end-routes-through-dedicated-step	internal	source comment: never reaches this reducer (exhaustiveness arm)
+💠️lowpoly	lowpoly-retained-checkpoint-capacity	internal	framework checkpoint buffer
+💠️lowpoly	lowpoly-retained-checkpoint-context	internal	own checkpoint bytes
+💠️lowpoly	lowpoly-retained-checkpoint-generation	internal	own checkpoint bytes
+💠️lowpoly	lowpoly-retained-checkpoint-identity-mismatch	internal	checkpoint identity differs from the resumed job (context already framework-checked)
+💠️lowpoly	lowpoly-retained-checkpoint-invalid	internal	own checkpoint bytes
+💠️lowpoly	lowpoly-retained-checkpoint-operation	internal	own checkpoint bytes
+💠️lowpoly	lowpoly-retained-checkpoint-paint-cursor	internal	own checkpoint bytes
+💠️lowpoly	lowpoly-retained-checkpoint-paint-cursor-capacity	internal	own checkpoint cursor outside the layer
+💠️lowpoly	lowpoly-retained-checkpoint-paint-digest	internal	own checkpoint bytes
+💠️lowpoly	lowpoly-retained-checkpoint-tool	internal	own checkpoint bytes
+💠️lowpoly	lowpoly-retained-context-freshness-drift	conflict	context identity changed while running = concurrent change
+💠️lowpoly	lowpoly-retained-operation-freshness-drift	conflict	operation/generation/base revision changed while running
+💠️lowpoly	lowpoly-retained-paint-buffer-capacity	precondition-failed	texture (stored) larger than the paint layer cap
+💠️lowpoly	lowpoly-retained-paint-replay-digest	conflict	replayed stroke no longer matches the texture = changed underneath
+💠️lowpoly	lowpoly-retained-work-closing	internal	work stepped after begin_close
+💠️lowpoly	lowpoly.media.export	input-invalid	serializer refuses the model in the requested format ("try another format")
+💠️lowpoly	lowpoly.media.import	input-invalid	imported file content unreadable
+💠️lowpoly	lowpoly.media.import-empty	input-invalid	opened data URL without payload
+💠️lowpoly	lowpoly.media.import-encoding	input-invalid	opened file payload not base64
+💠️lowpoly	lowpoly.session.state-invalid	internal	scratch session transient state cannot be rebuilt
+🏛️architect	architect-adjacency-window-stale	precondition-failed	window no longer open
+🏛️architect	architect-graph-window-stale	precondition-failed	window no longer open
+🏛️architect	architect-register-window-stale	precondition-failed	window no longer open
+🏛️architect	architect-report-window-stale	precondition-failed	window no longer open
+🏛️architect	architect.adjacency-field-missing	input-invalid	field argument empty
+🏛️architect	architect.adjacency-self	input-invalid	caller named the same element twice
+🏛️architect	architect.register-not-addable	input-invalid	addressed register kind does not accept new rows (static schema)
+🏛️architect	architect.register-not-removable	input-invalid	addressed register kind does not allow removal (static schema)
+🌍️gis	gis-map-window-stale	precondition-failed	window no longer open
+🌍️gis	gis-map-window-work-terminal	internal	step after complete / tool mismatch
+🌍️gis	gis.gismap.inference.cache-mode	input-invalid	request asks an unsupported incremental cache mode
+🌍️gis	gis.gismap.inference.cancellation	internal	host-built request without cancellation identity (not a cancellation)
+🌍️gis	gis.gismap.inference.snapshot-decode	internal	host-supplied canonical payload of our own document unreadable
+🌍️gis	gis.map.example.invalid	internal	bundled example fails to parse
+🌍️gis	gis.map.viewer.camera-missing	input-invalid	camera argument empty
+🌍️gis	gis.map.viewer.retained-route-required	internal	batch handler reached = routing
+🌍️gis	gis.terrain.example.invalid	internal	bundled example fails to parse
+💡️reasoning	wires-canvas-window-context-required	precondition-failed	no view state = window not open
+💡️reasoning	wires-command-payload-too-large	input-invalid	extent None = payload over the route cap
+💡️reasoning	wires-drag-camera-invalid	precondition-failed	stored window camera zoom invalid; reset the view
+💡️reasoning	wires-drag-child-not-materialized	unavailable	content child still loading
+💡️reasoning	wires-drag-node-capacity	input-invalid	dragged node id argument over 1 024 bytes
+💡️reasoning	wires-drag-position-non-finite	input-invalid	pointer deltas yield a non-finite position
+💡️reasoning	wires-drag-requires-window	precondition-failed	no window transient = not in the canvas window
+💡️reasoning	wires-drag-requires-window-config	unavailable	window config not created yet ("wait until it has loaded")
+💡️reasoning	wires-drag-window-kind	precondition-failed	dispatched from a non-canvas window
+💡️reasoning	wires-viewport-requires-window	unavailable	window config not created yet
+💡️reasoning	wires.canvas-window-required	precondition-failed	no window id = window not open
+💡️reasoning	wires.delete-selection-empty	precondition-failed	nothing selected
+💡️reasoning	wires.relationship-endpoint-missing	input-invalid	sourceId/targetId argument empty
+💡️reasoning	wires.relationship-endpoints-missing	precondition-failed	fewer than two nodes selected and none named
+💡️reasoning	wires.relationship-self	input-invalid	caller named the same node twice
+💡️reasoning	wires.unhandled-action	input-invalid	unknown action name
+🗒️note	note-retained-checkpoint-capacity	internal	framework checkpoint buffer
+🗒️note	note-retained-checkpoint-cursor	internal	own checkpoint bytes
+🗒️note	note-retained-checkpoint-extent	internal	own checkpoint bytes
+🗒️note	note-retained-checkpoint-identity	internal	own checkpoint bytes
+🗒️note	note-retained-checkpoint-invalid	internal	own checkpoint bytes
+🗒️note	note.patch-blocks.flag-required	input-invalid	value argument not true/false
+🗒️note	note.patch-blocks.ids-missing	input-invalid	block_ids argument empty
+🗒️note	note.patch-blocks.number-required	input-invalid	value argument not a number
+🗒️note	note.retained.coalesce	internal	own units disagree on coalesce key
+🗒️note	note.retained.description	internal	own units disagree on description
+🗒️note	note.retained.extent	input-invalid	command+selection yields no or too many units ("change fewer blocks")
+🗒️note	note.retained.projection	internal	own mutation fails on own projection
+🗒️note	note.retained.repeated	internal	step after complete
+🏭️process	process3d-retained-checkpoint-capacity	internal	framework checkpoint buffer
+🏭️process	process3d-retained-checkpoint-cursor	internal	own checkpoint bytes
+🏭️process	process3d-retained-checkpoint-cursor-out-of-range	internal	cursor past extent in step = invariant
+🏭️process	process3d-retained-checkpoint-digest	internal	own checkpoint bytes
+🏭️process	process3d-retained-checkpoint-extent	internal	own checkpoint bytes
+🏭️process	process3d-retained-checkpoint-extent-mismatch	internal	checkpoint extent differs after framework context check
+🏭️process	process3d-retained-checkpoint-identity	internal	own checkpoint bytes
+🏭️process	process3d-retained-checkpoint-invalid	internal	own checkpoint bytes
+🏭️process	process3d-retained-cursor-overflow	internal	cursor arithmetic overflow = invariant
+🏭️process	process3d-retained-route-not-resumable	internal	resumable work built for a non-resumable command = routing
+🏭️process	process3d.media.export	input-invalid	export refused for the requested format ("check the format")
+📕️norm	norm-command-retained-route-rejected	internal	routing
+📕️norm	norm-evaluate-checkpoint-capacity	internal	framework checkpoint buffer
+📕️norm	norm-results-window-stale	precondition-failed	window no longer open
+📕️norm	norm.apply-remedy-missing-option	input-invalid	option index argument outside the remedy's offered options
+📕️norm	norm.set-active-example-invalid	internal	bundled example fails to parse
+📕️norm	norm.set-snapshot-arg-missing	input-invalid	snapshot argument missing
+📕️norm	norm.unhandled-action	input-invalid	unknown action name
+📕️norm	norm.value-path	input-invalid	field path argument reaches nothing ("check the field path")
+📏️layout	layout-export-authority-invalid	internal	host-built export request/lease rejected
+📏️layout	layout-export-job-only	internal	batch handler reached = routing
+📏️layout	layout-window-stale	precondition-failed	window no longer open
+📏️layout	layout-window-work-route-rejected	internal	routing
+📏️layout	layout-window-work-terminal	internal	step after complete / tool mismatch
+📏️layout	layout.import.media-required	input-invalid	import sent without a file
+📐️cad	cad-extension-aec-building.inference.snapshot-decode	internal	host-supplied canonical payload of our own document unreadable
+📐️cad	cad.apply-transformation-unavailable	precondition-failed	composed panes cannot take the transformation: permanent, not transient
+📐️cad	cad.config.too-large	precondition-failed	stored window config over the admission cap ("clear the selection")
+📐️cad	cad.document.too-large	precondition-failed	document over the admission cap
+📐️cad	cad.example.invalid	internal	bundled demo fails to parse
+📐️cad	cad.import-object-unavailable	input-invalid	object files cannot be imported here yet (file kind not accepted): permanent, not transient
+📐️cad	cad.preview.conflict	internal	preview generation i64 overflow = invariant
+📐️cad	cad.preview.invalid	conflict	engagement session in config moved away from the runtime derived from it ("out of step")
+📐️cad	cad.window.invalid	precondition-failed	no view state = no open CAD pane
+📐️cad	cad.window.stale	precondition-failed	window no longer open
+🌿️vcs	vcs-edit-checkpoint-beyond-completion	internal	replay completed before its target = invariant
+🌿️vcs	vcs-edit-checkpoint-capacity	internal	framework checkpoint buffer
+🌿️vcs	vcs-edit-checkpoint-cursor	internal	own checkpoint bytes
+🌿️vcs	vcs-edit-checkpoint-invalid	internal	own checkpoint bytes
+🌿️vcs	vcs-edit-checkpoint-workspace-not-empty	internal	restore into a live workspace = restore protocol defect
+🌿️vcs	vcs-edit-command-mismatch	internal	work reached with another command
+🌿️vcs	vcs-edit-current-tag-capacity	precondition-failed	a stored tag exceeds the cap
+🌿️vcs	vcs-edit-next-snapshot-absent	internal	owner lost between phases
+🌿️vcs	vcs-edit-step-overflow	internal	u64 step overflow = invariant
+🌊️flow	flow-duplicate-window-transient-stale	precondition-failed	window transient belongs to another window than the view (focus mismatch, no revision)
+🌊️flow	flow-generation-window-transient-stale	precondition-failed	window transient belongs to another window ("focus the flow window")

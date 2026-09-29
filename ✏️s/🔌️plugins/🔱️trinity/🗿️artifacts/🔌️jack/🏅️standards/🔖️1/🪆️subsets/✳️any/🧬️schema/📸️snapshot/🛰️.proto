@@ -9,6 +9,7 @@ message JackSnapshot {
   Camera camera = 5;
   semio.os.store.ArtifactChild content = 6;
   optional string root_node_id = 7;
+  string query = 8;
 }
 message Camera { double x = 1; double y = 2; double zoom = 3; }
 message Manifest {

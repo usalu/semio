@@ -10,7 +10,7 @@
 //! `CYLINDRICAL_SURFACE`/`CONICAL_SURFACE`/`SPHERICAL_SURFACE`/`TOROIDAL_SURFACE`/
 //! `B_SPLINE_SURFACE_WITH_KNOTS`, both with optional `RATIONAL_B_SPLINE_*` weight fragments per
 //! ISO 10303-42). Zero codec reimplementation: bytes were already turned into the generic
-//! `StepEntity` graph by step's own Part-21 tokenizer (`engine::part21::parse_part21` via
+//! `StepEntity` graph by step's own Part-21 tokenizer (`semio_s_artifact_stdio_contract::part21::parse_part21` via
 //! `StepSnapshot`'s `ArtifactDsl`/`ArtifactPack` impls) — this file only maps typed snapshot to
 //! typed snapshot.
 //!

@@ -11,6 +11,78 @@ fn fresh_state() -> ShellState {
     ShellState::new(Vec::new(), String::new())
 }
 
+/// 🎯️ The same neutral owner vectors address each retained spawned document and action.
+#[test]
+fn spawned_documents_and_actions_keep_their_exact_owning_session() {
+    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️spawned-document-routing/🔣️.json")).unwrap();
+    let session = |owner: &Value| {
+        let mut app = super::command_registry_tests::test_app(Vec::new(), Vec::new());
+        app.id = owner["appId"].as_str().unwrap().into();
+        app.controller_id = owner["controllerId"].as_str().unwrap().into();
+        let id = owner["windowId"].as_str().unwrap().to_string();
+        let mut view_state = ViewModel::default();
+        view_state.window_id = Some(id.clone());
+        view_state.focused_window_id = Some(id.clone());
+        view_state.window_instances = vec![semio_framework::ViewWindowInstance { id, window_kind_id: "main".into() }];
+        ActiveSession { plugin_id: owner["pluginId"].as_str().unwrap().into(), instance_id: owner["instanceId"].as_u64().unwrap() as u32, app, view_state }
+    };
+    for law in fixture["cases"].as_array().unwrap() {
+        let mut shell = fresh_state();
+        shell.space_mode = true;
+        shell.session = Some(session(&fixture["host"]));
+        shell.spawned_session = if law["retired"] == true { None } else { Some(session(&fixture["spawned"])) };
+        if law["sharedController"] == true {
+            shell.spawned_session.as_mut().unwrap().app.controller_id = fixture["host"]["controllerId"].as_str().unwrap().into();
+        }
+        if law["sharedApp"] == true {
+            let child = shell.spawned_session.as_mut().unwrap();
+            let host = shell.session.as_ref().unwrap();
+            child.plugin_id = host.plugin_id.clone();
+            child.app.id = host.app.id.clone();
+            child.app.controller_id = host.app.controller_id.clone();
+        }
+        let action = ActionDescriptor { controller_id: law["controllerId"].as_str().unwrap().into(), action: "edit".into(), args: law["surface"].as_str().map(|id| semio_framework::DslValue::from(serde_json::json!({"windowId": id}))) };
+        let mut expected = law["ownerPath"].as_str().map(|path| fixture[path.trim_start_matches('/')].clone());
+        if law["sharedApp"] == true {
+            for field in ["pluginId", "appId", "controllerId"] {
+                expected.as_mut().unwrap()[field] = fixture["host"][field].clone();
+            }
+        }
+        let owner = shell.action_session(&action);
+        assert_eq!(owner.map(|s| (s.plugin_id.as_str(), s.instance_id, s.app.id.as_str())), expected.as_ref().map(|v| (v["pluginId"].as_str().unwrap(), v["instanceId"].as_u64().unwrap() as u32, v["appId"].as_str().unwrap())), "{}", law["id"]);
+        if let Some(surface) = law["surface"].as_str().filter(|id| *id == "main" || *id == "spawned") {
+            if expected.is_some() {
+                assert_eq!(shell.window_document_session(surface).map(|s| s.instance_id), owner.map(|s| s.instance_id), "{}", law["id"]);
+            }
+        }
+        if let Some(owner) = owner {
+            let live = shell.live_view_state(owner);
+            assert!(live.window_instances.iter().any(|window| Some(&window.id) == owner.view_state.window_id.as_ref()), "{}", law["id"]);
+            let invocation = shell.session_action_invocation(owner, &action, &live).expect("exact owner action address");
+            assert_eq!(invocation.address.plugin_id, owner.plugin_id);
+            assert_eq!(invocation.address.app_id, owner.app.id);
+            assert_eq!(Some(&invocation.address.window_instance_id), owner.view_state.window_id.as_ref());
+            if law["surface"] == "spawned" {
+                assert_eq!(invocation.arguments.get("windowId").and_then(DslValue::as_str), owner.view_state.window_id.as_deref());
+            }
+            let command_owner = semio_framework::manifest::CommandOwnerAddress::App { plugin_id: owner.plugin_id.clone(), app_id: owner.app.id.clone() };
+            assert!(shell.command_session(&command_owner, owner.view_state.window_id.as_deref()).is_some_and(|session| ShellState::same_session(session, owner)));
+        }
+        println!("[DEBUG] WGPU spawned routing {}: {:?}", law["id"], owner.map(|s| (&s.plugin_id, s.instance_id, &s.app.id)));
+        if law["ownerPath"] == "/spawned" {
+            let selected = shell.action_session(&action).unwrap().clone();
+            let host_panel = shell.session.as_ref().unwrap().view_state.panel_json.clone();
+            let panel = serde_json::json!({"ownerApp": selected.app.id});
+            let operations = vec![serde_json::json!({"operation": "setPanel", "panel": panel}).to_string()];
+            let result = semio_framework_async::block_on(shell.apply_ops_inner(&operations, true, UiDirtyScope::None, Some(selected)));
+            assert_eq!(result.unwrap_err(), "session program missing");
+            assert_eq!(shell.session.as_ref().unwrap().view_state.panel_json, host_panel);
+            assert_eq!(shell.spawned_session.as_ref().unwrap().view_state.panel_json, Some(panel.to_string()));
+            println!("[DEBUG] WGPU spawned panel projection {}: {}", law["id"], panel);
+        }
+    }
+}
+
 fn host_test_apps() -> (AppDefinition, AppDefinition) {
     let mut home = super::command_registry_tests::test_app(Vec::new(), Vec::new());
     home.id = "home".into();
@@ -45,6 +117,7 @@ pub(super) fn host_test_shell() -> ShellState {
         topic_contributions: vec![],
         commands: vec![],
         artifact_kinds: vec![],
+        hosted_artifact_kinds: Vec::new(),
         dependencies: vec![],
         contributions: vec![],
     };
@@ -897,7 +970,7 @@ fn the_command_dock_opens_the_expanded_commands_staged_form() {
     let expanded_id = format!("command.{}", key.replace(':', "."));
     assert!(!listed.contains(&expanded_id.as_str()), "🎛️ the expanded command is not also listed");
     let records = panel_ui_records("command.fixture", &UiNode::Tree(panel)).expect("command Tree projects");
-    let form_record = records.iter().find(|record| record.key.as_str() == format!("command.category.{category}.form")).expect("form record");
+    let form_record = records.iter().find(|record| record.key.as_str() == format!("command.fixture/command.category.{category}.form")).expect("form record");
     let ui_contract::Component::TreeSection(props) = &form_record.component else { panic!("form is a TreeSection") };
     let toolbar_id = props.header_toolbar.expect("TreeSection carries its header Toolbar relation");
     let toolbar_record = records.iter().find(|record| record.id == toolbar_id).expect("toolbar record");
@@ -1223,9 +1296,9 @@ fn footer_bands_match_the_react_chrome_band_fixture() {
         let (Some(first), Some(last)) = (rows.first(), rows.last()) else { continue };
         let span = (last.2.x + last.2.w) - first.2.x;
         let layout = shell.footer_chrome_layout(&mut atlas, &theme, width, 0.0, btn_h);
-        let ideal = (width - span) * 0.5;
-        let expected = ideal.clamp(layout.center.free.left, (layout.center.free.right - span).max(layout.center.free.left));
-        assert!((first.2.x - expected).abs() < 0.5, "📑️ {name} uses the free footer band: first={first:?}, last={last:?}, span={span}, expected={expected}");
+        let free = [ShellChromeBandSpan { left: 0.0, right: layout.center.free.left }, ShellChromeBandSpan { left: layout.center.free.right, right: width }];
+        let expected = shell_chrome_centered_band(width, &free, span).centered.left;
+        assert!((first.2.x - expected).abs() < 0.01, "📑️ {name} sits where the shared centred-band rule (`navbarCenteredLeftV1`, whole pixels inside the band) places it: first={first:?}, last={last:?}, span={span}, expected={expected}");
         assert!(first.2.x >= layout.center.free.left && last.2.x + last.2.w <= layout.center.free.right + 0.01);
     }
     for name in fixture["chromeBands"]["footer"]["trailing"].as_array().expect("footer trailing band").iter().map(|value| value.as_str().expect("anchor id")) {

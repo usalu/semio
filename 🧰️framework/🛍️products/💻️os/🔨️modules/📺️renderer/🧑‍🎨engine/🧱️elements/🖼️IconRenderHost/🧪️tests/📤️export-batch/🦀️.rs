@@ -94,6 +94,7 @@ fn icon_export_effect_publishes_an_accessible_cancel_control_and_drains_on_activ
     for _ in 0..1024 {
         if shell.render_icon_export_step(&mut cursor, &mut draw, &mut atlas, &mut input, &ui_wgpu::wgpu::Theme::default(), 1280.0) { break; }
     }
+    input.publish_hits();
     let nodes = shell.chrome_accessibility_nodes(input.hits());
     let cancel = nodes.iter().find(|node| node.key == CONTROL_ID).expect("export cancel button");
     assert_eq!(cancel.role, "button");

@@ -1,6 +1,5 @@
 {
   "arithmetic": false,
-  "frame": null,
   "height": 1,
   "huffmanTables": [
     {
@@ -30,7 +29,6 @@
     }
   ],
   "jfifDensityUnits": "aspect",
-  "jfifThumbnail": null,
   "jfifVersion": [
     1,
     1
@@ -58,7 +56,6 @@
   ],
   "quantTables": [],
   "reEncodeQuality": 90,
-  "restartInterval": null,
   "schema": "stdio.jpg",
   "sofMarker": 0,
   "width": 1

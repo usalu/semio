@@ -7,6 +7,7 @@ use crate::mutations::change_page_width::ChangePageWidth;
 use crate::mutations::delete_page::DeletePage;
 use crate::mutations::rename_page::RenamePage;
 use crate::mutations::reorder_pages::ReorderPages;
+use crate::mutations::create_layer::CreateLayer;
 use crate::mutations::set_page_guides::SetPageGuides;
 use crate::mutations::set_page_parent::SetPageParent;
 use crate::LayoutRect;
@@ -42,6 +43,22 @@ fn page_field_mutation(document: &LayoutSnapshot, page: &Page, field: &str, valu
             }
             guides.push(LayoutRect { x: 0.0, y: 0.0, width: page.width, height: 0.0 });
             Some(LayoutMutation::SetPageGuides(SetPageGuides { id, guides }))
+        }
+        "addLayer" => {
+            if page.layers.len() >= 16 {
+                return None;
+            }
+            let mut index = page.layers.len() + 1;
+            let layer_id = loop {
+                let candidate = format!("layer-{index}");
+                if page.layers.iter().all(|layer| layer.id != candidate) {
+                    break candidate;
+                }
+                index += 1;
+            };
+            let trimmed = value.trim();
+            let name = if trimmed.is_empty() { "Layer".to_string() } else { trimmed.to_string() };
+            Some(LayoutMutation::CreateLayer(CreateLayer { page_id: id, id: layer_id, name, remove: false }))
         }
         "parentPageId" => {
             let trimmed = value.trim();

@@ -24,7 +24,9 @@ async function publisherFindings(): Promise<Findings> {
 }
 
 /** 🛫️ LAW: a trusted-catalog selection is refused before any build when its profile id is not a bounded `local-…-open-v1` name,
- * a package identity or declared kind is unbounded, a package without linked codecs declares no artifact kind (hosted-only), or a
+ * a package identity or declared kind is unbounded, a package without linked codecs declares no kind of its own nor hosts one, a
+ * hosted (id, schema) row repeats or is also owned, a hosted row's owner is not another selected package it declares as a dependency
+ * (the hub's descriptor-decode rule: a definition-only kind its owner publishes no codec for is admitted and opens nothing), or a
  * linked package's codec registry is missing — every finding at once, in package order. Oracle: Ajv judges the profile-id rule
  * independently (pattern + 256-byte bound; the fixture's ids are ASCII, so code points = bytes). */
 describe("catalog selection preflight", async () => {

@@ -118,7 +118,7 @@ describe("retained browser clock deadlines", () => {
     };
     worker.reply({ kind: "booted", lifecycle: 1 });
     flushRaf();
-    const reply = (delay: number | null, generation = 0) => worker.reply({ kind: "frame", lifecycle: 1, frameSequence: ++frameSequence, generation, cursor: "default", fullscreen: null, requestFrame: false, nextDeadlineDelayMs: delay, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
+    const reply = (delay: number | null, generation = 0) => worker.reply({ kind: "frame", mediaSlots: [], lifecycle: 1, frameSequence: ++frameSequence, generation, cursor: "default", fullscreen: null, requestFrame: false, nextDeadlineDelayMs: delay, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
     return { worker, subject, raf, flushRaf, reply, setTimer, clearTimer };
   }
 
@@ -230,7 +230,7 @@ describe("retained browser clock deadlines", () => {
       const timer = context.setTimer.mock.results.at(-1)!.value;
       if (terminal === "close") context.subject.close();
       if (terminal === "fault") context.worker.reply({ kind: "fault", lifecycle: 1, code: "test", detail: "test" });
-      if (terminal === "quarantine") context.worker.reply({ kind: "frame", lifecycle: 1, frameSequence: 2, generation: 0, cursor: "default", fullscreen: null, requestFrame: false, nextDeadlineDelayMs: null, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted", quarantined: true, faultCode: "present-failed" });
+      if (terminal === "quarantine") context.worker.reply({ kind: "frame", mediaSlots: [], lifecycle: 1, frameSequence: 2, generation: 0, cursor: "default", fullscreen: null, requestFrame: false, nextDeadlineDelayMs: null, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted", quarantined: true, faultCode: "present-failed" });
       expect(context.clearTimer).toHaveBeenCalledWith(timer);
       vi.advanceTimersByTime(600);
       expect(context.raf.size).toBe(0);
@@ -299,8 +299,8 @@ describe("browser frame worker transport", () => {
     worker.reply({ kind: "batch-accepted", lifecycle: 1, inputSequence: first.inputSequence, generation: first.generation });
     subject.requestFrame();
     expect(subject.flush(2)).toBe(true);
-    worker.reply({ kind: "frame", lifecycle: 1, frameSequence: 1, generation: first.generation, cursor: "default", fullscreen: null, requestFrame: false, nextDeadlineDelayMs: null, progress: 0.5, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
-    worker.reply({ kind: "frame", lifecycle: 1, frameSequence: 2, generation: first.generation, cursor: "text", fullscreen: null, requestFrame: false, nextDeadlineDelayMs: null, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
+    worker.reply({ kind: "frame", mediaSlots: [], lifecycle: 1, frameSequence: 1, generation: first.generation, cursor: "default", fullscreen: null, requestFrame: false, nextDeadlineDelayMs: null, progress: 0.5, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
+    worker.reply({ kind: "frame", mediaSlots: [], lifecycle: 1, frameSequence: 2, generation: first.generation, cursor: "text", fullscreen: null, requestFrame: false, nextDeadlineDelayMs: null, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
     expect(directives).toEqual([first.generation, first.generation]);
   });
 
@@ -323,7 +323,7 @@ describe("browser frame worker transport", () => {
     expect(first.lossless.filter((event) => "documentKey" in event && event.documentKey === key)).toEqual([expect.objectContaining({ kind: "hub-document-close" })]);
     expect(subject.publishHubDocumentStatus(refused, { kind: "live", peerCount: 9 })).toBe(true);
     worker.reply({ kind: "batch-accepted", lifecycle: 1, inputSequence: first.inputSequence, generation: first.generation });
-    worker.reply({ kind: "frame", lifecycle: 1, frameSequence: first.inputSequence, generation: first.generation, cursor: "default", fullscreen: null, requestFrame: false, nextDeadlineDelayMs: null, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
+    worker.reply({ kind: "frame", mediaSlots: [], lifecycle: 1, frameSequence: first.inputSequence, generation: first.generation, cursor: "default", fullscreen: null, requestFrame: false, nextDeadlineDelayMs: null, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
     const delivered: unknown[] = [...first.lossless];
     let sequence = first.inputSequence;
     while (subject.flush(++sequence)) {
@@ -331,7 +331,7 @@ describe("browser frame worker transport", () => {
       if (batch?.kind !== "batch") break;
       delivered.push(...batch.lossless);
       worker.reply({ kind: "batch-accepted", lifecycle: 1, inputSequence: batch.inputSequence, generation: batch.generation });
-      worker.reply({ kind: "frame", lifecycle: 1, frameSequence: batch.inputSequence, generation: batch.generation, cursor: "default", fullscreen: null, requestFrame: false, nextDeadlineDelayMs: null, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
+      worker.reply({ kind: "frame", mediaSlots: [], lifecycle: 1, frameSequence: batch.inputSequence, generation: batch.generation, cursor: "default", fullscreen: null, requestFrame: false, nextDeadlineDelayMs: null, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
     }
     expect(delivered.filter((event) => typeof event === "object" && event !== null && "documentKey" in event && event.documentKey === key)).toEqual([expect.objectContaining({ kind: "hub-document-close" })]);
     expect(delivered).toContainEqual(expect.objectContaining({ kind: "hub-document-status", documentKey: refused, remote: { kind: "live", peerCount: 9 } }));
@@ -489,10 +489,10 @@ describe("browser frame worker transport", () => {
     subject.flush(1);
     subject.enqueueLossless({ kind: "text", text: "b" });
     worker.reply({ kind: "batch-accepted", lifecycle: 1, inputSequence: 1, generation: 1 });
-    worker.reply({ kind: "frame", lifecycle: 1, frameSequence: 1, generation: 1, cursor: "default", fullscreen: null, requestFrame: false, nextDeadlineDelayMs: null, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
+    worker.reply({ kind: "frame", mediaSlots: [], lifecycle: 1, frameSequence: 1, generation: 1, cursor: "default", fullscreen: null, requestFrame: false, nextDeadlineDelayMs: null, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
     expect(directives).toEqual([]);
     expect(subject.flush(2)).toBe(true);
-    worker.reply({ kind: "frame", lifecycle: 1, frameSequence: 2, generation: 2, cursor: "text", fullscreen: null, requestFrame: false, nextDeadlineDelayMs: null, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
+    worker.reply({ kind: "frame", mediaSlots: [], lifecycle: 1, frameSequence: 2, generation: 2, cursor: "text", fullscreen: null, requestFrame: false, nextDeadlineDelayMs: null, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
     expect(directives).toEqual([2]);
   });
 
@@ -502,7 +502,7 @@ describe("browser frame worker transport", () => {
     const subject = transport(worker, { directives });
     worker.reply({ kind: "booted", lifecycle: 1 });
     subject.close();
-    worker.reply({ kind: "frame", lifecycle: 1, frameSequence: 1, generation: 0, cursor: "pointer", fullscreen: null, requestFrame: false, nextDeadlineDelayMs: null, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
+    worker.reply({ kind: "frame", mediaSlots: [], lifecycle: 1, frameSequence: 1, generation: 0, cursor: "pointer", fullscreen: null, requestFrame: false, nextDeadlineDelayMs: null, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
     expect(subject.status).toBe("closed");
     expect(worker.terminated).toBe(false);
     worker.reply({ kind: "closed", lifecycle: 1 });
@@ -515,7 +515,7 @@ describe("browser frame worker transport", () => {
     const subject = transport(worker);
     worker.reply({ kind: "booted", lifecycle: 1 });
     subject.flush(1);
-    worker.reply({ kind: "frame", lifecycle: 1, frameSequence: 1, generation: 1, cursor: "default", fullscreen: null, requestFrame: false, nextDeadlineDelayMs: null, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
+    worker.reply({ kind: "frame", mediaSlots: [], lifecycle: 1, frameSequence: 1, generation: 1, cursor: "default", fullscreen: null, requestFrame: false, nextDeadlineDelayMs: null, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
     expect(subject.status).toBe("faulted");
     expect(subject.fault?.code).toBe("protocol-violation");
   });
@@ -539,11 +539,11 @@ describe("browser frame worker transport", () => {
     const subject = transport(worker, { directives });
     worker.reply({ kind: "booted", lifecycle: 1 });
     subject.flush(1);
-    worker.reply({ kind: "frame", lifecycle: 1, frameSequence: 1, generation: 0, cursor: "default", fullscreen: null, requestFrame: false, nextDeadlineDelayMs: null, progress: 1, workerDurationMs: 40, workerExecutingMs: 9, workerStepVerdict: "sustained-overrun", quarantined: true, faultCode: "worker-step-overrun", faultDetail: "frame step executed 9.000 ms for 4 consecutive steps" });
+    worker.reply({ kind: "frame", mediaSlots: [], lifecycle: 1, frameSequence: 1, generation: 0, cursor: "default", fullscreen: null, requestFrame: false, nextDeadlineDelayMs: null, progress: 1, workerDurationMs: 40, workerExecutingMs: 9, workerStepVerdict: "sustained-overrun", quarantined: true, faultCode: "worker-step-overrun", faultDetail: "frame step executed 9.000 ms for 4 consecutive steps" });
     expect(subject.status).toBe("quarantined");
     expect(worker.terminated).toBe(false);
     expect(directives).toEqual([]);
-    worker.reply({ kind: "frame", lifecycle: 1, frameSequence: 2, generation: 0, cursor: "pointer", fullscreen: true, requestFrame: true, nextDeadlineDelayMs: null, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
+    worker.reply({ kind: "frame", mediaSlots: [], lifecycle: 1, frameSequence: 2, generation: 0, cursor: "pointer", fullscreen: true, requestFrame: true, nextDeadlineDelayMs: null, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
     expect(directives).toEqual([]);
   });
 
@@ -789,7 +789,7 @@ describe("browser frame worker transport", () => {
       subject.requestFrame();
       expect(subject.flush(sequence)).toBe(true);
       worker.reply({ kind: "batch-accepted", lifecycle: 1, inputSequence: sequence, generation: 1 });
-      worker.reply({ kind: "frame", lifecycle: 1, frameSequence: sequence, generation: 1, cursor: "default", fullscreen: null, requestFrame: false, nextDeadlineDelayMs: null, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
+      worker.reply({ kind: "frame", mediaSlots: [], lifecycle: 1, frameSequence: sequence, generation: 1, cursor: "default", fullscreen: null, requestFrame: false, nextDeadlineDelayMs: null, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
     }
     expect(directives).toEqual([1, 1, 1, 1, 1]);
     expect(turns).toEqual([]);
@@ -808,7 +808,11 @@ describe("browser frame worker transport", () => {
     const root = dirname(fileURLToPath(import.meta.url));
     const bootSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"), "utf8");
     const mirrorSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/♿️accessibility-mirror/🟦️.ts"), "utf8");
-    const directiveHook = bootSource.slice(bootSource.indexOf("onDirectives: ({ cursor, fullscreen })"), bootSource.indexOf("onFault:"));
+    const directiveStart = bootSource.indexOf("onDirectives:");
+    const directiveEnd = bootSource.indexOf("onDiagnostic:", directiveStart);
+    expect(directiveStart).toBeGreaterThanOrEqual(0);
+    expect(directiveEnd).toBeGreaterThan(directiveStart);
+    const directiveHook = bootSource.slice(directiveStart, directiveEnd);
     const turnHook = bootSource.slice(bootSource.indexOf("onUiTurn: (outcome)"), bootSource.indexOf("onReady: () =>"));
     expect(directiveHook).toContain("accessibility?.refresh()");
     expect(turnHook).not.toContain("accessibility");

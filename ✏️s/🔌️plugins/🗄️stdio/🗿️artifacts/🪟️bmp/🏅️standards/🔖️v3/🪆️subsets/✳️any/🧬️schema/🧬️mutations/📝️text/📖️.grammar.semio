@@ -7,7 +7,6 @@ comment none
 
 op = set-snapshot | change-header-fields | insert-palette-entry | remove-palette-entry | replace-palette-entry | replace-pixel-data
 
-hex = IDENT | TEXT
 set-snapshot = "set-snapshot" "snapshot" "=" hex
 
 text-value = IDENT | TEXT

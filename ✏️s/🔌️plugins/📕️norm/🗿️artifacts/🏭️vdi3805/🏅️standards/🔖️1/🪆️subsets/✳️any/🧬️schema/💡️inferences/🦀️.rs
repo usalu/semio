@@ -1509,7 +1509,19 @@ fn check_catalog_integrity(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
         .sum::<usize>()
         .saturating_add(document.catalog.file.manufacturer.len())
         .saturating_add(document.catalog.file.created.len());
-    let actual_depth: usize = 4;
+    let mut actual_depth: usize = 1;
+    if !document.catalog.products.is_empty() {
+        actual_depth = 3;
+    }
+    if document.catalog.products.iter().any(|p| !p.records.is_empty()) {
+        actual_depth = 4;
+    }
+    if document.catalog.products.iter().any(|p| p.records.iter().any(|r| !r.fields.is_empty())) {
+        actual_depth = 5;
+    }
+    if !document.geometry.is_empty() || !document.curves.is_empty() {
+        actual_depth = actual_depth.max(2);
+    }
     for (leaf, actual, limit_v, en, de) in [
         ("limits.maxRecords", actual_records as f64, lim.max_records as f64, "Max records", "Max. Datensätze"),
         ("limits.maxFileBytes", actual_bytes as f64, lim.max_file_bytes as f64, "Max file bytes", "Max. Dateibytes"),

@@ -1,0 +1,22 @@
+{
+ "plugin": "sequence",
+ "dir": "🎬️sequence",
+ "apps": [
+  {
+   "app": "s.sequence.sequence@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "crate::editor::sequence::SequencePlayApp",
+   "create": "crate::editor::sequence::create_sequence_app",
+   "app": "s.sequence.sequence@1/*#editor"
+  }
+ ]
+}

@@ -4,7 +4,7 @@
 //! feature file's own description, the same finding the sibling `step/🔖️ap214/🧱️base` subset already
 //! made), so the oracle dispatcher (`../../🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🦀️oracle.rs`)
 //! performs every kind with its own from-scratch Part-21 writer against a `ruststep`-parsed
-//! document, independent of this subset's own `Ifc2x3Snapshot`/`step::engine::part21` codec; the
+//! document, independent of this subset's own `Ifc2x3Snapshot`/`semio_s_artifact_stdio_contract::part21` codec; the
 //! subject fully parses into `Ifc2x3Snapshot` and re-serializes from it alone (no byte pass-
 //! through). Both results are read back by the INDEPENDENT `ruststep` reader
 //! (`project_ifc_2x3_any`) before the `semantic-ifc-v1` profile compares them — real third-party
@@ -239,7 +239,7 @@ mod subject {
     use semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::io::{decode_ifc2x3, encode_ifc2x3};
     use semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::mutations::{apply_ifc2x3_mutation, remove_instance, set_header, set_snapshot, upsert_instance, Ifc2x3Mutation};
     use semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-    use semio_s_artifact_stdio_ifc::engine::part21::{Part21Header, Part21Instance, Part21Value};
+    use semio_s_artifact_stdio_contract::part21::{Part21Header, Part21Instance, Part21Value};
     use semio_s_plugin_stdio_test_oracle::artifacts::ifc::standards::v2x3::subsets::base::project_ifc_2x3_any;
 
     //#region 🔖️SpecReading
@@ -339,7 +339,7 @@ mod subject {
     /// 📐️ Full parse → typed mutation → re-serialize from the model alone — the no-byte-pass-
     /// through rule this wave exists to enforce. `decode_ifc2x3`/`encode_ifc2x3` are this subset's
     /// own real codec (`../../🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🦀️.rs`): standard-
-    /// specific `FILE_SCHEMA` validation plus the shared `step::engine::part21` tokenizer/writer.
+    /// specific `FILE_SCHEMA` validation plus the shared `semio_s_artifact_stdio_contract::part21` tokenizer/writer.
     fn apply_and_encode(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
         let snapshot = decode_ifc2x3(input)?;
         let base = snapshot.clone();

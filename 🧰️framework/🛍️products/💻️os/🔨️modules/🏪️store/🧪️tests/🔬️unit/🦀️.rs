@@ -6299,6 +6299,24 @@ async fn amend_last_incremental_path_matches_full_replay_over_many_amends() {
     assert_eq!(store.snapshot().expect("snapshot after undo").n, Some(0), "one undo reverts the whole 50-step coalesced gesture");
 }
 
+/// 🔏️ LAW (ticket 26/09/23 C12): a coalesced edit's revision identity is a pure function of the edit. Each amend extends the
+/// tail's digest chains by only the operations it appended, yet after a long run the live revision equals the revision a
+/// store loaded from the same envelope derives from scratch, and every amend still moves the revision.
+#[semio_framework_async_macros::async_test]
+async fn an_amended_edit_revision_is_its_own_from_scratch_digest() {
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
+    let mut store = ArtifactStore::new(envelope).await;
+    let mut revisions = std::collections::HashSet::new();
+    for n in 1..=256 {
+        store.dispatch(ArtifactCommand::AmendLast { mutations: vec![DemoMutation::SetN(SetN { n })], coalesce_key: Some("typing".into()) }).await.expect("amend");
+        assert!(revisions.insert(store.content_revision_now()), "amend {n} moves the revision");
+    }
+    assert_eq!(store.envelope().vcs.edits.len(), 1, "the run is one coalesced edit");
+    let files = print_document_pack(store.envelope()).await.expect("owned document encode");
+    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("owned document decode").envelope).await;
+    assert_eq!(reloaded.content_revision_now(), store.content_revision_now(), "the incrementally extended revision equals the from-scratch one");
+}
+
 /// 🪢️ Undo/redo only move edit ids between `applied_edit_ids`/`redo_edit_ids` — they never mutate
 /// an edit's own `forwards`, so a cached post-snapshot keyed by `(edit_id, forwards_len)` stays
 /// valid across an undo immediately followed by a redo of the very same coalesced edit.

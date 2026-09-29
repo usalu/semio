@@ -1050,7 +1050,7 @@ pub fn evaluate_document(doc: &Din18599Snapshot) -> CheckReport {
             &format!("Net floor area A_N = {a_n:.1} m²; sum of zone areas ΣA_zone = {a_zones:.1} m²."),
             &format!("Nettogrundfläche A_N = {a_n:.1} m²; Summe der Zonenflächen ΣA_zone = {a_zones:.1} m²."),
         ));
-        if (a_zones - a_n).abs() > 0.05 * a_n.max(1.0) {
+        if a_zones > a_n {
             b = b.remedy(Remedy::at_least(
                 SubjectRef::new("", "netFloorAreaM2", copy("Net floor area A_N", "Nettogrundfläche A_N")),
                 Quantity::new(QuantityKind::Area, a_n),
@@ -1434,26 +1434,38 @@ pub fn evaluate_document(doc: &Din18599Snapshot) -> CheckReport {
         report.push(b.build());
     }
 
-        // --- Part 2 cooling need Q_C,nd (always assessed so θ_i,c / gains remain normative) ---
+        // --- Part 2 cooling setpoint per zone (DIN V 18599-10). A lower θ_i,c raises Q_C,nd. ---
     {
         let q_c = derived.q_c_nd_kwh;
-        let zid = doc.zones.first().map(|z| z.id.clone()).unwrap_or_default();
-        let path = format!("zones[id={zid}].thetaICoolC");
-        let limit = q_c.max(1.0);
-        let b = CheckResult::assess(
-            "din18599.2.cooling-need",
-            "DIN V 18599-2",
-            ClauseId::new("DIN V 18599", "2", "Q_C,nd"),
-            SubjectRef::new(&zid, &path, copy("Indoor cooling setpoint", "Kühlsolltemperatur")),
-            copy("Net cooling demand Q_C,nd", "Kühlbedarf Q_C,nd"),
-        )
-        .annex(annex)
-        .utilization(energy(q_c), energy(limit))
-        .explanation(copy(
-            &format!("Q_C,nd = {q_c:.0} kWh/a (setpoints / gains; tracked for θ_i,c sensitivity)."),
-            &format!("Q_C,nd = {q_c:.0} kWh/a (Sollwerte / Gewinne; für θ_i,c-Sensitivität)."),
-        ));
-        report.push(b.build());
+        let min_theta = din_v_18599_10_zone_defaults::THETA_I_COOL_C;
+        for zone in &doc.zones {
+            let path = format!("zones[id={}].thetaICoolC", zone.id);
+            let mut b = CheckResult::assess(
+                format!("din18599.2.cooling-need.{}", zone.id),
+                "DIN V 18599-2",
+                ClauseId::new("DIN V 18599", "2", "Q_C,nd"),
+                SubjectRef::new(&zone.id, &path, copy("Indoor cooling setpoint", "Kühlsolltemperatur")),
+                copy("Cooling setpoint for Q_C,nd", "Kühlsollwert für Q_C,nd"),
+            )
+            .annex(annex)
+            .minimum(dimensionless(zone.theta_i_cool_c), dimensionless(min_theta))
+            .explanation(copy(
+                &format!("θ_i,c = {:.1} °C vs DIN V 18599-10 {min_theta:.0} °C. Q_C,nd = {q_c:.0} kWh/a.", zone.theta_i_cool_c),
+                &format!("θ_i,c = {:.1} °C gegenüber DIN V 18599-10 {min_theta:.0} °C. Q_C,nd = {q_c:.0} kWh/a.", zone.theta_i_cool_c),
+            ));
+            if zone.theta_i_cool_c + 1e-9 < min_theta {
+                b = b.remedy(Remedy::at_least(
+                    SubjectRef::new(&zone.id, &path, copy("Indoor cooling setpoint", "Kühlsolltemperatur")),
+                    dimensionless(zone.theta_i_cool_c),
+                    dimensionless(min_theta),
+                    copy(
+                        &format!("Raise the cooling setpoint from {:.1} °C to at least {min_theta:.0} °C.", zone.theta_i_cool_c),
+                        &format!("Kühlsollwert von {:.1} °C auf mindestens {min_theta:.0} °C anheben.", zone.theta_i_cool_c),
+                    ),
+                ));
+            }
+            report.push(b.build());
+        }
     }
 
     // --- Part 7 cooling ---

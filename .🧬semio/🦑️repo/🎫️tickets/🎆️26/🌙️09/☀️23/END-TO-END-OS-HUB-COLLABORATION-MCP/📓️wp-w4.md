@@ -3,6 +3,66 @@
 Session 14 slice W4. Canonical hub 7800, hubs 8000–8009, serves 6500–6509. Scripts `wp-w4/`, captures `wp-w4/generated/`, durable
 data `.🧬semio/🌐hub/s14-w4-*`. Handover: [📓️wp-w3.md](📓️wp-w3.md) (Session 13, phase `final`).
 
+## Session 15
+
+| # | Item | Status |
+|---|---|---|
+| 1 | Reconcile predecessor (died ~18:45, no handover) | **DONE** 19:2x: chain 57946 + hold 57953 alive (rebuild-all a1 in 4/11 components, demonstrator build); no half-applied W4 tree hunks (last W4 tree edit = 12:5x validator, landed); 7800 on p33 (hold 66344, `s13-w3-state-7800/pids.txt` hold=66344 → the move step stops it); no `s14-w4-catalog-t6` / `s14-w4-hub-7800-t6` yet (guards clean) |
+| 2 | Other allow-lists missing `hostedArtifactKinds`/`owner` | **CHECKED** 19:2x: `CATALOG_MANIFEST_FIELDS` is the only manifest/descriptor field allow-list in TS (`git grep` of `topicContributions`/`unknown fields`); hub preflight (`trustedBootstrapSelectionFindingsV1`, descriptor claims, components) and bootstrap (`trustedBootstrapHostedKindsV1`) already read `hostedArtifactKinds` + explicit `owner` (LB2 p15); no descriptor JSON-Schema allow-list |
+| 3 | Shepherd chain → publish rc → 7800 on t6 → probes | RUNNING — 22:29 rebuild-all a2 rc=0, preflight rc=0, publish-all running (see log). Earlier (19:48: rebuild-all a1 still in 4/11 components — 10 of 34 plugins described (architect, demonstrator, imperative, mathematical, playbook, procedural, reasoning, sequence, shooting, sourcing), animate building; ETA a1 end ~20:4x, then the blind retry `--from components` (+300 s), preflight ~21:xx). hub-build/mcp-build are `strict` w4_retry: a named red crate waits for green ≤ 45 min (H13 WAL lease window / G12 s15b host edits) |
+| 4 | Pre-check of the NEXT gates for hosted packages (preflight selection + publisher order) | **2 host-tooling reds found + FIXED before the chain reached them** (landing row 19:33–19:37): validator demanded the owner DECLARE hosted kinds (27 findings on stdio's 7 definition-only kinds) → hub's own rule; `demonstrator` published before 4 of its 6 owners (`trustedBootstrapHostedKindsV1` would throw mid-publish) → moved last + validator refuses owner-after-host. Pre-check over the 43-package `all` selection (families freshly emitted from their component-dev): **CLEAN** |
+| 5 | Chain #3 (after L1 round 4 GREEN incl. LB2 T7d p17) | **PREPARED** — commands below |
+
+### Chain #3 (prepared 19:4x; the coordinator launches it detached)
+
+Launch only after the t6 chain has EXITED (its hold's release tail writes `final-release-*` into the same log dir) and the t6 publish is on 7800:
+
+```
+cd "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-w4-logs" && for f in chain-final.txt final-*; do mv "$f" "t6-$f"; done
+cd /Users/ueli/Documents/semio && FLEET_TICKET_STAMP=20260928120100 W4_REBUILD_FROM=components W4_CATALOG=s14-w4-catalog-t6r4 W4_ROOT=s14-w4-hub-7800-t6r4 python3 .tmp-ticket/wp-w2/w2-detach.py ".🧬semio/🌐hub/s14-w4-logs/chain-final.txt" zsh .tmp-ticket/wp-w4/w4-chain.sh final
+```
+
+`--from components` = describe + materialize-dev of every changed package (nx), generate, check, activate-s, verify-s, flow-core bindings; then
+preflight + `--packages all` publish into `s14-w4-catalog-t6r4`, hub + mcp build, 7800 moved from the t6 hold (read from `s13-w3-state-7800/pids.txt`)
+onto the fresh root `s14-w4-hub-7800-t6r4`, readiness / hub-freshness / footprint / open-plan. Rollback: stop the hold, `zsh wp-w4/w4-hub-resume.sh
+s14-w4-hub-7800-t6`. Pre-launch check: `bun .tmp-ticket/wp-w4/w4-hosted-precheck.ts <scratch> <changed hosted packages>` (CLEAN expected).
+Disk: 63 GiB free at 19:2x (floor 80 was the old rule) — a second full release build set may need the coordinator to free space first.
+
+
+### Session 15 Log
+
+- 19:16 chain state: hub-prewarm rc=0 (18:23, 527 s); hold rebuild-all a1 3/11 guest-framework done 787 s, 4/11 components since ~18:28: 9 stdio
+  family describes failed `manifest has unknown fields hostedArtifactKinds` (binary, office, image, media, semio, mesh, bim, cad, pdf — 9, not 8),
+  no `could not compile` → w4_retry takes its one blind retry (300 s) and resumes `--from components`. Forward warm lane: stdio 0, gis 0, animate 0,
+  architect running. Disk 63 GiB free, swap 3.6/5.1 GB, load ~27.
+- Predecessor gap 13:17–18:45 (no log written; measured): the p33 chain's release tail was killed at 14:08 (`final-release-modules.txt` nx exit
+  143 after 58 min, `flow-extension-brep:component-release` stopped; no release-root-check capture); 7800 re-held 15:36:36 on root
+  `s14-w4-hub-7800-p33` (hold 66344, `s13-w3-state-7800/detach.txt` 15:36); p33 chain log archived `chain-final-p33-1814.txt`; the coordinator
+  launched the t6 chain 18:14:37 (pid 57946, `W4_CATALOG=s14-w4-catalog-t6 W4_ROOT=s14-w4-hub-7800-t6`, rebuild from start).
+- 19:25 demonstrator describe in a1 passed with the coordinator's allow-list fix (`described demonstrator (plugin semio:demonstrator@0.1.0)`; 8 hosted rows,
+  owns only `playground.document`).
+- 19:2x–19:37 pre-check `wp-w4/w4-hosted-precheck.ts` (families' descriptors emitted into `.🧬semio/🌐hub/s14-w4-precheck/` with jco + the 19:24 emitter;
+  17–97 s each; no cargo, no owner-root writes) + the hub's own `trustedBootstrapSelectionFindingsV1`: RED 27 → fixed → CLEAN; old order RED 6
+  (demonstrator) → new order CLEAN. Law 24/24, hub tsc 0 (landing row). Every family/demonstrator hosted row also satisfies the hub Rust decode rule
+  (no duplicate pair, none also owned, owner = declared dependency in the catalog).
+- 21:11:26 rebuild-all a1 rc=1 (10 609 s) in 4/11 components: nx "Failed tasks" = the 9 family describes (pre-fix allow-list) + `gis-plugin:describe`
+  (`raw component … semio_s_plugin_gis.wasm` 281 477 448 B > the 256 MiB `FRESH_COMPONENT_MAX_BYTES` bound). Nothing else failed: 59 `described` +
+  10 failed = 69 components, all 69 `materialize-dev` ran (none failed), no `[budget]`/panic/other `failed:` line (`final-rebuild-all-a1.txt`).
+  Coordinator landed `[profile.wasm-dev.package.semio-s-plugin-gis] strip = "symbols"` 21:12 (norm/stdio precedent). Near the bound: vcs 230.8 MiB,
+  demonstrator 218.8, stdio-image 207.0 (not rebuilt by the retry unless their inputs changed). Blind retry `--from components` due 21:16:27.
+- 21:16:27 retry a2 `--from components` (nx re-ran every component: 2/204 cache hits). **22:12 components done (3307 s)**: all 69 described, no
+  failure; gis component-dev 281.5 MB → **130.0 MB** with the strip override (22:09); the 9 families described with the fixed allow-list.
+  22:13 generate done (65 s); 6/11 check running.
+- 22:13 early live checks on the fresh committed descriptors: `w4-hosted-precheck.ts … none` **CLEAN** (43 packages; `s14-w4-precheck/precheck-5-committed.txt`);
+  the real `trusted-catalog-preflight --packages all` (hub script, read-only) **rc=0 in 13 s**: `local-all-open-v1`, 43 descriptors' dependencies in
+  closure, 69 component-dev deliverables match their descriptors (`s14-w4-captures/s15-preflight-all-early.txt`).
+- **22:28:35 rebuild-all a2 rc=0** (4328 s: check, activate-s 129 s, verify-s 38 s, flow-core-bindings 376 s); **22:29:21 chain preflight rc=0** (46 s);
+  publish-all (`--packages all` → `s14-w4-catalog-t6`, demonstrator last) started 22:29:21.
+- 22:49 publish-all: bootstrap preflight passed inside the publisher, `cargo build --bin os-hub` 12 m 08 s, codec capture done, first package
+  release build running (warm releases only for stdio/gis/animate/architect — the forward lane stopped at preflight; reverse lane: renderer since
+  22:35). Native lane: LW1 holds it, H13 lease7 (kernel-db WAL writer, apply → check → revert on red) queued — it may be mid-apply when the chain's
+  hub-build runs; hub-build/mcp-build `strict` w4_retry waits ≤ 45 min for a named red crate to turn green.
+
 ## Session 14
 
 | # | Item | Status |

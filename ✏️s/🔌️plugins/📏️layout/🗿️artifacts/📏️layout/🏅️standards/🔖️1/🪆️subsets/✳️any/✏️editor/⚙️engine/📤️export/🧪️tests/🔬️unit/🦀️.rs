@@ -847,3 +847,447 @@ fn pdf_export_prints_a_character_style_run() {
     assert!(text.contains("12.000 Tf"), "the rest of the story keeps the paragraph size");
     assert_eq!(text.matches("> Tj ET").count(), snapshot.stories[0].content.chars().count());
 }
+
+#[test]
+fn pdf_export_obliques_and_tracks_a_character_span() {
+    let mut tracked = crate::standards::v1::subsets::any::schema::default_document();
+    tracked.character_styles.push(crate::CharacterStyle { id: "character-1".into(), name: Some("Emphasis".into()), font_family: None, font_size: None, font_weight: Some(700), italic: Some(true), color: None, tracking: Some(10.0) });
+    tracked.stories[0].style_runs.push(crate::TextStyleRun { start: 0, end: 5, paragraph_style_id: None, character_style_id: Some("character-1".into()) });
+    let mut plain = tracked.clone();
+    plain.character_styles[0].tracking = Some(0.0);
+    plain.character_styles[0].italic = Some(false);
+    let mut engine = crate::editor::layout::engine::scene::LayoutEngine::new();
+    let tracked_list = crate::editor::layout::engine::scene::build_display_list_for_page(&mut engine, &tracked, &tracked.pages[0], "", &[], None, false);
+    let plain_list = crate::editor::layout::engine::scene::build_display_list_for_page(&mut engine, &plain, &plain.pages[0], "", &[], None, false);
+    let tracked_glyphs = &tracked_list.text_runs.iter().find(|run| run.object_id == "frame-text-1").expect("story").glyphs;
+    let plain_glyphs = &plain_list.text_runs.iter().find(|run| run.object_id == "frame-text-1").expect("story").glyphs;
+    assert!(tracked_glyphs.iter().take(5).all(|glyph| glyph.italic));
+    assert!(tracked_glyphs.iter().skip(5).all(|glyph| !glyph.italic));
+    let tracked_gap = tracked_glyphs[1].x - tracked_glyphs[0].x;
+    let plain_gap = plain_glyphs[1].x - plain_glyphs[0].x;
+    assert!(tracked_gap > plain_gap + 5.0, "tracked {tracked_gap} plain {plain_gap}");
+    let all = headless_batch_export(LayoutExportKind::Pdf, &tracked, Some("page-1"), None).expect("page pdf");
+    let bytes = decode_base64(&all.data).expect("base64 pdf");
+    assert_pdf_structure(&bytes);
+    let text = String::from_utf8_lossy(&bytes);
+    assert!(text.contains("1 0 0.250 1"), "the styled span prints oblique");
+    assert!(text.contains("1 0 0 1"), "the rest of the story stays upright");
+}
+
+#[test]
+fn pdf_export_prints_a_page_override() {
+    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    snapshot.pages[0].overrides.push(crate::PageOverride { object_id: "frame-inherited".into(), bounds: Some(crate::LayoutBounds { x: 90.0, y: 50.0, width: 100.0, height: 80.0, rotation: 0.0 }), visible: None, locked: None });
+    let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
+    let bytes = decode_base64(&all.data).expect("base64 pdf");
+    assert_pdf_structure(&bytes);
+    let text = String::from_utf8_lossy(&bytes);
+    assert!(text.contains("0.4000 0.5000 0.7000 RG 1 w 90.000 370.000 100.000 80.000 re S Q"), "the override prints at the page position");
+    assert!(!text.contains("50.000 370.000 100.000 80.000 re S Q"), "the master position is not printed on this page");
+}
+
+#[test]
+fn pdf_export_omits_a_hidden_layer() {
+    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    snapshot.pages[0].layers[0].visible = false;
+    let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
+    let bytes = decode_base64(&all.data).expect("base64 pdf");
+    assert_pdf_structure(&bytes);
+    let text = String::from_utf8_lossy(&bytes);
+    assert_eq!(text.matches("> Tj ET").count(), 0, "the hidden content layer prints no story glyphs");
+    assert!(!text.contains("10.000 450.000 40.000 40.000 re f Q"), "the hidden rect is omitted");
+    assert!(text.contains("0.4000 0.5000 0.7000 RG 1 w 50.000 370.000 100.000 80.000 re S Q"), "the master frame stays on its own layer");
+}
+
+#[test]
+fn pdf_export_omits_a_frame_on_a_hidden_layer() {
+    use crate::mutations::create_layer::CreateLayer;
+    use crate::mutations::set_frame_layer::SetFrameLayer;
+    use crate::mutations::LayoutMutation;
+    use protocol::{Mutation, MutationDiff};
+    let base = crate::standards::v1::subsets::any::schema::default_document();
+    let created = LayoutMutation::CreateLayer(CreateLayer { page_id: "page-1".into(), id: "layer-2".into(), name: "Notes".into(), remove: false }).diff(&base).diff().apply(&base).expect("layer");
+    let mut snapshot = LayoutMutation::SetFrameLayer(SetFrameLayer { page_id: "page-1".into(), frame_id: "frame-1".into(), layer_id: "layer-2".into() }).diff(&created).diff().apply(&created).expect("move");
+    snapshot.pages[0].layers.iter_mut().find(|layer| layer.id == "layer-2").unwrap().visible = false;
+    let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
+    let bytes = decode_base64(&all.data).expect("base64 pdf");
+    assert_pdf_structure(&bytes);
+    let text = String::from_utf8_lossy(&bytes);
+    assert!(!text.contains("10.000 450.000 40.000 40.000 re f Q"));
+    assert_eq!(text.matches("> Tj ET").count(), snapshot.stories[0].content.chars().count());
+}
+
+#[test]
+fn pdf_export_prints_the_background_drawing() {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
+    let point = |x: f64, y: f64| SemioPoint2 { x, y };
+    let content = SemioDrawingSnapshot {
+        schema: "stdio.semio.drawing".into(),
+        canvas: Default::default(),
+        styles: Vec::new(),
+        layers: vec![DrawLayer {
+            id: "imported".into(),
+            name: "Imported".into(),
+            visible: true,
+            root: DrawNode::Group {
+                transform: SemioTransform::identity(),
+                children: vec![DrawNode::Path {
+                    style: None,
+                    segments: vec![
+                        PathSegment::MoveTo { to: point(10.0, 20.0) },
+                        PathSegment::LineTo { to: point(110.0, 20.0) },
+                        PathSegment::LineTo { to: point(110.0, 70.0) },
+                        PathSegment::LineTo { to: point(10.0, 70.0) },
+                        PathSegment::Close,
+                    ],
+                }],
+            },
+        }],
+    };
+    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    snapshot.pages[0].width = 100.0;
+    snapshot.pages[0].height = 50.0;
+    snapshot.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
+    let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
+    let bytes = decode_base64(&all.data).expect("base64 pdf");
+    assert_pdf_structure(&bytes);
+    let text = String::from_utf8_lossy(&bytes);
+    assert!(text.contains("0.000 50.000 m 100.000 50.000 l 100.000 0.000 l 0.000 0.000 l h S Q"), "{text}");
+}
+
+#[test]
+fn pdf_export_prints_a_styled_plan_stroke() {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
+    let point = |x: f64, y: f64| SemioPoint2 { x, y };
+    let content = SemioDrawingSnapshot {
+        schema: "stdio.semio.drawing".into(),
+        canvas: Default::default(),
+        styles: vec![DrawStyle { name: "red".into(), fill: None, stroke: Some(SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }), stroke_width: Some(2.0), opacity: Some(0.5) }],
+        layers: vec![DrawLayer {
+            id: "imported".into(),
+            name: "Imported".into(),
+            visible: true,
+            root: DrawNode::Group {
+                transform: SemioTransform::identity(),
+                children: vec![DrawNode::Path {
+                    style: Some("red".into()),
+                    segments: vec![
+                        PathSegment::MoveTo { to: point(10.0, 20.0) },
+                        PathSegment::LineTo { to: point(110.0, 20.0) },
+                        PathSegment::LineTo { to: point(110.0, 70.0) },
+                        PathSegment::LineTo { to: point(10.0, 70.0) },
+                        PathSegment::Close,
+                    ],
+                }],
+            },
+        }],
+    };
+    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    snapshot.pages[0].width = 100.0;
+    snapshot.pages[0].height = 50.0;
+    snapshot.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
+    let mut engine = crate::editor::layout::engine::scene::LayoutEngine::new();
+    let list = crate::editor::layout::engine::scene::build_display_list_for_page(&mut engine, &snapshot, &snapshot.pages[0], "", &[], None, false);
+    assert_eq!(list.strokes[0].color, [1.0, 0.0, 0.0, 0.5]);
+    assert_eq!(list.strokes[0].width, 2.0);
+    let json = crate::editor::layout::canvas::canvas_layers(
+        &snapshot,
+        &crate::editor::layout::modes::edit::windows::blueprint::config::LayoutWindowConfig::default(),
+        &crate::editor::layout::modes::edit::windows::blueprint::transient::LayoutWindowTransient::default(),
+        &crate::editor::layout::LayoutInteractionSnapshot::default(),
+        false,
+    );
+    assert!(json.contains("drawing.plan.0") && json.contains("[1.0,0.0,0.0,0.5]") && json.contains("\"width\":2.0"), "{json}");
+    let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
+    let bytes = decode_base64(&all.data).expect("base64 pdf");
+    assert_pdf_structure(&bytes);
+    let text = String::from_utf8_lossy(&bytes);
+    assert!(text.contains("1.0000 0.0000 0.0000 RG 2.000 w"), "{text}");
+}
+
+#[test]
+fn pdf_export_prints_a_filled_plan_path() {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
+    let point = |x: f64, y: f64| SemioPoint2 { x, y };
+    let content = SemioDrawingSnapshot {
+        schema: "stdio.semio.drawing".into(),
+        canvas: Default::default(),
+        styles: vec![DrawStyle { name: "blue".into(), fill: Some(SemioRgba { r: 0.0, g: 0.0, b: 1.0, a: 1.0 }), stroke: None, stroke_width: None, opacity: None }],
+        layers: vec![DrawLayer {
+            id: "imported".into(),
+            name: "Imported".into(),
+            visible: true,
+            root: DrawNode::Group {
+                transform: SemioTransform::identity(),
+                children: vec![DrawNode::Path {
+                    style: Some("blue".into()),
+                    segments: vec![
+                        PathSegment::MoveTo { to: point(10.0, 20.0) },
+                        PathSegment::LineTo { to: point(110.0, 20.0) },
+                        PathSegment::LineTo { to: point(110.0, 70.0) },
+                        PathSegment::LineTo { to: point(10.0, 70.0) },
+                        PathSegment::Close,
+                    ],
+                }],
+            },
+        }],
+    };
+    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    snapshot.pages[0].width = 100.0;
+    snapshot.pages[0].height = 50.0;
+    snapshot.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
+    let mut engine = crate::editor::layout::engine::scene::LayoutEngine::new();
+    let list = crate::editor::layout::engine::scene::build_display_list_for_page(&mut engine, &snapshot, &snapshot.pages[0], "", &[], None, false);
+    assert_eq!(list.strokes[0].fill, Some([0.0, 0.0, 1.0, 1.0]));
+    let json = crate::editor::layout::canvas::canvas_layers(
+        &snapshot,
+        &crate::editor::layout::modes::edit::windows::blueprint::config::LayoutWindowConfig::default(),
+        &crate::editor::layout::modes::edit::windows::blueprint::transient::LayoutWindowTransient::default(),
+        &crate::editor::layout::LayoutInteractionSnapshot::default(),
+        false,
+    );
+    assert!(json.contains("drawing.plan.0") && json.contains("[0.0,0.0,1.0,1.0]"), "{json}");
+    let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
+    let bytes = decode_base64(&all.data).expect("base64 pdf");
+    let text = String::from_utf8_lossy(&bytes);
+    assert!(text.contains("0.0000 0.0000 1.0000 rg") && text.contains("f Q"), "{text}");
+}
+
+#[test]
+fn pdf_export_prints_a_placed_drawing_inside_its_frame() {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
+    let point = |x: f64, y: f64| SemioPoint2 { x, y };
+    let content = SemioDrawingSnapshot {
+        schema: "stdio.semio.drawing".into(),
+        canvas: Default::default(),
+        styles: Vec::new(),
+        layers: vec![DrawLayer {
+            id: "imported".into(),
+            name: "Imported".into(),
+            visible: true,
+            root: DrawNode::Group {
+                transform: SemioTransform::identity(),
+                children: vec![DrawNode::Path {
+                    style: None,
+                    segments: vec![
+                        PathSegment::MoveTo { to: point(0.0, 0.0) },
+                        PathSegment::LineTo { to: point(1.0, 0.0) },
+                        PathSegment::LineTo { to: point(1.0, 1.0) },
+                        PathSegment::LineTo { to: point(0.0, 1.0) },
+                        PathSegment::Close,
+                    ],
+                }],
+            },
+        }],
+    };
+    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    snapshot.links[0].artifact_kind = "s.draw.drawing".into();
+    snapshot.links[0].artifact_ref = "plan-1".into();
+    snapshot.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
+    let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
+    let bytes = decode_base64(&all.data).expect("base64 pdf");
+    assert_pdf_structure(&bytes);
+    let text = String::from_utf8_lossy(&bytes);
+    assert!(text.contains("146.000 65.000 m 186.000 65.000 l 186.000 25.000 l 146.000 25.000 l h S Q"), "{text}");
+}
+
+#[test]
+fn pdf_export_prints_drawing_text() {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
+    let point = |x: f64, y: f64| SemioPoint2 { x, y };
+    let content = SemioDrawingSnapshot {
+        schema: "stdio.semio.drawing".into(),
+        canvas: Default::default(),
+        styles: Vec::new(),
+        layers: vec![DrawLayer {
+            id: "imported".into(),
+            name: "Imported".into(),
+            visible: true,
+            root: DrawNode::Group {
+                transform: SemioTransform::identity(),
+                children: vec![
+                    DrawNode::Path {
+                        style: None,
+                        segments: vec![
+                            PathSegment::MoveTo { to: point(0.0, 0.0) },
+                            PathSegment::LineTo { to: point(1.0, 0.0) },
+                            PathSegment::LineTo { to: point(1.0, 1.0) },
+                            PathSegment::LineTo { to: point(0.0, 1.0) },
+                            PathSegment::Close,
+                        ],
+                    },
+                    DrawNode::Text { value: "Plan".into(), at: point(0.0, 0.0), style: None },
+                ],
+            },
+        }],
+    };
+    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    snapshot.links[0].artifact_kind = "s.draw.drawing".into();
+    snapshot.links[0].artifact_ref = "plan-1".into();
+    snapshot.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
+    let mut engine = crate::editor::layout::engine::scene::LayoutEngine::new();
+    let list = crate::editor::layout::engine::scene::build_display_list_for_page(&mut engine, &snapshot, &snapshot.pages[0], "", &[], None, false);
+    let glyphs = list.text_runs.iter().map(|run| run.glyphs.len()).sum::<usize>();
+    let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
+    let bytes = decode_base64(&all.data).expect("base64 pdf");
+    assert_pdf_structure(&bytes);
+    let text = String::from_utf8_lossy(&bytes);
+    assert_eq!(text.matches("> Tj ET").count(), glyphs);
+    assert!(glyphs >= 12 + 8, "{glyphs}");
+}
+
+#[test]
+fn pdf_export_prints_an_embedded_drawing_png() {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
+    let point = |x: f64, y: f64| SemioPoint2 { x, y };
+    let mut encoded = semio_s_artifact_stdio_png::PngSnapshot::default();
+    encoded.width = 1;
+    encoded.height = 1;
+    encoded.pixels = vec![255, 0, 0, 255];
+    let bytes = semio_s_artifact_stdio_png::io::encode_png(&encoded).expect("png");
+    let content = SemioDrawingSnapshot {
+        schema: "stdio.semio.drawing".into(),
+        canvas: Default::default(),
+        styles: Vec::new(),
+        layers: vec![DrawLayer {
+            id: "imported".into(),
+            name: "Imported".into(),
+            visible: true,
+            root: DrawNode::Group {
+                transform: SemioTransform::identity(),
+                children: vec![
+                    DrawNode::Path {
+                        style: None,
+                        segments: vec![PathSegment::MoveTo { to: point(0.0, 0.0) }, PathSegment::LineTo { to: point(1.0, 0.0) }, PathSegment::LineTo { to: point(1.0, 1.0) }, PathSegment::LineTo { to: point(0.0, 1.0) }, PathSegment::Close],
+                    },
+                    DrawNode::Image { at: point(0.0, 0.0), width: 1.0, height: 1.0, mime: "image/png".into(), bytes },
+                ],
+            },
+        }],
+    };
+    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    snapshot.links[0].artifact_kind = "s.draw.drawing".into();
+    snapshot.links[0].artifact_ref = "plan-1".into();
+    snapshot.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
+    let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
+    let pdf = decode_base64(&all.data).expect("base64 pdf");
+    assert_pdf_structure(&pdf);
+    let text = String::from_utf8_lossy(&pdf);
+    assert!(text.contains("q 40.000 0 0 40.000 146.000 25.000 cm"), "{text}");
+    assert!(text.contains("FF0000"), "{text}");
+}
+
+#[test]
+fn pdf_export_prints_a_rotated_drawing_png() {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
+    let point = |x: f64, y: f64| SemioPoint2 { x, y };
+    let mut encoded = semio_s_artifact_stdio_png::PngSnapshot::default();
+    encoded.width = 1;
+    encoded.height = 1;
+    encoded.pixels = vec![255, 0, 0, 255];
+    let bytes = semio_s_artifact_stdio_png::io::encode_png(&encoded).expect("png");
+    let content = SemioDrawingSnapshot {
+        schema: "stdio.semio.drawing".into(),
+        canvas: Default::default(),
+        styles: Vec::new(),
+        layers: vec![DrawLayer {
+            id: "imported".into(),
+            name: "Imported".into(),
+            visible: true,
+            root: DrawNode::Group {
+                transform: SemioTransform::identity(),
+                children: vec![
+                    DrawNode::Path {
+                        style: None,
+                        segments: vec![PathSegment::MoveTo { to: point(0.0, 0.0) }, PathSegment::LineTo { to: point(1.0, 0.0) }, PathSegment::LineTo { to: point(1.0, 1.0) }, PathSegment::LineTo { to: point(0.0, 1.0) }, PathSegment::Close],
+                    },
+                    DrawNode::Image { at: point(0.0, 0.0), width: 1.0, height: 1.0, mime: "image/png".into(), bytes },
+                ],
+            },
+        }],
+    };
+    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    snapshot.links[0].artifact_kind = "s.draw.drawing".into();
+    snapshot.links[0].artifact_ref = "plan-1".into();
+    let frame = snapshot.pages[0].frames.iter_mut().find(|frame| frame.id() == "frame-image-1").expect("image");
+    let crate::Frame::Image { bounds, .. } = frame else { panic!("image") };
+    bounds.rotation = std::f64::consts::FRAC_PI_2;
+    snapshot.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
+    let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
+    let pdf = decode_base64(&all.data).expect("base64 pdf");
+    let text = String::from_utf8_lossy(&pdf);
+    assert!(text.contains("q 0.000 -40.000 40.000 0.000 146.000 65.000 cm"), "{text}");
+    assert!(text.contains("FF0000"), "{text}");
+}
+
+#[test]
+fn pdf_export_prints_edited_drawing_text() {
+    use crate::mutations::set_drawing_text::SetDrawingText;
+    use crate::mutations::LayoutMutation;
+    use protocol::{Mutation, MutationDiff};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, SemioDrawingSnapshot};
+    let point = |x: f64, y: f64| SemioPoint2 { x, y };
+    let content = SemioDrawingSnapshot {
+        schema: "stdio.semio.drawing".into(),
+        canvas: Default::default(),
+        styles: Vec::new(),
+        layers: vec![DrawLayer {
+            id: "imported".into(),
+            name: "Imported".into(),
+            visible: true,
+            root: DrawNode::Group { transform: SemioTransform::identity(), children: vec![DrawNode::Text { value: "Plan".into(), at: point(0.0, 0.0), style: None }] },
+        }],
+    };
+    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    snapshot.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
+    let mutation = LayoutMutation::SetDrawingText(SetDrawingText { index: 0, text: "Title".into() });
+    let edited = mutation.diff(&snapshot).diff().apply(&snapshot).expect("rename");
+    let mut engine = crate::editor::layout::engine::scene::LayoutEngine::new();
+    let list = crate::editor::layout::engine::scene::build_display_list_for_page(&mut engine, &edited, &edited.pages[0], "", &[], None, false);
+    assert!(list.text_runs.iter().any(|run| run.content == "Title"));
+    let json = crate::editor::layout::canvas::canvas_layers(
+        &edited,
+        &crate::editor::layout::modes::edit::windows::blueprint::config::LayoutWindowConfig::default(),
+        &crate::editor::layout::modes::edit::windows::blueprint::transient::LayoutWindowTransient::default(),
+        &crate::editor::layout::LayoutInteractionSnapshot::default(),
+        false,
+    );
+    assert!(json.contains("Title"), "{json}");
+    let glyphs = list.text_runs.iter().map(|run| run.glyphs.len()).sum::<usize>();
+    let all = headless_batch_export(LayoutExportKind::Pdf, &edited, Some("page-1"), None).expect("page pdf");
+    let bytes = decode_base64(&all.data).expect("base64 pdf");
+    assert_pdf_structure(&bytes);
+    let text = String::from_utf8_lossy(&bytes);
+    assert_eq!(text.matches("> Tj ET").count(), glyphs);
+}
+
+#[test]
+fn pdf_export_prints_a_front_rect_after_the_image() {
+    use crate::mutations::reorder_frame::ReorderFrame;
+    use crate::mutations::LayoutMutation;
+    use protocol::{Mutation, MutationDiff};
+    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    for _ in 0..8 {
+        let mutation = LayoutMutation::ReorderFrame(ReorderFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), forward: true });
+        let outcome = mutation.diff(&snapshot);
+        if outcome.diff().pages.is_none() {
+            break;
+        }
+        snapshot = outcome.diff().apply(&snapshot).expect("forward");
+    }
+    let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
+    let bytes = decode_base64(&all.data).expect("base64 pdf");
+    assert_pdf_structure(&bytes);
+    let text = String::from_utf8_lossy(&bytes);
+    let image = text.find("0.92 0.88 0.84 rg 136.000 25.000 60.000 40.000 re f Q").expect("image");
+    let rect = text.find(" rg 10.000 450.000 40.000 40.000 re f Q").expect("rect");
+    assert!(rect > image, "the front rectangle follows the image in the content stream");
+}

@@ -1,6 +1,6 @@
 //! 🧬️ IfcArtifact schema — full artifact state. Ticket
 //! 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: this used to duplicate
-//! `IfcSnapshot`'s prior worst-offender defect (`document: step::engine::part21::Part21Document`
+//! `IfcSnapshot`'s prior worst-offender defect (`document: semio_s_artifact_stdio_contract::part21::Part21Document`
 //! verbatim) — now mirrors `IfcSnapshot`'s own typed `header`/`entities` fields.
 
 use crate::schema::snapshot::{IfcEntity, IfcHeader};

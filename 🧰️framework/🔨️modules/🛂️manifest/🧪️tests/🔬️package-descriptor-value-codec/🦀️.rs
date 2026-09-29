@@ -16,6 +16,7 @@ fn descriptor() -> PackageDescriptor {
             topic_contributions: Vec::new(),
             commands: Vec::new(),
             artifact_kinds: Vec::new(),
+            hosted_artifact_kinds: Vec::new(),
             dependencies: Vec::new(),
             contributions: Vec::new(),
         },

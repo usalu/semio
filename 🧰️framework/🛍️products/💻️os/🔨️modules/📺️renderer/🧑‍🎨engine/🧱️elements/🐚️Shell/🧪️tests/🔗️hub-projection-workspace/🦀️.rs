@@ -1376,7 +1376,7 @@ fn pump_until(shell: &mut ShellState, budget: std::time::Duration, done: impl Fn
 #[test]
 fn the_sign_in_verb_arms_a_task_and_returns_while_the_hub_is_still_answering() {
     let source = include_str!("../../🎯️targets/🧊️wgpu/🦀️.rs");
-    let dispatch = source.split("async fn handle_hub_workspace_action(").nth(1).expect("the hub verb dispatch exists");
+    let dispatch = source.split("fn handle_hub_workspace_action<'a>(").nth(1).expect("the hub verb dispatch exists");
     let dispatch = &dispatch[..dispatch.find("\n    }\n").expect("the dispatch closes")];
     assert!(dispatch.contains("hub_action::SIGN_IN => self.start_hub_sign_in(),"), "SIGN_IN arms and returns");
     assert!(dispatch.contains("hub_action::REFRESH_SPACES => self.start_hub_spaces_reload(),"), "REFRESH_SPACES arms and returns");

@@ -21,6 +21,62 @@ type AffineMeasure = { readonly volume: number; readonly centerOfMass: Vec3; rea
 /** 🧩️ One implementation under the vectors: build the primitive, apply one step, measure the result. */
 type AffineKernelOps<S> = { readonly make: (solid: AffineSolid) => Promise<S>; readonly apply: (shape: S, step: AffineStep) => Promise<S>; readonly measure: (shape: S) => Promise<AffineMeasure> };
 
+/** 🧠️ The CAD runtime's own path: the Rust `BrepKernel` over the `brep_invoke` wire (`invokeBrep`, flow-core wasm). */
+async function semioAffineOps(fixture: AffineFixture): Promise<AffineKernelOps<string>> {
+  const { invokeBrep } = await import("@semio-tech/s-3d-js");
+  const handle = async (method: string, args: Record<string, unknown>) => (await invokeBrep<{ readonly handle: string }>(method, args)).handle;
+  return {
+    make: async ({ kind, ...args }) => handle(kind, args),
+    apply: async (shape, { kind, ...args }) => handle(kind, { shape, ...args }),
+    measure: async (shape) => {
+      const { value: volume } = await invokeBrep<{ readonly value: number }>("volume", { shape });
+      const { value: centerOfMass } = await invokeBrep<{ readonly value: Vec3 }>("centerOfMass", { shape });
+      const mesh = await invokeBrep<{ readonly position: readonly number[]; readonly face_infos: readonly { readonly normal: Vec3 }[] }>("tessellate", { shape, tolerance: fixture.tessellationTolerance });
+      const topology = await invokeBrep<{ readonly faces: readonly string[]; readonly edges: readonly string[] }>("deconstruct", { shape });
+      const min: [number, number, number] = [Infinity, Infinity, Infinity];
+      const max: [number, number, number] = [-Infinity, -Infinity, -Infinity];
+      for (let index = 0; index < mesh.position.length; index += 3) {
+        for (let axis = 0; axis < 3; axis++) {
+          min[axis] = Math.min(min[axis]!, mesh.position[index + axis]!);
+          max[axis] = Math.max(max[axis]!, mesh.position[index + axis]!);
+        }
+      }
+      return { volume, centerOfMass, bounds: { min, max }, faceNormals: mesh.face_infos.map((info) => info.normal), faceCount: topology.faces.length, edgeCount: topology.edges.length };
+    },
+  };
+}
+
+const BREP_INVOKE_CATALOG_PATH = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📐️brep-geometry/";
+
+/** 🧾️ One `brep_invoke` verb as the catalog declares it. */
+type BrepInvokeVerb = { readonly method: string; readonly kernelOperation: string; readonly args: readonly { readonly name: string; readonly type: string; readonly default?: number | boolean }[]; readonly result: string; readonly label: { readonly en: string; readonly de: string } };
+
+/** ✂️ Splits an object literal's body at its top-level commas (commas inside `[]`/`()`/`{}` belong to a value). */
+function topLevelEntries(body: string): string[] {
+  const entries: string[] = [];
+  let depth = 0;
+  let current = "";
+  for (const character of body) {
+    if ("[({".includes(character)) depth++;
+    if ("])}".includes(character)) depth--;
+    if (character === "," && depth === 0) {
+      entries.push(current);
+      current = "";
+    } else current += character;
+  }
+  return [...entries, current];
+}
+
+/** 🔍️ Every `invokeBrep("<method>", { … })` call in the kernel source, with the argument keys its object literal passes. */
+function brepInvokeCalls(source: string): { readonly method: string; readonly keys: readonly string[] }[] {
+  return [...source.matchAll(/invokeBrep(?:<[^>]*>)?\("([A-Za-z]+)", \{([^{}]*)\}\)/g)].map((match) => ({
+    method: match[1]!,
+    keys: topLevelEntries(match[2]!)
+      .map((entry) => entry.split(":")[0]!.trim())
+      .filter((key) => key.length > 0),
+  }));
+}
+
 const AFFINE_FIXTURE_PATH = "../../../../🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧫️fixtures/🔁️affine-transforms/🔣️.json";
 
 /** 📥️ Reads the fixture and refuses a renamed contract or an empty case list, so a drift never passes over zero vectors. */
@@ -173,6 +229,31 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("OpenCascade (brepjs, the third-party oracle) answers every affine-transform vector and refuses every degenerate one", async () => {
       const fixture = await affineFixture(source);
       expect(await affineDisagreements(fixture, await openCascadeAffineOps())).toEqual([]);
+    });
+
+    it("the semio brep kernel answers every affine-transform vector and refuses every degenerate one", async () => {
+      const fixture = await affineFixture(source);
+      expect(await affineDisagreements(fixture, await semioAffineOps(fixture))).toEqual([]);
+    });
+
+    it("every brep_invoke call the kernel makes is a declared verb with its declared arguments", async () => {
+      const { readFile } = await import("node:fs/promises");
+      const { default: Ajv2020 } = await import("ajv/dist/2020.js");
+      const catalog = JSON.parse(await readFile(new URL(`${BREP_INVOKE_CATALOG_PATH}🔣️.json`, source.url), "utf8")) as { readonly verbs: readonly BrepInvokeVerb[] };
+      const schema = JSON.parse(await readFile(new URL(`${BREP_INVOKE_CATALOG_PATH}🧬️schema/🔣️.json`, source.url), "utf8")) as object;
+      const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
+      expect(validate(catalog), JSON.stringify(validate.errors)).toBe(true);
+      const verbs = new Map(catalog.verbs.map((verb) => [verb.method, verb]));
+      expect(verbs.size).toBe(catalog.verbs.length);
+      const calls = brepInvokeCalls(await readFile(new URL("🟦️.ts", source.url), "utf8"));
+      expect(calls.map((call) => call.method)).toEqual(expect.arrayContaining(["translate", "rotate", "box", "tessellate"]));
+      const violations = calls.flatMap(({ method, keys }) => {
+        const verb = verbs.get(method);
+        if (!verb) return [`${method}: not a declared brep_invoke verb`];
+        const declared = new Set(verb.args.map((arg) => arg.name));
+        return [...keys.filter((key) => !declared.has(key)).map((key) => `${method}: undeclared argument ${key}`), ...verb.args.filter((arg) => arg.default === undefined && !keys.includes(arg.name)).map((arg) => `${method}: missing required argument ${arg.name}`)];
+      });
+      expect(violations).toEqual([]);
     });
   });
 

@@ -15,6 +15,7 @@ message DeleteNode { string id = 1; }
 message MoveNode { string id = 1; double x = 2; double y = 3; }
 message RemoveDataProperty { JackMutationEntityRef entity = 1; string key = 2; }
 message RenameNode { string id = 1; string new_name = 2; }
+message SetQuery { string value = 1; }
 
 message JackMutation {
   oneof mutation {
@@ -26,5 +27,6 @@ message JackMutation {
     MoveNode move_node = 6;
     ChangeDataProperty change_data_property = 7;
     RemoveDataProperty remove_data_property = 8;
+    SetQuery set_query = 9;
   }
 }

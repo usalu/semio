@@ -9,20 +9,20 @@
       "x-semio-state": "artifact"
     },
     "header": {
-      "$ref": "#/definitions/LasHeader",
+      "$ref": "#/$defs/LasHeader",
       "x-semio-state": "artifact"
     },
     "vlrs": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/LasVlr"
+        "$ref": "#/$defs/LasVlr"
       },
       "x-semio-state": "artifact"
     },
     "points": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/LasPoint"
+        "$ref": "#/$defs/LasPoint"
       },
       "x-semio-state": "artifact"
     }

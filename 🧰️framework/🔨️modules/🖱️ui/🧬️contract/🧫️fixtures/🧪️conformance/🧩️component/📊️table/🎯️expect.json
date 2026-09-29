@@ -1,7 +1,7 @@
 {
   "case": "table",
   "kind": "component",
-  "description": "A windowed Table (rows 12–13 of 40) with two TableRows — header, cells and row actions are props (the one row-action representation); the editable row's cells are its two Commit-bound, revision-guarded input children, the plain row has none, so the table is five node records.",
+  "description": "A windowed Table (rows 12–13 of 40) with two TableRows — header, cells, row actions and activation are props, the actions and activation verbs on each row's ONE target (the one row-action representation); the editable row's cells are its two Commit-bound, revision-guarded input children, the plain row has none, so the table is five node records.",
   "outcome": "accept",
   "limits": null,
   "tree": {
@@ -89,6 +89,8 @@
     }
   ],
   "actionIds": [
+    "s.stdio.csv@rfc4180/*#editor.remove-row@1",
+    "s.space.home@1/*#editor.openSpace@1",
     "s.space.home@1/*#editor.openSpace@1",
     "s.stdio.csv@rfc4180/*#editor.set-cell@1",
     "s.stdio.csv@rfc4180/*#editor.set-cell@1"

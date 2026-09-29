@@ -146,6 +146,26 @@ fn svg_export_matches_neutral_three_and_sharp_fixture_and_retires_before_deliver
     assert!(export.terminal_is_empty());
 }
 
+/// 🔄️ LAW (ticket 26/09/23 session 14d, WG11): the exporter culls exactly the faces three's `Projector` culls — winding judged
+/// in NDC, not in the y-down SVG space — so the fixture's camera-facing triangle wound clockwise paints no fill, only its outline.
+#[test]
+fn svg_export_culls_a_back_face_by_its_ndc_winding() {
+    let mut fixture = fixture();
+    fixture["geometry"]["indices"] = serde_json::json!([0, 2, 1]);
+    let mut export = IconSvgExport::new(&request(&fixture), asset(0x5356_4703, &fixture)).expect("SVG export");
+    let mut steps = 0;
+    while !export.advance().expect("bounded SVG step") {
+        steps += 1;
+        assert!(steps < 256, "SVG export exceeded the bounded fixture ladder");
+    }
+    let markup = String::from_utf8(export.take_svg().expect("one SVG delivery")).unwrap();
+    assert!(!markup.contains("fill:rgb("), "a back face paints no fill: {markup}");
+    assert_eq!(markup.matches("<path ").count(), 1, "only the outline stroke remains");
+    export.cancel();
+    while !export.close_step() {}
+    assert!(export.terminal_is_empty());
+}
+
 #[test]
 fn svg_export_cancellation_retires_the_exact_asset_without_publication() {
     let fixture = fixture();

@@ -6,7 +6,7 @@
 //! (`[Content_Types].xml` and every `*.rels` file) plus the verbatim byte payload of every other
 //! part. Metadata XML extension nodes and archive headers need their own retained representation.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use crate::schema::snapshot::ZipEntry;
 use crate::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
@@ -464,9 +464,10 @@ pub struct OpcPackage {
     pub parts: Vec<OpcPart>,
     #[value(default)]
     pub content_types: OpcContentTypes,
-    /// 🗺️ Owner part path (`""` = package root) -> that owner's relationships.
+    /// 🗺️ Owner part path (`""` = package root) -> that owner's relationships, in owner order — one document has one
+    /// encoding (a hash map's per-instance order encoded the same package differently in two copies).
     #[value(default)]
-    pub relationships: HashMap<String, Vec<OpcRelationship>>,
+    pub relationships: BTreeMap<String, Vec<OpcRelationship>>,
     #[value(default)]
     pub comment: String,
 }
@@ -551,7 +552,7 @@ pub fn decode_opc(data: &[u8]) -> Result<OpcPackage, OpcError> {
     let content_types = OpcContentTypes::from_xml(&ct_doc)?;
 
     let mut parts = Vec::new();
-    let mut relationships: HashMap<String, Vec<OpcRelationship>> = HashMap::new();
+    let mut relationships: BTreeMap<String, Vec<OpcRelationship>> = BTreeMap::new();
 
     for entry in &zip.entries {
         if entry.name == CONTENT_TYPES_PART {

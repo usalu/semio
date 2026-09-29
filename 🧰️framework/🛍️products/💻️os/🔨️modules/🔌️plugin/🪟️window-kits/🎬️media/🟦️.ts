@@ -98,7 +98,7 @@ function parseResource(value: unknown, revision: string): MediaTransportResource
   if (value === null) return null;
   const resource = record(value);
   if (!resource || !exactKeys(resource, RESOURCE_KEYS)) return undefined;
-  if (resource.kind !== "artifact-media-export" || typeof resource.controllerId !== "string" || resource.controllerId.length === 0 || resource.controllerId.length > 256 || !integer(resource.appInstanceId, 0) || resource.appInstanceId > 4_294_967_295 || typeof resource.parentDocumentId !== "string" || resource.parentDocumentId.length === 0 || resource.parentDocumentId.length > 512 || resource.outputPort !== MEDIA_PLAYBACK_OUTPUT_PORT || resource.revision !== revision || !decimalRevision(resource.generation)) return undefined;
+  if (resource.kind !== "artifact-media-export" || typeof resource.controllerId !== "string" || resource.controllerId.length === 0 || [...resource.controllerId].length > 256 || !integer(resource.appInstanceId, 0) || resource.appInstanceId > 4_294_967_295 || typeof resource.parentDocumentId !== "string" || resource.parentDocumentId.length === 0 || [...resource.parentDocumentId].length > 512 || resource.outputPort !== MEDIA_PLAYBACK_OUTPUT_PORT || resource.revision !== revision || !decimalRevision(resource.generation)) return undefined;
   return resource as MediaTransportResource;
 }
 
@@ -107,7 +107,7 @@ export function parseMediaTransportProps(value: unknown): MediaTransportProps {
   const props = record(value);
   if (!props || !exactKeys(props, PROP_KEYS)) throw new TypeError("media-transport.props");
   const revision = props.revision;
-  if (props.schemaVersion !== 1 || (props.kind !== "audio" && props.kind !== "video") || typeof props.mediaType !== "string" || props.mediaType.length === 0 || props.mediaType.length > 128 || !decimalRevision(revision) || (props.locale !== "en" && props.locale !== "de")) throw new TypeError("media-transport.identity");
+  if (props.schemaVersion !== 1 || (props.kind !== "audio" && props.kind !== "video") || typeof props.mediaType !== "string" || props.mediaType.length === 0 || [...props.mediaType].length > 128 || !decimalRevision(revision) || (props.locale !== "en" && props.locale !== "de")) throw new TypeError("media-transport.identity");
   const duration = props.durationMs;
   const position = props.positionMs;
   const start = props.selectionStartMs;
@@ -120,7 +120,7 @@ export function parseMediaTransportProps(value: unknown): MediaTransportProps {
   const resource = parseResource(props.resource, revision);
   if (resource === undefined) throw new TypeError("media-transport.resource");
   const capability = record(props.capability);
-  if (!capability || !exactKeys(capability, CAPABILITY_KEYS) || (capability.status !== "ready" && capability.status !== "loading" && capability.status !== "unsupported") || (capability.reason !== null && typeof capability.reason !== "string") || (typeof capability.reason === "string" && capability.reason.length > 512) || (capability.status === "ready" && resource === null)) throw new TypeError("media-transport.capability");
+  if (!capability || !exactKeys(capability, CAPABILITY_KEYS) || (capability.status !== "ready" && capability.status !== "loading" && capability.status !== "unsupported") || (capability.reason !== null && typeof capability.reason !== "string") || (typeof capability.reason === "string" && [...capability.reason].length > 512) || (capability.status === "ready" && resource === null)) throw new TypeError("media-transport.capability");
   if (typeof props.hostContentHeight !== "number" || !Number.isFinite(props.hostContentHeight) || props.hostContentHeight < 0 || props.hostContentHeight > 4096) throw new TypeError("media-transport.host-height");
   return props as MediaTransportProps;
 }

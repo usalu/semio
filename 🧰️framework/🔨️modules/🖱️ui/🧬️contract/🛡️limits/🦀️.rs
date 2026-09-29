@@ -212,6 +212,19 @@ fn tree_detail_is_valid<'a>(record: &crate::UiNodeRecord, mut get: impl FnMut(cr
     let Some(detail_id) = props.detail else { return true };
     record.children.iter().any(|child| *child == detail_id) && get(detail_id).is_some_and(|detail| matches!(detail.component, crate::Component::Surface(_)))
 }
+
+/// 🎯️ A row's verbs and its [`crate::RowTarget`] come together: a TreeItem or TableRow carries `target`
+/// exactly when it carries row actions or a target `activation`, and never a record `Trigger::Activate`
+/// binding — its activation is the verb on its target.
+fn row_target_is_valid(record: &crate::UiNodeRecord) -> bool {
+    let (row_actions, target) = match &record.component {
+        crate::Component::TreeItem(props) => (&props.row_actions, &props.target),
+        crate::Component::TableRow(props) => (&props.row_actions, &props.target),
+        _ => return true,
+    };
+    let verbs = !row_actions.is_empty() || target.as_ref().is_some_and(|target| target.activation.is_some());
+    target.is_some() == verbs && !record.bindings.iter().any(|binding| binding.trigger == crate::Trigger::Activate)
+}
 //#endregion 🔖️Limits
 
 //#region 🔖️Validate
@@ -278,6 +291,11 @@ pub enum UiContractViolation {
     InvalidTreeDetail {
         node: crate::UiNodeId,
         detail: crate::UiNodeId,
+    },
+    /// 🎯️ A TreeItem or TableRow row's verbs and `target` disagree, or the row carries a record
+    /// `Trigger::Activate` binding instead of an `activation` verb on its target.
+    InvalidRowTarget {
+        node: crate::UiNodeId,
     },
 }
 
@@ -403,6 +421,11 @@ fn validate_core<'a>(
                                 if violations.try_push(UiContractViolation::InvalidTreeSectionHeaderToolbar { node: id, toolbar }).is_err() {
                                     return violations;
                                 }
+                            }
+                        }
+                        if !row_target_is_valid(record) {
+                            if violations.try_push(UiContractViolation::InvalidRowTarget { node: id }).is_err() {
+                                return violations;
                             }
                         }
                         if depth > limits.max_depth {
@@ -961,6 +984,9 @@ impl UiPatchApplyProducer {
                     if let Some(toolbar) = props.header_toolbar.filter(|_| !tree_section_header_toolbar_is_valid(record, |id| draft.nodes.get(&id))) {
                         return self.reject_violation(UiContractViolation::InvalidTreeSectionHeaderToolbar { node: frame.id, toolbar });
                     }
+                }
+                if !row_target_is_valid(record) {
+                    return self.reject_violation(UiContractViolation::InvalidRowTarget { node: frame.id });
                 }
                 if frame.depth > self.limits.max_depth {
                     return self.reject_violation(UiContractViolation::DepthQuota { node: frame.id, depth: frame.depth, max: self.limits.max_depth });

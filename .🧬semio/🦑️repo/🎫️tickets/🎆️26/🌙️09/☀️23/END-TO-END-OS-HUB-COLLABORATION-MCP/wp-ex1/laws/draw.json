@@ -1,0 +1,22 @@
+{
+ "plugin": "draw",
+ "dir": "🖍️draw",
+ "apps": [
+  {
+   "app": "s.draw.drawing@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "crate::editor::drawing::DrawingPlayApp",
+   "create": "crate::editor::drawing::create_drawing_app",
+   "app": "s.draw.drawing@1/*#editor"
+  }
+ ]
+}

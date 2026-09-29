@@ -473,7 +473,7 @@ fn an_enabled_shadow_pass_measures_every_caster_before_its_receivers() {
             break;
         }
     }
-    assert_eq!(order, vec!["shadow", "textured", "material-opaque", "opaque", "lines", "translucent", "material-translucent", "curvilinear"], "the image-space remap runs after every world color receiver");
+    assert_eq!(order, vec!["shadow", "textured", "material-opaque", "opaque", "lines", "translucent", "material-translucent", "world-postprocess"], "the image-space remap runs after every world color receiver");
 }
 
 /// 🌐️ LAW: the prepared scalar ladder owns exactly one grid item after textured references

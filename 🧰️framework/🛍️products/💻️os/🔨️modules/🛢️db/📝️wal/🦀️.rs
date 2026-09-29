@@ -2745,7 +2745,10 @@ pub struct WalAppendReceipt {
 
 /// 📼️ One document's write-ahead log: an ordered chain of per-segment `.spr` files over
 /// `db_storage::WalStorage`, with group-commit batching and crash recovery. This is the type
-/// `db_artifact`'s authority actor owns one of per open document.
+/// `db_artifact`'s authority actor owns one of per open document. Its backend's writer is scarce, so
+/// the WAL parks it whenever nothing waits in its group commit ([`Self::park_writer`]) and resumes it
+/// before every write ([`Self::begin_write`]); a writer the backend reclaimed meanwhile is replaced by a
+/// fresh acquisition, verified against the active segment exactly as this WAL left it.
 pub struct ArtifactWal {
     document: ArtifactId,
     writer: Option<db_storage::WalWriterPermit>,
@@ -3035,14 +3038,69 @@ impl ArtifactWal {
         self.active.index
     }
 
-    /// 🧹 Deletes one snapshot-covered sealed segment under this WAL's retained writer.
-    pub(crate) async fn delete_compacted_sealed_segment(&self, storage: &impl db_storage::WalStorage, index: u64) -> Result<(), DbError> {
+    /// 🖊️ Holds this document's writer for the writes that follow: the parked one resumed, else — its backend reclaimed it
+    /// for another document — a fresh acquisition in the backend's admission order, once the reclaimed one's release
+    /// completed. A fresh writer is verified against the active segment as this WAL left it (still active, exactly its
+    /// flushed length): a WAL another process appended to meanwhile is refused (`Conflict`), never appended to. Call it
+    /// before the caller changes anything a failed write would have to undo.
+    pub async fn begin_write(&mut self, storage: &impl db_storage::WalStorage) -> Result<(), DbError> {
+        if self.writer.as_ref().is_some_and(db_storage::WalWriterPermit::resume) {
+            return Ok(());
+        }
+        if let Some(reclaimed) = self.writer.take() {
+            self.release = Some(reclaimed.release());
+            self.release_retry = false;
+        }
+        if let Some(release) = self.release.take() {
+            let release = if std::mem::take(&mut self.release_retry) { release.retry() } else { release };
+            if let Err(failure) = release.await {
+                let (error, release) = failure.into_parts();
+                self.release = Some(release);
+                self.release_retry = true;
+                return Err(error);
+            }
+        }
+        let writer = storage.acquire_writer(&self.document).await?;
+        let verified = async {
+            let state = storage.segment_state(&self.document, self.active.index).await?;
+            let len = storage.segment_len(&self.document, self.active.index).await?;
+            if state != db_storage::WalSegmentState::Active || len != self.active.flushed_len {
+                return Err(DbError::Conflict("the document's WAL changed while its writer was reclaimed".to_string()));
+            }
+            Ok(())
+        }
+        .await;
+        match verified {
+            Ok(()) => {
+                self.writer = Some(writer);
+                Ok(())
+            }
+            Err(error) => {
+                self.release = Some(writer.release());
+                Err(error)
+            }
+        }
+    }
+
+    /// 🅿️ Parks this WAL's writer while nothing waits in its group commit, so its backend may reclaim it for another
+    /// document until the next [`Self::begin_write`]; a pending group commit keeps it held.
+    pub fn park_writer(&self) {
+        if !self.has_pending() {
+            if let Some(writer) = self.writer.as_ref() {
+                writer.park();
+            }
+        }
+    }
+
+    /// 🧹 Deletes one snapshot-covered sealed segment under this WAL's writer.
+    pub(crate) async fn delete_compacted_sealed_segment(&mut self, storage: &impl db_storage::WalStorage, index: u64) -> Result<(), DbError> {
         if index == self.active.index {
             return Err(DbError::InvalidArgument("active WAL segment cannot be compacted".to_string()));
         }
         if storage.segment_state(&self.document, index).await? != db_storage::WalSegmentState::Sealed {
             return Err(DbError::InvalidArgument("only sealed WAL segments can be compacted".to_string()));
         }
+        self.begin_write(storage).await?;
         storage.delete_segment(self.writer.as_ref().ok_or(DbError::Closed)?, index).await
     }
 
@@ -3075,6 +3133,7 @@ impl ArtifactWal {
     /// maximum, 256 KiB of encoded envelopes) is one transaction bounded only by the readable segment.
     pub async fn submit(&mut self, storage: &impl db_storage::WalStorage, commands: &[Vec<u8>], records: &WalRecordBatch, durability: DurabilityClass, now_ms: u64) -> Result<WalAppendReceipt, DbError> {
         let rotate = self.preflight_submit(commands, records)?;
+        self.begin_write(storage).await?;
         let next_tx_id = self.next_tx_id.checked_add(1).ok_or(DbError::LimitExceeded("wal transaction sequence"))?;
         if rotate {
             self.rotate(storage, now_ms).await?;
@@ -3111,6 +3170,11 @@ impl ArtifactWal {
     /// the primitive a timer-driven group-commit loop or a clean-shutdown drain calls. Returns
     /// `true` iff there was anything to flush.
     pub async fn force_flush(&mut self, storage: &impl db_storage::WalStorage) -> Result<bool, DbError> {
+        self.active.ensure_open()?;
+        if self.active.pending_records == 0 {
+            return Ok(false);
+        }
+        self.begin_write(storage).await?;
         Ok(self.active.commit_and_flush(storage, self.writer.as_ref().ok_or(DbError::Closed)?, DurabilityClass::Fsync).await?.is_some())
     }
 

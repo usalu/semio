@@ -6,11 +6,11 @@ Feature: Apply every typed jack scene mutation twice — once in Rust, once in P
 
   This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
   second implementation of the `s.trinity.jack` assembly scene, of its `.dsl.semio` carrier and of
-  all eight typed mutations, written in Python from
+  all nine typed mutations, written in Python from
   `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json` (the document — nodes with
   ports, edges over `node@port` endpoints, a manifest, a camera and a root node id), from
-  `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` (the eight verbs and their argument
-  lists, including `entity = "node" ":" id / "edge" ":" id`) and from the eight committed
+  `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` (the nine verbs and their argument
+  lists, including `entity = "node" ":" id / "edge" ":" id`) and from the nine committed
   specification vectors. It imports nothing from this repository's Rust.
 
   Why a second implementation rather than a third-party library. A jack scene is a labelled property
@@ -53,6 +53,10 @@ Feature: Apply every typed jack scene mutation twice — once in Rust, once in P
   `jack_orphan`, which sits in the MIDDLE of the nine, and `inverse-` deletes `jack_spare`, the last
   of them — and both are nodes no edge names, so neither rests on the cascade inference above.
 
+  The NINTH kind, `set-query`, joined when the Jack query became document content (2026-09-29): it edits the document's
+  query, never the scene, so both implementations project the `query` member too, and its committed vector is the first
+  POSITIVE one — its `verdict` is `applied`, and the vector must move the document to exactly the committed after-snapshot.
+
   The committed vectors were KEPT, not replaced. `spec-vector-<kind>` replays each one through both
   implementations, and its `verdict` column states which refusal that vector commits to: `refused`
   must be refused outright with the scene left alone, and `noop` must be ACCEPTED while leaving the
@@ -91,6 +95,7 @@ Feature: Apply every typed jack scene mutation twice — once in Rust, once in P
       | move-node             | {"mutation":"moveNode","id":"5f0266bc-856b-4ef2-9eb0-16ef5e1fb952","x":-260.5,"y":120.25}                                                                                                                                                                                                                            |
       | change-data-property  | {"mutation":"changeDataProperty","entity":{"entity":"node","id":"7dc5b737-3b6b-4068-b315-b7bacc91c2e1"},"key":"tier","new_value":3.5}                                                                                                                                                                                |
       | remove-data-property  | {"mutation":"removeDataProperty","entity":{"entity":"edge","id":"e-shaft-1"},"key":"tilt"}                                                                                                                                                                                                                           |
+      | set-query             | {"mutation":"setQuery","value":"MATCH (a:Piece) RETURN a.name"}                                                                                                                                                                                                                                                      |
 
   @id-inverse
   @level-exhaustive
@@ -112,6 +117,7 @@ Feature: Apply every typed jack scene mutation twice — once in Rust, once in P
       | move-node             | {"mutation":"moveNode","id":"5f0266bc-856b-4ef2-9eb0-16ef5e1fb952","x":-260.5,"y":120.25}                                                                                                                                                                                                                            |
       | change-data-property  | {"mutation":"changeDataProperty","entity":{"entity":"node","id":"7dc5b737-3b6b-4068-b315-b7bacc91c2e1"},"key":"tier","new_value":3.5}                                                                                                                                                                                |
       | remove-data-property  | {"mutation":"removeDataProperty","entity":{"entity":"edge","id":"e-shaft-1"},"key":"tilt"}                                                                                                                                                                                                                           |
+      | set-query             | {"mutation":"setQuery","value":"MATCH (a:Piece) RETURN a.name"}                                                                                                                                                                                                                                                      |
 
   @id-spec-vector
   @level-exhaustive
@@ -136,6 +142,7 @@ Feature: Apply every typed jack scene mutation twice — once in Rust, once in P
       | move-node            | noop    | 📍️move-node            | 📍️keeps-a-node-at-the-point-it-already-occupies       | 🧩️capsule-stack.scene.json |
       | change-data-property | noop    | 🔧️change-data-property | 🏷️keeps-a-node-property-at-the-value-it-already-holds | 🧩️capsule-stack.scene.json |
       | remove-data-property | noop    | 🧹️remove-data-property | 🧹️keeps-an-edge-without-the-property-it-never-had     | 🧩️capsule-stack.scene.json |
+      | set-query            | applied | 🔎️set-query            | 🔎️replaces-the-query                                  | 🧩️capsule-stack.scene.json |
 
   @id-identity-round-trip
   @level-long

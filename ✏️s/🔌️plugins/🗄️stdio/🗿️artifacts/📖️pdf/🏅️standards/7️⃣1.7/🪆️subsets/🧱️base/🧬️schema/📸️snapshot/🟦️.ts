@@ -44,12 +44,12 @@ export type PdfObject =
   | { kind: "null" }
   | { kind: "bool"; value: boolean }
   | { kind: "int"; value: number }
-  | { kind: "real"; value: PdfDecimal }
+  | ({ kind: "real" } & PdfDecimal)
   | { kind: "str"; value: number[] }
   | { kind: "name"; value: string }
   | { kind: "array"; value: PdfObject[] }
   | { kind: "dict"; value: PdfDictEntry[] }
-  | { kind: "ref"; value: ObjRef }
+  | ({ kind: "ref" } & ObjRef)
   | { kind: "stream"; dict: PdfDictEntry[]; data: number[]; filters: PdfStreamFilter[] };
 
 export type PdfStreamFilter =
@@ -5911,18 +5911,21 @@ export const schema = {
           ]
         },
         {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "real"
-            },
-            "value": {
+          "allOf": [
+            {
               "$ref": "#/$defs/PdfDecimal"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "real"
+                }
+              },
+              "required": [
+                "kind"
+              ]
             }
-          },
-          "required": [
-            "kind",
-            "value"
           ]
         },
         {
@@ -5996,18 +5999,21 @@ export const schema = {
           ]
         },
         {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "ref"
-            },
-            "value": {
+          "allOf": [
+            {
               "$ref": "#/$defs/ObjRef"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "ref"
+                }
+              },
+              "required": [
+                "kind"
+              ]
             }
-          },
-          "required": [
-            "kind",
-            "value"
           ]
         },
         {

@@ -15,10 +15,14 @@ type QueuedActionV1 = {
 /** 🚦️ Why the mailbox path refused an input, in the shell's input-ledger refusal vocabulary (L1/L5). */
 export type BrowserActorActionRefusalReasonV1 = "queue-full" | "owner-mismatch" | "dispatch-failed" | "not-applied" | "catching-up";
 
-/** 🧭️ Maps a mailbox or worker rejection onto the refusal vocabulary; `null` for errors this transport did not author. */
+/** 🧭️ Maps a mailbox or worker rejection onto the refusal vocabulary; `null` for errors this transport did not author. A
+ * refusal carrying its WHY is read by its prefix first — the actor's own admission refusal (`action-refused: …`) is
+ * `dispatch-failed`, a guest refusal (`action-guest-refused: …`) is not this transport's (`null`) — so words inside the
+ * carried fault ("queue full", "owner retired") never re-classify it. */
 export function browserActorActionRefusalReasonV1(error: unknown): BrowserActorActionRefusalReasonV1 | null {
   const message = error instanceof Error ? error.message : typeof error === "string" ? error : null;
-  if (message === null) return null;
+  if (message === null || /^action-guest-refused(: |$)/u.test(message)) return null;
+  if (/^action-refused(: |$)/u.test(message)) return "dispatch-failed";
   if (message.includes("queue full")) return "queue-full";
   if (/action-catching-up/u.test(message)) return "catching-up";
   if (/action-owner-mismatch|action-busy|owner retired/u.test(message)) return "owner-mismatch";

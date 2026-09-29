@@ -18,6 +18,15 @@ pub use crate::standards::v1_0::subsets::base::schema::*;
 #[path = "🧬️mutations/🦀️.rs"]
 pub mod valid_mutations;
 pub use valid_mutations::{apply_xml_valid_mutation, inverse_xml_valid_mutation, XmlValidMutation, KINDS as VALID_MUTATION_KINDS};
+
+/// 🆕️ A new valid xml document: `<!DOCTYPE root><root/>` as the real parser reads it — XML 1.0 §5.1 validity needs a DOCTYPE
+/// whose Name is the document element's; the empty document has neither, and this subset refuses every edit (and every
+/// undo) that would land on an invalid document, so an empty new document could never be edited.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn blank_valid_xml_snapshot() -> crate::XmlSnapshot {
+    let doc = crate::schema::snapshot::xml_document_from_text("<!DOCTYPE root><root/>").expect("blank_valid_xml_snapshot: the minimal valid document parses");
+    crate::XmlSnapshot { doc, ..crate::XmlSnapshot::default() }
+}
 //#endregion 🧬️Mutations
 
 //#region 🏗️DerivedConstruction

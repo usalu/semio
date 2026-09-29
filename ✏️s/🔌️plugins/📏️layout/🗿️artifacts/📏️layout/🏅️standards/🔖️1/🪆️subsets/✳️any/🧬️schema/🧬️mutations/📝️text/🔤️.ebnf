@@ -45,7 +45,12 @@ line = rename layout
      | set page parent
      | set page guides
      | set story runs
-     | update link ;
+     | update link
+     | set page overrides
+     | create layer
+     | set frame layer
+     | set drawing text
+     | reorder frame ;
 rename layout = 'rename-layout', space, text ;
 change print target = 'change-print-target', space, [ text ] ;
 change data fields = 'change-data-fields', space, [ text ] ;
@@ -98,3 +103,8 @@ space = ' ' ;
 set page guides = 'set-page-guides', space, id ;
 set story runs = 'set-story-runs', space, id ;
 update link = 'update-link', space, id ;
+set page overrides = 'set-page-overrides', space, id ;
+create layer = 'create-layer', space, id ;
+set frame layer = 'set-frame-layer', space, id ;
+set drawing text = 'set-drawing-text', space, id ;
+reorder frame = 'reorder-frame', space, id ;

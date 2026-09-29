@@ -216,6 +216,53 @@
         }
       }
     },
+    "AuthStreamLimitClassV1": {
+      "description": "The stream-limited families: `execution-target-asset` — the component and browser actor bodies of a document's execution target (`POST /spaces/{space}/documents/{document}/execution-target/{component,browser-actor}`). They are immutable, catalog-verified, content-addressed assets tens of megabytes long, so no per-request token bucket meters them; `AuthStreamLimitPolicyV1` bounds how many stream at once.",
+      "enum": [
+        "execution-target-asset"
+      ]
+    },
+    "AuthStreamLimitPolicyV1": {
+      "description": "One stream class's bound: at most `hubStreams` streams at once hub-wide and `principalStreams` per principal (one session or share); each stream holds its slot until its body ends or the client drops it. A request waits first come, first served for `admissionWaitMs`, then is refused with `RateLimitRefusalV1` naming `retryAfterMs`.",
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🦀️rust"
+      ],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "class",
+        "hubStreams",
+        "principalStreams",
+        "admissionWaitMs",
+        "retryAfterMs"
+      ],
+      "properties": {
+        "class": {
+          "$ref": "#/$defs/AuthStreamLimitClassV1"
+        },
+        "hubStreams": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "principalStreams": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "admissionWaitMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 60000
+        },
+        "retryAfterMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600000
+        }
+      }
+    },
     "AuthDurableEventKindV1": {
       "enum": [
         "session-issued",
@@ -1046,7 +1093,7 @@
       }
     },
     "RateLimitRefusalV1": {
-      "description": "The body of the `429` a rate-limited route family (every `AuthRateLimitClassV1` except `auth`, whose sign-in keeps `AuthErrorV1`) answers when its token bucket is empty: the class that refused, how long until one request is admitted again (also the `retry-after` header, rounded up to seconds), and the notice. Nothing was executed; the client resends the same request after the wait.",
+      "description": "The body of the `429` a rate-limited route family (every `AuthRateLimitClassV1` except `auth`, whose sign-in keeps `AuthErrorV1`) answers when its token bucket is empty, and a stream-limited one (`AuthStreamLimitClassV1`) when its streams stayed taken for the whole admission wait: the class that refused, how long until one request is admitted again (also the `retry-after` header, rounded up to seconds), and the notice. Nothing was executed; the client resends the same request after the wait.",
       "x-semio-formats": [
         "🔣️jsonschema",
         "🦀️rust"
@@ -1068,7 +1115,14 @@
           "const": "rate-limited"
         },
         "class": {
-          "$ref": "#/$defs/AuthRateLimitClassV1"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AuthRateLimitClassV1"
+            },
+            {
+              "$ref": "#/$defs/AuthStreamLimitClassV1"
+            }
+          ]
         },
         "retryAfterMs": {
           "type": "integer",

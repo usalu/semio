@@ -1,3 +1,5 @@
+import { mediaTransportPort } from "../../../🎬️media/📡️channel/🟦️.ts";
+import type { MediaTransportPort } from "../../../🎬️media/🚚️lifecycle/🟦️.ts";
 // #region 🧲️Header
 /** 🐚️ wgpu-web's plugin-loading + bridge-adapter pair — MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME
  * (`wgpu-web-shard`) replacement for the deleted `acquirePluginModule`/`pluginHandleForBridge` (both
@@ -1151,7 +1153,7 @@ export interface WgpuPluginInvokeContext {
 /** 🐚️ The typed handle this file hands to a `bootFrameworkOsWgpu`/`🟦️.ts` caller — narrower than
  * `PluginRuntime`'s wide `PluginWasmHandle` (no transactions/merge/conflicts/backbone/presence): only
  * the surface `🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`'s `wasm32` branch actually calls. */
-export interface WgpuPluginHandle {
+export interface WgpuPluginHandle extends MediaTransportPort {
   readonly pluginId: string;
   readonly manifest: PluginManifest;
   /** 🪪️ The package this module was admitted as, off its served descriptor — the identity a hub
@@ -1160,6 +1162,7 @@ export interface WgpuPluginHandle {
   readonly componentSha256: string;
   readonly createApp: (appId: string) => Promise<number>;
   readonly destroyApp: (instanceId: number) => Promise<void>;
+  readonly readAppDocumentIdentity: (instanceId: number) => Promise<{ readonly appInstanceId: number; readonly parentDocumentId: string | null }>;
   /** 🎯️ `dispatch` (`PluginDispatchHintV1`, kernel) is the input ledger's causal `order` for this one
    * call, threaded into {@link serializeWgpuActorCall} — see its `## order` section; absent ⇒ arrival order. */
   readonly handleAction: (instanceId: number, invocation: unknown, viewState: unknown, dispatch?: PluginDispatchHintV1) => Promise<InvocationResponse>;
@@ -1840,6 +1843,12 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     handleCommand: (instanceId, invocation, viewState, dispatch) => performInvocation(requireChannel(instanceId), instanceId, invocation, viewState, dispatch),
     render: (instanceId, surfaceId, bodyKey, viewState) => renderSurface(instanceId, surfaceId, bodyKey, viewState).then((result) => result.node),
     renderDocument: (instanceId, surfaceId, bodyKey, viewState) => renderSurface(instanceId, surfaceId, bodyKey, viewState).then((result) => JSON.stringify({ document: result.document, effects: jsonEffects(result.effects) })),
+    ...mediaTransportPort((instanceId) => { requireActorId(instanceId); return requireChannel(instanceId); }),
+    readAppDocumentIdentity: async (instanceId) => {
+      requireActorId(instanceId);
+      const identity = await requireChannel(instanceId).readDocumentIdentity();
+      return { appInstanceId: identity.app_instance_id, parentDocumentId: identity.parent_document_id };
+    },
     captureExtensionCompletion,
     invoke,
     dispatchInvokeExtension,
@@ -1898,6 +1907,7 @@ export interface WgpuJsBridge {
   readonly packageIdentity: () => string;
   readonly createApp: (appId: string) => Promise<number>;
   readonly destroyApp: (instanceId: number) => Promise<void>;
+  readonly readAppDocumentIdentity: (instanceId: number) => Promise<string>;
   /** 🎯️ `order` is the flat (wasm-bindgen-friendly) spelling of `PluginDispatchHintV1.order` — the
    * input ledger's causal key for this one call; omitted ⇒ arrival order. */
   readonly handleAction: (instanceId: number, invocationPack: string, contextJson: string, order?: number) => Promise<string>;
@@ -1978,6 +1988,7 @@ export function pluginHandleForBridge(handle: WgpuPluginHandle): WgpuJsBridge {
     applyMutations: (instanceId, operations) => handle.applyMutations(instanceId, operations),
     loadAppDocumentArchive: (instanceId, archive) => handle.loadAppDocumentArchive(instanceId, archive),
     readAppDocumentArchive: (instanceId) => handle.readAppDocumentArchive(instanceId),
+    readAppDocumentIdentity: (instanceId) => handle.readAppDocumentIdentity(instanceId).then((identity) => JSON.stringify(identity)),
     loadAppArtifactPack: (instanceId, pack, spr) => handle.loadAppDocumentPack(instanceId, pack, spr),
     codecPackSchemaHash: (artifactKind) => handle.codec({ operation: "pack-schema-hash", artifactKind }).then((value) => codecBytes(value, "pack-schema-hash")),
     codecPrintMirror: (artifactKind, pack, spr) => handle.codec({ operation: "print-mirror", artifactKind, pair: { pack, spr } }).then((value) => codecMirror(value)),

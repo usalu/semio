@@ -29,7 +29,14 @@ pub fn apply(_payload: &DeleteSelection, doc: &ArtifactView<'_, LayoutSnapshot>,
 pub fn apply_frame_ids(doc: &ArtifactView<'_, LayoutSnapshot>, selected: &[String]) -> Result<Emit<LayoutMutation, NoConfigMutation>, Fault> {
     let mutations = selected
         .iter()
-        .filter_map(|frame_id| frame_page_id(doc.snapshot, frame_id).map(|page_id| LayoutMutation::DeleteFrame(DeleteFrame { page_id, frame_id: frame_id.clone() })))
+        .filter_map(|frame_id| {
+            let page = doc.snapshot.pages.iter().find(|page| page.frames.iter().any(|frame| frame.id() == frame_id))?;
+            let frame = page.frames.iter().find(|frame| frame.id() == frame_id)?;
+            if crate::frame_edits_blocked(doc.snapshot, page, frame) {
+                return None;
+            }
+            Some(LayoutMutation::DeleteFrame(DeleteFrame { page_id: page.id.clone(), frame_id: frame_id.clone() }))
+        })
         .collect();
     Ok(Emit::mutations(mutations))
 }

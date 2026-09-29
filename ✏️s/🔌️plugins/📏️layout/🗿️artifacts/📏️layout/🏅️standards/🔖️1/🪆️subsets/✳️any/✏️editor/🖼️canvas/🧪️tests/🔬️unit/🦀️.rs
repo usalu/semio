@@ -21,6 +21,24 @@ async fn canvas_layers_renders_story_text_not_glyph_bars() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn canvas_layers_splits_a_styled_story_into_spans() {
+    let mut doc = crate::standards::v1::subsets::any::schema::default_document();
+    doc.character_styles.push(crate::CharacterStyle { id: "character-1".into(), name: Some("Emphasis".into()), font_family: None, font_size: Some(24.0), font_weight: None, italic: None, color: Some([1.0, 0.0, 0.0, 1.0]), tracking: Some(10.0) });
+    doc.stories[0].style_runs.push(crate::TextStyleRun { start: 0, end: 5, paragraph_style_id: None, character_style_id: Some("character-1".into()) });
+    let json = canvas_layers(&doc, &LayoutWindowConfig::default(), &LayoutWindowTransient::default(), &LayoutInteractionSnapshot::default(), false);
+    assert!(json.contains("frame-text-1.span.0.text"), "{json}");
+    assert!(json.contains("frame-text-1.span.1.text"), "{json}");
+    assert!(json.contains("Hello"), "{json}");
+    assert!(json.contains(" layout"), "{json}");
+    assert!(json.contains("\"size\":24.0"), "{json}");
+    assert!(json.contains("\"size\":12.0"), "{json}");
+    assert!(json.contains("[1.0,0.0,0.0,1.0]"), "{json}");
+    let emphasis = json.find("frame-text-1.span.0.text").unwrap();
+    let rest = json.find("frame-text-1.span.1.text").unwrap();
+    assert!(emphasis < rest);
+}
+
+#[semio_framework_async_macros::async_test]
 async fn canvas_layers_renders_the_page_background() {
     let doc = crate::standards::v1::subsets::any::schema::default_document();
     let config = LayoutWindowConfig::default();
@@ -134,4 +152,44 @@ async fn canvas_layers_turns_a_rotated_proxy() {
     assert_eq!((decoded.width, decoded.height), (1, 2));
     assert_eq!(&decoded.pixels[0..4], &[255, 0, 0, 255], "the left pixel turns to the top");
     assert_eq!(&decoded.pixels[4..8], &[0, 0, 255, 255], "the right pixel turns to the bottom");
+}
+
+#[test]
+fn canvas_layers_emits_an_embedded_drawing_png() {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
+    let point = |x: f64, y: f64| SemioPoint2 { x, y };
+    let mut encoded = semio_s_artifact_stdio_png::PngSnapshot::default();
+    encoded.width = 1;
+    encoded.height = 1;
+    encoded.pixels = vec![255, 0, 0, 255];
+    let bytes = semio_s_artifact_stdio_png::io::encode_png(&encoded).expect("png");
+    let content = SemioDrawingSnapshot {
+        schema: "stdio.semio.drawing".into(),
+        canvas: Default::default(),
+        styles: Vec::new(),
+        layers: vec![DrawLayer {
+            id: "imported".into(),
+            name: "Imported".into(),
+            visible: true,
+            root: DrawNode::Group {
+                transform: SemioTransform::identity(),
+                children: vec![
+                    DrawNode::Path {
+                        style: None,
+                        segments: vec![PathSegment::MoveTo { to: point(0.0, 0.0) }, PathSegment::LineTo { to: point(1.0, 0.0) }, PathSegment::LineTo { to: point(1.0, 1.0) }, PathSegment::LineTo { to: point(0.0, 1.0) }, PathSegment::Close],
+                    },
+                    DrawNode::Image { at: point(0.0, 0.0), width: 1.0, height: 1.0, mime: "image/png".into(), bytes },
+                ],
+            },
+        }],
+    };
+    let mut document = crate::standards::v1::subsets::any::schema::default_document();
+    document.links[0].artifact_kind = "s.draw.drawing".into();
+    document.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
+    let json = canvas_layers(&document, &LayoutWindowConfig::default(), &LayoutWindowTransient::default(), &LayoutInteractionSnapshot::default(), false);
+    assert!(json.contains("data:image/png;base64,"), "{json}");
+    assert!(json.contains("\"x\":146.0") || json.contains("\"x\":146"), "{json}");
+    assert!(json.contains("drawing.plan.0") && json.contains("[0.0,50.0]"), "{json}");
+    assert!(json.contains("drawing.frame.0"), "{json}");
 }

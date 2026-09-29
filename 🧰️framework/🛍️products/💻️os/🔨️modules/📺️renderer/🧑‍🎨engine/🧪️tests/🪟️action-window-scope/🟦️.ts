@@ -14,6 +14,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { testHostPanelStateSchema } from "../../🧱️elements/🐚️Shell/🧬️schema/📌️panel-state/🧪️tests/🔬️unit/🟦️.ts";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const fixturePath = resolve(suiteRoot, "../../🧫️fixtures/🪟️action-window-scope/🔣️.json");
@@ -39,6 +40,7 @@ const scope = (args: readonly Pair[] | null, windowId: string): Pair[] => [...(a
 const resolveWindow = (args: readonly Pair[] | null, focused: string): string => args?.find(([key]) => key === "windowId")?.[1] ?? focused;
 
 describe("🪟️ action window scope", () => {
+  it("matches spawned session owners through the neutral Ajv and JSON pointer oracle", testHostPanelStateSchema);
   it("declares the address resolution order the rewrite depends on", () => {
     expect(fixture.rule.resolutionOrder[0]).toBe("args.windowId");
     expect(fixture.cases.length).toBeGreaterThan(0);

@@ -5,15 +5,111 @@ Session 14 slice S19 (2026-09-27 18:2x, Opus 5.5). Continues [S17](📓️wp-s17
 logs `.🧬semio/🌐hub/s14-s19-logs/`. Native cargo only through the `native` lane (build-fleet-b); overlay builds only through
 the `overlay` lane with a private build-dir inside the overlay.
 
+## Session 15
+
+Successor (2026-09-29 19:1x, Opus 5.5). Focus (fleet-15): norm 12/14 kinds end to end over MCP + the 12 norm matrix reds, procedural
+`addWidget` trap, flow/sequence ownership, forms args; open items (regens after row 3b). GUEST FREEZE (window 5 not open).
+
+| # | Item | Status |
+|---|---|---|
+| 0 | Reconcile: orphan native job 62696 (predecessor's `s19-census-run.sh` → `s14-s19-logs/census-t7-1.txt`) | DONE — kept, ran 19:40–19:57 (forms/sequence rc 0, gen3d/gen2d/norm probes red = findings below); its 5 temporary `[DEBUG]` probe files reverted 19:58 (`git diff` empty, mtimes touched) |
+| 1 | norm over MCP (G12 p33-3: 12/14 fail) | ROOT-CAUSED; **PREPARED** t6 row 25 `norm-agent` (39 files, dry-run clean): roster exampleId choice, unknown-id refusal, en1999 (+4) op protocols, catalog audits; NOT compiled |
+| 2 | norm matrix reds (S18: 12/15, stale fixtures) | procedure ready without overlay: emitter mounted as a temporary norm test module (`s19-probes-2.py`), binary kept as `s14-s19-bin/norm-surface-emitter` at the end of probes-2; then vectors → materialize → verify (fixtures = test data, rule 22) |
+| 3 | forms args (G12) | ROOT-CAUSED (census: 17 `Unbridged`); **PREPARED** t6 row 27 `forms-args` (+ catalog audits); gateway default-fill RELAYED to G12 |
+| 4 | flow/sequence ownership violation (G12) | ROOT-CAUSED + reproduced natively (sequence); **PREPARED** t6 row 28 `load-rehome` (SDK `load_document_pack/text` re-home the composition); flow probe queued |
+| 5 | procedural `addWidget` guest trap (G12) | probe queued (`probes-2-1.txt`, hub-pair path); found on the way: gen2d example load refused its own config `Snapshot` → **PREPARED** t6 row 29; the SDK declared-verb probe itself traps on procedural snapshots (plain drop of `FlowHostSnapshot` OrderedMap in `declared_verb_state`) |
+| 6 | `catalogue.sourcing` guest refusal (A15 audit: `app-owned one-item preparation factory rejected its exact owner bundle`) | ROOT-CAUSED (hub actor 86 B > private 64 B bound); **PREPARED** t6 row 26 `sourcing-actor`; red-before probe queued |
+| 8 | os-mcp `search::long` 2 reds (G12 relay 20:0x) | MEASURED (`s14-s19-logs/mcp-search-long-1.txt`, G12's 19:58 test binary): descriptions missing ≈1 170 (stdio families ≈1 100, norm 60, gis `setCamera`, trinity `textEdit`, forms `updateForm` < 24 chars); not destructive: stdio families (remove/replace/setSnapshot-class), norm `removeItem` ×15, forms 2 exports, raster `exportPng`, space `deleteVirtualFileSystemNode`. norm + forms folded into rows 25/27; rest RELAYED (stdio → LB2, trinity → C12, space → SH2); gis viewer `setCamera` → Chrome + raster `exportPng` destructive = **PREPARED** t6 row 30 `catalog-audits` (coordinator 20:1x) |
+| 9 | G12 p33-5 relay (20:2x): procedural invoke traps, norm INTERNAL, sequence route mismatch, sourcing no-change | procedural: ROOT-CAUSED (SDK transaction fold plain-drops fail-closed scratch projections) → **PREPARED** row 33 `transaction-retire`; sequence args → **PREPARED** row 32; sourcing unknown object → folded into row 26; norm refusals are correct refusals of the harness's neutral input, the INTERNAL class is the gateway's code map → RELAYED (S20 row 12 / G12) |
+| 10 | Coordinator decisions 20:3x: (a) fault classes via row 12; (b) agent-lane stocking verb | (a) noted: declare `app.command.invalid-args`/`norm.*`/`mutation.*` classes when row 12 lands (no interim gateway map); (b) **PREPARED** row 35 `sourcing-stock` (59 files, dry-run clean; Python oracle exercised on both quintets + 5 feature rows) |
+| 7 | 2b-2 decision (coordinator 19:4x) | DEFERRED — never prepared (65 files / 176 refs, SDK hot file shared with T6 rows 9/11/12/17; no measured user defect: contributions live 26/26, flow Extensions landed T3); re-plan after row 12 lands (faults change every `Fault` site it would touch) |
+
+### Session 15 Log
+
+- 19:1x read preambles 15/14, report, fleet-15, t6-queue, G12 p33-3 rows (`s14-g12-logs/battery-p33-3/coverage-hub/coverage-hub-rows.jsonl`).
+  Orphan 62696 = `s19-census-run.sh` (forms, sequence, gen3d, gen2d, norm `--lib -- s19_census`, alarm 1680 s/step; probes =
+  `s19-census-probes.py --write` at 18:24, sequence hub-pair probe added 18:49). Kept: it measures exactly this session's focus.
+
+- 19:3x **norm root causes (source + G12 rows):** (a) `setActiveExample.exampleId` = free OPTIONAL text → harness sends {} → ""
+  = empty document = the genesis document → `SUCCEEDED head 0→0` on 11 kinds; an agent cannot discover example ids;
+  (b) unknown id = silent `Ok(no-op)` (pinned by the surface law) while the framework's catalogue door refuses (`app.example.unknown`);
+  (c) **en1999 binary op protocol stale**: `🧬️mutations/💾️binary/📡️.protocol.semio` names the pre-hierarchy flat vocabulary, 0 of 17
+  current kinds (census `wp-s19/s19-protocol-drift.py`: en1990 28/30 missing, en1991 70/80, en1992 27/28, en1996 52/58, en1999 17/18;
+  10 families aligned). Only en1999's codec READS the file (tagged `encode_tagged_op`) → every en1999 wire edit fails `declares no
+  record for 'change-materials'` (G12's only en1999 op). Finding (not in this set): the norm "binary" ops are a zoo — en1991/94/95/96
+  encode their OpText line as bytes, en1992 JSON bytes (`COMPONENT_PROTOCOL_SEMIO = ""`), en1990 literal tags, 4 tagged; one tagged
+  codec for all 15 = follow-up. Set **`norm-agent`** (`wp-s19/s19-norm-agent.py`, 39 files, `--dry-run` clean on live 19:4x):
+  `app_surface::example_id_arg` (required select over `<Editor>::examples()`, en + de labels) in 15 editors, unknown id → named
+  `norm.set-active-example-invalid` (13 roster handlers + en1990/din18599 tables), 5 protocols = `KINDS` (en1990 keeps its wire tags and
+  now derives them via `dsl::protocol_record::tag_u8`, like iso16757), laws: roster law round-trips every raised op through `OpBinary`,
+  `<family>_op_protocol_declares_every_mutation_kind` ×15, action-args law pins exampleId = required roster choice. NOT compiled (guest).
+- 19:3x **sourcing root cause (measured):** hub 7800 p33 CAS actors are `user:<uuid>#session:<uuid>` = **86 bytes**; both Sourcing one-item
+  preparation factories refuse actor/description > a private 64 (`SOURCING_CURATION_{DOCUMENT,CONFIG}_METADATA_BYTES`) → "app-owned one-item
+  preparation factory rejected its exact owner bundle" on every hub edit; local actor `local` passes. Every other plugin bounds by
+  `store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES` (256). Set **`sourcing-actor`** (`wp-s19/s19-sourcing-actor.py`, 2 files, dry-run clean):
+  private figures gone, store bound used; law `a_hub_member_edit_prepares_under_the_stores_identity_capacity` (86-byte + 256-byte actor,
+  document + config lane). MCP sourcing verbs with "Coverage" ids settle `no-change` = harness input limit (unknown object id is silently
+  a no-op — noted, not changed).
+- 19:4x forms: `addBlock.kind` has `default: "text"` in its input schema but is optional → gateway sends {} → decode fails; shells fill
+  declared defaults host-side (`effective_action_args`), the gateway does not → RELAYED to G12 (host fix in os-mcp prepare). Declaring
+  the ~18 undeclared forms verb args is NOT safe blind: `effective_action_args` drops undeclared keys, so every UI binding's keys must be
+  declared with its exact names — waits on the census (declared-verb probes) before a set is written.
+- 19:40 census 62696 got the native lane (U6 → LW1 → S19).
+
+- 19:40–19:57 **census (`census-t7-1.txt`)**: forms 17 agent verbs `Unbridged` (declared no args; only addStep/addBlock/setActiveExample
+  bridge); sequence hub-pair: boot doc `commit=Ok(edit-736d…)`, after `load_document_pack(genesis pair)` `commit=Err(transaction.commit-failed
+  ownership violation: sequence-content-13e3545f6a91fe1f is not a currently-tracked owned child of artifact-…19)`; gen3d: the SDK probe
+  itself aborts (`ordered-map root must be explicitly retired before drop`, `drop_glue::<FlowHostSnapshot>` in `declared_verb_state`);
+  gen2d: boot example refused `generation2d-config-unsupported-mutation`; norm: `setActiveExample` "settled silently" on 13 families,
+  en1999 boot `norm-artifact-retained-mutation-encode-failed` (= the stale protocol, natively).
+- 19:5x **flow/sequence root cause (source):** `AppCommand::LoadDocument` → SDK `load_document_pack` resets the parent store only; the held
+  content child keeps its boot-parent edge in `self.composition` (+ member/map owner refs) → `dispatch_relation_group` phase-1 owner check
+  fails at commit. Both shells' hub open and the MCP session seed use `LoadDocument` (`🌉️mcp/🏠️workspace` `load_session_document`). Set
+  `load-rehome` (row 28). gen2d config `Snapshot` gap → set `gen2d-config-snapshot` (row 29).
+- 19:5x census probes reverted (`s19-census-probes.py --revert`; restore used `copy2` → old mtimes → touched all 5 so no build reuses a stale
+  test unit). **probes-2 queued** (`s19-probes-2-run.sh`, pid 39555 → `probes-2-1.txt`): writes its `[DEBUG]` probes only WHILE holding the
+  native lane and reverts them at the end (sourcing actor red-before, norm op round trip ×15, gen3d/gen2d/flow hub-pair `addWidget`) +
+  mounts the N1 emitter as a temporary norm test module and keeps the built binary (`s14-s19-bin/norm-surface-emitter`). If the job dies
+  mid-run: `python3 wp-s19/s19-probes-2.py --revert`.
+- 20:0x G12 relay (`search::long`): measured by running G12's 19:58 os-mcp test binary (read-only) → item 8.
+- t6-queue rows 25–29 appended (numbers 18–24 had been taken by peers meanwhile).
+
+- 20:1x coordinator: take gis viewer `setCamera` + raster `exportPng`; mark proof needs. Decision: the viewer camera is window chrome (the gis
+  editor's `setCamera` is already Chrome; the audit law says camera poses are never published) → set `catalog-audits` (row 30, 4 files, dry
+  run clean). Proof marks on rows 25–30: 25/26/27/29/30 ride L1's combined proof (plugin-local, `--revert` per set); **28 `load-rehome` needs
+  its own sub-step** (SDK-wide `LoadDocument` behaviour; overlay pre-proof impossible: disk 43 GiB free, overlay queue 5 deep).
+
+- 20:2x **G12 p33-5 relay:** (1) procedural: SDK `transaction_prepare` folds the ops over `self.store.snapshot()` and plain-drops every
+  displaced scratch projection, diff and the final projection (unconditionally) → a procedural document (fail-closed `OrderedMap` layout)
+  traps on EVERY invoke; same template in the local + mounted emit (gated by `may_emit_foreign_steps`) → ONE `fold_foreign_steps` with
+  `retire_projection`/`retire_cold` = set `transaction-retire` (row 33; SDK sub-step with row 28). (2) norm: `removeItem`/`insertItem` "missing
+  field 'Coverage' in path", `setSnapshot` "unexpected byte 67" (= JSON text parse of the word `Coverage`, NOT bytes), `applyRemedy` missing
+  check are CORRECT refusals of the harness's neutral input; the gateway maps every undeclared code to INTERNAL (`🔀️dispatch` `map_fault`)
+  → relayed: row 12's declared faults need an input class (or interim `app.command.invalid-args` + norm's `norm.value-path`/`value-decode`/
+  `set-snapshot-arg-invalid`/`apply-remedy-missing-check` → INPUT_INVALID), gateway may validate `x-semio-format: json` before dispatch. Norm's
+  real e2e blocker is row 25. (3) = row 28. (4) sequence: 8 verbs declared no args, bridge `unwrap_or_default()` ids → set `sequence-args`
+  (row 32). (5) sourcing: unknown object → `UnknownObject` refusal folded into row 26 (9 files).
+- t6 numbering: C12 took 31 meanwhile → mine are 32 (sequence-args) and 33 (transaction-retire).
+
+- 20:3x coordinator decisions: (a) fault classes land with row 12 → nothing interim; (b) agent-lane stocking. Built set
+  `sourcing-stock` (row 35; C12/H14 took 31/34): two schema-first mutation owners `create-stock-object`/`delete-stock-object`
+  (13 surfaces each + fixture quintets), aggregates, io DSL twin, lib mounts, oracles manifest, structural law, Python oracle +
+  feature rows, Rust differential effects, `stockFromCatalogue` → emits the mutations on the Artifact lane (optional `moduleId`),
+  4 restock laws moved off `LoadDocument`, derived snapshot's stale catalogue id fixed, taxonomy +4 names, e2e law
+  `an_agent_stocks_and_curates_a_blank_catalogue`. Verified here: the content-id rule (`catalog-` + sha256(compact kit JSON)[..8])
+  reproduces the committed demo id; the transformed Python oracle applies both quintets exactly, holds the stock effects and
+  restores via the inverse on the derived snapshot (the inverse table unstocks the TRAILING row — a re-stock lands at the tail,
+  the same limit the feature documents for curated deletes). Finding: a hub-created curation is the DEMO stock, not blank.
+
 ### Session 14c
 
 | # | Item | Status |
 |---|---|---|
 | 0 | Reconcile the predecessor's last in-flight step (gen codemod at the 14:37 cut) | DONE — live tree carries ZERO S19 guest edits; overlay == payload (below) |
-| 1 | Procedural gen2d/gen3d + demonstrator/gen3d Import Document traps + hub genesis of `2d/3d.generation` | **PROVEN (overlay, green + red runs), PREPARED** set `gen-archive-load` (10 files: kernel hydration ×2 + `retire_unadopted`, SDK genesis producer, gen3d/gen2d lease + 4 laws) for L1's T3 train |
+| 1 | Procedural gen2d/gen3d + demonstrator/gen3d Import Document traps + hub genesis of `2d/3d.generation` | **LANDED (L1 T1, green)**; was PROVEN (overlay, green + red runs) set `gen-archive-load` (10 files: kernel hydration ×2 + `retire_unadopted`, SDK genesis producer, gen3d/gen2d lease + 4 laws) for L1's T3 train |
 | 2 | generation3d seated example evaluates in the served app | host fix LANDED 14b (live `s`: evaluates + STL, three.js oracle); S20's reds predate it (27-09 19:5x, 28-09 11:09: demonstrator/gen3d obj+stl red, procedural/gen3d exports ok) → live re-run of the io rows at window 3 (serve load now = chain) |
-| 3 | S17 2b-2 contributions, 2c flow "Extensions", 1b i18n | 2c **PROVEN (overlay) + PREPARED** (`flow-extensions`, 26 entries: vitest 9+41+51, flow `--lib` 258/258 + registry law 1/1 in its own process); 2b-2 NOT STARTED — sized: 65 files / 176 `SetContributions` refs over 8 artifacts + flow's new route, sequenced after 2c lands; 1b waits on T14's H9-L (window 3) |
-| 4 | norm: reds, `path` arg, `En1994Artifact` alias, production fixtures | PREPARED: `norm-examples` (roster route 13 families + en1998 assets + law; din16798 red fixed, en1998 in proof 3), `norm-args` (law 15/15), `norm-cleanup` (TS alias, 0 importers); `norm-fixtures` = window-3 procedure (overlay: 15/15 matrix cases replay-valid; live 3/15); compliance gate = Cursor peer |
+| 3 | S17 2b-2 contributions, 2c flow "Extensions", 1b i18n | 2c **LANDED (L1 T3)**; was PROVEN (overlay) (`flow-extensions`, 26 entries: vitest 9+41+51, flow `--lib` 258/258 + registry law 1/1 in its own process); 2b-2 NOT STARTED — sized: 65 files / 176 `SetContributions` refs over 8 artifacts + flow's new route, sequenced after 2c lands; 1b waits on T14's H9-L (window 3) |
+| 4 | norm: reds, `path` arg, `En1994Artifact` alias, production fixtures | LANDED (L1 T3): `norm-examples` (roster route 13 families + en1998 assets + law; din16798 red fixed, en1998 in proof 3), `norm-args` (law 15/15), `norm-cleanup` (TS alias, 0 importers); `norm-fixtures` = window-3 procedure (overlay: 15/15 matrix cases replay-valid; live 3/15); compliance gate = Cursor peer |
 
 #### Window-3 runbook (S19 sets; every `apply` is a dry run first, `--write` only when 0 conflicts)
 
@@ -209,6 +305,14 @@ the `overlay` lane with a private build-dir inside the overlay.
   (3 new cases), os `tsc` 3 errors = overlay-missing generated outputs (puzzle pkg, jcoprobe), 0 in touched files
   (`s14-s19-logs/tsc-os-t6-1.txt`), hub TS `tsc` 0 (`tsc-hub-t6-1.txt`). Rust proof queued (`s19-t6-proof.sh`, pid 93048 →
   `t6-proof-1.txt`; overlay lane 7 deep). Row 3b registered in `📓️t6-queue.md`.
+- 14:37 cut (session limit) killed the queued proof before its lane; lane queues wiped. 16:1x resumed: overlay re-synced to live
+  (441 placed, 32 pruned) + LB2's FINAL p9 + p15 (15:45 script, 26 files) + 3b (17, dry-run clean). TS laws re-run 29/29 + 20/20.
+- 16:2x–17:0x **row 3b PROVEN** (`t6-proof-2.txt`, one overlay hold): hub trusted_catalog 58/59 (my 3 laws ok; red = committed-
+  descriptor census, identical in LB2's p15 proof, REGEN), demonstrator 12/13 (hosting law ok; `descriptor_is_fresh` REGEN), SDK
+  check --tests rc 0, stdio shipped_fleet 6/7 (hosted rows owner `stdio` ok; red = dwg/ifc/las snapshot contract `$ref`s — row 4's
+  domain), framework 278/285 + describe 24/25: all reds also red on the live tree (`t6-baseline-1.txt`, native lane 17:0x).
+  Row 3b updated to PROVEN in `📓️t6-queue.md`; relayed to L1 + main.
+- 17:1x overlay-t6 build-dir + target deleted (rule 23); overlay sources kept for re-proofs.
 
 ### Session 14b
 
@@ -319,12 +423,12 @@ the `overlay` lane with a private build-dir inside the overlay.
 
 | # | Item | Status |
 |---|---|---|
-| 1 | Verify S17's window-2 tool-run snapshot retirement + N1's test-only norm fixes on the current tree | in progress |
-| 2 | S17 2b-2 contributions framework (`setContributions` → framework-reserved, non-ledgered job; 8 artifacts, ShellHost, TransientStore) | open |
-| 3 | S17 2c flow Catalogue "Extensions" group empty (operator-keyed reachability cut) | open |
-| 4 | S17 1b i18n `LocalizedLabel` catalogue text (after T14's H9-L) | open |
-| 5 | N1 norm: production-derived fixture vectors, vdi3805/iso16757 decoder drift, norm reds, norm in `s` + hub | open |
-| 6 | 26 plugin extensions: load in `s`, artifacts exposed, en + de | open |
+| 1 | Verify S17's window-2 tool-run snapshot retirement + N1's test-only norm fixes on the current tree | DONE 14b (S17 compiles; N1 reds → norm sets, LANDED T3) |
+| 2 | S17 2b-2 contributions framework (`setContributions` → framework-reserved, non-ledgered job; 8 artifacts, ShellHost, TransientStore) | DEFERRED (session 15 decision, see `## Session 15` item 7) — never prepared |
+| 3 | S17 2c flow Catalogue "Extensions" group empty (operator-keyed reachability cut) | LANDED (L1 T3 `s19-flow-extensions`, green) |
+| 4 | S17 1b i18n `LocalizedLabel` catalogue text (after T14's H9-L) | open — unblocked (H9-L landed T1), not started |
+| 5 | N1 norm: production-derived fixture vectors, vdi3805/iso16757 decoder drift, norm reds, norm in `s` + hub | norm-examples/args/cleanup/assets LANDED T3; decoders: every roster document of all 15 families parses (census 14c); fixtures = session 15 item 2 |
+| 6 | 26 plugin extensions: load in `s`, artifacts exposed, en + de | MEASURED 14b: 26/26 loaded en + de |
 
 ### Session 14 Log
 

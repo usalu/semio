@@ -210,6 +210,7 @@ pub fn cad_descriptor() -> PackageDescriptor {
         topic_contributions: Vec::new(),
         commands: Vec::new(),
         artifact_kinds: Vec::new(),
+        hosted_artifact_kinds: Vec::new(),
         dependencies: Vec::new(),
         contributions: Vec::new(),
     })
@@ -322,6 +323,7 @@ pub fn note_descriptor() -> PackageDescriptor {
         topic_contributions: Vec::new(),
         commands: Vec::new(),
         artifact_kinds: Vec::new(),
+        hosted_artifact_kinds: Vec::new(),
         dependencies: Vec::new(),
         contributions: Vec::new(),
     })
@@ -394,6 +396,7 @@ pub fn colliding_action_id_source() -> CatalogSource {
         topic_contributions: Vec::new(),
         commands: Vec::new(),
         artifact_kinds: Vec::new(),
+        hosted_artifact_kinds: Vec::new(),
         dependencies: Vec::new(),
         contributions: Vec::new(),
     });
@@ -407,6 +410,7 @@ pub fn colliding_action_id_source() -> CatalogSource {
         topic_contributions: Vec::new(),
         commands: Vec::new(),
         artifact_kinds: Vec::new(),
+        hosted_artifact_kinds: Vec::new(),
         dependencies: Vec::new(),
         contributions: Vec::new(),
     });
@@ -535,6 +539,7 @@ pub fn draw_descriptor() -> PackageDescriptor {
         topic_contributions: Vec::new(),
         commands: Vec::new(),
         artifact_kinds: Vec::new(),
+        hosted_artifact_kinds: Vec::new(),
         dependencies: Vec::new(),
         contributions: Vec::new(),
     })

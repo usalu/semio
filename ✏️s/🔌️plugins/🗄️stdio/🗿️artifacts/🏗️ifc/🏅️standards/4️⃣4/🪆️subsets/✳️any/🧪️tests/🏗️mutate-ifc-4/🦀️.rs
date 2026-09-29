@@ -3,7 +3,7 @@
 //! round trip. `ruststep` 0.4 can only READ Part-21 text (confirmed empirically — see the feature
 //! file's own description), so the oracle dispatcher (`../../🏅️standards/4️⃣4/🪆️subsets/✳️any/🔮️oracles/
 //! 🦀️.rs`) performs every kind with its own from-scratch Part-21 writer against a
-//! `ruststep`-parsed document, independent of this subset's own `IfcSnapshot`/`step::engine::part21`
+//! `ruststep`-parsed document, independent of this subset's own `IfcSnapshot`/`semio_s_artifact_stdio_contract::part21`
 //! codec; the subject fully parses into `IfcSnapshot` and re-serializes from it alone (no byte
 //! pass-through). Both results are read back by the INDEPENDENT `ruststep` reader
 //! (`project_ifc_4_any`) before the `semantic-ifc-v1` profile compares them — real third-party
@@ -215,7 +215,7 @@ mod subject {
         apply_ifc_mutation, insert_entity, insert_entity_arg, remove_entity, remove_entity_arg, set_entity_arg, set_entity_name, set_file_description, set_file_name, set_file_schema, set_snapshot, IfcMutation,
     };
     use semio_s_artifact_stdio_ifc::standards::v4::subsets::any::schema::snapshot::{from_part21_document, to_part21_document, IfcEntity, IfcSnapshot, IfcValue};
-    use semio_s_artifact_stdio_ifc::engine::part21::{parse_part21, write_part21};
+    use semio_s_artifact_stdio_contract::part21::{parse_part21, write_part21};
     use semio_s_plugin_stdio_test_oracle::artifacts::ifc::standards::v4::subsets::any::project_ifc_4_any;
 
     //#region 🔖️SpecReading

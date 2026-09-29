@@ -192,6 +192,22 @@ message SetStoryRuns {
 message UpdateLink {
   string id = 1;
 }
+message SetPageOverrides {
+  string id = 1;
+}
+message CreateLayer {
+  string id = 1;
+}
+message SetFrameLayer {
+  string id = 1;
+}
+message ReorderFrame {
+  string id = 1;
+}
+
+message SetDrawingText {
+  string id = 1;
+}
 
 message LayoutMutation {
   oneof kind {
@@ -235,5 +251,10 @@ message LayoutMutation {
     SetPageGuides set_page_guides = 38;
     SetStoryRuns set_story_runs = 39;
     UpdateLink update_link = 40;
+    SetPageOverrides set_page_overrides = 41;
+    CreateLayer create_layer = 42;
+    SetFrameLayer set_frame_layer = 43;
+    SetDrawingText set_drawing_text = 44;
+    ReorderFrame reorder_frame = 45;
   }
 }

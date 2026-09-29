@@ -1083,6 +1083,24 @@
           }
         }
       ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/set-snapshot/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSnapshot"
+            }
+          }
+        }
+      ]
     }
   ]
 }

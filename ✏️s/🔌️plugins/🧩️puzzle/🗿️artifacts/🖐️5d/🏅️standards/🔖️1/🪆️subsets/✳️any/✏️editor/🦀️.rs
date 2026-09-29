@@ -4162,6 +4162,8 @@ puzzle5d_command_variants! {
     DeleteSelection = "deleteSelection",
     DuplicateSelection = "duplicateSelection",
     SetSelectionFlag = "setSelectionFlag",
+    SetSelectionHidden = "setSelectionHidden",
+    SetSelectionLocked = "setSelectionLocked",
     FocusSelection = "focusSelection",
     EngagementSubmit = "engagementSubmit",
     EngagementRepeatLast = "engagementRepeatLast",
@@ -4224,6 +4226,8 @@ puzzle5d_command_variants! {
     DeleteTargetVolume = "deleteTargetVolume",
     RelocateTargetVolume = "relocateTargetVolume",
     SetTargetVolumeFlag = "setTargetVolumeFlag",
+    SetTargetVolumeHidden = "setTargetVolumeHidden",
+    SetTargetVolumeLocked = "setTargetVolumeLocked",
     SetVoxelDims = "setVoxelDims",
 }
 
@@ -4590,6 +4594,8 @@ fn dispatch_puzzle5d_action(ctx: &mut Puzzle5dActionCtx<'_>, action: &str, args:
         "deleteSelection" => delete_selection::delete_selection(ctx),
         "duplicateSelection" => duplicate_selection::duplicate_selection(ctx),
         "setSelectionFlag" => set_selection_flag::set_selection_flag(ctx, args),
+        "setSelectionHidden" => set_selection_flag::set_selection_flag_value(ctx, args, "hidden"),
+        "setSelectionLocked" => set_selection_flag::set_selection_flag_value(ctx, args, "locked"),
         "patchPart" => patch_part::patch_part(ctx, args),
         "patchGrip" => patch_grip::patch_grip(ctx, args),
         "patchFastener" => patch_fastener::patch_fastener(ctx, args),
@@ -4644,6 +4650,8 @@ fn dispatch_puzzle5d_action(ctx: &mut Puzzle5dActionCtx<'_>, action: &str, args:
         "deleteTargetVolume" => delete_target_volume::delete_target_volume(ctx, args),
         "relocateTargetVolume" => relocate_target_volume::relocate_target_volume(ctx, args),
         "setTargetVolumeFlag" => set_target_volume_flag::set_target_volume_flag(ctx, args),
+        "setTargetVolumeHidden" => set_target_volume_flag::set_target_volume_flag_value(ctx, args, "hidden"),
+        "setTargetVolumeLocked" => set_target_volume_flag::set_target_volume_flag_value(ctx, args, "locked"),
         "setVoxelDims" => set_voxel_dims::set_voxel_dims(ctx, args),
         "applyBoardEvents" => apply_board_events::apply_board_events(ctx, args),
         // 🛑️ Pure pointer-down notifications: no scene mutation, no operations, no config snapshot —
@@ -4659,6 +4667,8 @@ pub(crate) const PUZZLE5D_RETAINED_TOOL_IDS: &[&str] = &[
     "deleteTargetVolume",
     "relocateTargetVolume",
     "setTargetVolumeFlag",
+    "setTargetVolumeHidden",
+    "setTargetVolumeLocked",
     "setVoxelDims",
     "canvasPointerDown",
     "cycleBrushCandidate",
@@ -4678,6 +4688,8 @@ pub(crate) const PUZZLE5D_RETAINED_TOOL_IDS: &[&str] = &[
     "selectSameKindSelection",
     "setFillCount",
     "setSelectionFlag",
+    "setSelectionHidden",
+    "setSelectionLocked",
     "targetBrushSuggestions",
     "openVortexSuggestions",
     "closeVortexSuggestions",
@@ -8803,6 +8815,8 @@ impl ArtifactOwnedToolJobFactory for Puzzle5dRetainedCommandJobFactory {
         ArtifactToolPublicationContract { tool_id: "selectSameKindSelection", lanes: &[ArtifactToolPublicationLane::Interaction] },
         ArtifactToolPublicationContract { tool_id: "setFillCount", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setSelectionFlag", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setSelectionHidden", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setSelectionLocked", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "targetBrushSuggestions", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "openVortexSuggestions", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
         ArtifactToolPublicationContract { tool_id: "closeVortexSuggestions", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
@@ -8858,6 +8872,8 @@ impl ArtifactOwnedToolJobFactory for Puzzle5dRetainedCommandJobFactory {
         ArtifactToolPublicationContract { tool_id: "deleteTargetVolume", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "relocateTargetVolume", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "setTargetVolumeFlag", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setTargetVolumeHidden", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setTargetVolumeLocked", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "setVoxelDims", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ];
 }
@@ -9181,6 +9197,8 @@ impl Puzzle5dRetainedCommandProofs {
             "selectSameKindSelection",
             "setFillCount",
             "setSelectionFlag",
+            "setSelectionHidden",
+            "setSelectionLocked",
             "targetBrushSuggestions",
             "openVortexSuggestions",
             "closeVortexSuggestions",
@@ -9236,6 +9254,8 @@ impl Puzzle5dRetainedCommandProofs {
             "deleteTargetVolume",
             "relocateTargetVolume",
             "setTargetVolumeFlag",
+            "setTargetVolumeHidden",
+            "setTargetVolumeLocked",
             "setVoxelDims"
         ]
     }
@@ -9539,6 +9559,9 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     }
 
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+        if let Some(flag) = puzzle5d_flag_value_argument(action) {
+            args.and_then(|value| value.get(flag)).and_then(dsl::DslValue::as_bool).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("puzzle5d.action.flag-value-required"), format!("action '{action}' requires the boolean '{flag}' it sets")))?;
+        }
         let args = args.map(dsl::os_pack::json::from_dsl_value);
         let window_id = args.as_ref().and_then(|value| value.get("windowId").or_else(|| value.get("window_id"))).and_then(Value::as_str).map(str::to_string);
         Puzzle5dCommand::try_from_action(action, args, window_id).ok_or_else(|| Fault::from(format!("unknown Puzzle 5D action '{action}'")))
@@ -9827,6 +9850,24 @@ fn puzzle5d_default_part_kind(options: &[ActionArgOption]) -> String {
 
 /// 🗨️ The one `partKind` select both the standalone `addPartKind` arg form and the "Add Part" dialog
 /// declare — built twice from the same catalog so the two forms can never drift apart.
+/// 🙈️ The flag a set-verb sets to exactly the boolean its arguments carry (`setSelectionHidden{hidden}`,
+/// `setTargetVolumeLocked{locked}`, …) — the row target's explicit next state, so a stale view sets a value and never flips one.
+fn puzzle5d_flag_value_argument(action: &str) -> Option<&'static str> {
+    match action {
+        "setSelectionHidden" | "setTargetVolumeHidden" => Some("hidden"),
+        "setSelectionLocked" | "setTargetVolumeLocked" => Some("locked"),
+        _ => None,
+    }
+}
+
+/// 🙈️ A set-verb's definition: the explicit identity a row names (or, left empty, the live selection) and the REQUIRED
+/// boolean `flag` it sets — a missing value is refused, never defaulted.
+fn puzzle5d_flag_value_action(id: &str, identity: Vec<ActionArgDef>, flag: &str, label: LocalizedLabel, value: LocalizedLabel) -> ActionDefinition {
+    let mut args = identity;
+    args.push(ActionArgDef::toggle(flag, value).required());
+    ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(id, label, ActionKind::Mutation).with_category("settings").with_args(args) }
+}
+
 fn puzzle5d_part_kind_arg() -> ActionArgDef {
     let options = puzzle5d_part_kind_options();
     let default = puzzle5d_default_part_kind(&options);
@@ -9928,6 +9969,8 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
             .action_destructive("deleteSelection")
             .action_with(ActionDefinition::bounded_catalog("duplicateSelection", LocalizedLabel::native("Duplicate Selection", "Auswahl duplizieren"), ActionKind::Mutation).with_category("create"))
             .action_with(ActionDefinition::bounded_catalog("setSelectionFlag", LocalizedLabel::native("Set Selection Flag", "Auswahlmarkierung festlegen"), ActionKind::Mutation).with_category("settings"))
+            .action_with(puzzle5d_flag_value_action("setSelectionHidden", vec![ActionArgDef::text("entity", LocalizedLabel::native("Entity", "Entität")), ActionArgDef::text_list("ids", LocalizedLabel::native("Ids", "IDs"))], "hidden", LocalizedLabel::native("Set Hidden", "Verborgen festlegen"), LocalizedLabel::native("Hidden", "Verborgen")))
+            .action_with(puzzle5d_flag_value_action("setSelectionLocked", vec![ActionArgDef::text("entity", LocalizedLabel::native("Entity", "Entität")), ActionArgDef::text_list("ids", LocalizedLabel::native("Ids", "IDs"))], "locked", LocalizedLabel::native("Set Locked", "Gesperrt festlegen"), LocalizedLabel::native("Locked", "Gesperrt")))
             .action_with(ActionDefinition::bounded_catalog("focusSelection", LocalizedLabel::native("Focus Selection", "Auswahl fokussieren"), ActionKind::Mutation).with_category("view"))
             .mutation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
             .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
@@ -9949,6 +9992,8 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(ActionDefinition::bounded_catalog("deleteTargetVolume", LocalizedLabel::native("Delete Target Volume", "Zielvolumen löschen"), ActionKind::Mutation).with_category("selection"))
             .action_destructive("deleteTargetVolume")
             .action_with(ActionDefinition::bounded_catalog("setTargetVolumeFlag", LocalizedLabel::native("Set Target Volume Flag", "Zielvolumen-Markierung festlegen"), ActionKind::Mutation).with_category("settings"))
+            .action_with(puzzle5d_flag_value_action("setTargetVolumeHidden", vec![ActionArgDef::text("id", LocalizedLabel::native("Id", "ID"))], "hidden", LocalizedLabel::native("Set Target Volume Hidden", "Zielvolumen verborgen festlegen"), LocalizedLabel::native("Hidden", "Verborgen")))
+            .action_with(puzzle5d_flag_value_action("setTargetVolumeLocked", vec![ActionArgDef::text("id", LocalizedLabel::native("Id", "ID"))], "locked", LocalizedLabel::native("Set Target Volume Locked", "Zielvolumen gesperrt festlegen"), LocalizedLabel::native("Locked", "Gesperrt")))
             .mutation("relocateTargetVolume", LocalizedLabel::native("Relocate Target Volume", "Zielvolumen verlagern"))
             .mutation("applyBoardEvents", LocalizedLabel::native("Apply Board Events", "Board-Ereignisse anwenden"))
             // 👁️ Ephemeral view state — selection, hover, utility parameters, brush cycling, camera pose.
@@ -10055,6 +10100,8 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setLodManual", InteractiveJobClassification::Migrated)
             .action_interactive_job("setTransformGumballFlag", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSelectionFlag", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSelectionHidden", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSelectionLocked", InteractiveJobClassification::Migrated)
             .action_interactive_job("setLodMode", InteractiveJobClassification::Migrated)
             .action_interactive_job("setPartKindWeight", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSuggestionOffset", InteractiveJobClassification::Migrated)
@@ -10074,6 +10121,8 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("deleteTargetVolume", InteractiveJobClassification::Migrated)
             .action_interactive_job("relocateTargetVolume", InteractiveJobClassification::Migrated)
             .action_interactive_job("setTargetVolumeFlag", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setTargetVolumeHidden", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setTargetVolumeLocked", InteractiveJobClassification::Migrated)
             .action_interactive_job("setVoxelDims", InteractiveJobClassification::Migrated)
             .action_interactive_job("worldRelocate", InteractiveJobClassification::Migrated)
             // 📝️ Staged argument forms for the brush create actions (P1).
@@ -10112,6 +10161,8 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
     .action_describe("openImportFixture", LocalizedLabel::native("Opens the host's file picker for a 5D puzzle JSON file; the chosen file then replaces the whole puzzle.", "Öffnet die Dateiauswahl des Hosts für eine 5D-Puzzle-JSON-Datei; die gewählte Datei ersetzt dann das gesamte Puzzle."))
     .action_describe("importFixture", LocalizedLabel::native("Replaces the whole 5D puzzle with one read from an imported JSON file; the previous puzzle is discarded.", "Ersetzt das gesamte 5D-Puzzle durch eines aus einer importierten JSON-Datei; das bisherige Puzzle wird verworfen."))
     .action_describe("setSelectionFlag", LocalizedLabel::native("Sets one flag (such as hidden or locked) on the given or selected parts.", "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen oder ausgewählten Teile."))
+    .action_describe("setSelectionHidden", LocalizedLabel::native("Sets the given or selected parts hidden or shown, to exactly the value passed; repeating it changes nothing.", "Verbirgt die angegebenen oder ausgewählten Teile oder zeigt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."))
+    .action_describe("setSelectionLocked", LocalizedLabel::native("Sets the given or selected parts locked or unlocked, to exactly the value passed; repeating it changes nothing.", "Sperrt die angegebenen oder ausgewählten Teile oder entsperrt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."))
     .action_describe("acceptSuggestion", LocalizedLabel::native("Places the suggested piece chosen from the suggestion list (by index, or the highlighted one) at its connection point.", "Setzt das aus der Vorschlagsliste gewählte Teil (per Index oder das hervorgehobene) an seinem Anschlusspunkt."))
     .action_describe("selectSameKindSelection", LocalizedLabel::native("Extends the selection to every piece of the same kind as the selected one.", "Erweitert die Auswahl auf alle Teile derselben Art wie das ausgewählte."))
     .action_describe("toggleSun", LocalizedLabel::native("Switches the 3D view's sun light on or off; only the view changes.", "Schaltet das Sonnenlicht der 3D-Ansicht ein oder aus; nur die Ansicht ändert sich."))
@@ -10139,6 +10190,8 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
     .action_describe("addTargetVolume", LocalizedLabel::native("Adds a target volume, a box region the fill tool packs pieces into.", "Fügt ein Zielvolumen hinzu, einen Quaderbereich, in den das Füllwerkzeug Teile packt."))
     .action_describe("deleteTargetVolume", LocalizedLabel::native("Deletes one target volume by id.", "Löscht ein Zielvolumen anhand seiner Id."))
     .action_describe("setTargetVolumeFlag", LocalizedLabel::native("Sets one flag (such as hidden or locked) on the given target volumes.", "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen Zielvolumen."))
+    .action_describe("setTargetVolumeHidden", LocalizedLabel::native("Sets the given target volume hidden or shown, to exactly the value passed; repeating it changes nothing.", "Verbirgt das angegebene Zielvolumen oder zeigt es, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."))
+    .action_describe("setTargetVolumeLocked", LocalizedLabel::native("Sets the given target volume locked or unlocked, to exactly the value passed; repeating it changes nothing.", "Sperrt das angegebene Zielvolumen oder entsperrt es, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."))
     .action_describe("addNode", LocalizedLabel::native("Adds a part of the given kind (a 5D block kind) to the puzzle at x, y.", "Fügt dem Puzzle an x, y ein Teil der angegebenen Art (einer 5D-Blockart) hinzu."))
     .action_describe("proximityConnect", LocalizedLabel::native("Fastens every pair of compatible grips that lie within the proximity radius of each other.", "Verbindet jedes Paar verträglicher Griffe, die innerhalb des Näheradius beieinander liegen, mit Verbindern."))
     .action_describe("worldRelocate", LocalizedLabel::native("Moves one part to a new position and fastens it to nearby compatible grips.", "Verschiebt ein Teil an eine neue Position und verbindet es mit verträglichen Griffen in der Nähe."))

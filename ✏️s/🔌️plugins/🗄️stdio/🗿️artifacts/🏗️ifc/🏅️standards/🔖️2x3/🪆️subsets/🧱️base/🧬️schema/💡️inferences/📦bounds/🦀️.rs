@@ -9,7 +9,7 @@
 //! needed.
 
 use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-use semio_s_artifact_stdio_step::engine::part21::Part21Value;
+use semio_s_artifact_stdio_contract::part21::Part21Value;
 
 //#region 🔖️Bounds
 /// 📦️ IFC2X3's `IFCCARTESIANPOINT`-derived spatial bounding box.

@@ -97,3 +97,60 @@ fn dsl_value_literal_matches_serde_json_and_keeps_written_order() {
     let borrowed_str: &&str = &"x";
     assert_eq!(serde_json::Value::from(&crate::dsl_value!({ "t": borrowed_text, "l": borrowed_list, "s": borrowed_str })), serde_json::json!({ "t": borrowed_text, "l": borrowed_list, "s": borrowed_str }));
 }
+
+/// 🔢️ `DslValue::json_number` reads an `f64` the way its JSON text reads back — the shared `numbers` vectors of
+/// `🧫️fixtures/🔣️json-projection/🔣️.json`, whose `json` column the TypeScript law pins to `JSON.stringify`: every integer, null and
+/// in-range case equals `serde_json`'s parse of that text (third-party oracle); past the safe integer range an `f64` stays a float.
+#[test]
+fn a_json_number_reads_back_as_its_json_text() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️json-projection/🔣️.json")).expect("the json-projection fixture parses");
+    let numbers = fixture["numbers"].as_array().expect("numbers");
+    assert!(!numbers.is_empty());
+    for case in numbers {
+        let literal = case["literal"].as_str().expect("literal");
+        let value: f64 = literal.parse().expect("an f64 literal");
+        let bridged = DslValue::json_number(value);
+        let text = serde_json::from_str::<serde_json::Value>(case["json"].as_str().expect("json")).expect("json text parses");
+        match case["kind"].as_str().expect("kind") {
+            "uint" => assert!(matches!(bridged, DslValue::Number(Number::UInt(_))) && bridged == DslValue::from(&text), "{literal}: {bridged:?}"),
+            "int" => assert!(matches!(bridged, DslValue::Number(Number::Int(_))) && bridged == DslValue::from(&text), "{literal}: {bridged:?}"),
+            "null" => assert_eq!((bridged, DslValue::from(&text)), (DslValue::Null, DslValue::Null), "{literal}"),
+            "float" => assert_eq!(bridged, DslValue::float(value), "{literal}"),
+            kind => panic!("unknown kind {kind}"),
+        }
+    }
+}
+
+#[test]
+fn edit_through_value_matches_a_serde_json_pointer_edit_and_keeps_the_decode_invariant() {
+    #[derive(Debug, PartialEq)]
+    struct Placed {
+        name: String,
+        offset: DslValue,
+    }
+    impl ToValue for Placed {
+        fn to_value(&self) -> DslValue {
+            DslValue::object([("name".to_string(), self.name.to_value()), ("offset".to_string(), self.offset.clone())])
+        }
+    }
+    impl FromValue for Placed {
+        fn from_value(value: DslValue) -> Result<Self, ValueError> {
+            let mut entries = value.into_object()?.into_iter();
+            let (Some((_, name)), Some((_, offset))) = (entries.next(), entries.next()) else { return Err(ValueError::new("two fields")) };
+            let name = String::from_value(name)?;
+            if name.is_empty() {
+                return Err(ValueError::new("a placed value is named"));
+            }
+            Ok(Self { name, offset })
+        }
+    }
+    let mut placed = Placed { name: "saw".into(), offset: DslValue::from(&serde_json::json!({"x": 1, "y": [2, 3]})) };
+    let mut oracle = serde_json::Value::from(&placed.to_value());
+    *oracle.pointer_mut("/offset/y/1").unwrap() = serde_json::json!(5);
+    edit_through_value(&mut placed, &["offset", "y", "1"], ValueEdit::Set(DslValue::from(&serde_json::json!(5)))).unwrap();
+    assert_eq!(serde_json::Value::from(&placed.to_value()), oracle);
+    let before = serde_json::Value::from(&placed.to_value());
+    assert!(edit_through_value(&mut placed, &["name"], ValueEdit::Set(DslValue::from(&serde_json::json!("")))).is_err());
+    assert!(edit_through_value(&mut placed, &["missing", "x"], ValueEdit::Set(DslValue::from(&serde_json::json!(1)))).is_err());
+    assert_eq!(serde_json::Value::from(&placed.to_value()), before);
+}

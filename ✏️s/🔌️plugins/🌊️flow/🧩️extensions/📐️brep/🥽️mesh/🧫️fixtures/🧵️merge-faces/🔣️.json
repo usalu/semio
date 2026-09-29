@@ -1,0 +1,59 @@
+{
+  "mesh": {
+    "vertices": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        0,
+        2,
+        3
+      ]
+    ]
+  },
+  "cases": [
+    {
+      "operation": "dissolveEdges",
+      "edges": [
+        2
+      ],
+      "expected": {
+        "vertices": 4,
+        "faces": 1,
+        "area": 1
+      }
+    },
+    {
+      "operation": "mergeCoplanar",
+      "expected": {
+        "vertices": 4,
+        "faces": 1,
+        "area": 1
+      }
+    }
+  ]
+}

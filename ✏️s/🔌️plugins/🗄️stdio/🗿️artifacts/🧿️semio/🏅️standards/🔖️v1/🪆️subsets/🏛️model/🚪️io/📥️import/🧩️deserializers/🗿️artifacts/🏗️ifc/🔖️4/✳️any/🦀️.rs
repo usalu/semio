@@ -30,7 +30,7 @@ use crate::standards::v1::subsets::model::schema::snapshot::{
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 use semio_s_artifact_stdio_ifc::engine::spatial::{analyze_spatial, Mat4, PropertySet as IfcPropertySet, SpatialAnalysis, SpatialNode as IfcSpatialNode};
 use semio_s_artifact_stdio_ifc::IfcSnapshot;
-use semio_s_artifact_stdio_step::engine::part21::{Part21Document, Part21Value};
+use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Value};
 
 //#region 🔖️Deserializer
 pub struct SemioModelFromIfc;

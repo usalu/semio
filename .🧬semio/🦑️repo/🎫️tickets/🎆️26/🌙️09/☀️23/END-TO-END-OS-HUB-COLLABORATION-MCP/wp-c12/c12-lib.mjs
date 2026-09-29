@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-export const OUT = "/Users/ueli/Documents/semio/.tmp-ticket/wp-c12/generated";
+export const OUT = "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-c12-logs/probes";
 mkdirSync(OUT, { recursive: true });
 
 export const USERS = [

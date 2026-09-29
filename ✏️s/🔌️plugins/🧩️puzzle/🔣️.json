@@ -6643,6 +6643,192 @@
             }
           },
           {
+            "id": "setSelectionHidden",
+            "label": {
+              "native": {
+                "en": "Set Hidden",
+                "de": "Verborgen festlegen"
+              },
+              "reuse": {
+                "en": "Set Hidden",
+                "de": "Verborgen festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "ids",
+                "label": {
+                  "native": {
+                    "en": "Ids",
+                    "de": "IDs"
+                  },
+                  "reuse": {
+                    "en": "Ids",
+                    "de": "IDs"
+                  }
+                },
+                "schema": {
+                  "kind": "array",
+                  "items": {
+                    "kind": "string"
+                  }
+                },
+                "required": false
+              },
+              {
+                "id": "hidden",
+                "label": {
+                  "native": {
+                    "en": "Hidden",
+                    "de": "Verborgen"
+                  },
+                  "reuse": {
+                    "en": "Hidden",
+                    "de": "Verborgen"
+                  }
+                },
+                "schema": {
+                  "kind": "boolean"
+                },
+                "required": true
+              }
+            ],
+            "inPalette": false,
+            "category": "settings",
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the given or selected nodes hidden or shown, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Verbirgt die angegebenen oder ausgewählten Knoten oder zeigt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."
+                },
+                "reuse": {
+                  "en": "Sets the given or selected nodes hidden or shown, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Verbirgt die angegebenen oder ausgewählten Knoten oder zeigt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."
+                }
+              }
+            }
+          },
+          {
+            "id": "setSelectionLocked",
+            "label": {
+              "native": {
+                "en": "Set Locked",
+                "de": "Gesperrt festlegen"
+              },
+              "reuse": {
+                "en": "Set Locked",
+                "de": "Gesperrt festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "ids",
+                "label": {
+                  "native": {
+                    "en": "Ids",
+                    "de": "IDs"
+                  },
+                  "reuse": {
+                    "en": "Ids",
+                    "de": "IDs"
+                  }
+                },
+                "schema": {
+                  "kind": "array",
+                  "items": {
+                    "kind": "string"
+                  }
+                },
+                "required": false
+              },
+              {
+                "id": "locked",
+                "label": {
+                  "native": {
+                    "en": "Locked",
+                    "de": "Gesperrt"
+                  },
+                  "reuse": {
+                    "en": "Locked",
+                    "de": "Gesperrt"
+                  }
+                },
+                "schema": {
+                  "kind": "boolean"
+                },
+                "required": true
+              }
+            ],
+            "inPalette": false,
+            "category": "settings",
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the given or selected nodes locked or unlocked, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Sperrt die angegebenen oder ausgewählten Knoten oder entsperrt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."
+                },
+                "reuse": {
+                  "en": "Sets the given or selected nodes locked or unlocked, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Sperrt die angegebenen oder ausgewählten Knoten oder entsperrt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."
+                }
+              }
+            }
+          },
+          {
             "id": "patchInspectorNodes",
             "label": {
               "native": {
@@ -7650,6 +7836,186 @@
                 "reuse": {
                   "en": "Sets one flag (such as hidden or locked) on the given target regions.",
                   "de": "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen Zielbereichen."
+                }
+              }
+            }
+          },
+          {
+            "id": "setTargetRegionHidden",
+            "label": {
+              "native": {
+                "en": "Set Target Region Hidden",
+                "de": "Zielbereich verborgen festlegen"
+              },
+              "reuse": {
+                "en": "Set Target Region Hidden",
+                "de": "Zielbereich verborgen festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "id",
+                "label": {
+                  "native": {
+                    "en": "Id",
+                    "de": "Id"
+                  },
+                  "reuse": {
+                    "en": "Id",
+                    "de": "Id"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              },
+              {
+                "id": "hidden",
+                "label": {
+                  "native": {
+                    "en": "Hidden",
+                    "de": "Verborgen"
+                  },
+                  "reuse": {
+                    "en": "Hidden",
+                    "de": "Verborgen"
+                  }
+                },
+                "schema": {
+                  "kind": "boolean"
+                },
+                "required": true
+              }
+            ],
+            "inPalette": false,
+            "category": "targets",
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the given or selected target regions hidden or shown, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Verbirgt die angegebenen oder ausgewählten Zielbereiche oder zeigt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."
+                },
+                "reuse": {
+                  "en": "Sets the given or selected target regions hidden or shown, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Verbirgt die angegebenen oder ausgewählten Zielbereiche oder zeigt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."
+                }
+              }
+            }
+          },
+          {
+            "id": "setTargetRegionLocked",
+            "label": {
+              "native": {
+                "en": "Set Target Region Locked",
+                "de": "Zielbereich gesperrt festlegen"
+              },
+              "reuse": {
+                "en": "Set Target Region Locked",
+                "de": "Zielbereich gesperrt festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "id",
+                "label": {
+                  "native": {
+                    "en": "Id",
+                    "de": "Id"
+                  },
+                  "reuse": {
+                    "en": "Id",
+                    "de": "Id"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              },
+              {
+                "id": "locked",
+                "label": {
+                  "native": {
+                    "en": "Locked",
+                    "de": "Gesperrt"
+                  },
+                  "reuse": {
+                    "en": "Locked",
+                    "de": "Gesperrt"
+                  }
+                },
+                "schema": {
+                  "kind": "boolean"
+                },
+                "required": true
+              }
+            ],
+            "inPalette": false,
+            "category": "targets",
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the given or selected target regions locked or unlocked, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Sperrt die angegebenen oder ausgewählten Zielbereiche oder entsperrt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."
+                },
+                "reuse": {
+                  "en": "Sets the given or selected target regions locked or unlocked, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Sperrt die angegebenen oder ausgewählten Zielbereiche oder entsperrt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."
                 }
               }
             }
@@ -14021,6 +14387,226 @@
                 "reuse": {
                   "en": "Sets one flag (such as hidden or locked) on the given or selected objects.",
                   "de": "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen oder ausgewählten Objekte."
+                }
+              }
+            }
+          },
+          {
+            "id": "setSelectionHidden",
+            "label": {
+              "native": {
+                "en": "Set Hidden",
+                "de": "Verborgen festlegen"
+              },
+              "reuse": {
+                "en": "Set Hidden",
+                "de": "Verborgen festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "entity",
+                "label": {
+                  "native": {
+                    "en": "Entity",
+                    "de": "Entität"
+                  },
+                  "reuse": {
+                    "en": "Entity",
+                    "de": "Entität"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              },
+              {
+                "id": "ids",
+                "label": {
+                  "native": {
+                    "en": "Ids",
+                    "de": "IDs"
+                  },
+                  "reuse": {
+                    "en": "Ids",
+                    "de": "IDs"
+                  }
+                },
+                "schema": {
+                  "kind": "array",
+                  "items": {
+                    "kind": "string"
+                  }
+                },
+                "required": false
+              },
+              {
+                "id": "hidden",
+                "label": {
+                  "native": {
+                    "en": "Hidden",
+                    "de": "Verborgen"
+                  },
+                  "reuse": {
+                    "en": "Hidden",
+                    "de": "Verborgen"
+                  }
+                },
+                "schema": {
+                  "kind": "boolean"
+                },
+                "required": true
+              }
+            ],
+            "inPalette": false,
+            "category": "hand",
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the given or selected objects hidden or shown, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Verbirgt die angegebenen oder ausgewählten Objekte oder zeigt sie, genau auf den übergebenen Wert; eine Wiederholung ändert nichts."
+                },
+                "reuse": {
+                  "en": "Sets the given or selected objects hidden or shown, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Verbirgt die angegebenen oder ausgewählten Objekte oder zeigt sie, genau auf den übergebenen Wert; eine Wiederholung ändert nichts."
+                }
+              }
+            }
+          },
+          {
+            "id": "setSelectionLocked",
+            "label": {
+              "native": {
+                "en": "Set Locked",
+                "de": "Gesperrt festlegen"
+              },
+              "reuse": {
+                "en": "Set Locked",
+                "de": "Gesperrt festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "entity",
+                "label": {
+                  "native": {
+                    "en": "Entity",
+                    "de": "Entität"
+                  },
+                  "reuse": {
+                    "en": "Entity",
+                    "de": "Entität"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              },
+              {
+                "id": "ids",
+                "label": {
+                  "native": {
+                    "en": "Ids",
+                    "de": "IDs"
+                  },
+                  "reuse": {
+                    "en": "Ids",
+                    "de": "IDs"
+                  }
+                },
+                "schema": {
+                  "kind": "array",
+                  "items": {
+                    "kind": "string"
+                  }
+                },
+                "required": false
+              },
+              {
+                "id": "locked",
+                "label": {
+                  "native": {
+                    "en": "Locked",
+                    "de": "Gesperrt"
+                  },
+                  "reuse": {
+                    "en": "Locked",
+                    "de": "Gesperrt"
+                  }
+                },
+                "schema": {
+                  "kind": "boolean"
+                },
+                "required": true
+              }
+            ],
+            "inPalette": false,
+            "category": "hand",
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the given or selected objects locked or unlocked, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Sperrt die angegebenen oder ausgewählten Objekte oder entsperrt sie, genau auf den übergebenen Wert; eine Wiederholung ändert nichts."
+                },
+                "reuse": {
+                  "en": "Sets the given or selected objects locked or unlocked, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Sperrt die angegebenen oder ausgewählten Objekte oder entsperrt sie, genau auf den übergebenen Wert; eine Wiederholung ändert nichts."
                 }
               }
             }
@@ -25487,6 +26073,226 @@
             }
           },
           {
+            "id": "setSelectionHidden",
+            "label": {
+              "native": {
+                "en": "Set Hidden",
+                "de": "Verborgen festlegen"
+              },
+              "reuse": {
+                "en": "Set Hidden",
+                "de": "Verborgen festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "entity",
+                "label": {
+                  "native": {
+                    "en": "Entity",
+                    "de": "Entität"
+                  },
+                  "reuse": {
+                    "en": "Entity",
+                    "de": "Entität"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              },
+              {
+                "id": "ids",
+                "label": {
+                  "native": {
+                    "en": "Ids",
+                    "de": "IDs"
+                  },
+                  "reuse": {
+                    "en": "Ids",
+                    "de": "IDs"
+                  }
+                },
+                "schema": {
+                  "kind": "array",
+                  "items": {
+                    "kind": "string"
+                  }
+                },
+                "required": false
+              },
+              {
+                "id": "hidden",
+                "label": {
+                  "native": {
+                    "en": "Hidden",
+                    "de": "Verborgen"
+                  },
+                  "reuse": {
+                    "en": "Hidden",
+                    "de": "Verborgen"
+                  }
+                },
+                "schema": {
+                  "kind": "boolean"
+                },
+                "required": true
+              }
+            ],
+            "inPalette": false,
+            "category": "settings",
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the given or selected parts hidden or shown, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Verbirgt die angegebenen oder ausgewählten Teile oder zeigt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."
+                },
+                "reuse": {
+                  "en": "Sets the given or selected parts hidden or shown, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Verbirgt die angegebenen oder ausgewählten Teile oder zeigt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."
+                }
+              }
+            }
+          },
+          {
+            "id": "setSelectionLocked",
+            "label": {
+              "native": {
+                "en": "Set Locked",
+                "de": "Gesperrt festlegen"
+              },
+              "reuse": {
+                "en": "Set Locked",
+                "de": "Gesperrt festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "entity",
+                "label": {
+                  "native": {
+                    "en": "Entity",
+                    "de": "Entität"
+                  },
+                  "reuse": {
+                    "en": "Entity",
+                    "de": "Entität"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              },
+              {
+                "id": "ids",
+                "label": {
+                  "native": {
+                    "en": "Ids",
+                    "de": "IDs"
+                  },
+                  "reuse": {
+                    "en": "Ids",
+                    "de": "IDs"
+                  }
+                },
+                "schema": {
+                  "kind": "array",
+                  "items": {
+                    "kind": "string"
+                  }
+                },
+                "required": false
+              },
+              {
+                "id": "locked",
+                "label": {
+                  "native": {
+                    "en": "Locked",
+                    "de": "Gesperrt"
+                  },
+                  "reuse": {
+                    "en": "Locked",
+                    "de": "Gesperrt"
+                  }
+                },
+                "schema": {
+                  "kind": "boolean"
+                },
+                "required": true
+              }
+            ],
+            "inPalette": false,
+            "category": "settings",
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the given or selected parts locked or unlocked, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Sperrt die angegebenen oder ausgewählten Teile oder entsperrt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."
+                },
+                "reuse": {
+                  "en": "Sets the given or selected parts locked or unlocked, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Sperrt die angegebenen oder ausgewählten Teile oder entsperrt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."
+                }
+              }
+            }
+          },
+          {
             "id": "focusSelection",
             "label": {
               "native": {
@@ -26223,6 +27029,186 @@
                 "reuse": {
                   "en": "Sets one flag (such as hidden or locked) on the given target volumes.",
                   "de": "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen Zielvolumen."
+                }
+              }
+            }
+          },
+          {
+            "id": "setTargetVolumeHidden",
+            "label": {
+              "native": {
+                "en": "Set Target Volume Hidden",
+                "de": "Zielvolumen verborgen festlegen"
+              },
+              "reuse": {
+                "en": "Set Target Volume Hidden",
+                "de": "Zielvolumen verborgen festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "id",
+                "label": {
+                  "native": {
+                    "en": "Id",
+                    "de": "ID"
+                  },
+                  "reuse": {
+                    "en": "Id",
+                    "de": "ID"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              },
+              {
+                "id": "hidden",
+                "label": {
+                  "native": {
+                    "en": "Hidden",
+                    "de": "Verborgen"
+                  },
+                  "reuse": {
+                    "en": "Hidden",
+                    "de": "Verborgen"
+                  }
+                },
+                "schema": {
+                  "kind": "boolean"
+                },
+                "required": true
+              }
+            ],
+            "inPalette": false,
+            "category": "settings",
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the given target volume hidden or shown, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Verbirgt das angegebene Zielvolumen oder zeigt es, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."
+                },
+                "reuse": {
+                  "en": "Sets the given target volume hidden or shown, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Verbirgt das angegebene Zielvolumen oder zeigt es, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."
+                }
+              }
+            }
+          },
+          {
+            "id": "setTargetVolumeLocked",
+            "label": {
+              "native": {
+                "en": "Set Target Volume Locked",
+                "de": "Zielvolumen gesperrt festlegen"
+              },
+              "reuse": {
+                "en": "Set Target Volume Locked",
+                "de": "Zielvolumen gesperrt festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "id",
+                "label": {
+                  "native": {
+                    "en": "Id",
+                    "de": "ID"
+                  },
+                  "reuse": {
+                    "en": "Id",
+                    "de": "ID"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              },
+              {
+                "id": "locked",
+                "label": {
+                  "native": {
+                    "en": "Locked",
+                    "de": "Gesperrt"
+                  },
+                  "reuse": {
+                    "en": "Locked",
+                    "de": "Gesperrt"
+                  }
+                },
+                "schema": {
+                  "kind": "boolean"
+                },
+                "required": true
+              }
+            ],
+            "inPalette": false,
+            "category": "settings",
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the given target volume locked or unlocked, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Sperrt das angegebene Zielvolumen oder entsperrt es, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."
+                },
+                "reuse": {
+                  "en": "Sets the given target volume locked or unlocked, to exactly the value passed; repeating it changes nothing.",
+                  "de": "Sperrt das angegebene Zielvolumen oder entsperrt es, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."
                 }
               }
             }
@@ -32605,8 +33591,8 @@
     }
   ],
   "hashes": {
-    "wasmSha256": "116a1d6eb7f19dfcccd15bbb0a95970653072b51a9ac1b35921d7723ba9a8580",
-    "coreWasmSha256": "68d551d060426d56623f20e0bea459aa1876ca57dc7bec08aa6bf71c3b6b3a2e",
-    "descriptorSha256": "b0583df5009ed9520557f84c577435fee47180efe5678be129f5935f8762b5c0"
+    "wasmSha256": "aac603699cef464fa14e325f38bce193f53ddbbe88e6b2fc01c97621eab9a98f",
+    "coreWasmSha256": "dc520c91028ff681c45fd49e8af3a3c084308be704036e184ed8c4e802459fbf",
+    "descriptorSha256": "1a26aad285565e9c47999c190f059254303bfa87ebbf463356409afe0e6f70e3"
   }
 }

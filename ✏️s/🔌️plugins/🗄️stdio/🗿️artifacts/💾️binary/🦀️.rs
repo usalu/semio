@@ -10,7 +10,7 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 use semio_framework_plugin::io::FormatDescriptor;
-use semio_framework_plugin::{ArtifactDefinition, ArtifactDefinitionError, PluginAssemblyError};
+use semio_framework_plugin::{ArtifactDeclaration, ArtifactDefinition, ArtifactDefinitionError, PluginAssemblyError};
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
@@ -63,7 +63,20 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 /// 🗂️ This artifact's `ArtifactKindSpec`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, PluginAssemblyError> {
-    semio_s_artifact_stdio_contract::definition_only_assembly("binary", definition()?)
+    semio_s_artifact_stdio_contract::runtime_assembly("binary", definition()?, declaration)
+}
+
+/// 🧾️ The runtime `binary` declares: its schema, format, inference descriptor, composers and document codec.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn declaration(definition: ArtifactDefinition) -> Result<ArtifactDeclaration, ArtifactDefinitionError> {
+    let formats = formats()?;
+    ArtifactDeclaration::builder(definition)
+        .schema(standards::v_raw::subsets::any::schema::binary_artifact_schema_descriptor())
+        .formats(formats)
+        .inferences([standards::v_raw::subsets::any::schema::inferences::binary_artifact_inference_descriptor()])
+        .composers(standards::v_raw::subsets::any::io::io_registry::entries())
+        .document_codec_bare::<BinarySnapshot, BinaryMutation>(STDIO_BINARY_DOCUMENT_SCHEMA)
+        .try_build()
 }
 
 //#region 🔖️ArtifactDeclaration

@@ -34,13 +34,18 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 
 /// 🔌️ Builds the `stdio-binary` bundle: every binary/deflate/zip/epw subset's editor and viewer (with the owner-mutation roster where
 /// the subset's mutation enum derives one), one activation per artifact kind it opens read live from that kind's own
-/// `artifact_kind().id`, and the exact-pin runtime dependency on `stdio`, which owns those kinds and their codecs.
+/// `artifact_kind().id`, the exact-pin runtime dependency on `stdio`, which owns those kinds and their codecs, and the hosted runtime of
+/// each of them (`host_artifact`: schemas, inferences, document codecs, composers, formats, subset validators) in this component.
 pub fn plugin() -> Result<Plugin<StdioBinaryApps>, PluginAssemblyError> {
     Plugin::<StdioBinaryApps>::builder("stdio-binary")
         .label("Stdio Binary")
         .version(env!("CARGO_PKG_VERSION"))
         .package_id("semio:stdio-binary")
         .depends_on("stdio", semio_framework::tree_pin!())
+        .host_artifact(semio_s_artifact_stdio_binary::declaration(semio_s_artifact_stdio_binary::definition()?).map_err(PluginAssemblyError::definition)?)
+        .host_artifact(semio_s_artifact_stdio_deflate::declaration(semio_s_artifact_stdio_deflate::definition()?).map_err(PluginAssemblyError::definition)?)
+        .host_artifact(semio_s_artifact_stdio_zip::declaration(semio_s_artifact_stdio_zip::definition()?).map_err(PluginAssemblyError::definition)?)
+        .host_artifact(semio_s_artifact_stdio_epw::declaration(semio_s_artifact_stdio_epw::definition()?).map_err(PluginAssemblyError::definition)?)
         .editor::<semio_s_artifact_stdio_binary::editor::binary::BinaryEditor>(semio_s_artifact_stdio_binary::editor::binary::create_binary_editor())
         .viewer::<semio_s_artifact_stdio_binary::viewer::binary::BinaryViewer>(semio_s_artifact_stdio_binary::viewer::binary::create_binary_viewer())
         .editor::<semio_s_artifact_stdio_deflate::editor::deflate::DeflateEditor>(semio_s_artifact_stdio_deflate::editor::deflate::create_deflate_editor())

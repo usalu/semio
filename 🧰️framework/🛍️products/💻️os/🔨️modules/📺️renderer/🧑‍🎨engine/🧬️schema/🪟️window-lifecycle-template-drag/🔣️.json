@@ -414,7 +414,7 @@
           "additionalProperties": false,
           "required": ["id", "defaultOpen", "rows", "headerRect"],
           "properties": {
-            "id": { "type": "string", "minLength": 1 },
+            "id": { "$ref": "#/definitions/elementId" },
             "defaultOpen": { "const": false },
             "rows": {
               "type": "array",
@@ -424,7 +424,7 @@
                 "additionalProperties": false,
                 "required": ["id", "branch", "rect"],
                 "properties": {
-                  "id": { "type": "string", "minLength": 1 },
+                  "id": { "$ref": "#/definitions/elementId" },
                   "branch": { "type": "boolean" },
                   "defaultOpen": { "const": false },
                   "rect": { "$ref": "#/definitions/rect" }
@@ -470,12 +470,17 @@
           "minItems": 16,
           "maxItems": 16,
           "uniqueItems": true,
-          "items": { "type": "string", "minLength": 1 }
+          "items": { "$ref": "#/definitions/elementId" }
         }
       }
     }
   },
   "definitions": {
+    "elementId": {
+      "description": "🆔️ The UI element id grammar — `ELEMENT_ID_PATTERN` (`🖱️ui/🧱️elements/🆔️ElementId/🟦️.tsx`) ≡ `is_element_id` (`🛂️manifest/🦀️.rs`): dot-separated camelCase segments, each starting with a lowercase letter.",
+      "type": "string",
+      "pattern": "^[a-z][a-zA-Z0-9]*(\\.[a-z][a-zA-Z0-9]*)*$"
+    },
     "rect": {
       "type": "object",
       "additionalProperties": false,

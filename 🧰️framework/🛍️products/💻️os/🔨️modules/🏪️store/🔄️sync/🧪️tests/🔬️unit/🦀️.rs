@@ -461,7 +461,6 @@ async fn a_seeded_hub_actor_says_hello_at_the_canonical_pair_baseline() {
 #[tokio::test]
 async fn native_terminal_connection_failure_clears_receipt_actor_before_reissue() {
     use futures::StreamExt;
-    use tokio_tungstenite::tungstenite::Message;
 
     let (_, remote) = ChannelBackbone::pair("native-actor-epoch-test").await;
     let (_, receiver) = artifact_mailbox_pair();
@@ -530,15 +529,6 @@ async fn native_terminal_connection_failure_clears_receipt_actor_before_reissue(
     assert_eq!(envelopes[0].actor.0, reconnected);
     assert!(tokio::time::timeout(std::time::Duration::from_millis(30), reconnected_socket.next()).await.is_err(), "reconnect flush is exactly once");
     assert_eq!(actor.socket_epoch_test_state(), (Some(reconnected.into()), true, 1, Vec::new()));
-
-    actor.expire_test_socket_authority();
-    let after_expiry = sample_operation_envelope("after-authority-expiry", 5).await;
-    actor.relay_test_envelope(after_expiry).await;
-    let (socket_actor, confirmed, pending, queued) = actor.socket_epoch_test_state();
-    assert_eq!((socket_actor, confirmed, pending), (None, false, 0));
-    assert_eq!(queued.len(), 2, "unacknowledged and post-expiry mutations stay queued for a fresh plan");
-    let terminal = tokio::time::timeout(std::time::Duration::from_secs(1), reconnected_socket.next()).await.expect("expired authority closes promptly");
-    assert!(!matches!(terminal, Some(Ok(Message::Binary(_)))), "expired plan authority cannot carry another command");
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -1445,6 +1435,7 @@ mod actor_tests {
     struct MockHubSocketGrantSource {
         hub_origin: String,
         actor_id: String,
+        plan_window_ms: u64,
         trace: Arc<std::sync::Mutex<Vec<&'static str>>>,
     }
 
@@ -1459,7 +1450,7 @@ mod actor_tests {
             _timeout_ms: u64,
         ) -> Result<crate::os_directory::client::DocumentSocketAdmissionV1, crate::os_directory::client::DirectoryClientError> {
             self.trace.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push("grant.entered");
-            let expires_at_ms = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).expect("system clock after epoch").as_millis().saturating_add(60_000).min(i64::MAX as u128) as i64;
+            let expires_at_ms = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).expect("system clock after epoch").as_millis().saturating_add(u128::from(self.plan_window_ms)).min(i64::MAX as u128) as i64;
             let admission = crate::os_directory::client::DocumentSocketAdmissionV1 {
                 socket: crate::os_directory::client::DocumentSocketGrantReceiptV1 {
                     schema: "semio.hub.document-socket-grant/v1".into(),
@@ -1516,8 +1507,13 @@ mod actor_tests {
     }
 
     fn configure_mock_hub(host: &ArtifactHost, hub_origin: &str, actor_fill: char, hub: &MockHub) {
+        configure_mock_hub_with_plan_window(host, hub_origin, actor_fill, hub, 60_000);
+    }
+
+    /// ⏳️ [`configure_mock_hub`] with the admission plan's exchange window the grant source answers.
+    fn configure_mock_hub_with_plan_window(host: &ArtifactHost, hub_origin: &str, actor_fill: char, hub: &MockHub, plan_window_ms: u64) {
         host.set_local_hub_credential(Arc::new(crate::os_directory::client::LocalHubCredential::test(hub_origin, &format!("session.v1.{}.{}", actor_fill.to_string().repeat(32), actor_fill.to_string().repeat(64)))));
-        host.set_hub_socket_grant_source(Arc::new(MockHubSocketGrantSource { hub_origin: hub_origin.into(), actor_id: format!("hub.v1.{}", actor_fill.to_string().repeat(64)), trace: hub.trace.clone() }));
+        host.set_hub_socket_grant_source(Arc::new(MockHubSocketGrantSource { hub_origin: hub_origin.into(), actor_id: format!("hub.v1.{}", actor_fill.to_string().repeat(64)), plan_window_ms, trace: hub.trace.clone() }));
     }
 
     async fn mock_frontier(ordinal: u64) -> RuntimeFrontierSummary {
@@ -1825,6 +1821,38 @@ mod actor_tests {
 
         host_a.close_key(&key_a);
         host_b.close_key(&key_b);
+    }
+
+    /// 🔌️ A live document socket outlives its admission plan's exchange window: the plan's expiry bounds when its grant
+    /// may be exchanged (the hub's `DOCUMENT_OPEN_PLAN_MAX_TTL_MS`, 30 s), never the socket, which the hub re-proves every
+    /// second. With a 3 s window, an edit sent 3.5 s after Session goes out on the SAME socket and is accepted — the React
+    /// worker's contract since 09-22 (ticket 26/09/23 session 14c: both Rust actors re-planned every live socket at it).
+    #[tokio::test]
+    async fn a_live_socket_outlives_its_admission_plan_window() {
+        ensure_demo_codec_registered().await;
+        let (addr, hub) = spawn_mock_hub_with_session_gate(true).await;
+        let base_url = format!("ws://{addr}");
+        let host = ArtifactHost::new(test_pool());
+        configure_mock_hub_with_plan_window(&host, &base_url, 'a', &hub, 3_000);
+        let channels = host
+            .open(ArtifactActorConfig {
+                document_id: "plan-window".into(),
+                schema: "demo/v1".into(),
+                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), surface: None }],
+                watch_external: false,
+                actor: "A".into(),
+            })
+            .await;
+        let key = channels.document_key.clone();
+        let mut events = host.subscribe_key(&key).await;
+        hub.session_gate.as_ref().expect("gated mock").add_permits(1);
+        assert!(matches!(wait_for_mock_hub_event("Session", &hub, &mut events, |event| matches!(event, ArtifactEvent::Session { .. })).await, ArtifactEvent::Session { .. }));
+        tokio::time::sleep(std::time::Duration::from_millis(3_500)).await;
+        let edit = document_backbone_envelope("after-the-plan-window", "plan-window");
+        channels.cmd_tx.send(ArtifactActorMsg::DocumentBackbone { message: document_backbone_message(std::slice::from_ref(&edit)) }).expect("edit after the plan window");
+        assert!(matches!(wait_for_mock_hub_event("CommandOutcome", &hub, &mut events, |event| matches!(event, ArtifactEvent::CommandOutcome { .. })).await, ArtifactEvent::CommandOutcome { outcome: CommandAckOutcome::Accepted, .. }));
+        assert_eq!(hub.connections.load(Ordering::SeqCst), 1, "the edit went out on the socket admitted inside the plan window");
+        host.close_key(&key);
     }
 
     // 🔬️ Reconnect with `since` catch-up: after A appends operations while B is offline, B reconnects and

@@ -24,8 +24,8 @@ use crate::editor::home::transient::HomeDirectoryProjection;
 use crate::editor::home::terminology::SHomeLabels;
 use crate::editor::home::S_HOME_CONTROLLER_ID;
 use crate::HomeTableLabels;
-use semio_framework_plugin::app::{table_row_action, table_window_row, TableWindowKit, TreeWindows, WindowKit};
-use semio_framework_plugin::{ActionFactory, IconName, LocalizedLabel, WindowKindDefinition};
+use semio_framework_plugin::app::{row_action, row_target, table_window_row, TableWindowKit, TreeWindows, WindowKit};
+use semio_framework_plugin::{ActionFactory, IconName, LocalizedLabel, RowActionPlacement, WindowKindDefinition};
 use semio_framework_ui_contract::{Buildable, HasBase, HasChildren, HasStackLayout};
 
 //#region 🔖️Constants
@@ -69,15 +69,17 @@ fn fixed_label(value: semio_framework_plugin::LabelText, code: &'static str) -> 
     semio_framework_ui_contract::Label::try_from(value.as_str()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new(code, "fixed label admission failed"))
 }
 
-fn home_space_action(action_id: &str, space_id: &str) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
+/// 🎯️ A space row's ONE target: the Home controller, the `{spaceId}` argument map every row verb inherits, and `openSpace`
+/// as the row's activation (Enter on the focused row).
+fn home_space_target(space_id: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::RowTarget> {
     let mut args = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.table.action-args", "fixed table action argument admission failed"))?;
     args.push("spaceId".to_owned(), semio_framework_plugin::UiValue::Text(fixed_text(space_id, "ui.table.space-id")?))
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.action-args.space-id", "fixed table action argument admission failed"))?;
-    ActionFactory::new(S_HOME_CONTROLLER_ID).action(action_id, Some(semio_framework_plugin::UiValue::Map(args.finish())))
+    row_target(S_HOME_CONTROLLER_ID, Some(semio_framework_plugin::UiValue::Map(args.finish())), Some("openSpace"))
 }
 
-fn home_row_action(icon: IconName, label: semio_framework_plugin::LabelText, action_id: &str, space_id: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::RowAction> {
-    table_row_action(icon.as_str(), label.as_str(), home_space_action(action_id, space_id)?)
+fn home_row_action(icon: IconName, label: semio_framework_plugin::LabelText, verb: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::RowAction> {
+    row_action(icon.as_str(), label.as_str(), verb, RowActionPlacement::Row)
 }
 
 /// 🛂️ `openSpace` is offered to every row; the directory-owned lifecycle affordances
@@ -88,20 +90,20 @@ fn home_row_action(icon: IconName, label: semio_framework_plugin::LabelText, act
 /// Every local-origin row offers `deleteVirtualFileSystemNode` ("Remove from Home"): one Home config
 /// tombstone event that keeps the studio's document and is undone by its exact inverse.
 fn row_actions(labels: &SHomeLabels, row: &crate::HomeSpaceRow) -> semio_framework_plugin::UiAssemblyResult<Vec<semio_framework_plugin::RowAction>> {
-    let mut actions = vec![home_row_action(IconName::FolderOpen, labels.action_open, "openSpace", &row.id)?];
+    let mut actions = vec![home_row_action(IconName::FolderOpen, labels.action_open, "openSpace")?];
     if row.data_class == "ephemeralLocalOnly" {
-        actions.push(home_row_action(IconName::Cloud, labels.action_promote, "promoteToHubSpace", &row.id)?);
-        actions.push(home_row_action(IconName::Save, labels.action_persist, "persistLocally", &row.id)?);
+        actions.push(home_row_action(IconName::Cloud, labels.action_promote, "promoteToHubSpace")?);
+        actions.push(home_row_action(IconName::Save, labels.action_persist, "persistLocally")?);
     }
     if row.origin == "local" {
-        actions.push(home_row_action(IconName::EyeOff, labels.action_remove, "deleteVirtualFileSystemNode", &row.id)?);
+        actions.push(home_row_action(IconName::EyeOff, labels.action_remove, "deleteVirtualFileSystemNode")?);
         return Ok(actions);
     }
     if row.origin == "hub" && row.role == Some(crate::DirectorySpaceRole::Author) {
-        actions.push(home_row_action(IconName::Pencil, labels.action_rename, "renameSpace", &row.id)?);
-        actions.push(home_row_action(IconName::Link, labels.action_share, "shareSpace", &row.id)?);
-        actions.push(home_row_action(IconName::Trash2, labels.action_delete, "deleteSpace", &row.id)?);
-        actions.push(home_row_action(IconName::Users, labels.action_manage, "manageSpace", &row.id)?);
+        actions.push(home_row_action(IconName::Pencil, labels.action_rename, "renameSpace")?);
+        actions.push(home_row_action(IconName::Link, labels.action_share, "shareSpace")?);
+        actions.push(home_row_action(IconName::Trash2, labels.action_delete, "deleteSpace")?);
+        actions.push(home_row_action(IconName::Users, labels.action_manage, "manageSpace")?);
     }
     Ok(actions)
 }
@@ -123,7 +125,7 @@ fn render_rows(rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, actions: &
     let columns = [table.column_name.as_str(), table.column_kind.as_str(), table.column_visibility.as_str(), table.column_members.as_str(), table.column_updated.as_str(), table.column_origin.as_str()];
     TableWindowKit::render_rows(windows, table.table_name.as_str(), &columns, Some(table.column_actions.as_str()), rows, |row| {
         let cells = row.cells(table);
-        table_window_row(&format!("space:{}", row.id), &cells.each_ref().map(String::as_str), row_actions(actions, row)?, Some(home_space_action("openSpace", &row.id)?))
+        table_window_row(&format!("space:{}", row.id), &cells.each_ref().map(String::as_str), row_actions(actions, row)?, Some(home_space_target(&row.id)?))
     })
 }
 

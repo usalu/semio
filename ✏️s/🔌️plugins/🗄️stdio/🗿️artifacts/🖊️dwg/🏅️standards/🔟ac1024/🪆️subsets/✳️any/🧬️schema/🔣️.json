@@ -5865,7 +5865,7 @@
         "stepSize": {
           "type": "number"
         },
-        "dwf_3dPrecision": {
+        "dwf3dPrecision": {
           "type": "number"
         },
         "lensLength": {
@@ -5977,7 +5977,7 @@
         "cameraDisplay",
         "stepsPerSecond",
         "stepSize",
-        "dwf_3dPrecision",
+        "dwf3dPrecision",
         "lensLength",
         "cameraHeight",
         "solidHistory",

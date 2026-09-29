@@ -7,7 +7,7 @@
 
 use crate::standards::v2x3::subsets::base::schema::snapshot::{Ifc2x3EdmPreamble, Ifc2x3Snapshot};
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use semio_s_artifact_stdio_step::engine::part21::{Part21Decimal, Part21Header, Part21Instance, Part21Value};
+use semio_s_artifact_stdio_contract::part21::{Part21Decimal, Part21Header, Part21Instance, Part21Value};
 // 🧭️ `DiffAlgebra` isn't yet on the `protocol` facade's curated re-export list (S1 added the
 // trait but the facade wasn't updated) — reached via the still-public `os_spr::command` path
 // instead, same as `txt`'s own `🔺️diff/🦀️.rs`.

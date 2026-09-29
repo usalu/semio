@@ -165,7 +165,7 @@ pub struct WavSnapshot {
 
 impl Default for WavSnapshot {
     fn default() -> Self {
-        Self { schema: STDIO_WAV_DOCUMENT_SCHEMA.into(), fmt: WavFmt::default(), data: WavData::default(), fmt_pad_byte: 0, data_pad_byte: 0, other_chunks: Vec::new(), chunk_order: vec![WavChunkRef::Format, WavChunkRef::Samples] }
+        Self { schema: STDIO_WAV_DOCUMENT_SCHEMA.into(), fmt: WavFmt::default(), data: WavData::Pcm16(Vec::new()), fmt_pad_byte: 0, data_pad_byte: 0, other_chunks: Vec::new(), chunk_order: vec![WavChunkRef::Format, WavChunkRef::Samples] }
     }
 }
 //#endregion 🔖️Snapshot

@@ -5,8 +5,8 @@ use crate::editor::flow::{flow_action, ui_value_map, ui_value_text};
 use crate::playbook::FormGeneration;
 use semio_framework_plugin::plugin_app_close_prelude::Label;
 use semio_framework_plugin::{
-    tree_item_with_action, ActionBinding, Buildable, BuiltNode, HasBase, Locale, LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, RowAction, RowActionPlacement, SurfaceKind, Terminology, TreeWindows, Trigger, UiAssemblyResult,
-    UiFixedList, UiText, WindowKindDefinition, WindowOptions,
+    activation_target, row_action, tree_item_with_action, Buildable, BuiltNode, HasBase, HasChildren, Locale, LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, RowActionPlacement, SurfaceKind, Terminology, TreeWindows, Trigger,
+    UiAssemblyResult, UiFixedList, UiText, WindowKindDefinition, WindowOptions,
 };
 use semio_framework_ui_contract as ui;
 
@@ -69,30 +69,33 @@ fn generation_tree_label(key: &str, locale: Locale, terminology: Terminology) ->
     localized.resolve(terminology, locale).to_string()
 }
 
-/// 🎬️ One remove/rename row action, surfaced in the row's overflow menu (mirrors the retired
-/// `UiTreeItemAction { placement: Menu }` pair — `📓️recipe-plugin.md` §2's `TreeItem` row).
-fn generation_row_action(icon: &str, label: String, action: &str, args: Option<semio_framework_plugin::UiValue>) -> UiAssemblyResult<RowAction> {
-    let (action, args) = flow_action(action, args)?;
-    Ok(RowAction { icon: ui_text(icon)?, label: Some(ui_label(label)?), action: ActionBinding { trigger: Trigger::Activate, action, args, capability: None }, placement: RowActionPlacement::Menu })
+/// ✏️ The selected generation's inline name editor: `renameGeneration{id}` committed on blur with the typed name — the one
+/// reachable rename, as procedural's twin `generation_rename_field` (`🌀️procedural/🫀️core/🖼️semantic-ui`) renders it. The
+/// former row action renamed to a HARDCODED `"{name} copy"`, so a user could reach the verb but never choose a name.
+fn generation_rename_field(surface_prefix: &str, generation: &FormGeneration, placeholder: &str) -> UiAssemblyResult<BuiltNode> {
+    let (action, args) = flow_action("renameGeneration", Some(ui_value_map([("id", ui_value_text(&generation.id)?)])?))?;
+    let editor = ui::input(ui::InputKind::Text).value(ui_text(&generation.name)?).placeholder(ui_label(placeholder)?).commit(ui_text("blur")?);
+    let editor = editor.try_id(format!("{surface_prefix}.generation.{}.rename", generation.id)).map_err(|_| generation_error("rename-id"))?;
+    let editor = match args {
+        Some(args) => editor.try_on_with(Trigger::Commit, action, args).map_err(|_| generation_error("rename-binding"))?,
+        None => editor.try_on(Trigger::Commit, action).map_err(|_| generation_error("rename-binding"))?,
+    };
+    editor.try_build().map_err(|_| generation_error("rename-build"))
 }
 
-/// 🌳️ One generation row: primary click selects it, the overflow menu carries rename/remove.
+/// 🌳️ One generation row: its ONE target `{id}` — activation `selectGeneration`, the overflow menu's `removeGeneration` —
+/// and, while selected, the inline name editor.
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM / `📓️recipe-plugin.md` §6: the old
 /// `presence.selected` stamp has no build-time equivalent this wave — dropped rather than approximated,
 /// mirroring this crate's `main`/`inspection` windows' identical documented gap.
-fn generation_item(generation: &FormGeneration, surface_prefix: &str, locale: Locale, terminology: Terminology) -> UiAssemblyResult<BuiltNode> {
-    let remove_args = ui_value_map([("id", ui_value_text(&generation.id)?)])?;
-    let rename_args = ui_value_map([("id", ui_value_text(&generation.id)?), ("name", ui_value_text(format!("{} copy", generation.name))?)])?;
-    let select_args = ui_value_map([("id", ui_value_text(&generation.id)?)])?;
-    let (select_action, select_args) = flow_action("selectGeneration", Some(select_args))?;
+fn generation_item(generation: &FormGeneration, selected: bool, surface_prefix: &str, locale: Locale, terminology: Terminology) -> UiAssemblyResult<BuiltNode> {
+    let select = flow_action("selectGeneration", Some(ui_value_map([("id", ui_value_text(&generation.id)?)])?))?;
     let mut builder = ui::tree_item(ui_label(&generation.name)?).description(ui_text(format!("{} values", generation.values.len()))?).icon(ui_text("layers")?);
-    builder = builder.try_id(format!("{surface_prefix}.generation.{}", generation.id)).map_err(|_| generation_error("item-id"))?;
-    builder = match select_args {
-        Some(args) => builder.try_on_with(Trigger::Activate, select_action, args).map_err(|_| generation_error("item-select"))?,
-        None => builder.try_on(Trigger::Activate, select_action).map_err(|_| generation_error("item-select"))?,
-    };
-    builder = builder.try_row_action(generation_row_action("pencil", generation_tree_label("rename", locale, terminology), "renameGeneration", Some(rename_args))?).map_err(|_| generation_error("item-row-actions"))?;
-    builder = builder.try_row_action(generation_row_action("trash-2", generation_tree_label("remove", locale, terminology), "removeGeneration", Some(remove_args))?).map_err(|_| generation_error("item-row-actions"))?;
+    builder = builder.try_id(format!("{surface_prefix}.generation.{}", generation.id)).map_err(|_| generation_error("item-id"))?.target(activation_target(select)?);
+    builder = builder.try_row_action(row_action("trash-2", &generation_tree_label("remove", locale, terminology), "removeGeneration", RowActionPlacement::Menu)?).map_err(|_| generation_error("item-row-actions"))?;
+    if selected {
+        builder = builder.try_child(generation_rename_field(surface_prefix, generation, &generation_tree_label("rename", locale, terminology))?).map_err(|_| generation_error("item-rename"))?;
+    }
     builder.try_build().map_err(|_| generation_error("item-build"))
 }
 
@@ -105,7 +108,7 @@ pub fn render(transient: &FlowWindowTransient, locale: Locale, terminology: Term
         Some(ui_label(generation_tree_label("generations", locale, terminology))?),
         true,
         &generation.generations,
-        |entry| generation_item(entry, surface_prefix, locale, terminology),
+        |entry| generation_item(entry, crate::playbook::selected_generation(&generation).is_some_and(|selected| selected.id == entry.id), surface_prefix, locale, terminology),
         generation_tree_label("empty", locale, terminology),
     )?;
     let mut add_items = UiFixedList::default();

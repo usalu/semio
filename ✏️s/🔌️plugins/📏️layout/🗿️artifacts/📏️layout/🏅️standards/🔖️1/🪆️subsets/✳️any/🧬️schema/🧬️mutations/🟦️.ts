@@ -323,6 +323,11 @@ export interface SetPageParent { id: string }
 export interface SetPageGuides { id: string }
 export interface SetStoryRuns { id: string }
 export interface UpdateLink { id: string }
+export interface SetPageOverrides { id: string }
+export interface CreateLayer { id: string }
+export interface SetFrameLayer { id: string }
+export interface SetDrawingText { id: string }
+export interface ReorderFrame { id: string }
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
@@ -366,5 +371,10 @@ export type LayoutMutation =
   | { SetPageParent: SetPageParent }
   | { SetPageGuides: SetPageGuides }
   | { SetStoryRuns: SetStoryRuns }
-  | { UpdateLink: UpdateLink };
+  | { UpdateLink: UpdateLink }
+  | { SetPageOverrides: SetPageOverrides }
+  | { CreateLayer: CreateLayer }
+  | { SetFrameLayer: SetFrameLayer }
+  | { SetDrawingText: SetDrawingText }
+  | { ReorderFrame: ReorderFrame };
 //#endregion 🔖️Mutations

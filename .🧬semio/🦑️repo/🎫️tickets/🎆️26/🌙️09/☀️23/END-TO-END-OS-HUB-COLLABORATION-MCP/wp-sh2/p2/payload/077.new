@@ -1,0 +1,29 @@
+use super::*;
+use crate::editor::space_index::{unit_tests::context, SpaceIndexCommand, SpaceIndexEditor};
+use crate::viewer::space_index::transient::SpaceIndexTransient;
+use semio_framework_plugin::{ArtifactEditor, HistoryView};
+
+/// 📥️ The batch folds as its own transient item: the one space's origin lists its directory-owned row.
+#[semio_framework_async_macros::async_test]
+async fn a_batch_folds_as_its_transient_item() {
+    let origin = context::directory_origin("artifact-1");
+    let listed = context::fold_directory_events(0, &origin).item().judge(&SpaceIndexTransient::default()).expect("admissible origin").expect("the origin lists the space");
+    assert_eq!(listed.directory().rows("space-1").iter().map(|row| row.name.as_str()).collect::<Vec<_>>(), ["First"]);
+    assert_eq!(listed.directory().space("space-1").map(|space| space.members.len()), Some(1));
+}
+
+/// 🚫️ The direct lane never folds a batch: there is no captured transient to judge it against.
+#[semio_framework_async_macros::async_test]
+async fn the_direct_lane_refuses_by_name() {
+    let (snapshot, history) = (SSpaceSnapshot::default(), HistoryView::empty());
+    let refused = handle(&context::fold_directory_events(0, &context::directory_origin("artifact-1")), &ArtifactView::new(&snapshot, &history), &ConfigView { snapshot: &NoConfig::default(), window: None });
+    assert!(matches!(refused, Err(fault) if fault.code.0.as_str() == "s.space.fold-directory-events.requires-retained-job"));
+}
+
+/// 🌉️ The host's action bridges field for field onto the batch.
+#[semio_framework_async_macros::async_test]
+async fn the_host_action_bridges_onto_the_batch() {
+    let args = pack::json_to_dsl_value(&pack::json!({ "spaceId": "space-1", "afterSeqExclusive": 4, "eventsJson": "[]" }));
+    let SpaceIndexCommand::FoldDirectoryEvents(batch) = SpaceIndexEditor::command_from_action("foldDirectoryEvents", Some(&args)).expect("the feed bridges") else { panic!("expected FoldDirectoryEvents") };
+    assert_eq!(batch, FoldDirectoryEvents { space_id: "space-1".into(), after_seq_exclusive: 4, events_json: "[]".into() });
+}

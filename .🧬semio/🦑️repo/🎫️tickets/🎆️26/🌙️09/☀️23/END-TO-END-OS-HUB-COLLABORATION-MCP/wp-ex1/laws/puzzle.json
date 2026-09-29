@@ -1,0 +1,66 @@
+{
+ "plugin": "puzzle",
+ "dir": "🧩️puzzle",
+ "apps": [
+  {
+   "app": "s.puzzle.puzzle3d@1/*#editor",
+   "examples": [
+    {
+     "id": "concrete-forest",
+     "document": "distinct"
+    },
+    {
+     "id": "nakagin-capsule-tower",
+     "document": "distinct"
+    }
+   ]
+  },
+  {
+   "app": "s.puzzle.puzzle5d@1/*#editor",
+   "examples": [
+    {
+     "id": "capsule-dream",
+     "document": "distinct"
+    },
+    {
+     "id": "concrete-forest",
+     "document": "distinct"
+    },
+    {
+     "id": "nakagin-capsule-tower",
+     "document": "distinct"
+    }
+   ]
+  },
+  {
+   "app": "s.puzzle.puzzle2d@1/*#editor",
+   "examples": [
+    {
+     "id": "concrete-forest",
+     "document": "distinct"
+    },
+    {
+     "id": "nakagin-capsule-tower",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "semio_s_artifact_puzzle_3d::editor::puzzle3d::Puzzle3dPlayApp",
+   "create": "semio_s_artifact_puzzle_3d::editor::puzzle3d::create_puzzle3d_app",
+   "app": "s.puzzle.puzzle3d@1/*#editor"
+  },
+  {
+   "editor": "semio_s_artifact_puzzle_5d::editor::puzzle5d::Puzzle5dPlayApp",
+   "create": "semio_s_artifact_puzzle_5d::editor::puzzle5d::create_puzzle5d_app",
+   "app": "s.puzzle.puzzle5d@1/*#editor"
+  },
+  {
+   "editor": "semio_s_artifact_puzzle_2d::editor::puzzle2d::Puzzle2dPlayApp",
+   "create": "semio_s_artifact_puzzle_2d::editor::puzzle2d::create_puzzle2d_app",
+   "app": "s.puzzle.puzzle2d@1/*#editor"
+  }
+ ]
+}

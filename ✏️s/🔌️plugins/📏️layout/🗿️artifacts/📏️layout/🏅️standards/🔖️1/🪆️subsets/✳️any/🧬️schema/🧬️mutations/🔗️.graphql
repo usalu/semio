@@ -316,6 +316,11 @@ type SetPageParent { id: String! }
 type SetPageGuides { id: String! }
 type SetStoryRuns { id: String! }
 type UpdateLink { id: String! }
+type SetPageOverrides { id: String! }
+type CreateLayer { id: String! }
+type SetFrameLayer { id: String! }
+type SetDrawingText { id: String! }
+type ReorderFrame { id: String! }
 
 union LayoutMutation =
     RenameLayout
@@ -358,3 +363,8 @@ union LayoutMutation =
   | SetPageGuides
   | SetStoryRuns
   | UpdateLink
+  | SetPageOverrides
+  | CreateLayer
+  | SetFrameLayer
+  | SetDrawingText
+  | ReorderFrame

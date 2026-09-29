@@ -10,7 +10,7 @@ async fn add_widget_action_appends_widget() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let mut app = app().await;
     let before = context::snapshot(&app).host_snapshot.widgets.len();
-    dispatch(&mut app, Generation3dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), x: None, y: None })).await;
+    dispatch(&mut app, Generation3dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, format: None, action: None, x: None, y: None })).await;
     assert!(context::snapshot(&app).host_snapshot.widgets.len() > before);
 }
 

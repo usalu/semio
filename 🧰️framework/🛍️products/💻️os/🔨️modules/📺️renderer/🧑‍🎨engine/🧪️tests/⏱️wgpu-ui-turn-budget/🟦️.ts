@@ -171,7 +171,7 @@ describe("wgpu UI-turn budget", () => {
   });
 
   it("reports the real fallback state instead of a static no-fallback claim", () => {
-    const subject = harness();
+    const subject = harness({ now: () => 0 });
     subject.worker.reply({ kind: "booted", lifecycle: 1 });
     expect(subject.transport.fallbackState()).toMatchObject({ surface: "ready", uiThreadFrames: "unavailable-offscreen-transferred", workerTerminated: false, inputAccepted: true, deferredCadence: false });
     subject.worker.reply({ kind: "fault", lifecycle: 1, code: "runtime", detail: "broken" });

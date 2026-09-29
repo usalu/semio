@@ -144,7 +144,14 @@ fn inline_svg_saturation_rejects_before_parse_or_source_copy() {
         while !rejected.close_step() {}
     }
     let mut cursor = crate::scenes::PendingRasterUploadCursor::default();
-    while !matches!(cursor.step(), crate::scenes::PendingRasterUploadStep::Fault(_)) {}
+    for _ in 0..65_536 {
+        match cursor.step() {
+            crate::scenes::PendingRasterUploadStep::Complete => return,
+            crate::scenes::PendingRasterUploadStep::Fault(fault) => panic!("back-pressure retires without faulting the frame: {fault}"),
+            _ => {}
+        }
+    }
+    panic!("the upload cursor retires the parked back-pressure refusal within its bounded pass");
 }
 
 #[test]

@@ -6,9 +6,57 @@ Slice LW1 (new, session 14c, 2026-09-29 05:3x, Opus 5.5). Coordinator = `main`. 
 `LW1-START/RC/END` lines; `lw1-wait.sh` = one blocking wait ≤ 570 s; `lw1-<owner>.sh` = the owner's law block). Captures ONLY under
 `.🧬semio/🌐hub/s14-lw1-logs/` (rule 26). No product code edits; live hubs are down (no live runs).
 
+## Session 15
+
+LW1 successor (session 15, 2026-09-29 19:3x, Opus 5.5). FOCUS (A15 §6.5): owner laws of the 36 T6 sets landed in rounds R1 (16:12),
+R2 (17:33), R3a (18:15), on the LIVE tree, native lane, sequential, one lane ticket per block, every block ≤ 43 min
+(`wp-lw1/lw1-budget.sh`: `step <label> <cap> <cmd…>` = per-step cap ∧ block budget, process-group kill on expiry, `l1=alive` flag when an
+L1 train writes meanwhile). Env = rule 3 (build-fleet-b, `CARGO_INCREMENTAL=0`, `NX_DAEMON=false`); target stays
+`.🧬semio/🌐hub/s14-lw1-target` (not `wp-lw1/target`: rule 26 sweep; also the orphan chain's). Captures `.🧬semio/🌐hub/s14-lw1-logs/<block>.txt`.
+No tree edits (no landing rows). Baselines = the owners' proof captures named per row.
+
+| T6 row | Owner | Laws (block) | Result | Baseline / verdict | Capture |
+|---|---|---|---|---|---|
+| 1 | H14 retire-pages | os-kernel lib `sync,ureq` nextest (T6-1; re-check post-R3a in h) | **PASS** 1270/0 (16:17, pre-R2) | T3 1264/3 → fixed | `t6-a-kernel-1.txt`; h queued |
+| 2 | H13 vcs removal | taxonomy-load probe (T6-2) | **PASS** | = L1 | `t6-a-kernel-1.txt` |
+| 6b | U6 stdio wire drift | the 47 stdio lib suites as U6's o2 proof (b) | **PASS** 6984/10 — the 10 = `descriptor_is_fresh` of stdio + 9 families (stale committed descriptors, EXPECTED until the chain's describe); every 6b law ok: pdf `every_kind_is_declared_once…`, `samples_round_trip…`, `samples_apply_and_invert…`, `ops_grammar_conformance_law` ×48, `fixture_honesty_law` ×49, gltf `mutation_restore…`, zip `iso_archive_agent_rename…` | o2 (13:17) had epw ×2, png, pptx, semio reds owned by LB2/WG11/CD1 → all green now | `t6-b-stdio47-4.txt` |
+| 7, 8, 6 (renderer) | WG11 ×12, WG11 Marketplace, U6 | renderer-wgpu lib per process, nextest `--test-threads 4` (c) | queued (lane pos 5 at 19:41) | WG11 `s14-wg11-captures/reds-5.txt`, overlay build 8 | `t6-c-wg11-1.txt` |
+| 7, T7a, T7b, 6 (ui) | WG11, U6 | ui `wgpu-engine` lib nextest, contract `a_ui_number_serializes`, value `a_json_number_reads_back`, TS display-id / engine-contract / Interpreter tree-window / text corpus + navbar + GraphTimeline (c2) | queued (chain 2) | WG11 build 7: ui 751/751 | `t6-c2-wg11ui-1.txt` |
+| 13, 11 (writer/jack) | C12 | writer lib, jack (app-assembly), trinity rewriting + plugin (nextest), jack TS ×2, `🔌️mutate-jack-1` oracle + subject (d) | queued | C12 proof 4/5 (writer 188/188, jack 229/229) | `t6-d-c12-1.txt` |
+| 11, 9, 6, 16 B, 3 (SDK) | C12, P9, U6, C13, LB2 | SDK full lib + `semio-framework` lib nextest, canonical-edit digest TS (d2) | queued (chain 2) | C12: SDK 855/865 = live 10 reds (`sdk-baseline-2.txt`), framework 285/285 | `t6-d2-sdk-1.txt` |
+| 14, 15 | CD1 | stdio-semio `--tests`, flow `flow_brep_invoke`, cad `typology`, repo-lib frozen/projection, cad vitest (e) | queued | CD1 `s14-cd1-work/proof-{1,2}-*` | `t6-e-cd1-1.txt` |
+| 9 | P9 | overlay-t6-4 command (10 crates, agent-lane/declared-verb laws) + AJV twins (f) | queued | P9 `overlay-t6-4` | `t6-f-p9-1.txt` |
+| 3, 3b, 4, 5, 5a, 5b, 5b2, 5c | LB2, S19 | stdio shipped_fleet + editor_catalog, family descriptor freshness, SDK builder, schema + contract, value `edit_through_value`, 21 roots app-assembly (g); pptx honesty, part21 + ifc + IfcOpenShell oracle, typegen law, hub trusted_catalog, demonstrator, describe, TS surface-opens-kind (g2) | queued | LB2 s17 / p15-s3, S19 `t6-proof-2.txt` | `t6-g-lb2s19-1.txt`, `t6-g2-lb2s19-1.txt` |
+| 17, 1, 11 (kernel) | H14, C12 | os-kernel lib `sync,ureq` nextest incl. `a_live_socket_outlives_its_admission_plan_window` (h) | queued (chain 2) | T6-1 1270/0 | `t6-h-r3a-1.txt` |
+| 6, 16 A | U6, C13 | U6's 38-crate lib build (`lw1-suites.sh`, = `r6-base.sh` set), ui-contract serial, SDK row laws, suites space-home / puzzle 3d / 2d / 5d / cad / process3d / ui-runtime (h); the other 28 suites, React vitest, ui-contract TS test (h2) | queued (chain 2) | U6 `s14-u6-logs/r6-prove.txt` (overlay post-R2 + row 6), `r6-vitest-react-live.txt` | `t6-h-r3a-1.txt`, `t6-h2-r3a-1.txt` |
+
+Not run by LW1 (by design): wasm32 checks (rows 16/17; wasm lane = chain), `describe` of every plugin (row 16 B guard = the chain's
+describe step), live hub/serve checks (rows 16/17/3b live legs wait for the t6 publish).
+
+#### Log (session 15)
+
+- 19:3x start; read preambles 15 + 14 (rules 1–33), t6-queue Laws, A15 §1–§8, own report. Reconciled the orphan (rule 30): chain
+  `lw1-chain.sh` 63902 (mutex 63907) was in block **t6-b** (not t6-c: t6-b-stdio47-2/-3 had been cancelled, -4 queued 18:26:33, lane
+  granted 19:20:48 after U6's r6-base exit); left running. Its remaining blocks c–g had no bound (lane holds of 1 h+ possible) → rewrote
+  them in place (read fresh per block; originals kept in `s14-lw1-logs/s15-pre/`) on `lw1-budget.sh`, split c → c + c2, d → d + d2,
+  g → g + g2; new h/h2 for R3a (rows 17, 6, 16) + `lw1-suites.sh` (U6's suite form). Chain 2 (pid 23927, `s15-chain2.txt`) waits for
+  63902 to exit, then runs h → d2 → c2 → g2 → h2 (each its own lane ticket).
+- 19:40:41 block b done (wall 1193 s): row 6b PASS (table). Block c queued behind s19 (holding), g12, s18, u6 ×2.
+- Note for U6: its queued census `stdio-reds.sh s15-stdio-census` (mutex 6351) is the same 47-crate `cargo test --lib` as block b.
+
 ## Session 14
 
-### Verdict (08:27)
+### Session 14d — T6 round 1 owner laws (resumed 16:1x)
+
+T6 round 1 GREEN 16:12 (L1: 22 sets, rows 1, 2, 6b, 7 ×12, T7a, T7b, 9, 11, 13, 14, 15; `📓️t6-queue.md`). Laws on the LIVE tree, each crate's
+canonical runner (nextest per process + RUST_MIN_STACK 128 MiB unless the owner's row prescribes otherwise). Scripts `wp-lw1/lw1-t6-{a..f}.sh`.
+
+| # | Owner / row | Law (command) | rc | pass / fail | vs overlay proof / pre-landing baseline | Capture |
+|---|---|---|---|---|---|---|
+| T6-1 | H14 row 1 + C12 row 11 kernel half | `cargo nextest run --profile long --test-threads 4 -p semio-framework-os-kernel --features sync,ureq --lib` | 0 | **1270 / 0** — both former `retained_clone` reds green (`paged_list … close_turns == 1`, `production_snapshot … remains bounded`), retirement + canonical-edit/digest laws green | T3/T4 baseline 1264/3 (`wg11-laws-2.txt`) → fixed by H14 retire-pages; C12 overlay 1179/1181 (2 = that pair) → matches | `t6-a-kernel-1.txt` |
+| T6-2 | H13 row 2 | `bun wp-coord/taxonomy-load-probe.ts` | 0 | taxonomy valid (1543 ms) | = L1 round proof | `t6-a-kernel-1.txt` |
+
+### Session 14c — T3/T4 verdict (08:27)
 
 Laws of every T3 owner (C13, SH2, S18, WG11, AV2, EN2, S19, S20, U6, LB2) and T4 owner (C12, H14, Z4, R10, W4/T14) run; captures under
 `.🧬semio/🌐hub/s14-lw1-logs/`. **Green:** C13, SH2 (after describe + 1 test-only oracle fix), S18, AV2, EN2, U6, Z4, R10, W4/T14,

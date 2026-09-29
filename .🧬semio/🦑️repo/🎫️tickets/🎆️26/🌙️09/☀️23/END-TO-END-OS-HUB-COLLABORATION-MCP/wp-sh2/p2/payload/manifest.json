@@ -1,0 +1,617 @@
+[
+ {
+  "id": "000",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "001",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️.ts",
+  "mode": "whole"
+ },
+ {
+  "id": "002",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json",
+  "mode": "whole"
+ },
+ {
+  "id": "003",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "004",
+  "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+  "mode": "whole"
+ },
+ {
+  "id": "005",
+  "path": "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🕒️document-activity-v1.json",
+  "mode": "create"
+ },
+ {
+  "id": "006",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "007",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/🔣️.json",
+  "mode": "whole"
+ },
+ {
+  "id": "008",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📇️projection-wire-v1/🔣️.json",
+  "mode": "whole"
+ },
+ {
+  "id": "009",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/📇️directory-projection/🧪️tests/🔬️unit/🟦️.ts",
+  "mode": "whole"
+ },
+ {
+  "id": "010",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "011",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🔮️oracles/🔣️.json",
+  "mode": "whole"
+ },
+ {
+  "id": "014",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/✅️apply-directory-page-applied/🔺️diff/🔣️.json",
+  "mode": "whole"
+ },
+ {
+  "id": "017",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/🟰️apply-directory-page-no-op/🔺️diff/🔣️.json",
+  "mode": "whole"
+ },
+ {
+  "id": "020",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/🚫️apply-directory-page-rejected/🔺️diff/🔣️.json",
+  "mode": "whole"
+ },
+ {
+  "id": "022",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/✅️apply-directory-page-applied/📸️snapshot/➡️after/🔣️.json",
+  "mode": "whole"
+ },
+ {
+  "id": "023",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/🟰️apply-directory-page-no-op/📸️snapshot/⬅️before/🔣️.json",
+  "mode": "whole"
+ },
+ {
+  "id": "024",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/🟰️apply-directory-page-no-op/📸️snapshot/➡️after/🔣️.json",
+  "mode": "whole"
+ },
+ {
+  "id": "025",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/🚫️apply-directory-page-rejected/📸️snapshot/⬅️before/🔣️.json",
+  "mode": "whole"
+ },
+ {
+  "id": "026",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/🚫️apply-directory-page-rejected/📸️snapshot/➡️after/🔣️.json",
+  "mode": "whole"
+ },
+ {
+  "id": "027",
+  "path": "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/📜️script.ts",
+  "mode": "whole"
+ },
+ {
+  "id": "028",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/📌️.empty.md",
+  "mode": "delete"
+ },
+ {
+  "id": "029",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🦀️.rs",
+  "mode": "create"
+ },
+ {
+  "id": "030",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧬️schema/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "031",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧬️schema/🧬️mutations/🦀️.rs",
+  "mode": "create"
+ },
+ {
+  "id": "032",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧬️schema/🧬️mutations/📥️apply-directory-events/🦀️.rs",
+  "mode": "create"
+ },
+ {
+  "id": "033",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧬️schema/🧬️mutations/📥️apply-directory-events/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "034",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧬️schema/🧬️mutations/📥️apply-directory-events/🧬️schema/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "035",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧬️schema/🧬️mutations/👥️set-artifact-presence/🦀️.rs",
+  "mode": "create"
+ },
+ {
+  "id": "036",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧬️schema/🧬️mutations/👥️set-artifact-presence/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "037",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧬️schema/🧬️mutations/👥️set-artifact-presence/🧬️schema/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "038",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "create"
+ },
+ {
+  "id": "039",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🔮️oracles/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "040",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "041",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "042",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🏠️main/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "043",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🏠️main/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "044",
+  "path": "✏️s/🔌️plugins/🪐️space/🧪️tests/🔬️surface/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "045",
+  "path": "✏️s/🔌️plugins/🪐️space/🧪️tests/🔬️interactive-job-catalog/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "046",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "047",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "048",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "049",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+  "mode": "delete"
+ },
+ {
+  "id": "050",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📌️.empty.md",
+  "mode": "create"
+ },
+ {
+  "id": "051",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "delete"
+ },
+ {
+  "id": "052",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🔣️.json",
+  "mode": "whole"
+ },
+ {
+  "id": "053",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🔗️.graphql",
+  "mode": "whole"
+ },
+ {
+  "id": "054",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "055",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🟦️.ts",
+  "mode": "whole"
+ },
+ {
+  "id": "056",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🛰️.proto",
+  "mode": "whole"
+ },
+ {
+  "id": "057",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🧫️retained-command-limits/🔣️.json",
+  "mode": "whole"
+ },
+ {
+  "id": "058",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/👥️members/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "059",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/👥️members/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "060",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🏠️main/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "061",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🏠️main/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "062",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/❔request-delete-artifact/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "063",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/❔request-delete-artifact/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "064",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/❕request-invite-member/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "065",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/❕request-invite-member/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "066",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌱create-artifact/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "067",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌱create-artifact/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "068",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏷️rename-artifact/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "069",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏷️rename-artifact/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "070",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-visibility/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "071",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-visibility/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "072",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💌invite-member/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "073",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💌invite-member/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "074",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💓presence-heartbeat/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "075",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💓presence-heartbeat/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "076",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📇fold-directory-events/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "077",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📇fold-directory-events/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "078",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔗copy-invite-link/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "079",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔗copy-invite-link/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "080",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕒touch-artifact/🦀️.rs",
+  "mode": "delete"
+ },
+ {
+  "id": "081",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕒touch-artifact/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "delete"
+ },
+ {
+  "id": "082",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗃️open-artifact-with/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "083",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗃️open-artifact-with/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "084",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️delete-artifact/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "085",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️delete-artifact/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "086",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗿️open-artifact/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "087",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗿️open-artifact/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "088",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚪remove-member/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "089",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚪remove-member/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "090",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-s-space-1-any-viewer-transient/🥒️.feature",
+  "mode": "create"
+ },
+ {
+  "id": "091",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-s-space-1-any-viewer-transient/🦀️.rs",
+  "mode": "create"
+ },
+ {
+  "id": "092",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json",
+  "mode": "whole"
+ },
+ {
+  "id": "093",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/👥️set-artifact-presence/🟰️set-artifact-presence-no-op/🔺️diff/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "094",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/👥️set-artifact-presence/✅️set-artifact-presence-applied/🦠️mutation/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "095",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/👥️set-artifact-presence/✅️set-artifact-presence-applied/🎯️outcome/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "096",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/👥️set-artifact-presence/✅️set-artifact-presence-applied/🔺️diff/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "097",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/👥️set-artifact-presence/🚫️set-artifact-presence-rejected/🦠️mutation/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "098",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/👥️set-artifact-presence/🚫️set-artifact-presence-rejected/🎯️outcome/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "099",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/👥️set-artifact-presence/🚫️set-artifact-presence-rejected/🔺️diff/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "100",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/👥️set-artifact-presence/✅️set-artifact-presence-applied/📸️snapshot/⬅️before/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "101",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/👥️set-artifact-presence/✅️set-artifact-presence-applied/📸️snapshot/➡️after/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "102",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/👥️set-artifact-presence/🚫️set-artifact-presence-rejected/📸️snapshot/⬅️before/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "103",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/👥️set-artifact-presence/🚫️set-artifact-presence-rejected/📸️snapshot/➡️after/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "104",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/📥️apply-directory-events/🚫️apply-directory-events-rejected/🦠️mutation/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "105",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/📥️apply-directory-events/🚫️apply-directory-events-rejected/🎯️outcome/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "106",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/📥️apply-directory-events/🚫️apply-directory-events-rejected/🔺️diff/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "107",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/📥️apply-directory-events/✅️apply-directory-events-applied/🦠️mutation/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "108",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/📥️apply-directory-events/✅️apply-directory-events-applied/🎯️outcome/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "109",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/📥️apply-directory-events/✅️apply-directory-events-applied/🔺️diff/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "110",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/📥️apply-directory-events/🟰️apply-directory-events-no-op/🦠️mutation/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "111",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/📥️apply-directory-events/🟰️apply-directory-events-no-op/🎯️outcome/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "112",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/📥️apply-directory-events/🟰️apply-directory-events-no-op/🔺️diff/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "113",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/👥️set-artifact-presence/🟰️set-artifact-presence-no-op/🦠️mutation/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "114",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/👥️set-artifact-presence/🟰️set-artifact-presence-no-op/🎯️outcome/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "115",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/📥️apply-directory-events/🚫️apply-directory-events-rejected/📸️snapshot/⬅️before/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "116",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/📥️apply-directory-events/🚫️apply-directory-events-rejected/📸️snapshot/➡️after/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "117",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/📥️apply-directory-events/✅️apply-directory-events-applied/📸️snapshot/⬅️before/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "118",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/📥️apply-directory-events/✅️apply-directory-events-applied/📸️snapshot/➡️after/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "119",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/📥️apply-directory-events/🟰️apply-directory-events-no-op/📸️snapshot/⬅️before/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "120",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/📥️apply-directory-events/🟰️apply-directory-events-no-op/📸️snapshot/➡️after/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "121",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/👥️set-artifact-presence/🟰️set-artifact-presence-no-op/📸️snapshot/⬅️before/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "122",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧫️fixtures/👥️set-artifact-presence/🟰️set-artifact-presence-no-op/📸️snapshot/➡️after/🔣️.json",
+  "mode": "create"
+ },
+ {
+  "id": "123",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
+  "mode": "whole"
+ },
+ {
+  "id": "124",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📇️space-directory/🟦️.ts",
+  "mode": "whole"
+ },
+ {
+  "id": "125",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx",
+  "mode": "whole"
+ },
+ {
+  "id": "126",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⚡️quick/🟦️.ts",
+  "mode": "whole"
+ },
+ {
+  "id": "127",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "128",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-identity-directory-presence/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "129",
+  "path": "🧰️framework/🛍️products/💻️os/🟦️.ts",
+  "mode": "whole"
+ }
+]

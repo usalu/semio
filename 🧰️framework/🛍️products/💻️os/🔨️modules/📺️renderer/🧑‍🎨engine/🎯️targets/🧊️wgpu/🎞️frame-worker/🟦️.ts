@@ -1,3 +1,4 @@
+import { BrowserMediaRegistry, type BrowserMediaCommand } from "../../../🎬️media/🌐️browser/🟦️.ts";
 /// <reference lib="webworker" />
 
 import { PlaygroundBootPlanner, pluginGraphErrorMessage } from "@semio-tech/framework";
@@ -293,6 +294,9 @@ let lifecycle = 0;
 let runtime: BrowserRendererWorkerHandle | undefined;
 let bindings: RendererBindings | undefined;
 let interactiveJobs: InteractiveWorkerScheduler | undefined;
+const typedMediaPlugins = new Map<string, Awaited<ReturnType<typeof loadPluginModule>>>();
+const mediaRegistry = new BrowserMediaRegistry((pluginId) => typedMediaPlugins.get(pluginId));
+let mediaRetirement: Promise<void> | undefined;
 let frameTurns: FrameTurnScheduler | undefined;
 let frameTurnTasks: WorkerTurnTaskQueue | undefined;
 let frameInput: { readonly timestampMs: number; readonly generation: number } | undefined;
@@ -345,6 +349,14 @@ async function receive(message: BrowserFrameUiMessage): Promise<void> {
   if (message.kind === "close") {
     if (closed || closing) return;
     beginClose();
+    return;
+  }
+  if (message.kind === "media-release") {
+    mediaRegistry.release(message.slotToken);
+    return;
+  }
+  if (message.kind === "media-command") {
+    await answerMediaCommand(message);
     return;
   }
   if (message.kind === "introspect") {
@@ -401,6 +413,7 @@ function runFrameTurn(): boolean {
     frameSequence = nextFrameSequence(frameSequence);
     const input = frameInput;
     const result = ownedStep("frame-step", () => JSON.parse(runtime!.tick(input.timestampMs, BigInt(frameSequence), BigInt(input.generation)))) as Omit<Extract<BrowserFrameWorkerMessage, { kind: "frame" }>, "kind" | "lifecycle" | "frameSequence" | "generation" | "workerDurationMs"> & { readonly continueFrame: boolean };
+    let mediaSlots = mediaRegistry.accept(result.quarantined ? [] : result.mediaSlots);
     const outcome = lastStepOutcome;
     lastFrame = { cursor: result.cursor, fullscreen: result.fullscreen };
     const assetCancellationStep = assetCancellation.step({
@@ -414,7 +427,8 @@ function runFrameTurn(): boolean {
     if (result.quarantined) quarantined = { code: result.faultCode ?? "renderer-quarantine", detail: result.faultDetail ?? "renderer quarantined its own frame step" };
     const sustained = outcome?.verdict === "sustained-overrun";
     const degrade = quarantined ?? (sustained ? { code: "worker-step-overrun", detail: `frame step executed ${outcome!.executingMs.toFixed(3)} ms for ${outcome!.consecutive} consecutive steps` } : undefined);
-    post({ kind: "frame", lifecycle, frameSequence, generation: input.generation, cursor: result.cursor, fullscreen: result.fullscreen, requestFrame: result.requestFrame, nextDeadlineDelayMs: result.nextDeadlineDelayMs, progress: result.progress, workerDurationMs: performance.now() - startedAt, workerExecutingMs: outcome?.executingMs ?? 0, workerStepVerdict: outcome?.verdict ?? "clock-fault", quarantined: degrade !== undefined, faultCode: degrade?.code, faultDetail: degrade?.detail });
+    if (degrade) mediaSlots = mediaRegistry.accept([]);
+    post({ kind: "frame", mediaSlots, lifecycle, frameSequence, generation: input.generation, cursor: result.cursor, fullscreen: result.fullscreen, requestFrame: result.requestFrame, nextDeadlineDelayMs: result.nextDeadlineDelayMs, progress: result.progress, workerDurationMs: performance.now() - startedAt, workerExecutingMs: outcome?.executingMs ?? 0, workerStepVerdict: outcome?.verdict ?? "clock-fault", quarantined: degrade !== undefined, faultCode: degrade?.code, faultDetail: degrade?.detail });
     publishWorld3dAcceptedFrameDiagnostic(input.generation);
     if (quarantined) requestFault(quarantined.code, quarantined.detail);
     else if (assetCancellationStep === "idle") scheduleAssetPump();
@@ -496,6 +510,7 @@ function answerIntrospection(message: Extract<BrowserFrameUiMessage, { kind: "in
 }
 
 async function closeRuntime(): Promise<void> {
+  await mediaRetirement;
   for (;;) {
     ownedStep("close-step", () => {
       if (closeOwner === "runtime" && !runtimeCloseComplete) {
@@ -522,6 +537,7 @@ async function closeRuntime(): Promise<void> {
 function beginClose(): void {
   if (closed || closing) return;
   closing = true;
+  mediaRetirement = mediaRegistry.close();
   failed = pendingFault !== undefined;
   runtimeCloseComplete = runtime === undefined;
   jobsCloseComplete = interactiveJobs === undefined;
@@ -540,7 +556,7 @@ function beginClose(): void {
   void closeRuntime();
 }
 
-type PluginHandleMount = { readonly pluginId: string; readonly handle: ReturnType<typeof pluginHandleForBridge> };
+type PluginHandleMount = { readonly pluginId: string; readonly typedHandle: Awaited<ReturnType<typeof loadPluginModule>>; readonly handle: ReturnType<typeof pluginHandleForBridge> };
 
 /** 🧩️ Mounts every plugin the boot plan names, isolating each one. A module that fails to load, or
  * whose manifest overruns its fixed credits, is reported as a `plugin-fault:` boot-progress stage and
@@ -557,7 +573,8 @@ async function mountPluginHandles(targets: readonly { readonly pluginId: string;
     await macrotask();
     try {
       const module = await monitoredSuspension(`plugin:${target.pluginId}`, () => loadPluginModule(target.pluginId, target.moduleUrl), suspensionLedger);
-      mounted.push(ownedStep(`plugin-handle:${target.pluginId}`, () => ({ pluginId: target.pluginId, handle: pluginHandleForBridge(module) })));
+      typedMediaPlugins.set(target.pluginId, module);
+      mounted.push(ownedStep(`plugin-handle:${target.pluginId}`, () => ({ pluginId: target.pluginId, typedHandle: module, handle: pluginHandleForBridge(module) })));
     } catch (error) {
       if (closed || closing) throw error;
       progress(`plugin-fault:${target.pluginId}: ${error instanceof Error ? error.message : String(error)}`, share);
@@ -976,6 +993,7 @@ const lazyPluginInstalls = createLazyPluginInstallDoor({
   mount: async (pluginId, moduleUrl) => {
     if (closed || closing || failed) throw new Error("plugin-install.closing: the frame Worker is closing");
     const module = await monitoredSuspension(`plugin-install:${pluginId}`, () => loadPluginModule(pluginId, moduleUrl), suspensionLedger);
+    typedMediaPlugins.set(pluginId, module);
     const handle = pluginHandleForBridge(module);
     void primeContributionManifest(pluginId, moduleUrl).catch(() => {});
     return handle;
@@ -1004,6 +1022,21 @@ installWgpuDynamicExtensionDoor(globalThis, async (record) => {
   await module.dispose();
 });
 //#endregion 🧩️LazyPluginInstall
+
+/** 📮️ Answers one accepted slot command with transferable bounded chunk storage. */
+async function answerMediaCommand(message: BrowserMediaCommand): Promise<void> {
+  try {
+    if (closed || closing || failed || quarantined || !runtime) throw new Error("browser-media.closed");
+    const result = await mediaRegistry.execute(message);
+    const current = closed || closing || failed || quarantined;
+    if (current) throw new Error("browser-media.retired");
+    const transfer: Transferable[] = result && "data" in result ? [result.data.buffer as ArrayBuffer] : [];
+    post({ kind: "media-result", lifecycle, requestId: message.requestId, slotToken: message.slotToken, result }, transfer);
+    frameTurns?.requestRuntimeWake();
+  } catch (error) {
+    post({ kind: "media-result", lifecycle, requestId: message.requestId, slotToken: message.slotToken, fault: error instanceof Error ? error.message : String(error) });
+  }
+}
 
 function post(message: BrowserFrameWorkerMessage, transfer: Transferable[] = []): void {
   scope.postMessage(message, transfer);

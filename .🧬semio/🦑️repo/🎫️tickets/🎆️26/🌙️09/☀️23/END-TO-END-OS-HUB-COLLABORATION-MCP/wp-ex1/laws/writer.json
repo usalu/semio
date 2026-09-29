@@ -1,0 +1,22 @@
+{
+ "plugin": "writer",
+ "dir": "✒️writer",
+ "apps": [
+  {
+   "app": "s.writer.writer@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "crate::editor::writer::WriterPlayApp",
+   "create": "crate::editor::writer::create_writer_app",
+   "app": "s.writer.writer@1/*#editor"
+  }
+ ]
+}

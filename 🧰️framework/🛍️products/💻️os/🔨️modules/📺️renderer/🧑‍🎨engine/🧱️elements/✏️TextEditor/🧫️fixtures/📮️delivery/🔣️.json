@@ -97,5 +97,27 @@
       ],
       "readOnly": false
     }
+  ],
+  "spliceCases": [
+    {
+      "id": "a-collaborator-run-folded-in-while-a-splice-is-in-flight",
+      "note": "the editor types X (splice 1 in flight), then Y; the window publishes its text with splice 1 AND a collaborator's C folded in; when splice 1 settles the next splice goes out against what the editor shows NOW: it inserts Y only, never deleting C",
+      "initial": "ab",
+      "typedFirst": [
+        "X"
+      ],
+      "typedWhileInFlight": [
+        "Y"
+      ],
+      "published": {
+        "buffer": "CabX",
+        "applied": 1
+      },
+      "expected": [
+        "textSplice:1:2::X:ab:",
+        "textSplice:2:4::Y:CabX:"
+      ],
+      "finalText": "CabXY"
+    }
   ]
 }

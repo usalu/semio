@@ -228,7 +228,7 @@ pub mod standards {
         // serializers`; `decode_pptx`/`sniff_pptx_bytes` + the `*_from_xml` mapping moved to
         // `subsets::any::io::import::deserializers`; `PptxError` + shared OPC/XML constants +
         // the minimal slideMaster/slideLayout/theme boilerplate moved to `subsets::any::io`;
-        // `io_registry` moved to `subsets::any::io`; `empty_pptx_snapshot`/`demo_pptx_snapshot`
+        // `io_registry` moved to `subsets::any::io`; `blank_pptx_snapshot`/`demo_pptx_snapshot`
         // + tests moved to `subsets::any::schema`. pptx is NOT one of stdio's 10 protected
         // imperative plugin-root `engine::register()` calls, so no `engine` shim remains —
         // external callers only ever reached `PptxSnapshot`/`STDIO_PPTX_DOCUMENT_SCHEMA`

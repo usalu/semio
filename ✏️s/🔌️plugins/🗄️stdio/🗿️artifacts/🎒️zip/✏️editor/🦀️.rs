@@ -26,7 +26,7 @@ fn fault(code: &'static str, message: &str) -> Fault {
 /// 📥️ Reads the exact schema-owned archive draft payload.
 pub fn edit_arguments(args: Option<&dsl::DslValue>) -> Result<(String, String, String), Fault> {
     if let Some(dsl::DslValue::Object(fields)) = args {
-        if fields.iter().any(|(key, _)| !["nodeId", "value", "revision"].contains(&key.as_str())) {
+        if fields.iter().any(|(key, _)| !["nodeId", "value", "revision", "windowId"].contains(&key.as_str())) {
             return Err(fault("stdio.zip.argument-unknown", "the archive edit contains an unknown argument"));
         }
     }

@@ -9,7 +9,7 @@ use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
 use semio_s_artifact_stdio_png::io::encode_png;
-use semio_s_artifact_stdio_png::schema::empty_png_snapshot;
+use semio_s_artifact_stdio_png::schema::blank_png_snapshot;
 
 pub const PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId::ANY };
 
@@ -26,7 +26,7 @@ impl Serializer<NoteSnapshot> for NoteIntoPng {
         for px in rgba.chunks_mut(4) {
             px[3] = 255;
         }
-        let mut snapshot = empty_png_snapshot();
+        let mut snapshot = blank_png_snapshot();
         snapshot.width = width;
         snapshot.height = height;
         snapshot.pixels = rgba;

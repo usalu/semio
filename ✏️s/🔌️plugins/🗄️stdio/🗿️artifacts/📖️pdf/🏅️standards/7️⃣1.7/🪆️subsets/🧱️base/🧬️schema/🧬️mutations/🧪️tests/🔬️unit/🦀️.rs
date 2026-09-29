@@ -18,6 +18,7 @@ fn samples() -> Vec<PdfMutation> {
         PdfMutation::SetEncryption(set_encryption::SetEncryption { encryption: None }),
         PdfMutation::SetCatalogEntry(set_catalog_entry::SetCatalogEntry { key: "Marker".into(), value: PdfObject::Int(7) }),
         PdfMutation::SetTrailerEntry(SetTrailerEntry { key: "Marker".into(), value: PdfObject::Bool(true) }),
+        PdfMutation::SetSnapshot(SetSnapshot { snapshot: text_document(&[(120.0, 80.0, "Replaced")]) }),
     ]
 }
 

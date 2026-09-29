@@ -35,7 +35,7 @@
           "const": 8388608
         },
         "aggregateCeilingBytes": {
-          "const": 52559872
+          "const": 54001664
         },
         "workBytes": {
           "const": 4096
@@ -80,7 +80,7 @@
           ]
         },
         "documentBytes": {
-          "const": 821248
+          "const": 843776
         },
         "residentSlots": {
           "const": 64

@@ -153,7 +153,7 @@ fn inspector_layer_actions_are_localized_and_protection_aware() {
             let text=semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).unwrap();
             let projection:serde_json::Value=serde_json::from_str(&text).unwrap();let mut pending=vec![&projection];
             while let Some(node)=pending.pop() {
-                for action in fixture["layerActions"].as_array().unwrap() {if node["key"]==format!("raster-inspector.{}",action["key"].as_str().unwrap()) {assert_eq!(node["bindings"][0]["action"]["name"],action["command"]);assert_eq!(node["bindings"][0]["args"]["layerId"],id);assert!(node.to_string().contains(action["labels"][locale].as_str().unwrap()));}}
+                for action in fixture["layerActions"].as_array().unwrap() {if node["key"]==format!("raster-inspector.{}",action["key"].as_str().unwrap()) {assert_eq!(node["component"]["target"]["activation"],action["command"]);assert_eq!(node["component"]["target"]["args"]["layerId"],id);assert!(node.to_string().contains(action["labels"][locale].as_str().unwrap()));}}
                 pending.extend(node["children"].as_array().unwrap());
             }
         }

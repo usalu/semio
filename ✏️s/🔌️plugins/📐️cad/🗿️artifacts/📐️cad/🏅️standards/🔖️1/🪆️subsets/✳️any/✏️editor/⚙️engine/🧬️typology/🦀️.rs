@@ -217,10 +217,10 @@ const RAW_MODEL_DEFINITION_ASSETS: &[&str] = &[
 ];
 
 const RAW_TYPOLOGY_ASSETS: &[(&str, &str)] = &[
-    ("aec.building.structure.classic", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🗂️typologies/🏛️ReinforcedConcreteColumn/🔣️typology-20ac89.json")),
-    ("aec.building.structure.classic", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🗂️typologies/🚧️ReinforcedConcreteInternalWall/🔣️typology-87a300.json")),
-    ("aec.building.structure.classic", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🗂️typologies/🛡️ReinforcedConcreteExternalWall/🔣️typology-9f56a1.json")),
-    ("aec.building.structure.classic", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🗂️typologies/🧱️OneWayReinforcedConcreteSlab/🔣️typology-6a95a6.json")),
+    ("aec.building.structure.classic", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🗂️typologies/🏛️ReinforcedConcreteColumn/🔣️typology.json")),
+    ("aec.building.structure.classic", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🗂️typologies/🚧️ReinforcedConcreteInternalWall/🔣️typology.json")),
+    ("aec.building.structure.classic", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🗂️typologies/🛡️ReinforcedConcreteExternalWall/🔣️typology.json")),
+    ("aec.building.structure.classic", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🗂️typologies/🧱️OneWayReinforcedConcreteSlab/🔣️typology.json")),
     ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🗂️typologies/⬆️Ceiling/🔣️typology.json")),
     ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🗂️typologies/🏛️Column/🔣️typology.json")),
     ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🗂️typologies/🏠️Roof/🔣️typology.json")),
@@ -232,7 +232,7 @@ const RAW_TYPOLOGY_ASSETS: &[(&str, &str)] = &[
     ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🗂️typologies/🪟️Window/🔣️typology.json")),
     ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🗂️typologies/🪨️Foundation/🔣️typology.json")),
     ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🗂️typologies/🪵️Beam/🔣️typology.json")),
-    ("aec.building.structure.fem.line", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building.structure.fem.line/🗂️typologies/📏️LineElement/🔣️typology-3ad563.json")),
+    ("aec.building.structure.fem.line", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building.structure.fem.line/🗂️typologies/📏️LineElement/🔣️typology.json")),
     ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🗂️typologies/➡️ExtrudeCurve/🔣️typology.json")),
     ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🗂️typologies/⭕️Circle/🔣️typology.json")),
     ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🗂️typologies/〰️ControlPointCurve/🔣️typology.json")),
@@ -253,8 +253,8 @@ const RAW_TYPOLOGY_ASSETS: &[(&str, &str)] = &[
     ("aec.building.energy", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🗂️typologies/🧱️ExternalWall/🔣️typology.json")),
     ("aec.building.energy", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🗂️typologies/🪟️Windows/🔣️typology.json")),
     ("aec.building.energy", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🗂️typologies/🪨️BasePlate/🔣️typology.json")),
-    ("aec.building.structure.fem.surface", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building.structure.fem.surface/🗂️typologies/🗺️SurfaceElement/🔣️typology-b35a36.json")),
-    ("aec.building.structure.fem.solid", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building.structure.fem.solid/🗂️typologies/🧊️SolidElement/🔣️typology-4e128f.json")),
+    ("aec.building.structure.fem.surface", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building.structure.fem.surface/🗂️typologies/🗺️SurfaceElement/🔣️typology.json")),
+    ("aec.building.structure.fem.solid", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building.structure.fem.solid/🗂️typologies/🧊️SolidElement/🔣️typology.json")),
 ];
 
 const RAW_ATTRIBUTE_DEFINITION_ASSETS: &[(&str, &str)] = &[

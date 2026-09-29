@@ -1,0 +1,22 @@
+{
+ "plugin": "playbook",
+ "dir": "📖️playbook",
+ "apps": [
+  {
+   "app": "s.playbook.playbook@1/*#editor",
+   "examples": [
+    {
+     "id": "demo",
+     "document": "distinct"
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "editor": "crate::editor::playbook::PlaybookPlayApp",
+   "create": "crate::editor::playbook::create_playbook_play_app",
+   "app": "s.playbook.playbook@1/*#editor"
+  }
+ ]
+}

@@ -5,7 +5,7 @@ export const BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES = 256 * 1024;
 export const BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM = 4_096;
 export const BROWSER_ACTOR_ACTION_HOST_EFFECT_MAXIMUM = 1;
 export const BROWSER_ACTOR_ACTION_HISTORY_PATCH_MAXIMUM = 8;
-export const BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION = 19;
+export const BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION = 20;
 
 export type BrowserActorActionScopeV1 = { readonly spaceId: string; readonly documentId: string };
 
@@ -45,16 +45,29 @@ function object(value: unknown, path: string, required: readonly string[], optio
   return record;
 }
 
-/** 🚫️ The rejected-result reason of a guest refusal: `action-guest-refused`, then the guest's own fault as the shell displays
- * it (`code: message`) with control characters and runs of blanks folded to one space, cut on a character boundary to the
- * result's 256-byte text rule — so the refusal always parses and the human reads WHY (the fault used to be dropped).
- * Rows: `🧫️fixtures/🔣️.json` `guestRefusals`. */
-export function browserActorGuestRefusalReasonV1(detail: string | null): string {
+/** 🧺️ `prefix`, then `detail` with control characters and runs of blanks folded to one space, cut on a character boundary to
+ * the result's 256-byte text rule — so a rejected result always parses and the human reads WHY. */
+function foldedRefusalReason(prefix: string, detail: string | null): string {
   const folded = (detail ?? "").replace(/[\u0000-\u001f\u007f]/gu, " ").split(/\s+/u).filter(Boolean).join(" ");
-  let reason = folded.length === 0 ? "action-guest-refused" : `action-guest-refused: ${folded}`;
+  let reason = folded.length === 0 ? prefix : `${prefix}: ${folded}`;
   const encoder = new TextEncoder();
   while (encoder.encode(reason).length > 256) reason = Array.from(reason).slice(0, -1).join("");
   return reason.trimEnd();
+}
+
+/** 🚫️ The rejected-result reason of a guest refusal: `action-guest-refused`, then the guest's own fault as the shell displays
+ * it (`code: message`), folded and cut by {@link foldedRefusalReason} (the fault used to be dropped).
+ * Rows: `🧫️fixtures/🔣️.json` `guestRefusals`. */
+export function browserActorGuestRefusalReasonV1(detail: string | null): string {
+  return foldedRefusalReason("action-guest-refused", detail);
+}
+
+/** 🚧️ The rejected-result reason of an action the document actor refused BEFORE it invoked the guest (owner, canonical form or
+ * UI-quiescence admission): `action-refused`, then the admission fault, folded and cut by {@link foldedRefusalReason} (a
+ * bare `action-refused` hid which admission rule refused every 3d.puzzle input on the p33 hub sweep).
+ * Rows: `🧫️fixtures/🔣️.json` `admissionRefusals`. */
+export function browserActorAdmissionRefusalReasonV1(detail: string | null): string {
+  return foldedRefusalReason("action-refused", detail);
 }
 
 function text(value: unknown, path: string): string {
@@ -176,5 +189,6 @@ if (import.meta.vitest) {
   const { decodeAppCommand, decodePackValue } = await import("../../../../🟦️.ts");
   const { createBrowserActorAppCommandRequestV1 } = await import("./🎛️command/🟦️.ts");
   const { createBrowserActorUiIntentRequestV1 } = await import("./🧭️intent/🟦️.ts");
-  await registerTests1(import.meta.vitest, { BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES, browserActorActionOwnerMatchesV1, browserActorGuestRefusalReasonV1, createBrowserActorAppCommandRequestV1, createBrowserActorUiIntentRequestV1, decodeAppCommand, decodePackValue, parseBrowserActorActionRequestV1, parseBrowserActorActionResultV1 }, { directory: (await import("node:url")).fileURLToPath(new URL(".", import.meta.url)), url: import.meta.url });
+  const { browserActorActionRefusalReasonV1 } = await import("./📮️requests/🟦️.ts");
+  await registerTests1(import.meta.vitest, { BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES, browserActorActionOwnerMatchesV1, browserActorActionRefusalReasonV1, browserActorAdmissionRefusalReasonV1, browserActorGuestRefusalReasonV1, createBrowserActorAppCommandRequestV1, createBrowserActorUiIntentRequestV1, decodeAppCommand, decodePackValue, parseBrowserActorActionRequestV1, parseBrowserActorActionResultV1 }, { directory: (await import("node:url")).fileURLToPath(new URL(".", import.meta.url)), url: import.meta.url });
 }

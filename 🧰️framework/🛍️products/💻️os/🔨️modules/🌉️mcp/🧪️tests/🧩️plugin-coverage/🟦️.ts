@@ -5,7 +5,8 @@
  * destructive, carry an empty description or declare no arguments, its declared inferences (`inference_list`), and for
  * every installed artifact kind of the package `artifact_create` plus ONE mutation through `action_prepare` →
  * `action_invoke` whose required inputs the declared input schema can fill (default, first enum value, or a typed
- * neutral value) — non-destructive verbs first, then destructive ones (the gateway binds a throwaway folder and
+ * neutral value; in the hub lane an id-like input takes an id the document's snapshot holds, as an agent reading the
+ * document first would) — non-destructive verbs first, then destructive ones (the gateway binds a throwaway folder and
  * auto-approves, and the row says `invokeDestructive`). A kind passes when it is created and one mutation SUCCEEDS; a
  * kind whose package declares no mutation for it at all passes on creation and is counted apart
  * (`no-mutation-declared`), never rounded into the mutated count. The sweep passes when every kind does. A gateway that
@@ -51,6 +52,10 @@ const CREATE_MS = 900_000;
 /** 🪟️ How many hub creations the hub lane has in flight at once — a bounded window, so one run never floods the hub's
  * creation workers with every kind of a large catalog at the same moment. */
 const CREATE_WINDOW = 4;
+/** 🪟️ The typed refusal of a verb whose whole effect is shell view state (`interactive-job.agent-lane-uncarried`): correct for
+ * an agent, so the battery marks it — and a kind whose every candidate verb is one — "n/a for agents", never a failure. */
+const AGENT_LANE_UNCARRIED = "interactive-job.agent-lane-uncarried";
+const NOT_FOR_AGENTS = "n/a for agents";
 const startedAt = new Date();
 mkdirSync(outDir, { recursive: true });
 const rowsPath = join(outDir, "coverage-rows.jsonl");
@@ -74,6 +79,45 @@ function neutralInput(schema: any): Record<string, unknown> | null {
   }
   return input;
 }
+
+/** 🔎️ An id-like input or snapshot key: `id`, `key`, `…Id`, `…_id`, `…Ids`, `…_ids`. */
+const ID_KEY = /^(id|key)$|Id$|_id$|Ids$|_ids$/u;
+
+/** 🔎️ The entity ids an agent reads from a document before acting on it: every string an id-like key of the artifact
+ * snapshot holds, first seen first, at most 32. */
+function harvestIds(snapshot: unknown): string[] {
+  const ids: string[] = [];
+  const walk = (value: unknown, key: string, depth: number): void => {
+    if (ids.length >= 32 || depth > 16) return;
+    if (typeof value === "string") {
+      if (value && ID_KEY.test(key) && !ids.includes(value)) ids.push(value);
+    } else if (Array.isArray(value)) {
+      for (const item of value) walk(item, key, depth + 1);
+    } else if (value && typeof value === "object") {
+      for (const [child, item] of Object.entries(value)) walk(item, child, depth + 1);
+    }
+  };
+  walk(snapshot, "", 0);
+  return ids;
+}
+
+/** 🧮️ What an agent fills a verb's required inputs with after reading the document: an id-like input without a
+ * default or enum takes the first id the snapshot holds (`harvestIds`), every other input its `neutralInput` value. */
+function agentInput(schema: any, ids: string[]): Record<string, unknown> | null {
+  const input = neutralInput(schema);
+  if (input === null || ids.length === 0) return input;
+  for (const name of schema?.required ?? []) {
+    const property = schema.properties?.[name] ?? {};
+    if (property.default !== undefined || Array.isArray(property.enum) || !ID_KEY.test(name)) continue;
+    const type = Array.isArray(property.type) ? property.type[0] : property.type;
+    if (type === "string") input[name] = ids[0];
+    else if (type === "array" && property.items?.type === "string") input[name] = [ids[0]];
+  }
+  return input;
+}
+
+/** 🎯️ How many of a kind's candidate verbs the hub lane tries before the kind counts as not mutated. */
+const HUB_CANDIDATES = 16;
 
 /** 🎯️ A kind's mutation candidates: non-destructive verbs first, then those declaring arguments. */
 const candidateOrder = (left: any, right: any): number => Number(left?.effects?.destructive === true) - Number(right?.effects?.destructive === true) || Number((right?.presentation?.args ?? []).length > 0) - Number((left?.presentation?.args ?? []).length > 0);
@@ -267,6 +311,7 @@ async function hubLane(hub: string): Promise<void> {
   };
   const failing: string[] = [];
   const undeclared: string[] = [];
+  const shellOnly: string[] = [];
   const table: string[] = [];
   try {
     const initialized = await session.request("initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "semio-plugin-coverage-hub", title: "plugin coverage, hub lane", version: "1" } });
@@ -277,8 +322,11 @@ async function hubLane(hub: string): Promise<void> {
       const documentId = String(entry.creation?.ready?.artifactId ?? "");
       const row: Record<string, unknown> = { kindId: entry.kind.kindId, artifactKind, create: documentId ? "ok" : String(entry.creation?.phase ?? `refused ${entry.refusal}`), createMs: Date.now() - entry.startedMs };
       if (documentId) {
+        const openStarted = Date.now();
         const opened = await session.call("artifact_open", { artifactId: documentId }, CALL_MS);
+        row.openMs = Date.now() - openStarted;
         row.open = opened.isError ? `${opened.structuredContent?.code}` : "ok";
+        if (opened.isError) row.openDetail = String(opened.structuredContent?.message ?? "").slice(0, 240);
         const plugin = pluginOf(entry.kind);
         const found = await session.call("capabilities_search", { query: plugin, owner: plugin, artifactKind, kind: ["mutation"], limit: 100 });
         const described: any[] = [];
@@ -287,10 +335,12 @@ async function hubLane(hub: string): Promise<void> {
           if (!answer.isError && answer.structuredContent) described.push(answer.structuredContent);
         }
         const candidates = described.filter((capability: any) => capability?.artifactKind === artifactKind).sort(candidateOrder);
+        const snapshot = opened.isError ? null : await session.call("artifact_snapshot", { artifactId: documentId }, CALL_MS);
+        const ids = harvestIds(snapshot?.isError ? null : snapshot?.structuredContent);
         const attempts: string[] = [];
         let undoToken = "";
-        for (const capability of candidates.slice(0, 8)) {
-          const input = neutralInput(capability.inputSchema ?? {});
+        for (const capability of candidates.slice(0, HUB_CANDIDATES)) {
+          const input = agentInput(capability.inputSchema ?? {}, ids);
           if (input === null) {
             attempts.push(`${capability.id}: needs required args`);
             continue;
@@ -298,19 +348,22 @@ async function hubLane(hub: string): Promise<void> {
           const before = await head(documentId);
           const prepared = await session.call("action_prepare", { capabilityId: capability.id, input }, CALL_MS);
           if (prepared.isError) {
-            attempts.push(`${capability.id}: prepare ${prepared.structuredContent?.code} ${String(prepared.structuredContent?.message ?? "").slice(0, 120)}`);
+            attempts.push(prepared.structuredContent?.details?.faultCode === AGENT_LANE_UNCARRIED ? `${capability.id}: ${NOT_FOR_AGENTS} (runs only from the shell)` : `${capability.id}: prepare ${prepared.structuredContent?.code} ${String(prepared.structuredContent?.message ?? "").slice(0, 120)}`);
             continue;
           }
           const invoked = await session.call("action_invoke", { preparedActionHandle: prepared.structuredContent?.preparedHandle }, CALL_MS);
-          const after = await headAbove(documentId, before);
-          if (!invoked.isError && invoked.structuredContent?.status === "SUCCEEDED" && after > before) {
-            Object.assign(row, { mutate: "ok", verb: capability.id, destructive: capability?.effects?.destructive === true, head: `${before}→${after}` });
+          const succeeded = !invoked.isError && invoked.structuredContent?.status === "SUCCEEDED";
+          const after = succeeded ? await headAbove(documentId, before) : await head(documentId);
+          if (succeeded && after > before) {
+            Object.assign(row, { mutate: "ok", verb: capability.id, input, destructive: capability?.effects?.destructive === true, head: `${before}→${after}` });
             undoToken = String(invoked.structuredContent?.undoToken ?? "");
             break;
           }
-          attempts.push(`${capability.id}: invoke ${invoked.structuredContent?.status ?? invoked.structuredContent?.code} head ${before}→${after} ${String(invoked.structuredContent?.message ?? "").slice(0, 120)}`);
+          const noChange = ((invoked.structuredContent?.warnings ?? []) as string[]).some((warning) => warning.startsWith("no-change")) ? "no-change (the verb emitted no operation) " : "";
+          attempts.push(`${capability.id}: invoke ${invoked.structuredContent?.status ?? invoked.structuredContent?.code} head ${before}→${after} ${noChange}${String(invoked.structuredContent?.message ?? "").slice(0, 120)}`);
         }
-        if (row.mutate !== "ok") Object.assign(row, { mutate: candidates.length === 0 ? "no-mutation-declared" : "failed", attempts });
+        const viewOnly = attempts.length > 0 && attempts.every((attempt) => attempt.includes(`: ${NOT_FOR_AGENTS} `));
+        if (row.mutate !== "ok") Object.assign(row, { mutate: row.open !== "ok" ? "not-reached" : candidates.length === 0 ? "no-mutation-declared" : viewOnly ? NOT_FOR_AGENTS : "failed", attempts });
         if (undoToken) {
           for (const tool of ["history_undo", "history_redo"] as const) {
             const before = await head(documentId);
@@ -322,19 +375,20 @@ async function hubLane(hub: string): Promise<void> {
         const exported = await session.call("artifact_export", { artifactId: documentId }, CALL_MS);
         row.export = exported.isError ? `${exported.structuredContent?.code} ${String(exported.structuredContent?.message ?? "").slice(0, 160)}` : `ok ${exported.structuredContent?.format} ${exported.structuredContent?.contentBytes} B`;
       }
-      const passed = row.create === "ok" && row.open === "ok" && String(row.export).startsWith("ok") && (row.mutate === "no-mutation-declared" || (row.mutate === "ok" && String(row.undo).startsWith("ok") && String(row.redo).startsWith("ok")));
+      const passed = row.create === "ok" && row.open === "ok" && String(row.export).startsWith("ok") && (row.mutate === "no-mutation-declared" || row.mutate === NOT_FOR_AGENTS || (row.mutate === "ok" && String(row.undo).startsWith("ok") && String(row.redo).startsWith("ok")));
       if (row.mutate === "no-mutation-declared") undeclared.push(artifactKind);
+      if (row.mutate === NOT_FOR_AGENTS) shellOnly.push(artifactKind);
       if (!passed) failing.push(`${artifactKind}(${String(row.kindId)})`);
       appendFileSync(rowsHubPath, `${JSON.stringify(row)}\n`);
-      table.push(`| ${row.kindId} | ${artifactKind} | ${row.create} | ${row.open ?? "-"} | ${row.mutate ?? "-"} ${row.verb ? String(row.verb).split(".").at(-1) : ""} | ${row.undo ?? "-"} | ${row.redo ?? "-"} | ${String(row.export ?? "-").slice(0, 60)} |`);
-      log(`hub ${row.kindId} create=${row.create} open=${row.open} mutate=${row.mutate} undo=${row.undo ?? "-"} redo=${row.redo ?? "-"} export=${String(row.export ?? "-").slice(0, 60)}`);
+      table.push(`| ${row.kindId} | ${artifactKind} | ${row.create} | ${row.open ?? "-"} | ${row.openMs ?? "-"} | ${row.mutate ?? "-"} ${row.verb ? String(row.verb).split(".").at(-1) : ""} | ${row.undo ?? "-"} | ${row.redo ?? "-"} | ${String(row.export ?? "-").slice(0, 60)} |`);
+      log(`hub ${row.kindId} create=${row.create} open=${row.open} (${row.openMs ?? "-"} ms) mutate=${row.mutate} undo=${row.undo ?? "-"} redo=${row.redo ?? "-"} export=${String(row.export ?? "-").slice(0, 60)}`);
     }
   } finally {
     session.stop();
     writeFileSync(join(outDir, "coverage-hub-gateway-stderr.txt"), `${session.stderrLines().join("\n")}\n`);
     await http("POST", `/auth/agent-delegations/${encodeURIComponent(String(delegation.json.delegationId))}/revoke`, token).catch(() => undefined);
   }
-  const header = "| kind id | artifact kind | create | open | mutate | undo | redo | export |\n|---|---|---|---|---|---|---|---|";
+  const header = "| kind id | artifact kind | create | open | open ms | mutate | undo | redo | export |\n|---|---|---|---|---|---|---|---|---|";
   writeFileSync(join(outDir, "coverage-hub-table.md"), `${header}\n${table.join("\n")}\n`);
   console.log(`${header}\n${table.join("\n")}`);
   const passedCount = pending.length - failing.length;
@@ -344,10 +398,10 @@ async function hubLane(hub: string): Promise<void> {
       check: "mcp-plugin-coverage-hub",
       status: pending.length > 0 && failing.length === 0 ? "pass" : "fail",
       startedAt,
-      measured: { hub, kinds: pending.length, passed: passedCount, noMutationDeclared: undeclared.length },
+      measured: { hub, kinds: pending.length, passed: passedCount, noMutationDeclared: undeclared.length, notForAgents: shellOnly.length },
       summary: {
-        en: `${passedCount}/${pending.length} hub-creatable kinds created, opened, mutated, undone, redone and exported over the semio MCP (${undeclared.length} declare no mutation)${failing.length ? `; failing: ${failing.slice(0, 10).join(", ")}` : ""}`,
-        de: `${passedCount}/${pending.length} am Hub anlegbare Arten über das semio-MCP angelegt, geöffnet, verändert, rückgängig gemacht, wiederhergestellt und exportiert (${undeclared.length} erklären keine Änderung)${failing.length ? `; fehlgeschlagen: ${failing.slice(0, 10).join(", ")}` : ""}`,
+        en: `${passedCount}/${pending.length} hub-creatable kinds created, opened, mutated, undone, redone and exported over the semio MCP (${undeclared.length} declare no mutation, ${shellOnly.length} n/a for agents: every verb is shell-only view state)${failing.length ? `; failing: ${failing.slice(0, 10).join(", ")}` : ""}`,
+        de: `${passedCount}/${pending.length} am Hub anlegbare Arten über das semio-MCP angelegt, geöffnet, verändert, rückgängig gemacht, wiederhergestellt und exportiert (${undeclared.length} erklären keine Änderung, ${shellOnly.length} für Agenten nicht anwendbar: jedes Verb ist reiner Ansichtszustand der Oberfläche)${failing.length ? `; fehlgeschlagen: ${failing.slice(0, 10).join(", ")}` : ""}`,
       },
       evidence: [rowsHubPath, join(outDir, "coverage-hub-table.md")],
     }),

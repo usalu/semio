@@ -584,17 +584,27 @@ export type RingProps = { orbId: string, t: number, };"####,
     },
     SchemaMetadata {
         name: "RowAction",
-        version: 1,
+        version: 3,
         typescript: r####"/**
- * 🎬️ One action affordance painted on (or reachable from) a [`Component::TreeItem`] row —
- * `action` reuses [`crate::ActionBinding`] rather than a second parallel action-id type, since a row
- * action is exactly a binding fired unconditionally on click (no `Trigger` ambiguity to add here).
+ * 🎬️ One action affordance painted on (or reachable from) a [`Component::TreeItem`] or
+ * [`Component::TableRow`] row. It names only its `verb`: the scope, version and argument map are the
+ * row's ONE [`RowTarget`], which every row action and the row's activation inherit, so N actions cost N
+ * verbs, never N argument maps.
  */
 export type RowAction = {
 /**
  * 🖼️ Icon key. See [`ButtonProps::icon`] for why this is a plain `String`, not a closed enum.
  */
-icon: string, label: Label | null, action: ActionBinding, placement: RowActionPlacement, };"####,
+icon: string, label: Label | null,
+/**
+ * ▶️ The verb this action fires on the row's [`RowTarget`].
+ */
+verb: string, placement: RowActionPlacement,
+/**
+ * 🚫️ A disabled action paints and announces disabled and never dispatches ([`RowTarget::action_binding`] refuses it
+ * typed). Only a disabled action carries the flag, so an enabled row costs nothing for it.
+ */
+disabled: boolean, };"####,
     },
     SchemaMetadata {
         name: "RowActionPlacement",
@@ -603,6 +613,22 @@ icon: string, label: Label | null, action: ActionBinding, placement: RowActionPl
  * 📍️ Where a [`RowAction`] paints: on the tree row itself, or folded into the row's context menu.
  */
 export type RowActionPlacement = "row" | "menu";"####,
+    },
+    SchemaMetadata {
+        name: "RowTarget",
+        version: 1,
+        typescript: r####"/**
+ * 🎯️ The ONE action target of a row: the controller `scope` at its contract `version` that every
+ * [`RowAction::verb`] and the row's `activation` fire in, the ONE argument map they all inherit, and the
+ * verb the row's primary activation (open, select) fires. A host dispatches a row verb as
+ * [`RowTarget::binding`] — the same [`crate::ActionBinding`] shape any record binding has, so a tree row
+ * and a table row with the same target dispatch identically.
+ */
+export type RowTarget = { scope: string, version: number, args: { [key in string]?: UiValue } | null,
+/**
+ * ▶️ The verb the row's primary activation fires on this target.
+ */
+activation: string | null, };"####,
     },
     SchemaMetadata {
         name: "ScrollAxes",
@@ -799,11 +825,11 @@ columnWindow: TreeWindow | null, };"####,
     },
     SchemaMetadata {
         name: "TableRowProps",
-        version: 1,
+        version: 2,
         typescript: r####"/**
- * 📊️ Props for `Component::TableRow` — one row of a [`TableProps`] table: its cells in column order and
- * its row-scoped actions, both as props, so a row is ONE node record. The row's primary activation (open,
- * select) is the record's own `Trigger::Activate` binding.
+ * 📊️ Props for `Component::TableRow` — one row of a [`TableProps`] table: its cells in column order, its
+ * row-scoped actions and its target, all as props, so a row is ONE node record. Actions and activation
+ * are verbs on the row's ONE [`RowTarget`], exactly as a [`TreeItemProps`] row's are.
  */
 export type TableRowProps = {
 /**
@@ -813,7 +839,11 @@ cells: Array<string>,
 /**
  * 🎬️ Row-scoped actions, rendered in the table's trailing actions column.
  */
-rowActions: Array<RowAction>, };"####,
+rowActions: Array<RowAction>,
+/**
+ * 🎯️ The one target `row_actions` and the activation fire on — present exactly when either is.
+ */
+target: RowTarget | null, };"####,
     },
     SchemaMetadata {
         name: "TextProps",
@@ -861,7 +891,7 @@ export type TransitionHint = "introducing" | "celebrating";"####,
     },
     SchemaMetadata {
         name: "TreeItemProps",
-        version: 1,
+        version: 2,
         typescript: r####"/**
  * 🌿️ Props for `Component::TreeItem` — a single row. `items`/`control` are gone: nested items and
  * the old inline `control: Option<UiControlNode>` are now ordinary children on the record (the
@@ -870,8 +900,8 @@ export type TransitionHint = "introducing" | "celebrating";"####,
  * type). `inlineToolbar` identifies the one direct horizontal Toolbar child whose real Button
  * children remain independently focusable and actionable inside the row. `detail` identifies one
  * direct Surface child placed in a bounded band below the row. The row's primary click
- * action (old `action: Option<ActionDescriptor>`) moved to the record's `bindings`
- * (`Trigger::Activate`).
+ * action (old `action: Option<ActionDescriptor>`) is [`RowTarget::activation`], a verb on the
+ * row's target — never a record `Trigger::Activate` binding.
  */
 export type TreeItemProps = { label: Label, description: string | null, icon: string | null, defaultOpen: boolean | null, draggable: boolean | null, dragData: { [key in string]?: string } | null,
 /**
@@ -899,7 +929,11 @@ inlineToolbar: UiNodeId | null,
  * 🎞️ A direct Surface child placed in a bounded detail band below this row. It is neither an
  * inline control nor a nested TreeItem, and remains a real independently hosted scene.
  */
-detail: UiNodeId | null, rowActions: Array<RowAction>, };"####,
+detail: UiNodeId | null, rowActions: Array<RowAction>,
+/**
+ * 🎯️ The one target `row_actions` and the activation fire on — present exactly when either is.
+ */
+target: RowTarget | null, };"####,
     },
     SchemaMetadata {
         name: "TreePresentation",
@@ -964,12 +998,12 @@ export type Trigger = "activate" | "change" | "commit" | "delta" | "drop" | "sub
     },
     SchemaMetadata {
         name: "UiContractViolation",
-        version: 1,
+        version: 2,
         typescript: r####"/**
  * ⚠️ One structural invariant a [`crate::UiSnapshot`] fails — every variant here is a whole-document
  * shape property, never a per-patch wire quota (those are [`PatchRejection::QuotaExceeded`]).
  */
-export type UiContractViolation = { "type": "cycle", node: UiNodeId, } | { "type": "orphanChild", parent: UiNodeId, child: UiNodeId, } | { "type": "duplicateSiblingKey", parent: UiNodeId, key: string, } | { "type": "nodeQuota", count: number, max: number, } | { "type": "depthQuota", node: UiNodeId, depth: number, max: number, } | { "type": "danglingRoot", node: UiNodeId, } | { "type": "sectionNested", node: UiNodeId, } | { "type": "nonFiniteNumber", node: UiNodeId, } | { "type": "invalidTreeInlineToolbar", node: UiNodeId, toolbar: UiNodeId, } | { "type": "invalidTreeSectionHeaderToolbar", node: UiNodeId, toolbar: UiNodeId, } | { "type": "invalidTreeDetail", node: UiNodeId, detail: UiNodeId, };"####,
+export type UiContractViolation = { "type": "cycle", node: UiNodeId, } | { "type": "orphanChild", parent: UiNodeId, child: UiNodeId, } | { "type": "duplicateSiblingKey", parent: UiNodeId, key: string, } | { "type": "nodeQuota", count: number, max: number, } | { "type": "depthQuota", node: UiNodeId, depth: number, max: number, } | { "type": "danglingRoot", node: UiNodeId, } | { "type": "sectionNested", node: UiNodeId, } | { "type": "nonFiniteNumber", node: UiNodeId, } | { "type": "invalidTreeInlineToolbar", node: UiNodeId, toolbar: UiNodeId, } | { "type": "invalidTreeSectionHeaderToolbar", node: UiNodeId, toolbar: UiNodeId, } | { "type": "invalidTreeDetail", node: UiNodeId, detail: UiNodeId, } | { "type": "invalidRowTarget", node: UiNodeId, };"####,
     },
     SchemaMetadata {
         name: "UiDocumentLimits",

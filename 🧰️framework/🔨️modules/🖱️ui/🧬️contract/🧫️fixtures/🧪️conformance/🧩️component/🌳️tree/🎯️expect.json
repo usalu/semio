@@ -58,5 +58,7 @@
       "hidden": false
     }
   ],
-  "actionIds": []
+  "actionIds": [
+    "cad-play.deleteItem@1"
+  ]
 }

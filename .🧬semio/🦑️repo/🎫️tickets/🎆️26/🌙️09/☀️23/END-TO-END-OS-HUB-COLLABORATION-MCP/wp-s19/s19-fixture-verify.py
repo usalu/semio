@@ -10,13 +10,20 @@ import sys
 
 binary, root = sys.argv[1], sys.argv[2]
 FAMILIES = {"din16798": "🌬️din16798", "din18599": "⚡️din18599", "din4108": "🧱️din4108", "en1990": "⚖️en1990", "en1991": "🏋️en1991", "en1992": "🏛️en1992", "en1993": "🔩️en1993", "en1994": "🧩️en1994", "en1995": "🪵️en1995", "en1996": "🪨️en1996", "en1997": "🌍️en1997", "en1998": "🫨️en1998", "en1999": "🪶️en1999", "iso16757": "📇️iso16757", "vdi3805": "🏭️vdi3805"}
-process = subprocess.Popen([binary], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, encoding="utf-8")
+process = subprocess.Popen([binary] + os.environ.get("S19_EMITTER_ARGS", "").split(), stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, encoding="utf-8")
+
+
+def _line():
+    while True:
+        line = process.stdout.readline()
+        if not line or line.lstrip().startswith("{"):
+            return line
 
 
 def ask(request):
     process.stdin.write(json.dumps(request, ensure_ascii=False) + "\n")
     process.stdin.flush()
-    reply = json.loads(process.stdout.readline())
+    reply = json.loads(_line())
     if "error" in reply:
         raise ValueError(reply["error"])
     return reply["ok"]

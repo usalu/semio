@@ -8589,11 +8589,37 @@
             {
               "capabilities": [
                 {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.binary@raw/*"
+                    }
+                  ],
+                  "descriptorSha256": "e80dc3673e6b99b53e7e17b42faac6e9cb490f403d1ff8a9c5d97ba443969958",
+                  "executable": false,
+                  "identity": "s.stdio.binary.composer.dialect-s-stdio-binary-raw.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "b0ff3737c550730cb2ad7f87192b5401732ebff538975557fc0a10241100dd66",
                   "executable": false,
                   "identity": "s.stdio.binary.conformance-suite.public-corpus",
                   "kind": "conformance-suite",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.binary.inference"
+                    }
+                  ],
+                  "descriptorSha256": "caf367cd99282035e88cdf54fbeb0770832bc3abe93c234797dc32a469cc9fc3",
+                  "executable": false,
+                  "identity": "s.stdio.binary.inference.schema-s-stdio-binary-inference.v1",
+                  "kind": "inference",
                   "localizations": []
                 },
                 {
@@ -8631,11 +8657,41 @@
                   "localizations": []
                 },
                 {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.binary"
+                    }
+                  ],
+                  "descriptorSha256": "cfdd54191a276a5e634e5c990006d492ae1e4f1c0672bf7c5c46c2bec4d6ff9b",
+                  "executable": false,
+                  "identity": "s.stdio.binary.schema.schema-s-stdio-binary.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "ee2cee175a6ed23fcdced76f372f386c968fa3c42134bcd468c680ec822a78d8",
                   "executable": false,
                   "identity": "s.stdio.binary.standard.raw",
                   "kind": "standard",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.binary"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "12:stdio.binary:bin"
+                    }
+                  ],
+                  "descriptorSha256": "1abc76fb3d078c4eb045450da510219293883df2d2d34b1e6530dc55eeb2c41e",
+                  "executable": false,
+                  "identity": "s.stdio.binary.standard.raw.codec.codec-stdio-binary-extension-bin.v1",
+                  "kind": "codec",
                   "localizations": []
                 },
                 {
@@ -8661,6 +8717,23 @@
                   "identity": "s.stdio.binary.standard.raw.representation.document",
                   "kind": "representation",
                   "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "extension",
+                      "value": ".bin"
+                    },
+                    {
+                      "namespace": "mime",
+                      "value": "application/octet-stream"
+                    }
+                  ],
+                  "descriptorSha256": "98d1f0c6b5c471b3f8e71826c387d4b6de3954fdc71178fba76114cc8735c2a9",
+                  "executable": false,
+                  "identity": "s.stdio.binary.standard.raw.representation.mime-application-octet-stream-extension-bin",
+                  "kind": "representation",
+                  "localizations": []
                 }
               ],
               "identity": "s.stdio.binary"
@@ -8668,11 +8741,37 @@
             {
               "capabilities": [
                 {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.bmp@v3/*"
+                    }
+                  ],
+                  "descriptorSha256": "3a258dce29b7e243fb7cb011c492e5b8541b9559af45c7f668fbaaa75b355bff",
+                  "executable": false,
+                  "identity": "s.stdio.bmp.composer.dialect-s-stdio-bmp-v3.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "33746bbff92c55ac384344b69c74ebb80d9b84885ee9031e9a1ade5cd1dc90f1",
                   "executable": false,
                   "identity": "s.stdio.bmp.conformance-suite.public-corpus",
                   "kind": "conformance-suite",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.bmp.inference"
+                    }
+                  ],
+                  "descriptorSha256": "c298266b1ed83a986b668f5aff2147c10283ddb64dbe8222f23aaeb2411965cc",
+                  "executable": false,
+                  "identity": "s.stdio.bmp.inference.schema-s-stdio-bmp-inference.v1",
+                  "kind": "inference",
                   "localizations": []
                 },
                 {
@@ -8710,11 +8809,41 @@
                   "localizations": []
                 },
                 {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.bmp"
+                    }
+                  ],
+                  "descriptorSha256": "f896aa2a74c0b4ad5b33c9f7edfa5d153f1dd5a43e9543c18bc026177363f611",
+                  "executable": false,
+                  "identity": "s.stdio.bmp.schema.schema-s-stdio-bmp.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "73cc9379e322055f0828eb1508b27809c943c94b215b8a5261bab579ebc7bfdf",
                   "executable": false,
                   "identity": "s.stdio.bmp.standard.v3",
                   "kind": "standard",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.bmp"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "9:stdio.bmp:bmp"
+                    }
+                  ],
+                  "descriptorSha256": "0db5ecaffd4f499f1c71299b96b2c19a4a4eac7fc6f39850497fb1b6b8e4dc8a",
+                  "executable": false,
+                  "identity": "s.stdio.bmp.standard.v3.codec.codec-stdio-bmp-extension-bmp.v1",
+                  "kind": "codec",
                   "localizations": []
                 },
                 {
@@ -8738,6 +8867,23 @@
                   "descriptorSha256": "d89f9b0350f809ee45f5ac542b64decb0a03af3f50ffc23040a055fe4909efb4",
                   "executable": false,
                   "identity": "s.stdio.bmp.standard.v3.representation.document",
+                  "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "extension",
+                      "value": ".bmp"
+                    },
+                    {
+                      "namespace": "mime",
+                      "value": "image/bmp"
+                    }
+                  ],
+                  "descriptorSha256": "c2e7682107481866e02e8364c5b0d0aba976a4e72369684b3759518e62b0c0e0",
+                  "executable": false,
+                  "identity": "s.stdio.bmp.standard.v3.representation.mime-image-bmp-extension-bmp",
                   "kind": "representation",
                   "localizations": []
                 }
@@ -9956,11 +10102,37 @@
             {
               "capabilities": [
                 {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.epw@energyplus/*"
+                    }
+                  ],
+                  "descriptorSha256": "bb6755e4cfc501543ab944399084b160b17fa991c485c85f30382987913b0c02",
+                  "executable": false,
+                  "identity": "s.stdio.epw.composer.dialect-s-stdio-epw-energyplus.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "da39b02fbc05f1804a8bc1e3b6453de40a32e1eb04c0c840d44d41b9ac4f8cc9",
                   "executable": false,
                   "identity": "s.stdio.epw.conformance-suite.public-corpus",
                   "kind": "conformance-suite",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.epw.inference"
+                    }
+                  ],
+                  "descriptorSha256": "4bd0300a1488c6d8f4df584c65a5c3ea1bebdbc72b6a5a9a8e2982feca913c5e",
+                  "executable": false,
+                  "identity": "s.stdio.epw.inference.schema-s-stdio-epw-inference.v1",
+                  "kind": "inference",
                   "localizations": []
                 },
                 {
@@ -9998,11 +10170,41 @@
                   "localizations": []
                 },
                 {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.epw"
+                    }
+                  ],
+                  "descriptorSha256": "dfa7c34f13e22f41ec98adc8d68daa3d20f5981f2731665c5be0be97a55f1bf1",
+                  "executable": false,
+                  "identity": "s.stdio.epw.schema.schema-s-stdio-epw.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "4471aa18880e3dce5213f1552747bed8e1b973a3dce0edda40a28ea76fdd7689",
                   "executable": false,
                   "identity": "s.stdio.epw.standard.energyplus",
                   "kind": "standard",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.epw"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "9:stdio.epw:epw"
+                    }
+                  ],
+                  "descriptorSha256": "c3303f6c579395c171d07d42ce192f941c5106b890e9d61530f8351a187eab59",
+                  "executable": false,
+                  "identity": "s.stdio.epw.standard.energyplus.codec.codec-stdio-epw-extension-epw.v1",
+                  "kind": "codec",
                   "localizations": []
                 },
                 {
@@ -10028,6 +10230,19 @@
                   "identity": "s.stdio.epw.standard.energyplus.representation.document",
                   "kind": "representation",
                   "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "extension",
+                      "value": ".epw"
+                    }
+                  ],
+                  "descriptorSha256": "d15f4b9129c53b3838236c60a30463334ed87d2fbe093055982969a074c07f0b",
+                  "executable": false,
+                  "identity": "s.stdio.epw.standard.energyplus.representation.extension-epw",
+                  "kind": "representation",
+                  "localizations": []
                 }
               ],
               "identity": "s.stdio.epw"
@@ -10035,11 +10250,63 @@
             {
               "capabilities": [
                 {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.gif@87a/*"
+                    }
+                  ],
+                  "descriptorSha256": "1fc7a1da2a046c36b7d082a976cb3ea9c61f7f033bbeb3ae8f004a3acacd6e6a",
+                  "executable": false,
+                  "identity": "s.stdio.gif.composer.dialect-s-stdio-gif-87a.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.gif@89a/*"
+                    }
+                  ],
+                  "descriptorSha256": "591cc5360c466c74253a815af4814c72ff0e8b4f6cae7c5a252ea859df391827",
+                  "executable": false,
+                  "identity": "s.stdio.gif.composer.dialect-s-stdio-gif-89a.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "003c5896262fe32d413598ed4695a231b004b1f7b68b8f3ca45ebecee0bf1035",
                   "executable": false,
                   "identity": "s.stdio.gif.conformance-suite.public-corpus",
                   "kind": "conformance-suite",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.gif.89a.inference"
+                    }
+                  ],
+                  "descriptorSha256": "034c24dc46b9340a6b4172472f54ae95c743542764cc96aae50d336c158c9f18",
+                  "executable": false,
+                  "identity": "s.stdio.gif.inference.schema-s-stdio-gif-89a-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.gif.inference"
+                    }
+                  ],
+                  "descriptorSha256": "05a3bd2b705e9a90ea81847967e0ec48323fda316105de2040294935fa63ce9f",
+                  "executable": false,
+                  "identity": "s.stdio.gif.inference.schema-s-stdio-gif-inference.v1",
+                  "kind": "inference",
                   "localizations": []
                 },
                 {
@@ -10077,11 +10344,71 @@
                   "localizations": []
                 },
                 {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.gif.89a"
+                    }
+                  ],
+                  "descriptorSha256": "26b0cefd2b05a154c61ac7d72906eb889a1b3a1624a5f2470be71889da0de53b",
+                  "executable": false,
+                  "identity": "s.stdio.gif.schema.schema-s-stdio-gif-89a.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.gif"
+                    }
+                  ],
+                  "descriptorSha256": "018452afbc00cfbaf2272e40e31bc52b04f27982ea3f1a7dfb7a64f433a3e2f5",
+                  "executable": false,
+                  "identity": "s.stdio.gif.schema.schema-s-stdio-gif.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "dbf1fa9c6e0707366007cb5982b4f01d5614e86d47a9be635e0632f638dd00cf",
                   "executable": false,
                   "identity": "s.stdio.gif.standard.87a",
                   "kind": "standard",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.gif.89a"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "13:stdio.gif.89a:gif"
+                    }
+                  ],
+                  "descriptorSha256": "664e4b209f4b232e4d67337104470fc23ef1b28d9f05e255381e7f909a4d344d",
+                  "executable": false,
+                  "identity": "s.stdio.gif.standard.87a.codec.codec-stdio-gif-89a-extension-gif.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.gif"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "9:stdio.gif:gif"
+                    }
+                  ],
+                  "descriptorSha256": "3da1e775b24f048a4101f973f965e82dce7ab6063824fa8d6620c8ccb463e5ab",
+                  "executable": false,
+                  "identity": "s.stdio.gif.standard.87a.codec.codec-stdio-gif-extension-gif.v1",
+                  "kind": "codec",
                   "localizations": []
                 },
                 {
@@ -10105,6 +10432,23 @@
                   "descriptorSha256": "8e3fc0eeedd9c8326608a063a439c89af21fff69175cf55a33353e06b13b1720",
                   "executable": false,
                   "identity": "s.stdio.gif.standard.87a.representation.document",
+                  "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "extension",
+                      "value": ".gif"
+                    },
+                    {
+                      "namespace": "mime",
+                      "value": "image/gif"
+                    }
+                  ],
+                  "descriptorSha256": "0f8bff259cf3b6b6a8d550cd39141ac888d7b5ba034e05e3e87e09041d00673f",
+                  "executable": false,
+                  "identity": "s.stdio.gif.standard.87a.representation.mime-image-gif-extension-gif",
                   "kind": "representation",
                   "localizations": []
                 },
@@ -11456,11 +11800,102 @@
             {
               "capabilities": [
                 {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.ifc@2x3/cobie"
+                    }
+                  ],
+                  "descriptorSha256": "42c93f7dca269bebc6ce91dbdba0da61829c7052a1ae17aefddaa6546aa36b86",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.composer.dialect-s-stdio-ifc-2x3-cobie.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.ifc@2x3/cv20"
+                    }
+                  ],
+                  "descriptorSha256": "804ef154a34780d746c0e5360b77811518ee605bcf8ecebfc34ef0abd4b1adef",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.composer.dialect-s-stdio-ifc-2x3-cv20.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.ifc@2x3/sav"
+                    }
+                  ],
+                  "descriptorSha256": "b6a56f22e51589fc1687ce4640595b604f77b964333dee28f2b3a14be43c1034",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.composer.dialect-s-stdio-ifc-2x3-sav.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.ifc@2x3/*"
+                    }
+                  ],
+                  "descriptorSha256": "e85e34772750cb104db40f9d6568a5635e4c0677be9531174ec0d583f7bc5e81",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.composer.dialect-s-stdio-ifc-2x3.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.ifc@4/*"
+                    }
+                  ],
+                  "descriptorSha256": "a64584863f07f309c9d35bb65cb00cbfb74a5a0ca29905fe5dea14317d042e97",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.composer.dialect-s-stdio-ifc-4.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "e8eb81c294251c0be92549265c2a096d52ac3f9c0d7343a938f7e9ebe5da5d64",
                   "executable": false,
                   "identity": "s.stdio.ifc.conformance-suite.public-corpus",
                   "kind": "conformance-suite",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.ifc.2x3.inference"
+                    }
+                  ],
+                  "descriptorSha256": "347c02a7a8990a9878d6bd90a51c42cc8292c7aba816a7b26f1f44370be4553f",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.inference.schema-s-stdio-ifc-2x3-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.ifc.inference"
+                    }
+                  ],
+                  "descriptorSha256": "28bda31132325133a38aca148237b55a2b02760bada6671c22792726a190b8a0",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.inference.schema-s-stdio-ifc-inference.v1",
+                  "kind": "inference",
                   "localizations": []
                 },
                 {
@@ -11498,11 +11933,71 @@
                   "localizations": []
                 },
                 {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.ifc.2x3"
+                    }
+                  ],
+                  "descriptorSha256": "0c5ab859d2a0136d9cec87752033e0aa2788fe8f84de9e37b342baa97a1ef5ad",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.schema.schema-s-stdio-ifc-2x3.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.ifc"
+                    }
+                  ],
+                  "descriptorSha256": "52b16c5894ea44478ff419961ff32f12e70c54f16947241bb4936a60e2d26995",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.schema.schema-s-stdio-ifc.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "aff373b4183f2c6b3dd1971def1ac48dcde4654d198108c75d2ef2153698bfb6",
                   "executable": false,
                   "identity": "s.stdio.ifc.standard.2x3",
                   "kind": "standard",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.ifc.2x3"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "13:stdio.ifc.2x3:ifc"
+                    }
+                  ],
+                  "descriptorSha256": "edd661070deb0eb3c9f1ca9b01c808108b2435909feff4836233d929512a699e",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.standard.2x3.codec.codec-stdio-ifc-2x3-extension-ifc.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.ifc"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "9:stdio.ifc:ifc"
+                    }
+                  ],
+                  "descriptorSha256": "b6bb8d401af2c877c3c22e0d3cb614a0305f5e21fae02d95de6d2e291d4f352b",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.standard.2x3.codec.codec-stdio-ifc-extension-ifc.v1",
+                  "kind": "codec",
                   "localizations": []
                 },
                 {
@@ -11526,6 +12021,23 @@
                   "descriptorSha256": "6ab764fa593870448b95cf49a8c28d792600b39db0ba6f62dcd47941020a43c2",
                   "executable": false,
                   "identity": "s.stdio.ifc.standard.2x3.representation.document",
+                  "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "extension",
+                      "value": ".ifc"
+                    },
+                    {
+                      "namespace": "mime",
+                      "value": "application/x-ifc"
+                    }
+                  ],
+                  "descriptorSha256": "f7dbc7f93789903c4d04a178e6e781103ec13195d699ae6d92cb91c3ad4c924d",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.standard.2x3.representation.mime-application-x-ifc-extension-ifc",
                   "kind": "representation",
                   "localizations": []
                 },
@@ -11559,6 +12071,45 @@
                   "executable": false,
                   "identity": "s.stdio.ifc.standard.4.representation.document",
                   "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.ifc@2x3/cobie"
+                    }
+                  ],
+                  "descriptorSha256": "abcfd75ce444dd8cd3fa79d82840538c5a931bab05fe24ec1562efdd80e7c1a6",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.subset-validator.validated-dialect-s-stdio-ifc-2x3-cobie.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.ifc@2x3/cv20"
+                    }
+                  ],
+                  "descriptorSha256": "cd7fe71f849c3c9beca52291514b0c855ce704e98c5f77a32ae2b8e71cf6368d",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.subset-validator.validated-dialect-s-stdio-ifc-2x3-cv20.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.ifc@2x3/sav"
+                    }
+                  ],
+                  "descriptorSha256": "3e35e1f9a2e6ba61413bd1392f0277b7665ed850c34ecf9964ac69a5b9ce93ca",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.subset-validator.validated-dialect-s-stdio-ifc-2x3-sav.v1",
+                  "kind": "subset-validator",
                   "localizations": []
                 }
               ],
@@ -14403,11 +14954,427 @@
             {
               "capabilities": [
                 {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.semio@v1/animation"
+                    }
+                  ],
+                  "descriptorSha256": "3c68402ea462b9d2d4041f950d2b3653859ec282427badf1bd0f4e6587fc12b5",
+                  "executable": false,
+                  "identity": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-animation.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.semio@v1/audio"
+                    }
+                  ],
+                  "descriptorSha256": "1f3955c9d70a4917ace0a17d7d5b494a1feaac6e1effb78bdb02d66ecd977581",
+                  "executable": false,
+                  "identity": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-audio.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.semio@v1/brep"
+                    }
+                  ],
+                  "descriptorSha256": "065944113b14475a68042fd9ccbed3f7fdb49e083a2524581ad7b300a7d45ba5",
+                  "executable": false,
+                  "identity": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-brep.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.semio@v1/cad"
+                    }
+                  ],
+                  "descriptorSha256": "68bb6d777175f1ed02a3b3e0da36df6a7d048e3d3541651f93d0cb934ae344ff",
+                  "executable": false,
+                  "identity": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-cad.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.semio@v1/document"
+                    }
+                  ],
+                  "descriptorSha256": "965f7376b0c9d3d4d1eb26c6c4b41984fe01341f269e9e2116f9eefc0eeae038",
+                  "executable": false,
+                  "identity": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-document.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.semio@v1/drawing"
+                    }
+                  ],
+                  "descriptorSha256": "063c73463bd650b94edda9eab6ba48a34ea2097411a59c6ec855c5f232da2bfe",
+                  "executable": false,
+                  "identity": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-drawing.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.semio@v1/flow"
+                    }
+                  ],
+                  "descriptorSha256": "1f624b38362086c643a7e7e8977a7d08b874719dcfa6761dc91a8a268ca36f82",
+                  "executable": false,
+                  "identity": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-flow.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.semio@v1/image"
+                    }
+                  ],
+                  "descriptorSha256": "ffd491076142ba53dee921b505064b109d66caca7e5fb2abb63b3b3f44d67ebc",
+                  "executable": false,
+                  "identity": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-image.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.semio@v1/mesh"
+                    }
+                  ],
+                  "descriptorSha256": "8c8bb2aaf43314737b9190a8ce5d270372b5a35a9f69311528dee08b991c6a50",
+                  "executable": false,
+                  "identity": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-mesh.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.semio@v1/model"
+                    }
+                  ],
+                  "descriptorSha256": "518c6b7196291bde29d2a55b0a175fee38c086b943c587cc2505975146ab33d5",
+                  "executable": false,
+                  "identity": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-model.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.semio@v1/presentation"
+                    }
+                  ],
+                  "descriptorSha256": "71fe573d2f1237c52644a86c2554ed651e63d7d9f8a01a0ff981e2cba408d170",
+                  "executable": false,
+                  "identity": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-presentation.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.semio@v1/value"
+                    }
+                  ],
+                  "descriptorSha256": "dd8547166280d68adde4989e2848de2c157f12e275f0419f3db47a2ef2d1fcca",
+                  "executable": false,
+                  "identity": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-value.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.semio@v1/video"
+                    }
+                  ],
+                  "descriptorSha256": "ca7b1bfe5548250b6a1837ee403ca8668d597de588a5e8f6d123b2907b02a75e",
+                  "executable": false,
+                  "identity": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-video.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "5f91b94fc9b11c3acbb4e163bad5edb3765adb25548a1d775bbac6ca2f458c9e",
                   "executable": false,
                   "identity": "s.stdio.semio.conformance-suite.public-corpus",
                   "kind": "conformance-suite",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.animation.inference"
+                    }
+                  ],
+                  "descriptorSha256": "a3c792d7785e3acab9d4dd84dd4ae32b4153175dc71b5200b512d09eeeea1795",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-animation-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.audio.inference"
+                    }
+                  ],
+                  "descriptorSha256": "a51398860001497e318a3f19b9878932ab1ce78d4fdd5682e3025c25755dd57e",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-audio-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.brep.inference"
+                    }
+                  ],
+                  "descriptorSha256": "59e85975ae4055cd1d05a05ce0229a4130b31944565b4aeda095e22de5f35c5e",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-brep-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.cad.inference"
+                    }
+                  ],
+                  "descriptorSha256": "4e1ff9af052e3d7f950ec79feab2b5b9805437462b2b77d7825d892dce6da758",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-cad-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.document.inference"
+                    }
+                  ],
+                  "descriptorSha256": "dd49623a4e7a48b6aa672635170c5f1c8b8b10220550e504c41a7c1bc9324e02",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-document-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.drawing.inference"
+                    }
+                  ],
+                  "descriptorSha256": "6cdf75fad823d1f96ec68943f3564625c5e3496982980bf426211074cc4ef59a",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-drawing-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.flow.inference"
+                    }
+                  ],
+                  "descriptorSha256": "410d85839be99787765ba4eb7d37a677e7a534d49f9812550d53f9ae57f2cf0d",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-flow-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.graph.inference"
+                    }
+                  ],
+                  "descriptorSha256": "e2936b87b5789d547de727c2ee80c7051cc168bed6da96e5856479e58ad47f43",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-graph-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.image.inference"
+                    }
+                  ],
+                  "descriptorSha256": "08b1904e0c9418fa054cdb0ac7789bfa1d8f3bb77d17715bfc76c6a755af4026",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-image-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.inference"
+                    }
+                  ],
+                  "descriptorSha256": "2f1b631fbcd79db22fdd4c0e50ca400867d41dffce278105a01819494254f375",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.kit.inference"
+                    }
+                  ],
+                  "descriptorSha256": "b75b940954796a52297d791eb436a53ad4fda14536119805c35790bc1de27073",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-kit-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.mesh.inference"
+                    }
+                  ],
+                  "descriptorSha256": "ca93b04130a571c9d7a6f55cefa90d76f3a2274190f152ca41ce1238623fd1cb",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-mesh-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.model.inference"
+                    }
+                  ],
+                  "descriptorSha256": "583e520f83fee8496d73eaa19f4d33aafa529a92cc3e6b179e5ed2f597cb6074",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-model-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.object.inference"
+                    }
+                  ],
+                  "descriptorSha256": "39e7fef648a82c6af03f183241571e4639207f6bffa67debce6997a22f5b68f9",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-object-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.presentation.inference"
+                    }
+                  ],
+                  "descriptorSha256": "7f8b2f59cf18d17ed8f7ce653913bdecbb4b6d2cdff39879f0fe40a4abdaed05",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-presentation-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.table.inference"
+                    }
+                  ],
+                  "descriptorSha256": "43453107adef03841a7c70c17af33ef69c6e5a15b646346abed68a02729cc4b8",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-table-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.text.inference"
+                    }
+                  ],
+                  "descriptorSha256": "a5f4cdd09435b1418411863a9279fa6885ce79260b92b4769f0037c7ecd01cfe",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-text-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.value.inference"
+                    }
+                  ],
+                  "descriptorSha256": "02ef2703de6340edfdd77ad19d780dff284c9ffaeac2340b95d36dfc41718fac",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-value-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.video.inference"
+                    }
+                  ],
+                  "descriptorSha256": "4a41335fefa00c38c28e7756343511fb12e5c0ca6a98612b4234d9ec7627bdae",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-video-inference.v1",
+                  "kind": "inference",
                   "localizations": []
                 },
                 {
@@ -14445,11 +15412,607 @@
                   "localizations": []
                 },
                 {
+                  "claims": [
+                    {
+                      "namespace": "schema-export",
+                      "value": "s.stdio.semio#child"
+                    }
+                  ],
+                  "descriptorSha256": "1c51746cfa5e04fa5186372ebd9e7ef7907dd1c3d6ce3541425298f96f7d5929",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-export-s-stdio-semio-child.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema-export",
+                      "value": "s.stdio.semio#geometry"
+                    }
+                  ],
+                  "descriptorSha256": "03843fb8f1c8e05cbe9c2be76f751cb2f711e0cd5f135eea8dd5f36c95e85178",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-export-s-stdio-semio-geometry.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.animation"
+                    }
+                  ],
+                  "descriptorSha256": "413b6b2bf8c1a989ce799d4df4fe8e8ae49cd4a47c683f6c6127189b868d7e41",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-animation.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.audio"
+                    }
+                  ],
+                  "descriptorSha256": "0f9a31ca1c00bbb75eca148987d40d2f1522f78e6dd003c41271203f3da22195",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-audio.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.brep"
+                    }
+                  ],
+                  "descriptorSha256": "a93d220f37026f006c0c5c464fc9a4ced9fc4ba71585912cf6fd2f781ce0491c",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-brep.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.cad"
+                    }
+                  ],
+                  "descriptorSha256": "477c7cfcd9b80ec176c7fbe921c77853877619e738452839b7f325ed724f8a42",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-cad.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.document"
+                    }
+                  ],
+                  "descriptorSha256": "689f66930cc6f80e48a498d13b1a18175d91334830c92d26bb0076ab3f3814b5",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-document.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.drawing"
+                    }
+                  ],
+                  "descriptorSha256": "8770d195e284d3bed94b752ee94f9f8bd4540ead13ad525a00ba98e2cc7a2781",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-drawing.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.flow"
+                    }
+                  ],
+                  "descriptorSha256": "680a23c948854b0e466fb9d23249283e63efc92dfce531233baf900333bebb8d",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-flow.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.graph"
+                    }
+                  ],
+                  "descriptorSha256": "84067387f795295ec99e15f0d088e5a479c14cc9257ae9c4cec38ad99f76e9a2",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-graph.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.image"
+                    }
+                  ],
+                  "descriptorSha256": "66dbca0ab365e136da42ac4a2f8c75aa0516ab586617898758c8feb34adce73c",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-image.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.kit"
+                    }
+                  ],
+                  "descriptorSha256": "1a6d483a76779de3a001243f120ab1af3a066f0b7e99998a3fb2823ecb55e347",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-kit.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.mesh"
+                    }
+                  ],
+                  "descriptorSha256": "89fed9726566fdc5e0eb7e7fd0e3727587673aa4732e3124b70c25118e9b6959",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-mesh.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.model"
+                    }
+                  ],
+                  "descriptorSha256": "e93406ce00131e75738c7c7edae7e0cc58f77852a9ec6f9ae18443364282f67d",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-model.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.object"
+                    }
+                  ],
+                  "descriptorSha256": "ed496a52c02071d17ce8600c855ea76d68c35c5babd4ac16855a261a840c94f5",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-object.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.presentation"
+                    }
+                  ],
+                  "descriptorSha256": "16271e3a082dbba59c7af7fc3f0fd2cf0e76b7f2830434f3f60082344811c6f2",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-presentation.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.table"
+                    }
+                  ],
+                  "descriptorSha256": "58d287d5ba3b62ce95c3bfea7e492979ff11ad13ed9031367e9cd666b3b4a91f",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-table.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.text"
+                    }
+                  ],
+                  "descriptorSha256": "432ac8a2229a4197eb17b5d9c307546ce82908f52cf45103ecb3ea214ae5c7dd",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-text.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.value"
+                    }
+                  ],
+                  "descriptorSha256": "0b3091778382a9c4c2059bd8fbe5e2395538ba4400825c145e24d3ac3c3932c1",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-value.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.video"
+                    }
+                  ],
+                  "descriptorSha256": "003a62aabcd1a926ac9f5c0f287e049bc98e1f23392c887086491d7b538ee143",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-video.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio"
+                    }
+                  ],
+                  "descriptorSha256": "e89d4a51b13d290fa3da597e3fabafb598d730dd1ec27fcddfec732e3a69b8b4",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "f5c22f92c7256e6550c2dc5e5dd99b0469848a4be1e74fe1da981c53af720f04",
                   "executable": false,
                   "identity": "s.stdio.semio.standard.v1",
                   "kind": "standard",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "s.stdio.semio.animation"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "23:s.stdio.semio.animation:semio"
+                    }
+                  ],
+                  "descriptorSha256": "ed5ba851f683cda9061fc5771ea12d11b3c93a479f077bbf923cc71ca17365f6",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-animation-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "s.stdio.semio.document"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "22:s.stdio.semio.document:semio"
+                    }
+                  ],
+                  "descriptorSha256": "c558c515694db7ef2c1832cbb5d9196eebee1b5ad26ee2c1cf1dbc74dee380fa",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-document-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "s.stdio.semio.graph"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "19:s.stdio.semio.graph:semio"
+                    }
+                  ],
+                  "descriptorSha256": "51ab19df4e775b1efaf3df73b738ff27e62d3edf785fd021881df76a9a250212",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-graph-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "s.stdio.semio.image"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "19:s.stdio.semio.image:semio"
+                    }
+                  ],
+                  "descriptorSha256": "9eab6209a305ec3b43a0a0ede3b3b9138aa885aabcc2e52c780ad89a1be88c40",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-image-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "s.stdio.semio.presentation"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "26:s.stdio.semio.presentation:semio"
+                    }
+                  ],
+                  "descriptorSha256": "8695ff85f1fcf661c35995d0a72a4877791256a067071495592c8fbc1e92fb6e",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-presentation-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "s.stdio.semio.table"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "19:s.stdio.semio.table:semio"
+                    }
+                  ],
+                  "descriptorSha256": "51cc3548ae1654c25f93b272aaa284b80c87eec2d703b1de49ed9c0062ed35fb",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-table-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "s.stdio.semio.text"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "18:s.stdio.semio.text:semio"
+                    }
+                  ],
+                  "descriptorSha256": "90e28cf84206a796f47b334d3572fe7b86affbd5bd8115c111f6d11f16c37f8e",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-text-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.semio.audio"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "17:stdio.semio.audio:semio"
+                    }
+                  ],
+                  "descriptorSha256": "2071e661abdea7c4c4d7b708cc1b8428b49c38d665a86e74eb76e67cc2f0f6c7",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-audio-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.semio.brep"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "16:stdio.semio.brep:semio"
+                    }
+                  ],
+                  "descriptorSha256": "b53bfcc5ecc4efb2c3825780f3fb2e74d833cad844ad40c95c052f6420094f76",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-brep-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.semio.cad"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "15:stdio.semio.cad:semio"
+                    }
+                  ],
+                  "descriptorSha256": "4abe056fb61b36f82a41687e862a214669cd4dfa645b439538a0503c22723ce1",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-cad-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.semio.drawing"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "19:stdio.semio.drawing:semio"
+                    }
+                  ],
+                  "descriptorSha256": "72212ae5fe599af76f06fd97e42a3c9391b55cbca9823d5fecabfca0e3c22f4b",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-drawing-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.semio"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "11:stdio.semio:semio"
+                    }
+                  ],
+                  "descriptorSha256": "8026357e3e787bdb4af38e197d025b6352925ecfc0aa0ad20a0c5d235bbd844a",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.semio.flow"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "16:stdio.semio.flow:semio"
+                    }
+                  ],
+                  "descriptorSha256": "327c8513d5b9af804a1592831e2ef8bd706a566f8953b2382e3de4ddf3dfd87a",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-flow-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.semio.kit"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "15:stdio.semio.kit:semio"
+                    }
+                  ],
+                  "descriptorSha256": "efd2154a2e9a70d35660bc13f0804de45c8c13d32365bc22190b1a3f073ab28d",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-kit-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.semio.mesh"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "16:stdio.semio.mesh:semio"
+                    }
+                  ],
+                  "descriptorSha256": "bb0af707d2679f138e51ee40a7365ba0a80760d7cccf1261fa66a81a11469ccd",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-mesh-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.semio.model"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "17:stdio.semio.model:semio"
+                    }
+                  ],
+                  "descriptorSha256": "97526511e15c1f1d17af68c23f2421ec7bd82e19e5f7533330fbc4da23193120",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-model-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.semio.object"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "18:stdio.semio.object:semio"
+                    }
+                  ],
+                  "descriptorSha256": "12841cfb54b9435640a7698110e32b28e6d06ef445be7b21c4aa7814d7290991",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-object-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.semio.value"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "17:stdio.semio.value:semio"
+                    }
+                  ],
+                  "descriptorSha256": "a1b8ebd61f97f804489a6390a3cd163efd79c5e421e19c55220c3076c5f316fd",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-value-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.semio.video"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "17:stdio.semio.video:semio"
+                    }
+                  ],
+                  "descriptorSha256": "37e296c876fe4b334793944cfdc3459a2dedcc341dd495de18fc968419c396f6",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-video-extension-semio.v1",
+                  "kind": "codec",
                   "localizations": []
                 },
                 {
@@ -14474,6 +16037,270 @@
                   "executable": false,
                   "identity": "s.stdio.semio.standard.v1.representation.document",
                   "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "extension",
+                      "value": ".semio"
+                    },
+                    {
+                      "namespace": "mime",
+                      "value": "application/vnd.semio"
+                    }
+                  ],
+                  "descriptorSha256": "12ac2a2fc6e3ea54e7fc6164df18b1d010909243115a4aa140de446d53529190",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.representation.mime-application-vnd-semio-extension-semio",
+                  "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/animation"
+                    }
+                  ],
+                  "descriptorSha256": "5a6059d580aa668d036cc5821fd13e7ea26454e9a418b701758138dad2b30583",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-animation.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/audio"
+                    }
+                  ],
+                  "descriptorSha256": "30c4fb434f452896dfcbf48afb4838225429b8d4607e59c50bef1b33debbf677",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-audio.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/brep"
+                    }
+                  ],
+                  "descriptorSha256": "beec1c5ab26bf120b036cb90fc83fb0fb044c6aefe78cc2a1767dc47f6dfd01c",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-brep.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/cad"
+                    }
+                  ],
+                  "descriptorSha256": "40c7c033a164de1f03d2c1d3e0a2d77083f48430e06edb0890d4e1ef40cb0d80",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-cad.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/document"
+                    }
+                  ],
+                  "descriptorSha256": "905f9ae2a2909993eccf691d153b2b568752df10b03224fe7e80676c29a41018",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-document.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/drawing"
+                    }
+                  ],
+                  "descriptorSha256": "3c4c3326236a63044a7d16f17d3457fc57aecab4ec4819b33eac6bc6029f6166",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-drawing.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/flow"
+                    }
+                  ],
+                  "descriptorSha256": "75f64a420f2801036d3e16e77f3c391da45d3fffdbbb6dac2346f5c18100f29b",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-flow.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/graph"
+                    }
+                  ],
+                  "descriptorSha256": "5a4f7cab7670efc05123823276744937e72f0cbb80594c93f686589cb0a9f8c4",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-graph.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/image"
+                    }
+                  ],
+                  "descriptorSha256": "d9a211d84031786affc22b724c212299070101db3bc4ab435d374ae8cd493e2d",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-image.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/kit"
+                    }
+                  ],
+                  "descriptorSha256": "ecaf9885bb2b56327f0d695296fedfffc9663bcbd8be5caeaab4e2d8d34284c7",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-kit.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/mesh"
+                    }
+                  ],
+                  "descriptorSha256": "2f39be000e11c7dbe7288ae737df37c22a956adb29963b25e1c8f127a2779881",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-mesh.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/model"
+                    }
+                  ],
+                  "descriptorSha256": "c6950be9e5901a007926b0362cb2c558fc9e1c62c2428f9d2aec24f223488afa",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-model.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/object"
+                    }
+                  ],
+                  "descriptorSha256": "b077184979947f39556ff6ddcf84d1793abe407e103635d45d1dd333b9e3fc2d",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-object.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/presentation"
+                    }
+                  ],
+                  "descriptorSha256": "7bd5bba23780ded2e878bea02269515a6c24c76a2527d1fbd6f30f2612efdd67",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-presentation.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/table"
+                    }
+                  ],
+                  "descriptorSha256": "8344c2190d8701938f149fa08e4dd77f13d1a08a1423b486f145b114466a4b09",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-table.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/text"
+                    }
+                  ],
+                  "descriptorSha256": "07004b4a34494f4f6b7b19d1de9b74f1927ed95e858a0e148aa8888c327a05fb",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-text.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/value"
+                    }
+                  ],
+                  "descriptorSha256": "10f3918ecd3149f99b53fd34f49390874039dc28523a879025c29478846e3e6a",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-value.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/video"
+                    }
+                  ],
+                  "descriptorSha256": "ae321ebcf8d1d7dbe781c312c0d6b7eed9c6b1f43320db84efc5bbc9a297e536",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-video.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/*"
+                    }
+                  ],
+                  "descriptorSha256": "ff8f03049948404b010bb63b6943c5125937162af19adfa7a8729c49d675ec53",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1.v1",
+                  "kind": "subset-validator",
                   "localizations": []
                 }
               ],
@@ -15867,11 +17694,37 @@
             {
               "capabilities": [
                 {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.wav@riff-pcm/*"
+                    }
+                  ],
+                  "descriptorSha256": "c2597c2e47a924523243efb08ac9e84f2c50fa6e797e492aa17482c9ed765ba6",
+                  "executable": false,
+                  "identity": "s.stdio.wav.composer.dialect-s-stdio-wav-riff-pcm.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "9bc49786e1aa5089d0ae3fe7973c50545a712d875e043078fe117e583ba1a964",
                   "executable": false,
                   "identity": "s.stdio.wav.conformance-suite.public-corpus",
                   "kind": "conformance-suite",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.wav.inference"
+                    }
+                  ],
+                  "descriptorSha256": "05449368a182305919920167506dcd03bf7a33106eee03cdf0030c26546d7543",
+                  "executable": false,
+                  "identity": "s.stdio.wav.inference.schema-s-stdio-wav-inference.v1",
+                  "kind": "inference",
                   "localizations": []
                 },
                 {
@@ -15909,11 +17762,41 @@
                   "localizations": []
                 },
                 {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.wav"
+                    }
+                  ],
+                  "descriptorSha256": "b39a29492a5cade1b78fb00f77e99ed4ee80875c169c4d24b523f2fec7a388d8",
+                  "executable": false,
+                  "identity": "s.stdio.wav.schema.schema-s-stdio-wav.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "f333d97902266cfe59e82c750725871235f558da5433104290778b197107cf4c",
                   "executable": false,
                   "identity": "s.stdio.wav.standard.riff-pcm",
                   "kind": "standard",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.wav"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "9:stdio.wav:wav"
+                    }
+                  ],
+                  "descriptorSha256": "676d4b9151336506f3b8df7b8b4197eb0dc2ffab9a241638ad48bc36769d366c",
+                  "executable": false,
+                  "identity": "s.stdio.wav.standard.riff-pcm.codec.codec-stdio-wav-extension-wav.v1",
+                  "kind": "codec",
                   "localizations": []
                 },
                 {
@@ -15937,6 +17820,23 @@
                   "descriptorSha256": "a8cb03bad07684cce84f765ba99d5f635c1cff366972fadc6dfa7bd0e25def71",
                   "executable": false,
                   "identity": "s.stdio.wav.standard.riff-pcm.representation.document",
+                  "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "extension",
+                      "value": ".wav"
+                    },
+                    {
+                      "namespace": "mime",
+                      "value": "audio/wav"
+                    }
+                  ],
+                  "descriptorSha256": "3ca4426c6b054b4ef56e828c56e69cd447c1b334d8acef7b11991b2938340d21",
+                  "executable": false,
+                  "identity": "s.stdio.wav.standard.riff-pcm.representation.mime-audio-wav-extension-wav",
                   "kind": "representation",
                   "localizations": []
                 }
@@ -17667,11 +19567,37 @@
             {
               "capabilities": [
                 {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.binary@raw/*"
+                    }
+                  ],
+                  "descriptorSha256": "e80dc3673e6b99b53e7e17b42faac6e9cb490f403d1ff8a9c5d97ba443969958",
+                  "executable": false,
+                  "identity": "s.stdio.binary.composer.dialect-s-stdio-binary-raw.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "b0ff3737c550730cb2ad7f87192b5401732ebff538975557fc0a10241100dd66",
                   "executable": false,
                   "identity": "s.stdio.binary.conformance-suite.public-corpus",
                   "kind": "conformance-suite",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.binary.inference"
+                    }
+                  ],
+                  "descriptorSha256": "caf367cd99282035e88cdf54fbeb0770832bc3abe93c234797dc32a469cc9fc3",
+                  "executable": false,
+                  "identity": "s.stdio.binary.inference.schema-s-stdio-binary-inference.v1",
+                  "kind": "inference",
                   "localizations": []
                 },
                 {
@@ -17709,11 +19635,41 @@
                   "localizations": []
                 },
                 {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.binary"
+                    }
+                  ],
+                  "descriptorSha256": "cfdd54191a276a5e634e5c990006d492ae1e4f1c0672bf7c5c46c2bec4d6ff9b",
+                  "executable": false,
+                  "identity": "s.stdio.binary.schema.schema-s-stdio-binary.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "ee2cee175a6ed23fcdced76f372f386c968fa3c42134bcd468c680ec822a78d8",
                   "executable": false,
                   "identity": "s.stdio.binary.standard.raw",
                   "kind": "standard",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.binary"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "12:stdio.binary:bin"
+                    }
+                  ],
+                  "descriptorSha256": "1abc76fb3d078c4eb045450da510219293883df2d2d34b1e6530dc55eeb2c41e",
+                  "executable": false,
+                  "identity": "s.stdio.binary.standard.raw.codec.codec-stdio-binary-extension-bin.v1",
+                  "kind": "codec",
                   "localizations": []
                 },
                 {
@@ -17739,6 +19695,23 @@
                   "identity": "s.stdio.binary.standard.raw.representation.document",
                   "kind": "representation",
                   "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "extension",
+                      "value": ".bin"
+                    },
+                    {
+                      "namespace": "mime",
+                      "value": "application/octet-stream"
+                    }
+                  ],
+                  "descriptorSha256": "98d1f0c6b5c471b3f8e71826c387d4b6de3954fdc71178fba76114cc8735c2a9",
+                  "executable": false,
+                  "identity": "s.stdio.binary.standard.raw.representation.mime-application-octet-stream-extension-bin",
+                  "kind": "representation",
+                  "localizations": []
                 }
               ],
               "identity": "s.stdio.binary"
@@ -17746,11 +19719,37 @@
             {
               "capabilities": [
                 {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.bmp@v3/*"
+                    }
+                  ],
+                  "descriptorSha256": "3a258dce29b7e243fb7cb011c492e5b8541b9559af45c7f668fbaaa75b355bff",
+                  "executable": false,
+                  "identity": "s.stdio.bmp.composer.dialect-s-stdio-bmp-v3.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "33746bbff92c55ac384344b69c74ebb80d9b84885ee9031e9a1ade5cd1dc90f1",
                   "executable": false,
                   "identity": "s.stdio.bmp.conformance-suite.public-corpus",
                   "kind": "conformance-suite",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.bmp.inference"
+                    }
+                  ],
+                  "descriptorSha256": "c298266b1ed83a986b668f5aff2147c10283ddb64dbe8222f23aaeb2411965cc",
+                  "executable": false,
+                  "identity": "s.stdio.bmp.inference.schema-s-stdio-bmp-inference.v1",
+                  "kind": "inference",
                   "localizations": []
                 },
                 {
@@ -17788,11 +19787,41 @@
                   "localizations": []
                 },
                 {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.bmp"
+                    }
+                  ],
+                  "descriptorSha256": "f896aa2a74c0b4ad5b33c9f7edfa5d153f1dd5a43e9543c18bc026177363f611",
+                  "executable": false,
+                  "identity": "s.stdio.bmp.schema.schema-s-stdio-bmp.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "73cc9379e322055f0828eb1508b27809c943c94b215b8a5261bab579ebc7bfdf",
                   "executable": false,
                   "identity": "s.stdio.bmp.standard.v3",
                   "kind": "standard",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.bmp"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "9:stdio.bmp:bmp"
+                    }
+                  ],
+                  "descriptorSha256": "0db5ecaffd4f499f1c71299b96b2c19a4a4eac7fc6f39850497fb1b6b8e4dc8a",
+                  "executable": false,
+                  "identity": "s.stdio.bmp.standard.v3.codec.codec-stdio-bmp-extension-bmp.v1",
+                  "kind": "codec",
                   "localizations": []
                 },
                 {
@@ -17816,6 +19845,23 @@
                   "descriptorSha256": "d89f9b0350f809ee45f5ac542b64decb0a03af3f50ffc23040a055fe4909efb4",
                   "executable": false,
                   "identity": "s.stdio.bmp.standard.v3.representation.document",
+                  "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "extension",
+                      "value": ".bmp"
+                    },
+                    {
+                      "namespace": "mime",
+                      "value": "image/bmp"
+                    }
+                  ],
+                  "descriptorSha256": "c2e7682107481866e02e8364c5b0d0aba976a4e72369684b3759518e62b0c0e0",
+                  "executable": false,
+                  "identity": "s.stdio.bmp.standard.v3.representation.mime-image-bmp-extension-bmp",
                   "kind": "representation",
                   "localizations": []
                 }
@@ -19034,11 +21080,37 @@
             {
               "capabilities": [
                 {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.epw@energyplus/*"
+                    }
+                  ],
+                  "descriptorSha256": "bb6755e4cfc501543ab944399084b160b17fa991c485c85f30382987913b0c02",
+                  "executable": false,
+                  "identity": "s.stdio.epw.composer.dialect-s-stdio-epw-energyplus.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "da39b02fbc05f1804a8bc1e3b6453de40a32e1eb04c0c840d44d41b9ac4f8cc9",
                   "executable": false,
                   "identity": "s.stdio.epw.conformance-suite.public-corpus",
                   "kind": "conformance-suite",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.epw.inference"
+                    }
+                  ],
+                  "descriptorSha256": "4bd0300a1488c6d8f4df584c65a5c3ea1bebdbc72b6a5a9a8e2982feca913c5e",
+                  "executable": false,
+                  "identity": "s.stdio.epw.inference.schema-s-stdio-epw-inference.v1",
+                  "kind": "inference",
                   "localizations": []
                 },
                 {
@@ -19076,11 +21148,41 @@
                   "localizations": []
                 },
                 {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.epw"
+                    }
+                  ],
+                  "descriptorSha256": "dfa7c34f13e22f41ec98adc8d68daa3d20f5981f2731665c5be0be97a55f1bf1",
+                  "executable": false,
+                  "identity": "s.stdio.epw.schema.schema-s-stdio-epw.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "4471aa18880e3dce5213f1552747bed8e1b973a3dce0edda40a28ea76fdd7689",
                   "executable": false,
                   "identity": "s.stdio.epw.standard.energyplus",
                   "kind": "standard",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.epw"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "9:stdio.epw:epw"
+                    }
+                  ],
+                  "descriptorSha256": "c3303f6c579395c171d07d42ce192f941c5106b890e9d61530f8351a187eab59",
+                  "executable": false,
+                  "identity": "s.stdio.epw.standard.energyplus.codec.codec-stdio-epw-extension-epw.v1",
+                  "kind": "codec",
                   "localizations": []
                 },
                 {
@@ -19106,6 +21208,19 @@
                   "identity": "s.stdio.epw.standard.energyplus.representation.document",
                   "kind": "representation",
                   "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "extension",
+                      "value": ".epw"
+                    }
+                  ],
+                  "descriptorSha256": "d15f4b9129c53b3838236c60a30463334ed87d2fbe093055982969a074c07f0b",
+                  "executable": false,
+                  "identity": "s.stdio.epw.standard.energyplus.representation.extension-epw",
+                  "kind": "representation",
+                  "localizations": []
                 }
               ],
               "identity": "s.stdio.epw"
@@ -19113,11 +21228,63 @@
             {
               "capabilities": [
                 {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.gif@87a/*"
+                    }
+                  ],
+                  "descriptorSha256": "1fc7a1da2a046c36b7d082a976cb3ea9c61f7f033bbeb3ae8f004a3acacd6e6a",
+                  "executable": false,
+                  "identity": "s.stdio.gif.composer.dialect-s-stdio-gif-87a.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.gif@89a/*"
+                    }
+                  ],
+                  "descriptorSha256": "591cc5360c466c74253a815af4814c72ff0e8b4f6cae7c5a252ea859df391827",
+                  "executable": false,
+                  "identity": "s.stdio.gif.composer.dialect-s-stdio-gif-89a.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "003c5896262fe32d413598ed4695a231b004b1f7b68b8f3ca45ebecee0bf1035",
                   "executable": false,
                   "identity": "s.stdio.gif.conformance-suite.public-corpus",
                   "kind": "conformance-suite",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.gif.89a.inference"
+                    }
+                  ],
+                  "descriptorSha256": "034c24dc46b9340a6b4172472f54ae95c743542764cc96aae50d336c158c9f18",
+                  "executable": false,
+                  "identity": "s.stdio.gif.inference.schema-s-stdio-gif-89a-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.gif.inference"
+                    }
+                  ],
+                  "descriptorSha256": "05a3bd2b705e9a90ea81847967e0ec48323fda316105de2040294935fa63ce9f",
+                  "executable": false,
+                  "identity": "s.stdio.gif.inference.schema-s-stdio-gif-inference.v1",
+                  "kind": "inference",
                   "localizations": []
                 },
                 {
@@ -19155,11 +21322,71 @@
                   "localizations": []
                 },
                 {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.gif.89a"
+                    }
+                  ],
+                  "descriptorSha256": "26b0cefd2b05a154c61ac7d72906eb889a1b3a1624a5f2470be71889da0de53b",
+                  "executable": false,
+                  "identity": "s.stdio.gif.schema.schema-s-stdio-gif-89a.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.gif"
+                    }
+                  ],
+                  "descriptorSha256": "018452afbc00cfbaf2272e40e31bc52b04f27982ea3f1a7dfb7a64f433a3e2f5",
+                  "executable": false,
+                  "identity": "s.stdio.gif.schema.schema-s-stdio-gif.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "dbf1fa9c6e0707366007cb5982b4f01d5614e86d47a9be635e0632f638dd00cf",
                   "executable": false,
                   "identity": "s.stdio.gif.standard.87a",
                   "kind": "standard",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.gif.89a"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "13:stdio.gif.89a:gif"
+                    }
+                  ],
+                  "descriptorSha256": "664e4b209f4b232e4d67337104470fc23ef1b28d9f05e255381e7f909a4d344d",
+                  "executable": false,
+                  "identity": "s.stdio.gif.standard.87a.codec.codec-stdio-gif-89a-extension-gif.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.gif"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "9:stdio.gif:gif"
+                    }
+                  ],
+                  "descriptorSha256": "3da1e775b24f048a4101f973f965e82dce7ab6063824fa8d6620c8ccb463e5ab",
+                  "executable": false,
+                  "identity": "s.stdio.gif.standard.87a.codec.codec-stdio-gif-extension-gif.v1",
+                  "kind": "codec",
                   "localizations": []
                 },
                 {
@@ -19183,6 +21410,23 @@
                   "descriptorSha256": "8e3fc0eeedd9c8326608a063a439c89af21fff69175cf55a33353e06b13b1720",
                   "executable": false,
                   "identity": "s.stdio.gif.standard.87a.representation.document",
+                  "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "extension",
+                      "value": ".gif"
+                    },
+                    {
+                      "namespace": "mime",
+                      "value": "image/gif"
+                    }
+                  ],
+                  "descriptorSha256": "0f8bff259cf3b6b6a8d550cd39141ac888d7b5ba034e05e3e87e09041d00673f",
+                  "executable": false,
+                  "identity": "s.stdio.gif.standard.87a.representation.mime-image-gif-extension-gif",
                   "kind": "representation",
                   "localizations": []
                 },
@@ -20534,11 +22778,102 @@
             {
               "capabilities": [
                 {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.ifc@2x3/cobie"
+                    }
+                  ],
+                  "descriptorSha256": "42c93f7dca269bebc6ce91dbdba0da61829c7052a1ae17aefddaa6546aa36b86",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.composer.dialect-s-stdio-ifc-2x3-cobie.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.ifc@2x3/cv20"
+                    }
+                  ],
+                  "descriptorSha256": "804ef154a34780d746c0e5360b77811518ee605bcf8ecebfc34ef0abd4b1adef",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.composer.dialect-s-stdio-ifc-2x3-cv20.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.ifc@2x3/sav"
+                    }
+                  ],
+                  "descriptorSha256": "b6a56f22e51589fc1687ce4640595b604f77b964333dee28f2b3a14be43c1034",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.composer.dialect-s-stdio-ifc-2x3-sav.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.ifc@2x3/*"
+                    }
+                  ],
+                  "descriptorSha256": "e85e34772750cb104db40f9d6568a5635e4c0677be9531174ec0d583f7bc5e81",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.composer.dialect-s-stdio-ifc-2x3.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.ifc@4/*"
+                    }
+                  ],
+                  "descriptorSha256": "a64584863f07f309c9d35bb65cb00cbfb74a5a0ca29905fe5dea14317d042e97",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.composer.dialect-s-stdio-ifc-4.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "e8eb81c294251c0be92549265c2a096d52ac3f9c0d7343a938f7e9ebe5da5d64",
                   "executable": false,
                   "identity": "s.stdio.ifc.conformance-suite.public-corpus",
                   "kind": "conformance-suite",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.ifc.2x3.inference"
+                    }
+                  ],
+                  "descriptorSha256": "347c02a7a8990a9878d6bd90a51c42cc8292c7aba816a7b26f1f44370be4553f",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.inference.schema-s-stdio-ifc-2x3-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.ifc.inference"
+                    }
+                  ],
+                  "descriptorSha256": "28bda31132325133a38aca148237b55a2b02760bada6671c22792726a190b8a0",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.inference.schema-s-stdio-ifc-inference.v1",
+                  "kind": "inference",
                   "localizations": []
                 },
                 {
@@ -20576,11 +22911,71 @@
                   "localizations": []
                 },
                 {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.ifc.2x3"
+                    }
+                  ],
+                  "descriptorSha256": "0c5ab859d2a0136d9cec87752033e0aa2788fe8f84de9e37b342baa97a1ef5ad",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.schema.schema-s-stdio-ifc-2x3.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.ifc"
+                    }
+                  ],
+                  "descriptorSha256": "52b16c5894ea44478ff419961ff32f12e70c54f16947241bb4936a60e2d26995",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.schema.schema-s-stdio-ifc.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "aff373b4183f2c6b3dd1971def1ac48dcde4654d198108c75d2ef2153698bfb6",
                   "executable": false,
                   "identity": "s.stdio.ifc.standard.2x3",
                   "kind": "standard",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.ifc.2x3"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "13:stdio.ifc.2x3:ifc"
+                    }
+                  ],
+                  "descriptorSha256": "edd661070deb0eb3c9f1ca9b01c808108b2435909feff4836233d929512a699e",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.standard.2x3.codec.codec-stdio-ifc-2x3-extension-ifc.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.ifc"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "9:stdio.ifc:ifc"
+                    }
+                  ],
+                  "descriptorSha256": "b6bb8d401af2c877c3c22e0d3cb614a0305f5e21fae02d95de6d2e291d4f352b",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.standard.2x3.codec.codec-stdio-ifc-extension-ifc.v1",
+                  "kind": "codec",
                   "localizations": []
                 },
                 {
@@ -20604,6 +22999,23 @@
                   "descriptorSha256": "6ab764fa593870448b95cf49a8c28d792600b39db0ba6f62dcd47941020a43c2",
                   "executable": false,
                   "identity": "s.stdio.ifc.standard.2x3.representation.document",
+                  "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "extension",
+                      "value": ".ifc"
+                    },
+                    {
+                      "namespace": "mime",
+                      "value": "application/x-ifc"
+                    }
+                  ],
+                  "descriptorSha256": "f7dbc7f93789903c4d04a178e6e781103ec13195d699ae6d92cb91c3ad4c924d",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.standard.2x3.representation.mime-application-x-ifc-extension-ifc",
                   "kind": "representation",
                   "localizations": []
                 },
@@ -20637,6 +23049,45 @@
                   "executable": false,
                   "identity": "s.stdio.ifc.standard.4.representation.document",
                   "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.ifc@2x3/cobie"
+                    }
+                  ],
+                  "descriptorSha256": "abcfd75ce444dd8cd3fa79d82840538c5a931bab05fe24ec1562efdd80e7c1a6",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.subset-validator.validated-dialect-s-stdio-ifc-2x3-cobie.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.ifc@2x3/cv20"
+                    }
+                  ],
+                  "descriptorSha256": "cd7fe71f849c3c9beca52291514b0c855ce704e98c5f77a32ae2b8e71cf6368d",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.subset-validator.validated-dialect-s-stdio-ifc-2x3-cv20.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.ifc@2x3/sav"
+                    }
+                  ],
+                  "descriptorSha256": "3e35e1f9a2e6ba61413bd1392f0277b7665ed850c34ecf9964ac69a5b9ce93ca",
+                  "executable": false,
+                  "identity": "s.stdio.ifc.subset-validator.validated-dialect-s-stdio-ifc-2x3-sav.v1",
+                  "kind": "subset-validator",
                   "localizations": []
                 }
               ],
@@ -23481,11 +25932,427 @@
             {
               "capabilities": [
                 {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.semio@v1/animation"
+                    }
+                  ],
+                  "descriptorSha256": "3c68402ea462b9d2d4041f950d2b3653859ec282427badf1bd0f4e6587fc12b5",
+                  "executable": false,
+                  "identity": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-animation.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.semio@v1/audio"
+                    }
+                  ],
+                  "descriptorSha256": "1f3955c9d70a4917ace0a17d7d5b494a1feaac6e1effb78bdb02d66ecd977581",
+                  "executable": false,
+                  "identity": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-audio.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.semio@v1/brep"
+                    }
+                  ],
+                  "descriptorSha256": "065944113b14475a68042fd9ccbed3f7fdb49e083a2524581ad7b300a7d45ba5",
+                  "executable": false,
+                  "identity": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-brep.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.semio@v1/cad"
+                    }
+                  ],
+                  "descriptorSha256": "68bb6d777175f1ed02a3b3e0da36df6a7d048e3d3541651f93d0cb934ae344ff",
+                  "executable": false,
+                  "identity": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-cad.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.semio@v1/document"
+                    }
+                  ],
+                  "descriptorSha256": "965f7376b0c9d3d4d1eb26c6c4b41984fe01341f269e9e2116f9eefc0eeae038",
+                  "executable": false,
+                  "identity": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-document.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.semio@v1/drawing"
+                    }
+                  ],
+                  "descriptorSha256": "063c73463bd650b94edda9eab6ba48a34ea2097411a59c6ec855c5f232da2bfe",
+                  "executable": false,
+                  "identity": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-drawing.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.semio@v1/flow"
+                    }
+                  ],
+                  "descriptorSha256": "1f624b38362086c643a7e7e8977a7d08b874719dcfa6761dc91a8a268ca36f82",
+                  "executable": false,
+                  "identity": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-flow.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.semio@v1/image"
+                    }
+                  ],
+                  "descriptorSha256": "ffd491076142ba53dee921b505064b109d66caca7e5fb2abb63b3b3f44d67ebc",
+                  "executable": false,
+                  "identity": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-image.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.semio@v1/mesh"
+                    }
+                  ],
+                  "descriptorSha256": "8c8bb2aaf43314737b9190a8ce5d270372b5a35a9f69311528dee08b991c6a50",
+                  "executable": false,
+                  "identity": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-mesh.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.semio@v1/model"
+                    }
+                  ],
+                  "descriptorSha256": "518c6b7196291bde29d2a55b0a175fee38c086b943c587cc2505975146ab33d5",
+                  "executable": false,
+                  "identity": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-model.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.semio@v1/presentation"
+                    }
+                  ],
+                  "descriptorSha256": "71fe573d2f1237c52644a86c2554ed651e63d7d9f8a01a0ff981e2cba408d170",
+                  "executable": false,
+                  "identity": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-presentation.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.semio@v1/value"
+                    }
+                  ],
+                  "descriptorSha256": "dd8547166280d68adde4989e2848de2c157f12e275f0419f3db47a2ef2d1fcca",
+                  "executable": false,
+                  "identity": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-value.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.semio@v1/video"
+                    }
+                  ],
+                  "descriptorSha256": "ca7b1bfe5548250b6a1837ee403ca8668d597de588a5e8f6d123b2907b02a75e",
+                  "executable": false,
+                  "identity": "s.stdio.semio.composer.dialect-s-stdio-semio-v1-video.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "5f91b94fc9b11c3acbb4e163bad5edb3765adb25548a1d775bbac6ca2f458c9e",
                   "executable": false,
                   "identity": "s.stdio.semio.conformance-suite.public-corpus",
                   "kind": "conformance-suite",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.animation.inference"
+                    }
+                  ],
+                  "descriptorSha256": "a3c792d7785e3acab9d4dd84dd4ae32b4153175dc71b5200b512d09eeeea1795",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-animation-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.audio.inference"
+                    }
+                  ],
+                  "descriptorSha256": "a51398860001497e318a3f19b9878932ab1ce78d4fdd5682e3025c25755dd57e",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-audio-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.brep.inference"
+                    }
+                  ],
+                  "descriptorSha256": "59e85975ae4055cd1d05a05ce0229a4130b31944565b4aeda095e22de5f35c5e",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-brep-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.cad.inference"
+                    }
+                  ],
+                  "descriptorSha256": "4e1ff9af052e3d7f950ec79feab2b5b9805437462b2b77d7825d892dce6da758",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-cad-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.document.inference"
+                    }
+                  ],
+                  "descriptorSha256": "dd49623a4e7a48b6aa672635170c5f1c8b8b10220550e504c41a7c1bc9324e02",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-document-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.drawing.inference"
+                    }
+                  ],
+                  "descriptorSha256": "6cdf75fad823d1f96ec68943f3564625c5e3496982980bf426211074cc4ef59a",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-drawing-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.flow.inference"
+                    }
+                  ],
+                  "descriptorSha256": "410d85839be99787765ba4eb7d37a677e7a534d49f9812550d53f9ae57f2cf0d",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-flow-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.graph.inference"
+                    }
+                  ],
+                  "descriptorSha256": "e2936b87b5789d547de727c2ee80c7051cc168bed6da96e5856479e58ad47f43",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-graph-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.image.inference"
+                    }
+                  ],
+                  "descriptorSha256": "08b1904e0c9418fa054cdb0ac7789bfa1d8f3bb77d17715bfc76c6a755af4026",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-image-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.inference"
+                    }
+                  ],
+                  "descriptorSha256": "2f1b631fbcd79db22fdd4c0e50ca400867d41dffce278105a01819494254f375",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.kit.inference"
+                    }
+                  ],
+                  "descriptorSha256": "b75b940954796a52297d791eb436a53ad4fda14536119805c35790bc1de27073",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-kit-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.mesh.inference"
+                    }
+                  ],
+                  "descriptorSha256": "ca93b04130a571c9d7a6f55cefa90d76f3a2274190f152ca41ce1238623fd1cb",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-mesh-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.model.inference"
+                    }
+                  ],
+                  "descriptorSha256": "583e520f83fee8496d73eaa19f4d33aafa529a92cc3e6b179e5ed2f597cb6074",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-model-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.object.inference"
+                    }
+                  ],
+                  "descriptorSha256": "39e7fef648a82c6af03f183241571e4639207f6bffa67debce6997a22f5b68f9",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-object-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.presentation.inference"
+                    }
+                  ],
+                  "descriptorSha256": "7f8b2f59cf18d17ed8f7ce653913bdecbb4b6d2cdff39879f0fe40a4abdaed05",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-presentation-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.table.inference"
+                    }
+                  ],
+                  "descriptorSha256": "43453107adef03841a7c70c17af33ef69c6e5a15b646346abed68a02729cc4b8",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-table-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.text.inference"
+                    }
+                  ],
+                  "descriptorSha256": "a5f4cdd09435b1418411863a9279fa6885ce79260b92b4769f0037c7ecd01cfe",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-text-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.value.inference"
+                    }
+                  ],
+                  "descriptorSha256": "02ef2703de6340edfdd77ad19d780dff284c9ffaeac2340b95d36dfc41718fac",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-value-inference.v1",
+                  "kind": "inference",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.video.inference"
+                    }
+                  ],
+                  "descriptorSha256": "4a41335fefa00c38c28e7756343511fb12e5c0ca6a98612b4234d9ec7627bdae",
+                  "executable": false,
+                  "identity": "s.stdio.semio.inference.schema-s-stdio-semio-video-inference.v1",
+                  "kind": "inference",
                   "localizations": []
                 },
                 {
@@ -23523,11 +26390,607 @@
                   "localizations": []
                 },
                 {
+                  "claims": [
+                    {
+                      "namespace": "schema-export",
+                      "value": "s.stdio.semio#child"
+                    }
+                  ],
+                  "descriptorSha256": "1c51746cfa5e04fa5186372ebd9e7ef7907dd1c3d6ce3541425298f96f7d5929",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-export-s-stdio-semio-child.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema-export",
+                      "value": "s.stdio.semio#geometry"
+                    }
+                  ],
+                  "descriptorSha256": "03843fb8f1c8e05cbe9c2be76f751cb2f711e0cd5f135eea8dd5f36c95e85178",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-export-s-stdio-semio-geometry.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.animation"
+                    }
+                  ],
+                  "descriptorSha256": "413b6b2bf8c1a989ce799d4df4fe8e8ae49cd4a47c683f6c6127189b868d7e41",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-animation.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.audio"
+                    }
+                  ],
+                  "descriptorSha256": "0f9a31ca1c00bbb75eca148987d40d2f1522f78e6dd003c41271203f3da22195",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-audio.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.brep"
+                    }
+                  ],
+                  "descriptorSha256": "a93d220f37026f006c0c5c464fc9a4ced9fc4ba71585912cf6fd2f781ce0491c",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-brep.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.cad"
+                    }
+                  ],
+                  "descriptorSha256": "477c7cfcd9b80ec176c7fbe921c77853877619e738452839b7f325ed724f8a42",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-cad.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.document"
+                    }
+                  ],
+                  "descriptorSha256": "689f66930cc6f80e48a498d13b1a18175d91334830c92d26bb0076ab3f3814b5",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-document.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.drawing"
+                    }
+                  ],
+                  "descriptorSha256": "8770d195e284d3bed94b752ee94f9f8bd4540ead13ad525a00ba98e2cc7a2781",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-drawing.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.flow"
+                    }
+                  ],
+                  "descriptorSha256": "680a23c948854b0e466fb9d23249283e63efc92dfce531233baf900333bebb8d",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-flow.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.graph"
+                    }
+                  ],
+                  "descriptorSha256": "84067387f795295ec99e15f0d088e5a479c14cc9257ae9c4cec38ad99f76e9a2",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-graph.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.image"
+                    }
+                  ],
+                  "descriptorSha256": "66dbca0ab365e136da42ac4a2f8c75aa0516ab586617898758c8feb34adce73c",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-image.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.kit"
+                    }
+                  ],
+                  "descriptorSha256": "1a6d483a76779de3a001243f120ab1af3a066f0b7e99998a3fb2823ecb55e347",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-kit.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.mesh"
+                    }
+                  ],
+                  "descriptorSha256": "89fed9726566fdc5e0eb7e7fd0e3727587673aa4732e3124b70c25118e9b6959",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-mesh.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.model"
+                    }
+                  ],
+                  "descriptorSha256": "e93406ce00131e75738c7c7edae7e0cc58f77852a9ec6f9ae18443364282f67d",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-model.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.object"
+                    }
+                  ],
+                  "descriptorSha256": "ed496a52c02071d17ce8600c855ea76d68c35c5babd4ac16855a261a840c94f5",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-object.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.presentation"
+                    }
+                  ],
+                  "descriptorSha256": "16271e3a082dbba59c7af7fc3f0fd2cf0e76b7f2830434f3f60082344811c6f2",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-presentation.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.table"
+                    }
+                  ],
+                  "descriptorSha256": "58d287d5ba3b62ce95c3bfea7e492979ff11ad13ed9031367e9cd666b3b4a91f",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-table.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.text"
+                    }
+                  ],
+                  "descriptorSha256": "432ac8a2229a4197eb17b5d9c307546ce82908f52cf45103ecb3ea214ae5c7dd",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-text.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.value"
+                    }
+                  ],
+                  "descriptorSha256": "0b3091778382a9c4c2059bd8fbe5e2395538ba4400825c145e24d3ac3c3932c1",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-value.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio.video"
+                    }
+                  ],
+                  "descriptorSha256": "003a62aabcd1a926ac9f5c0f287e049bc98e1f23392c887086491d7b538ee143",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio-video.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.semio"
+                    }
+                  ],
+                  "descriptorSha256": "e89d4a51b13d290fa3da597e3fabafb598d730dd1ec27fcddfec732e3a69b8b4",
+                  "executable": false,
+                  "identity": "s.stdio.semio.schema.schema-s-stdio-semio.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "f5c22f92c7256e6550c2dc5e5dd99b0469848a4be1e74fe1da981c53af720f04",
                   "executable": false,
                   "identity": "s.stdio.semio.standard.v1",
                   "kind": "standard",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "s.stdio.semio.animation"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "23:s.stdio.semio.animation:semio"
+                    }
+                  ],
+                  "descriptorSha256": "ed5ba851f683cda9061fc5771ea12d11b3c93a479f077bbf923cc71ca17365f6",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-animation-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "s.stdio.semio.document"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "22:s.stdio.semio.document:semio"
+                    }
+                  ],
+                  "descriptorSha256": "c558c515694db7ef2c1832cbb5d9196eebee1b5ad26ee2c1cf1dbc74dee380fa",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-document-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "s.stdio.semio.graph"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "19:s.stdio.semio.graph:semio"
+                    }
+                  ],
+                  "descriptorSha256": "51ab19df4e775b1efaf3df73b738ff27e62d3edf785fd021881df76a9a250212",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-graph-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "s.stdio.semio.image"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "19:s.stdio.semio.image:semio"
+                    }
+                  ],
+                  "descriptorSha256": "9eab6209a305ec3b43a0a0ede3b3b9138aa885aabcc2e52c780ad89a1be88c40",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-image-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "s.stdio.semio.presentation"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "26:s.stdio.semio.presentation:semio"
+                    }
+                  ],
+                  "descriptorSha256": "8695ff85f1fcf661c35995d0a72a4877791256a067071495592c8fbc1e92fb6e",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-presentation-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "s.stdio.semio.table"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "19:s.stdio.semio.table:semio"
+                    }
+                  ],
+                  "descriptorSha256": "51cc3548ae1654c25f93b272aaa284b80c87eec2d703b1de49ed9c0062ed35fb",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-table-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "s.stdio.semio.text"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "18:s.stdio.semio.text:semio"
+                    }
+                  ],
+                  "descriptorSha256": "90e28cf84206a796f47b334d3572fe7b86affbd5bd8115c111f6d11f16c37f8e",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-text-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.semio.audio"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "17:stdio.semio.audio:semio"
+                    }
+                  ],
+                  "descriptorSha256": "2071e661abdea7c4c4d7b708cc1b8428b49c38d665a86e74eb76e67cc2f0f6c7",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-audio-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.semio.brep"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "16:stdio.semio.brep:semio"
+                    }
+                  ],
+                  "descriptorSha256": "b53bfcc5ecc4efb2c3825780f3fb2e74d833cad844ad40c95c052f6420094f76",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-brep-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.semio.cad"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "15:stdio.semio.cad:semio"
+                    }
+                  ],
+                  "descriptorSha256": "4abe056fb61b36f82a41687e862a214669cd4dfa645b439538a0503c22723ce1",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-cad-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.semio.drawing"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "19:stdio.semio.drawing:semio"
+                    }
+                  ],
+                  "descriptorSha256": "72212ae5fe599af76f06fd97e42a3c9391b55cbca9823d5fecabfca0e3c22f4b",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-drawing-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.semio"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "11:stdio.semio:semio"
+                    }
+                  ],
+                  "descriptorSha256": "8026357e3e787bdb4af38e197d025b6352925ecfc0aa0ad20a0c5d235bbd844a",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.semio.flow"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "16:stdio.semio.flow:semio"
+                    }
+                  ],
+                  "descriptorSha256": "327c8513d5b9af804a1592831e2ef8bd706a566f8953b2382e3de4ddf3dfd87a",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-flow-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.semio.kit"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "15:stdio.semio.kit:semio"
+                    }
+                  ],
+                  "descriptorSha256": "efd2154a2e9a70d35660bc13f0804de45c8c13d32365bc22190b1a3f073ab28d",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-kit-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.semio.mesh"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "16:stdio.semio.mesh:semio"
+                    }
+                  ],
+                  "descriptorSha256": "bb0af707d2679f138e51ee40a7365ba0a80760d7cccf1261fa66a81a11469ccd",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-mesh-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.semio.model"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "17:stdio.semio.model:semio"
+                    }
+                  ],
+                  "descriptorSha256": "97526511e15c1f1d17af68c23f2421ec7bd82e19e5f7533330fbc4da23193120",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-model-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.semio.object"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "18:stdio.semio.object:semio"
+                    }
+                  ],
+                  "descriptorSha256": "12841cfb54b9435640a7698110e32b28e6d06ef445be7b21c4aa7814d7290991",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-object-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.semio.value"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "17:stdio.semio.value:semio"
+                    }
+                  ],
+                  "descriptorSha256": "a1b8ebd61f97f804489a6390a3cd163efd79c5e421e19c55220c3076c5f316fd",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-value-extension-semio.v1",
+                  "kind": "codec",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.semio.video"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "17:stdio.semio.video:semio"
+                    }
+                  ],
+                  "descriptorSha256": "37e296c876fe4b334793944cfdc3459a2dedcc341dd495de18fc968419c396f6",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.codec.codec-stdio-semio-video-extension-semio.v1",
+                  "kind": "codec",
                   "localizations": []
                 },
                 {
@@ -23552,6 +27015,270 @@
                   "executable": false,
                   "identity": "s.stdio.semio.standard.v1.representation.document",
                   "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "extension",
+                      "value": ".semio"
+                    },
+                    {
+                      "namespace": "mime",
+                      "value": "application/vnd.semio"
+                    }
+                  ],
+                  "descriptorSha256": "12ac2a2fc6e3ea54e7fc6164df18b1d010909243115a4aa140de446d53529190",
+                  "executable": false,
+                  "identity": "s.stdio.semio.standard.v1.representation.mime-application-vnd-semio-extension-semio",
+                  "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/animation"
+                    }
+                  ],
+                  "descriptorSha256": "5a6059d580aa668d036cc5821fd13e7ea26454e9a418b701758138dad2b30583",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-animation.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/audio"
+                    }
+                  ],
+                  "descriptorSha256": "30c4fb434f452896dfcbf48afb4838225429b8d4607e59c50bef1b33debbf677",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-audio.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/brep"
+                    }
+                  ],
+                  "descriptorSha256": "beec1c5ab26bf120b036cb90fc83fb0fb044c6aefe78cc2a1767dc47f6dfd01c",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-brep.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/cad"
+                    }
+                  ],
+                  "descriptorSha256": "40c7c033a164de1f03d2c1d3e0a2d77083f48430e06edb0890d4e1ef40cb0d80",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-cad.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/document"
+                    }
+                  ],
+                  "descriptorSha256": "905f9ae2a2909993eccf691d153b2b568752df10b03224fe7e80676c29a41018",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-document.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/drawing"
+                    }
+                  ],
+                  "descriptorSha256": "3c4c3326236a63044a7d16f17d3457fc57aecab4ec4819b33eac6bc6029f6166",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-drawing.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/flow"
+                    }
+                  ],
+                  "descriptorSha256": "75f64a420f2801036d3e16e77f3c391da45d3fffdbbb6dac2346f5c18100f29b",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-flow.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/graph"
+                    }
+                  ],
+                  "descriptorSha256": "5a4f7cab7670efc05123823276744937e72f0cbb80594c93f686589cb0a9f8c4",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-graph.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/image"
+                    }
+                  ],
+                  "descriptorSha256": "d9a211d84031786affc22b724c212299070101db3bc4ab435d374ae8cd493e2d",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-image.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/kit"
+                    }
+                  ],
+                  "descriptorSha256": "ecaf9885bb2b56327f0d695296fedfffc9663bcbd8be5caeaab4e2d8d34284c7",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-kit.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/mesh"
+                    }
+                  ],
+                  "descriptorSha256": "2f39be000e11c7dbe7288ae737df37c22a956adb29963b25e1c8f127a2779881",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-mesh.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/model"
+                    }
+                  ],
+                  "descriptorSha256": "c6950be9e5901a007926b0362cb2c558fc9e1c62c2428f9d2aec24f223488afa",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-model.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/object"
+                    }
+                  ],
+                  "descriptorSha256": "b077184979947f39556ff6ddcf84d1793abe407e103635d45d1dd333b9e3fc2d",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-object.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/presentation"
+                    }
+                  ],
+                  "descriptorSha256": "7bd5bba23780ded2e878bea02269515a6c24c76a2527d1fbd6f30f2612efdd67",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-presentation.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/table"
+                    }
+                  ],
+                  "descriptorSha256": "8344c2190d8701938f149fa08e4dd77f13d1a08a1423b486f145b114466a4b09",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-table.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/text"
+                    }
+                  ],
+                  "descriptorSha256": "07004b4a34494f4f6b7b19d1de9b74f1927ed95e858a0e148aa8888c327a05fb",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-text.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/value"
+                    }
+                  ],
+                  "descriptorSha256": "10f3918ecd3149f99b53fd34f49390874039dc28523a879025c29478846e3e6a",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-value.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/video"
+                    }
+                  ],
+                  "descriptorSha256": "ae321ebcf8d1d7dbe781c312c0d6b7eed9c6b1f43320db84efc5bbc9a297e536",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1-video.v1",
+                  "kind": "subset-validator",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "validated-dialect",
+                      "value": "s.stdio.semio@v1/*"
+                    }
+                  ],
+                  "descriptorSha256": "ff8f03049948404b010bb63b6943c5125937162af19adfa7a8729c49d675ec53",
+                  "executable": false,
+                  "identity": "s.stdio.semio.subset-validator.validated-dialect-s-stdio-semio-v1.v1",
+                  "kind": "subset-validator",
                   "localizations": []
                 }
               ],
@@ -24945,11 +28672,37 @@
             {
               "capabilities": [
                 {
+                  "claims": [
+                    {
+                      "namespace": "dialect",
+                      "value": "s.stdio.wav@riff-pcm/*"
+                    }
+                  ],
+                  "descriptorSha256": "c2597c2e47a924523243efb08ac9e84f2c50fa6e797e492aa17482c9ed765ba6",
+                  "executable": false,
+                  "identity": "s.stdio.wav.composer.dialect-s-stdio-wav-riff-pcm.v1",
+                  "kind": "composer",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "9bc49786e1aa5089d0ae3fe7973c50545a712d875e043078fe117e583ba1a964",
                   "executable": false,
                   "identity": "s.stdio.wav.conformance-suite.public-corpus",
                   "kind": "conformance-suite",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.wav.inference"
+                    }
+                  ],
+                  "descriptorSha256": "05449368a182305919920167506dcd03bf7a33106eee03cdf0030c26546d7543",
+                  "executable": false,
+                  "identity": "s.stdio.wav.inference.schema-s-stdio-wav-inference.v1",
+                  "kind": "inference",
                   "localizations": []
                 },
                 {
@@ -24987,11 +28740,41 @@
                   "localizations": []
                 },
                 {
+                  "claims": [
+                    {
+                      "namespace": "schema",
+                      "value": "s.stdio.wav"
+                    }
+                  ],
+                  "descriptorSha256": "b39a29492a5cade1b78fb00f77e99ed4ee80875c169c4d24b523f2fec7a388d8",
+                  "executable": false,
+                  "identity": "s.stdio.wav.schema.schema-s-stdio-wav.v1",
+                  "kind": "schema",
+                  "localizations": []
+                },
+                {
                   "claims": [],
                   "descriptorSha256": "f333d97902266cfe59e82c750725871235f558da5433104290778b197107cf4c",
                   "executable": false,
                   "identity": "s.stdio.wav.standard.riff-pcm",
                   "kind": "standard",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "codec",
+                      "value": "stdio.wav"
+                    },
+                    {
+                      "namespace": "codec-extension",
+                      "value": "9:stdio.wav:wav"
+                    }
+                  ],
+                  "descriptorSha256": "676d4b9151336506f3b8df7b8b4197eb0dc2ffab9a241638ad48bc36769d366c",
+                  "executable": false,
+                  "identity": "s.stdio.wav.standard.riff-pcm.codec.codec-stdio-wav-extension-wav.v1",
+                  "kind": "codec",
                   "localizations": []
                 },
                 {
@@ -25015,6 +28798,23 @@
                   "descriptorSha256": "a8cb03bad07684cce84f765ba99d5f635c1cff366972fadc6dfa7bd0e25def71",
                   "executable": false,
                   "identity": "s.stdio.wav.standard.riff-pcm.representation.document",
+                  "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "extension",
+                      "value": ".wav"
+                    },
+                    {
+                      "namespace": "mime",
+                      "value": "audio/wav"
+                    }
+                  ],
+                  "descriptorSha256": "3ca4426c6b054b4ef56e828c56e69cd447c1b334d8acef7b11991b2938340d21",
+                  "executable": false,
+                  "identity": "s.stdio.wav.standard.riff-pcm.representation.mime-audio-wav-extension-wav",
                   "kind": "representation",
                   "localizations": []
                 }
@@ -26007,8 +29807,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "0158f8e99e0ca20aff9727026feeef83d99dba3d3170f273cd6695f013a663ef",
-    "coreWasmSha256": "984adf62cfb33f8e30f62a51dcbf1dac76b3697b5255c92704b9f8eeb8405c63",
-    "descriptorSha256": "7a77ac5a75fcac955f60436348ccb345fff85c8dbfe653475d9f100eef32a612"
+    "wasmSha256": "46f3c0c10b313d4cc4f1c8bb9b7a8244132d7c32fecc3fa43e3b17941122d0ec",
+    "coreWasmSha256": "00fcbae14a6f0c8a0e86216cac983232c0941a6dadecd32990a451d95a4169eb",
+    "descriptorSha256": "cd437ed82b09cfeac27dae02e4cbef61e98b8a050fb87ff8e2a381d55d1fa2b7"
   }
 }

@@ -513,8 +513,15 @@ fn locale_roundtrip_preserves_instance_titles_and_localizes_singletons() {
         assert_eq!(ids.iter().map(|id| labels.get(*id).unwrap().as_str()).collect::<Vec<_>>(), expected);
         let identity = shell.dock_input_identity.as_ref().unwrap().mode_layout.as_ref().unwrap();
         let WindowLayoutRoot::Axis(axis) = &identity.root else { panic!("row identity") };
-        let titles: Vec<_> = axis.children.iter().flat_map(|child| match child { WindowLayoutChild::Stack(stack) => stack.children.iter().map(|leaf| leaf.title.as_deref().unwrap()).collect::<Vec<_>>(), _ => panic!("stack identity") }).collect();
-        assert_eq!(titles, expected);
+        let leaves: Vec<_> = axis
+            .children
+            .iter()
+            .flat_map(|child| match child {
+                WindowLayoutChild::Stack(stack) => stack.children.iter().map(|leaf| (leaf.window_kind_id.as_str(), leaf.title.as_deref())).collect::<Vec<_>>(),
+                _ => panic!("stack identity"),
+            })
+            .collect();
+        assert_eq!(leaves, ids.iter().map(|id| (*id, None)).collect::<Vec<_>>(), "React Mode's identity keys every leaf by its instance id and carries no presentation title, so a locale switch never remounts it");
         assert_eq!(axis.children.iter().map(|child| match child { WindowLayoutChild::Stack(stack) => stack.size, _ => None }).collect::<Vec<_>>(), [Some(30.0), Some(30.0), Some(40.0)]);
     }
 }

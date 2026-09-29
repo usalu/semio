@@ -58,11 +58,8 @@
     "graph-left": 1,
     "graph-right": 1
   },
-  "queryOwnership": {
+  "resultsOwnership": {
     "appConfig": {},
-    "editorBase": {
-      "jackQuery": "MATCH (a:Piece) RETURN a.name"
-    },
     "resultsBase": {
       "queryExecutionId": null,
       "result": null,
@@ -70,12 +67,7 @@
     },
     "pairs": [
       {
-        "editorWindowId": "editor-left",
         "resultsWindowId": "results-left",
-        "queryMutation": {
-          "kind": "set-query",
-          "value": "MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name"
-        },
         "resultMutation": {
           "kind": "replace-query-result",
           "executionId": "41",
@@ -89,12 +81,7 @@
         }
       },
       {
-        "editorWindowId": "editor-right",
         "resultsWindowId": "results-right",
-        "queryMutation": {
-          "kind": "set-query",
-          "value": "MATCH (a:Piece) WHERE a.name != 'b' RETURN a.name"
-        },
         "resultMutation": {
           "kind": "replace-query-result",
           "executionId": "42",
@@ -108,10 +95,6 @@
         }
       }
     ],
-    "expectedEditorGenerations": {
-      "editor-left": 1,
-      "editor-right": 1
-    },
     "expectedResultsGenerations": {
       "results-left": 1,
       "results-right": 1

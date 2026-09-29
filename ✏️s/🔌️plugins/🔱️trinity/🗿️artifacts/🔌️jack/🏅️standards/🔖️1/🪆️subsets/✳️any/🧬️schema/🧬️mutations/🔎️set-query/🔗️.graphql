@@ -1,0 +1,2 @@
+# 🔎️ Direct set-query / SetQuery payload.
+input SetQueryInput { value: String! }

@@ -94,7 +94,7 @@ impl ArtifactViewer for XmlValidViewer {
     }
 
     fn initial_snapshot() -> XmlSnapshot {
-        XmlSnapshot::default()
+        crate::standards::v1_0::subsets::valid::schema::blank_valid_xml_snapshot()
     }
 
     fn handle(

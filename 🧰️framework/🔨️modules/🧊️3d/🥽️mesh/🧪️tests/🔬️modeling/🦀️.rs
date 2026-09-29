@@ -339,3 +339,225 @@ fn subdivision_preserves_concave_polygon_area() {
         assert!((area as f64 - case["area"].as_f64().unwrap()).abs() < 1e-5);
     }
 }
+
+fn assert_edit_surface(mesh: &HalfedgeMesh, expected_area: Option<f64>, expected_volume: Option<f64>) {
+    let (positions, faces) = mesh.polygon_soup();
+    let mut used = HashSet::new();
+    let mut incidence = HashMap::<(u32, u32), (usize, i32)>::new();
+    for face in faces {
+        assert_eq!(face.iter().copied().collect::<HashSet<_>>().len(), face.len());
+        for i in 0..face.len() {
+            let (a, b) = (face[i], face[(i + 1) % face.len()]);
+            used.insert(a);
+            let entry = incidence.entry((a.min(b), a.max(b))).or_default();
+            entry.0 += 1; entry.1 += if a < b { 1 } else { -1 };
+        }
+    }
+    assert_eq!(used.len(), positions.len());
+    assert!(incidence.values().all(|edge| edge.0 == 1 || *edge == (2, 0)));
+    if expected_volume.is_some() { assert!(incidence.values().all(|edge| *edge == (2, 0))); }
+    let transfer = mesh.tessellate().unwrap();
+    let mut area = 0.0;
+    let mut volume = 0.0;
+    for indices in transfer.indices.chunks_exact(3) {
+        let points: [_; 3] = std::array::from_fn(|i| {
+            let offset = indices[i] as usize * 3;
+            parry3d::na::Point3::new(transfer.positions[offset], transfer.positions[offset + 1], transfer.positions[offset + 2])
+        });
+        let triangle = parry3d::shape::Triangle::new(points[0], points[1], points[2]);
+        let measured = triangle.area() as f64;
+        assert!(measured > 0.0);
+        area += measured;
+        volume += points[0].coords.dot(&points[1].coords.cross(&points[2].coords)) as f64 / 6.0;
+    }
+    if let Some(expected) = expected_area { assert!((area - expected).abs() < 1e-5, "area={area}"); }
+    if let Some(expected) = expected_volume { assert!((volume - expected).abs() < 1e-5, "volume={volume}, expected={expected}"); }
+}
+
+#[test]
+fn bevel_fixtures_have_segments_and_closed_geometry() {
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
+    for case in fixtures["bevels"].as_array().unwrap() {
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+        let pairs: Vec<[u32; 2]> = serde_json::from_value(case["edges"].clone()).unwrap();
+        let edges = pairs.iter().map(|&[a,b]| EdgeId((0..mesh.halfedges.len()).find(|&id| mesh.edge_endpoints(EdgeId(id as u32)).unwrap() == (VertexId(a),VertexId(b))).unwrap() as u32)).collect::<Vec<_>>();
+        mesh.bevel_edges(&edges, case["amount"].as_f64().unwrap() as f32, case["segments"].as_u64().unwrap() as u32).unwrap();
+        assert_eq!(mesh.vertex_count(), case["vertices"].as_u64().unwrap() as usize);
+        assert_eq!(mesh.face_count(), case["faces"].as_u64().unwrap() as usize);
+        assert_edit_surface(&mesh, None, case["volume"].as_f64());
+    }
+}
+
+#[test]
+fn dissolve_and_merge_fixtures_preserve_surface() {
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
+    for group in ["dissolutions", "merges"] {
+        for case in fixtures[group].as_array().unwrap() {
+            let positions: Vec<[f32;3]> = serde_json::from_value(case["mesh"]["vertices"].clone()).unwrap();
+            let faces: Vec<Vec<u32>> = serde_json::from_value(case["mesh"]["faces"].clone()).unwrap();
+            let selected: Vec<u32> = serde_json::from_value(case["selection"].clone()).unwrap();
+            let selected = selected.into_iter().map(VertexId).collect::<Vec<_>>();
+            let mut mesh = HalfedgeMesh::from_faces(&positions, &faces).unwrap();
+            if group == "dissolutions" { mesh.dissolve_vertices(&selected).unwrap(); }
+            else { mesh.merge_vertices(&selected, if case["mode"] == "distance" { WeldMode::ByDistance } else { WeldMode::First }, case["threshold"].as_f64().unwrap() as f32).unwrap(); }
+            assert_eq!(mesh.vertex_count(), case["vertices"].as_u64().unwrap() as usize);
+            assert_eq!(mesh.face_count(), case["faces"].as_u64().unwrap() as usize);
+            assert_edit_surface(&mesh, case["area"].as_f64(), None);
+        }
+    }
+}
+
+#[test]
+fn proportional_and_snap_fixtures_are_atomic_and_update_normals() {
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
+    for group in ["proportional", "snapping"] {
+        let case = &fixtures[group];
+        let positions: Vec<[f32;3]> = serde_json::from_value(case["mesh"]["vertices"].clone()).unwrap();
+        let faces: Vec<Vec<u32>> = serde_json::from_value(case["mesh"]["faces"].clone()).unwrap();
+        let selected: Vec<u32> = serde_json::from_value(case["selection"].clone()).unwrap();
+        let selected = selected.into_iter().map(VertexId).collect::<Vec<_>>();
+        let mut mesh = HalfedgeMesh::from_faces(&positions, &faces).unwrap();
+        let before = mesh.to_obj().unwrap();
+        if group == "snapping" {
+            assert!(mesh.snap_vertices_to_grid(&[VertexId(0), VertexId(999)], 1.0).is_err());
+            assert_eq!(mesh.to_obj().unwrap(), before);
+            assert!(mesh.snap_vertices_to_grid(&selected, f32::NAN).is_err());
+            mesh.snap_vertices_to_grid(&selected, case["grid"].as_f64().unwrap() as f32).unwrap();
+        } else {
+            let delta = Vec3(serde_json::from_value(case["delta"].clone()).unwrap());
+            let pivot = Vec3(serde_json::from_value(case["pivot"].clone()).unwrap());
+            assert!(mesh.move_vertices_proportional(&[VertexId(0), VertexId(999)], delta, pivot, 1.0).is_err());
+            assert_eq!(mesh.to_obj().unwrap(), before);
+            mesh.move_vertices_proportional(&selected, delta, pivot, case["radius"].as_f64().unwrap() as f32).unwrap();
+        }
+        let expected: Vec<[f32;3]> = serde_json::from_value(case["expected"].clone()).unwrap();
+        assert_eq!(mesh.polygon_soup().0, expected);
+        let rebuilt = HalfedgeMesh::from_faces(&expected, &faces).unwrap();
+        assert_eq!(mesh.tessellate().unwrap().normals, rebuilt.tessellate().unwrap().normals);
+    }
+}
+
+#[test]
+fn adjacent_bevels_and_duplicate_selections_preserve_manifold() {
+    for edges in [vec![EdgeId(0), EdgeId(1)], vec![EdgeId(0), EdgeId(0)], vec![EdgeId(0), EdgeId(1), EdgeId(2)]] {
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+        mesh.bevel_edges(&edges,0.1,3).unwrap();
+        assert_edit_surface(&mesh,None,None);
+        assert!(mesh.halfedges.iter().all(|edge| edge.twin.is_some()));
+    }
+}
+
+#[test]
+fn bevel_and_decimate_cancel_and_reject_invalid_input_atomically() {
+    let mut mesh = HalfedgeMesh::box_prim(1.0,1.0,1.0).unwrap();
+    let before = mesh.to_obj().unwrap();
+    for (edges,width,segments) in [(vec![EdgeId(999)],0.1,1),(vec![EdgeId(0)],f32::NAN,1),(vec![EdgeId(0)],0.1,0),(vec![EdgeId(0)],0.1,65),(vec![EdgeId(0)],0.9,1)] {
+        assert!(mesh.bevel_edges(&edges,width,segments).is_err());
+        assert_eq!(mesh.to_obj().unwrap(),before);
+    }
+    let mut updates = Vec::new();
+    assert!(mesh.bevel_edges_with_progress(&[EdgeId(0)],0.1,4,|fraction| { updates.push(fraction); fraction < 0.5 }).is_err());
+    assert!(updates.len() > 1);
+    assert_eq!(mesh.to_obj().unwrap(),before);
+    assert!(mesh.decimate_with_progress(0.5,|_| false).is_err());
+    assert_eq!(mesh.to_obj().unwrap(),before);
+    assert!(mesh.mirror(MirrorAxis::X,0.0).is_err());
+    assert_eq!(mesh.to_obj().unwrap(),before);
+    assert!(mesh.dissolve_edges(&[EdgeId(0),EdgeId(999)]).is_err());
+    assert_eq!(mesh.to_obj().unwrap(),before);
+}
+
+#[test]
+fn mirror_and_decimate_fixtures_are_compact_and_oriented() {
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
+    for case in fixtures["mirrors"].as_array().unwrap() {
+        let mut mesh = HalfedgeMesh::box_prim(1.0,1.0,1.0).unwrap();
+        mesh.translate(Vec3(serde_json::from_value(case["translation"].clone()).unwrap())).unwrap();
+        mesh.mirror(MirrorAxis::X,case["threshold"].as_f64().unwrap() as f32).unwrap();
+        assert_eq!(mesh.vertex_count(),case["vertices"].as_u64().unwrap() as usize);
+        assert_eq!(mesh.face_count(),case["faces"].as_u64().unwrap() as usize);
+        assert_edit_surface(&mesh,case["area"].as_f64(),case["volume"].as_f64());
+    }
+    for case in fixtures["decimations"].as_array().unwrap() {
+        let mut mesh = HalfedgeMesh::box_prim(1.0,1.0,1.0).unwrap();
+        mesh.decimate(case["ratio"].as_f64().unwrap() as f32).unwrap();
+        assert!(mesh.vertex_count() <= case["maximumVertices"].as_u64().unwrap() as usize);
+        assert_edit_surface(&mesh,None,None);
+        assert!(mesh.halfedges.iter().all(|edge| edge.twin.is_some()));
+        let transfer = mesh.tessellate().unwrap();
+        let points = transfer.positions.chunks_exact(3).map(|p| parry3d::na::Point3::new(p[0],p[1],p[2])).collect::<Vec<_>>();
+        let indices = transfer.indices.chunks_exact(3).map(|i| [i[0],i[1],i[2]]).collect::<Vec<_>>();
+        let oracle = parry3d::shape::TriMesh::new(points,indices);
+        use parry3d::shape::Shape;
+        assert!(oracle.mass_properties(1.0).mass() > case["minimumVolume"].as_f64().unwrap() as f32);
+    }
+}
+
+#[test]
+fn smooth_normal_fixture_excludes_flat_faces_and_face_order() {
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
+    let case = &fixtures["normals"];
+    let positions: Vec<[f32;3]> = serde_json::from_value(case["mesh"]["vertices"].clone()).unwrap();
+    let faces: Vec<Vec<u32>> = serde_json::from_value(case["mesh"]["faces"].clone()).unwrap();
+    let smooth: Vec<usize> = serde_json::from_value(case["smoothFaces"].clone()).unwrap();
+    let expected: [f32;3] = serde_json::from_value(case["expected"].clone()).unwrap();
+    let mut sum = parry3d::na::Vector3::zeros();
+    for &id in &smooth {
+        let points = faces[id].iter().map(|&id| parry3d::na::Point3::from(positions[id as usize])).collect::<Vec<_>>();
+        sum += (points[1]-points[0]).cross(&(points[2]-points[0])).normalize();
+    }
+    let oracle = sum.normalize();
+    for order in [[0,1,2],[2,1,0],[1,0,2]] {
+        let permuted = order.iter().map(|&id| faces[id].clone()).collect::<Vec<_>>();
+        let mut mesh = HalfedgeMesh::from_faces(&positions,&permuted).unwrap();
+        let selected = order.iter().enumerate().filter_map(|(id,source)| smooth.contains(source).then_some(FaceId(id as u32))).collect::<Vec<_>>();
+        mesh.set_shading(&selected,true).unwrap();
+        let normal = mesh.vertices[case["vertex"].as_u64().unwrap() as usize].normal.unwrap();
+        for axis in 0..3 { assert!((normal[axis]-expected[axis]).abs() < 1e-6); assert!((normal[axis]-oracle[axis]).abs() < 1e-6); }
+    }
+}
+
+#[test]
+fn retained_modeling_jobs_slice_work_and_match_synchronous_geometry() {
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛠️modeling/🔣️.json")).unwrap();
+    for case in fixtures["jobs"].as_array().unwrap() {
+        let source = HalfedgeMesh::box_prim(1.0,1.0,1.0).unwrap();
+        let before = source.to_obj().unwrap();
+        let make_job = || if case["operation"] == "bevel" { source.bevel_job(&[EdgeId(0)],case["amount"].as_f64().unwrap() as f32,case["segments"].as_u64().unwrap() as u32).unwrap() } else { source.decimate_job(case["ratio"].as_f64().unwrap() as f32).unwrap() };
+        let mut synchronous = source.clone();
+        if case["operation"] == "bevel" { synchronous.bevel_edges(&[EdgeId(0)],case["amount"].as_f64().unwrap() as f32,case["segments"].as_u64().unwrap() as u32).unwrap(); } else { synchronous.decimate(case["ratio"].as_f64().unwrap() as f32).unwrap(); }
+        let mut sliced = make_job();
+        let initial = sliced.progress();
+        assert!(matches!(sliced.step(0).unwrap(),MeshModelingStep::Working(_)));
+        assert_eq!(sliced.progress(),initial);
+        let mut calls = 0;
+        let output = loop {
+            let before = sliced.progress().units_done;
+            calls += 1;
+            match sliced.step(1).unwrap() {
+                MeshModelingStep::Working(progress) => {
+                    assert_eq!(progress.units_done,before+1);
+                    assert!(progress.units_done < progress.units_total);
+                }
+                MeshModelingStep::Done(mesh) => break mesh,
+                MeshModelingStep::Cancelled(_) => panic!("unexpected cancellation"),
+            }
+            assert!(calls < 10000);
+        };
+        assert!(calls >= case["minimumSteps"].as_u64().unwrap() as usize);
+        assert_eq!(output.to_obj().unwrap(),synchronous.to_obj().unwrap());
+        assert_eq!(source.to_obj().unwrap(),before);
+        assert_eq!(sliced.progress().units_done,sliced.progress().units_total);
+        sliced.cancel();
+        assert!(sliced.step(1).is_err());
+        let mut cancelled = make_job();
+        assert!(matches!(cancelled.step(1).unwrap(),MeshModelingStep::Working(_)));
+        let progress = cancelled.progress();
+        cancelled.cancel();
+        assert!(matches!(cancelled.step(1).unwrap(),MeshModelingStep::Cancelled(value) if value.units_done == progress.units_done));
+        assert_eq!(source.to_obj().unwrap(),before);
+        let mut batched = make_job();
+        let output = loop { match batched.step(3).unwrap() { MeshModelingStep::Done(mesh) => break mesh, MeshModelingStep::Working(_) => {}, MeshModelingStep::Cancelled(_) => panic!("unexpected cancellation") } };
+        assert_eq!(output.to_obj().unwrap(),synchronous.to_obj().unwrap());
+    }
+}

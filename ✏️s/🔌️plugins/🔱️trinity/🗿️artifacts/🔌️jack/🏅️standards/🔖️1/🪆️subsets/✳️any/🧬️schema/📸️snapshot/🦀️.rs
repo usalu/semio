@@ -28,6 +28,9 @@ pub struct JackSnapshot {
     pub content: JackContentChild,
     #[state(artifact)]
     pub root_node_id: Option<String>,
+    /// 🔎️ The document's Jack query — the query editor's text, document content like the graph it runs against.
+    #[state(artifact)]
+    pub query: String,
 }
 //#endregion 🔖️Snapshot
 
@@ -44,7 +47,7 @@ impl dsl::ToValue for JackSnapshot {
     /// committed `📸️snapshot` fixture vectors are written against): decode→encode of a committed
     /// snapshot is a fixed point only if an absent id stays absent instead of surfacing as `null`.
     fn to_value(&self) -> dsl::DslValue {
-        let mut entries: Vec<(String, dsl::DslValue)> = Vec::with_capacity(7);
+        let mut entries: Vec<(String, dsl::DslValue)> = Vec::with_capacity(8);
         entries.push(("schema".to_string(), dsl::ToValue::to_value(&self.schema)));
         entries.push(("name".to_string(), dsl::ToValue::to_value(&self.name)));
         if let Some(manifest_id) = self.manifest_id.as_ref() {
@@ -56,6 +59,7 @@ impl dsl::ToValue for JackSnapshot {
         if let Some(root_node_id) = self.root_node_id.as_ref() {
             entries.push(("rootNodeId".to_string(), dsl::ToValue::to_value(root_node_id)));
         }
+        entries.push(("query".to_string(), dsl::ToValue::to_value(&self.query)));
         dsl::DslValue::object(entries)
     }
 }
@@ -89,6 +93,7 @@ impl dsl::FromValue for JackSnapshot {
                 Some(v) => dsl::FromValue::from_value(v)?,
                 None => None,
             },
+            query: dsl::FromValue::from_value(get("query").ok_or_else(|| dsl::ValueError::new("missing field `query`"))?)?,
         })
     }
 }
@@ -96,7 +101,7 @@ impl dsl::FromValue for JackSnapshot {
 
 impl Default for JackSnapshot {
     fn default() -> Self {
-        Self { schema: crate::TRINITY_GRAPH_SCHEMA.into(), name: String::new(), manifest_id: None, manifest: Manifest::default(), camera: Camera::default(), content: crate::jack_content_child_with_owner(Vec::new(), Vec::new()), root_node_id: None }
+        Self { schema: crate::TRINITY_GRAPH_SCHEMA.into(), name: String::new(), manifest_id: None, manifest: Manifest::default(), camera: Camera::default(), content: crate::jack_content_child_with_owner(Vec::new(), Vec::new()), root_node_id: None, query: crate::TRINITY_JACK_DEFAULT_QUERY.into() }
     }
 }
 

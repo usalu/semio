@@ -74,10 +74,53 @@ fn every_component_variant_round_trips() {
         inline_toolbar: Some(crate::UiNodeId(42)),
         detail: Some(crate::UiNodeId(43)),
         row_actions: crate::UiFixedList::default(),
+        target: None,
     }));
     component_round_trips(Component::Image(ImageProps { src: ui_text("atlas://x"), alt: Some(label("alt")) }));
     component_round_trips(Component::Surface(Default::default()));
     component_round_trips(Component::Extension(ExtensionProps { extension: ui_text("plugin.app.slot"), props: Default::default() }));
+}
+
+#[test]
+fn row_target_fixture_dispatches_tree_and_table_rows_identically_and_refuses_disagreeing_rows() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️row-target/🔣️.json")).expect("row-target fixture");
+    for row in fixture["rows"].as_array().expect("fixture rows") {
+        let node = serde_json::json!({
+            "id": 1, "key": row["case"], "component": row["component"], "bindings": row["bindings"],
+            "layout": { "kind": "stack", "axis": "horizontal", "gap": "none", "padding": { "all": "none" }, "align": "stretch", "justify": "start", "grow": false, "wrap": false },
+            "style": {}, "activity": "idle", "accessibility": {}
+        });
+        let snapshot: crate::UiSnapshot = serde_json::from_value(serde_json::json!({ "surface": "row-target", "revision": 1, "root": 1, "nodes": [node], "layoutEpoch": 0 })).expect("row snapshot");
+        let verdict = crate::validate_snapshot(&snapshot, &crate::UiDocumentLimits::default());
+        let Some(_) = row["violation"].as_str() else {
+            assert_eq!(verdict, Ok(()), "{}: a targeted row is admitted", row["case"]);
+            let (target, row_actions) = match &snapshot.nodes[0].component {
+                Component::TreeItem(props) => (props.target.as_ref(), &props.row_actions),
+                Component::TableRow(props) => (props.target.as_ref(), &props.row_actions),
+                _ => panic!("{}: a row component", row["case"]),
+            };
+            let target = target.expect("a targeted row");
+            let dispatched: Vec<serde_json::Value> = target
+                .activation
+                .iter()
+                .map(|verb| serde_json::json!({ "verb": verb.as_str(), "binding": serde_json::to_value(target.binding(verb).expect("credited row binding")).expect("binding wire") }))
+                .chain(row_actions.iter().map(|action| match target.action_binding(action) {
+                    Ok(binding) => serde_json::json!({ "verb": action.verb.as_str(), "binding": serde_json::to_value(binding).expect("binding wire") }),
+                    Err(crate::RowActionRefusal::Disabled) => serde_json::json!({ "verb": action.verb.as_str(), "refusal": "disabled" }),
+                    Err(refusal) => panic!("{}: an enabled row action binds, got {refusal:?}", row["case"]),
+                }))
+                .collect();
+            let disabled = row_actions.iter().find(|action| action.disabled).expect("the fixture's disabled row action");
+            let wire = serde_json::to_value(disabled).expect("row action wire");
+            assert_eq!(wire["disabled"], serde_json::json!(true), "{}: a disabled action carries its flag", row["case"]);
+            assert!(row_actions.iter().filter(|action| !action.disabled).all(|action| serde_json::to_value(action).expect("row action wire").get("disabled").is_none()), "{}: an enabled action carries no flag at all", row["case"]);
+            assert_eq!(serde_json::Value::from(dispatched), fixture["dispatch"], "{}: the activation and every row action dispatch as the fixture's bindings", row["case"]);
+            assert_eq!(snapshot.nodes[0].credited_clone().expect("credited row copy").component, snapshot.nodes[0].component, "{}: a credited copy keeps target, activation and verbs", row["case"]);
+            continue;
+        };
+        let violations = verdict.expect_err("a row whose verbs and target disagree is refused");
+        assert!(violations.iter().any(|violation| matches!(violation, crate::UiContractViolation::InvalidRowTarget { node: crate::UiNodeId(1) })), "{}: refused as InvalidRowTarget", row["case"]);
+    }
 }
 
 #[test]

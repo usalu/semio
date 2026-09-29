@@ -10,6 +10,7 @@ export interface JackSnapshot {
   /** @state artifact */ camera: Camera;
   /** @state artifact @child kind=s.stdio.semio */ content: ArtifactChild;
   /** @state artifact */ rootNodeId?: string;
+  /** @state artifact */ query: string;
 }
 
 /** 🪪️ Parses the snapshot through the identical persisted artifact contract. */

@@ -109,6 +109,7 @@ pub struct OsHost {
 #[cfg(target_arch = "wasm32")]
 pub(crate) struct BrowserRedrawOutcome {
     pub cursor_css: &'static str,
+    pub media_slots: Vec<crate::media_slots::PresentedMediaSlot>,
 }
 
 struct OsHostRetirementState {

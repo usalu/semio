@@ -2667,3 +2667,120 @@ async fn a_backend_cleanup_fault_reaches_only_its_own_waiters_and_close() {
     assert_eq!(pool.shutdown(), Ok(()));
     assert_eq!(ledger_witness(), before);
 }
+
+fn leased_guard() -> Result<WriterControllerLawGuard, DbError> {
+    Ok(WriterControllerLawGuard { failures: Arc::new(std::sync::atomic::AtomicUsize::new(0)), closed: false })
+}
+
+fn leased_documents(prefix: &str) -> Vec<DbIoText> {
+    (0..writer::WAL_WRITER_CAPACITY).map(|ordinal| DbIoText::try_from_str(&format!("{prefix}-{ordinal}")).unwrap()).collect()
+}
+
+async fn release_leased(permits: impl IntoIterator<Item = WalWriterPermit>) {
+    for permit in permits {
+        permit.release().await.unwrap();
+    }
+}
+
+/// 🅿️ A backend lends its writers to whichever document writes (declared `lease`): with every slot taken an acquisition
+/// reclaims the least recently parked writer — never a held or resumed one, and a parked writer still owns its document
+/// against a second acquisition of it. The reclaimed holder can no longer resume or validate its key, and its release is
+/// already terminal.
+#[semio_framework_async_macros::async_test]
+async fn wal_writer_parked_writers_are_reclaimed_least_recently_parked_first_and_held_ones_never() {
+    let _owner = fixture_owner();
+    let before = ledger_witness();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔐️writer/🧫️fixtures/🔣️.json")).unwrap();
+    let lease = &fixture["lease"];
+    let slots = |key: &str| lease[key].as_array().unwrap().iter().map(|slot| slot.as_u64().unwrap() as usize).collect::<Vec<_>>();
+    let (control, _) = register_writer_controller_law(DbIoExecutorMode::BlockingLane);
+    let documents = leased_documents("leased");
+    let mut permits: Vec<Option<WalWriterPermit>> = writer_controller_law_table(control, |table| documents.iter().map(|document| Some(table.acquire_with(document, leased_guard).unwrap())).collect());
+    let key = |permits: &[Option<WalWriterPermit>], slot: usize| permits[slot].as_ref().unwrap().key();
+    for slot in slots("parkOrder") {
+        permits[slot].as_ref().unwrap().park();
+    }
+    let resumed = lease["resumedBeforeReclaim"].as_u64().unwrap() as usize;
+    assert!(permits[resumed].as_ref().unwrap().resume(), "a parked writer nobody reclaimed is still its holder's");
+    let parked = slots("reclaimOrder")[0];
+    let mut factory_calls = 0;
+    let same_document = writer_controller_law_table(control, |table| {
+        table
+            .acquire_with(&documents[parked], || {
+                factory_calls += 1;
+                leased_guard()
+            })
+            .map(drop)
+    });
+    assert!(matches!(same_document, Err(DbError::Conflict(_))), "a parked writer still owns its document: {same_document:?}");
+    assert_eq!((lease["sameDocumentWhileParked"].as_str().unwrap(), factory_calls), ("conflict", 0));
+    let mut newcomers = Vec::new();
+    for (ordinal, reclaimed) in slots("reclaimOrder").into_iter().enumerate() {
+        let document = DbIoText::try_from_str(&format!("newcomer-{ordinal}")).unwrap();
+        newcomers.push(writer_controller_law_table(control, |table| table.acquire_with(&document, leased_guard)).unwrap());
+        assert!(writer::release::parked_since(key(&permits, reclaimed)).is_none(), "newcomer {ordinal} reclaimed slot {reclaimed}, the least recently parked writer");
+        for later in slots("reclaimOrder").into_iter().skip(ordinal + 1) {
+            assert!(writer::release::parked_since(key(&permits, later)).is_some(), "slot {later} stays parked until it is the least recent");
+        }
+    }
+    let spare = DbIoText::try_from_str("newcomer-spare").unwrap();
+    let full = writer_controller_law_table(control, |table| table.acquire_with(&spare, leased_guard).map(drop));
+    assert!(matches!(full, Err(DbError::LimitExceeded("WAL writer capacity"))), "every writer held: {full:?}");
+    assert_eq!(lease["everyWriterHeld"], "capacity");
+    for reclaimed in slots("reclaimOrder") {
+        let permit = permits[reclaimed].take().unwrap();
+        assert_eq!(permit.resume(), lease["reclaimedResume"].as_bool().unwrap());
+        let validated = writer_controller_law_table(control, |table| table.validate(permit.key(), control, &documents[reclaimed]).map(drop));
+        assert!(matches!(validated, Err(DbError::Fenced { .. })) && lease["reclaimedKey"] == "fenced", "a reclaimed key never validates: {validated:?}");
+        let mut release = permit.release();
+        assert!(matches!(Pin::new(&mut release).poll(&mut std::task::Context::from_waker(std::task::Waker::noop())), std::task::Poll::Ready(Ok(()))) && lease["reclaimedRelease"] == "terminal");
+    }
+    release_leased(permits.into_iter().flatten().chain(newcomers)).await;
+    writer_controller_law_table(control, |table| assert!(table.terminal_is_empty()));
+    retire_db_io_backend(control).unwrap();
+    close_db_io_backend(control).await.unwrap();
+    assert_eq!(ledger_witness(), before);
+}
+
+/// 🚦️ With every writer writing, acquisitions wait in the backend's admission line first come, first served: a parked
+/// writer is lent to the head only, a newcomer joins behind the line instead of overtaking it, a waiter that gives up hands
+/// nothing on unless it was the head, and a wait that outlives its bound is refused as transient on the backend's own
+/// timer — never a stall.
+#[semio_framework_async_macros::async_test]
+async fn wal_writer_admission_serves_waiters_in_arrival_order_and_refuses_an_elapsed_wait() {
+    let _owner = fixture_owner();
+    let before = ledger_witness();
+    let (control, _) = register_writer_controller_law(DbIoExecutorMode::BlockingLane);
+    let documents = leased_documents("admitted");
+    let permits: Vec<WalWriterPermit> = writer_controller_law_table(control, |table| documents.iter().map(|document| table.acquire_with(document, leased_guard).unwrap()).collect());
+    let acquire = |name: &'static str, wait: std::time::Duration| {
+        writer::admitted_acquire(control, wait, move || std::future::ready(writer_controller_law_table(control, |table| table.acquire_with(&DbIoText::try_from_str(name).unwrap(), leased_guard))))
+    };
+    let mut context = std::task::Context::from_waker(std::task::Waker::noop());
+    let long = std::time::Duration::from_secs(60);
+    let mut first = Box::pin(acquire("first", long));
+    let mut second = Box::pin(acquire("second", long));
+    assert!(first.as_mut().poll(&mut context).is_pending(), "every writer writes: the first acquisition waits");
+    assert!(second.as_mut().poll(&mut context).is_pending(), "and the second behind it");
+    permits[0].park();
+    let mut third = Box::pin(acquire("third", long));
+    assert!(third.as_mut().poll(&mut context).is_pending(), "a newcomer joins behind the line although a writer is parked");
+    assert!(second.as_mut().poll(&mut context).is_pending(), "only the head is lent the parked writer");
+    let std::task::Poll::Ready(Ok(first_permit)) = first.as_mut().poll(&mut context) else { panic!("the head takes the parked writer") };
+    assert_eq!(first_permit.document().as_str(), "first");
+    drop(second);
+    assert!(third.as_mut().poll(&mut context).is_pending(), "a cancelled waiter frees its place but no writer");
+    permits[1].park();
+    let std::task::Poll::Ready(Ok(third_permit)) = third.as_mut().poll(&mut context) else { panic!("the next in line takes the next parked writer") };
+    assert_eq!(writer::admission_census(control), writer::WalWriterAdmissionCensus { waited: 3, refused: 0, waiting: 0 });
+    let started = std::time::Instant::now();
+    let late = acquire("late", std::time::Duration::from_millis(50)).await;
+    assert!(matches!(late, Err(DbError::Unavailable(ref detail)) if detail == writer::WAL_WRITER_ADMISSION_REFUSAL), "an elapsed wait is the typed transient refusal: {:?}", late.as_ref().map(WalWriterPermit::document));
+    assert!(started.elapsed() < std::time::Duration::from_secs(10), "the backend's timer ends the wait");
+    assert_eq!(writer::admission_census(control), writer::WalWriterAdmissionCensus { waited: 4, refused: 1, waiting: 0 });
+    release_leased(permits.into_iter().chain([first_permit, third_permit])).await;
+    writer_controller_law_table(control, |table| assert!(table.terminal_is_empty()));
+    retire_db_io_backend(control).unwrap();
+    close_db_io_backend(control).await.unwrap();
+    assert_eq!(ledger_witness(), before);
+}

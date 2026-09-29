@@ -595,6 +595,8 @@ import {
   type PanelTreeConfigCacheV1,
   applyBrowserActorUiPatchesV1,
   browserActorPanelKeysV1,
+  browserActorSectionValuesV1,
+  withoutUiRefreshSectionsV1,
   hubCommandRejectionReasonKeyV1,
   type BrowserActorPanelHostV1,
   type TreeWindowHostV1,
@@ -641,6 +643,8 @@ import {
   resolvePanelTabLabel,
   undeclaredActionDiagnostic,
   appSwitchesExamples,
+  appOffersRegisteredExamples,
+  frameworkOwnsExampleSwitch,
   historyPatchShouldApplyV1,
   historyRefreshNeededV1,
   shellHistoryCursorDomV1,
@@ -946,8 +950,9 @@ const MUTATION_REJECTED_FAULT_CODE = "mutation.rejected";
 const LOCAL_SESSION_RECLAIM_INTERVAL_MS = 30_000;
 
 /** ⚖️ Maps one of the frozen seven `mutation.*` codes (contract freeze §C2 — no per-plugin codes,
- * ever) onto its `ui.mutation.code.*` label key; an unrecognized code falls back to the generic
- * rejected-title key rather than fabricating a key the schema doesn't have. */
+ * ever) onto its `ui.mutation.code.*` label key, and the event log's own `history.foreign-transition` refusal (kernel-db
+ * `FOREIGN_HISTORY_TRANSITION_CODE`) onto `ui.mutation.history.foreignTransition`; an unrecognized code falls back to the
+ * generic rejected-title key rather than fabricating a key the schema doesn't have. */
 function mutationCodeLabelKey(code: string): UiTranslationKey {
   switch (code) {
     case "mutation.target-missing":
@@ -964,6 +969,8 @@ function mutationCodeLabelKey(code: string): UiTranslationKey {
       return "ui.mutation.code.invariant";
     case "mutation.cascade":
       return "ui.mutation.code.cascade";
+    case "history.foreign-transition":
+      return "ui.mutation.history.foreignTransition";
     default:
       return "ui.mutation.rejected.title";
   }
@@ -3289,9 +3296,34 @@ function FrameworkOsShellInner({
     if (origin === null || !isCurrentDialogOrigin(origin) || !active?.app.dialogs?.some((entry) => entry.id === dialogId)) return null;
     return { openingId: ++dialogOpeningRef.current, dialogId, origin, ...(seedArgs === undefined ? {} : { seedArgs }) };
   }, [isCurrentDialogOrigin]);
-  type RetainedBrowserActorUiV1 = { readonly clientInstanceId: string; readonly activationGeneration: string; readonly verifiedSurfaceId: string; readonly scope: DocumentScope; readonly sessionInstanceId: number; readonly windows: Map<string, UiDocumentStore>; readonly panels: Map<string, UiDocumentStore>; readonly identity: BrowserActorUiMountedV1 | null; readonly actions: BrowserActorActionMailboxV1 };
+  type RetainedBrowserActorUiV1 = { readonly clientInstanceId: string; readonly activationGeneration: string; readonly verifiedSurfaceId: string; readonly scope: DocumentScope; readonly sessionInstanceId: number; readonly windows: Map<string, UiDocumentStore>; readonly panels: Map<string, UiDocumentStore>; readonly sections: Map<string, UiDocumentStore>; readonly identity: BrowserActorUiMountedV1 | null; readonly actions: BrowserActorActionMailboxV1 };
   const browserActorUiByRuntimeKeyRef = useRef(new Map<string, RetainedBrowserActorUiV1>());
   const [browserActorUiVersion, setBrowserActorUiVersion] = useState(0);
+  /** 🎭️ The painted actor serving `session`'s document, if any: its reserved section stores are then the ONLY source of the
+   * session's engagements, measures, tool measures and catalogue — the local instance never sees a hub document, so its
+   * sections froze at the opening state (C13 P1: draw's "N layers" stayed 1 after committed `addLayer`s). */
+  const browserActorForSessionV1 = (session: Pick<ActiveSession, "pluginId" | "instanceId">): RetainedBrowserActorUiV1 | null => {
+    for (const [runtimeKey, retained] of browserActorUiByRuntimeKeyRef.current) {
+      const entry = openDocumentSessionsRef.current.get(runtimeKey);
+      if (entry?.clientInstanceId === retained.clientInstanceId && retained.sessionInstanceId === session.instanceId && entry.session.pluginId === session.pluginId && entry.session.instanceId === session.instanceId) return retained;
+    }
+    return null;
+  };
+  /** 🧩️ Dispatches `cache`'s reserved sections — after taking them from `retained`'s section stores when an actor serves the
+   * session — exactly as a local refresh does, so window chrome and tool measures follow the live document in every open
+   * window. The app-static catalogue is kept by identity, so a scene host subscribing through `AppCatalogueContext` never
+   * re-renders on an unchanged one. */
+  const publishUiRefreshSectionsV1 = (cache: UiRefreshCache, retained: RetainedBrowserActorUiV1 | null): void => {
+    if (retained !== null) for (const [key, { revision, value }] of browserActorSectionValuesV1(retained.sections, `actor ${retained.verifiedSurfaceId}`)) cache.set(key, { hash: `actor:${revision}`, value });
+    const engagements = (cache.get("engagements")?.value as Readonly<Record<string, WindowEngagement>> | undefined) ?? {},
+      measures = (cache.get("measures")?.value as Readonly<Record<string, readonly WindowMeasure[]>> | undefined) ?? {},
+      toolMeasures = (cache.get("tools")?.value as Readonly<Record<string, readonly WindowMeasure[]>> | undefined) ?? {},
+      catalogue = (cache.get("catalogue")?.value as AppCatalogue | undefined) ?? EMPTY_APP_CATALOGUE;
+    dispatch({ type: "SET_WINDOW_ENGAGEMENTS_BY_WINDOW_ID", value: (current) => mergeRecordPreservingIdentity(current, Object.entries(engagements)) });
+    dispatch({ type: "SET_WINDOW_MEASURES_BY_WINDOW_ID", value: (current) => mergeRecordPreservingIdentity(current, Object.entries(measures)) });
+    dispatch({ type: "SET_TOOL_MEASURES_BY_TOOL_ID", value: (current) => mergeRecordPreservingIdentity(current, withProgramEntriesV1(current, null, spawnedIdsRef.current, Object.entries(toolMeasures))) });
+    dispatch({ type: "SET_APP_CATALOGUE", value: (current) => preserveJsonIdentity(current, catalogue) });
+  };
   const retireBrowserActorUi = useCallback((runtimeKey: string, reason: string) => {
     browserActorUiByRuntimeKeyRef.current.get(runtimeKey)?.actions.close(reason);
     if (browserActorUiByRuntimeKeyRef.current.delete(runtimeKey)) setBrowserActorUiVersion((current) => current + 1);
@@ -3463,12 +3495,15 @@ function FrameworkOsShellInner({
           answer(message.patches.map((patch) => ({ surface: patch.surface, outcome: "rejected" as const, revision: 0, reason: refusal })));
           return;
         }
-        const applied = applyBrowserActorUiPatchesV1(message.patches, new Set(entry.session.app.windowKinds.map((kind) => kind.id)), browserActorPanelKeysV1(entry.session.app), retained === undefined ? null : { windows: retained.windows, panels: retained.panels });
+        const applied = applyBrowserActorUiPatchesV1(message.patches, new Set(entry.session.app.windowKinds.map((kind) => kind.id)), browserActorPanelKeysV1(entry.session.app), retained === undefined ? null : { windows: retained.windows, panels: retained.panels, sections: retained.sections });
         if (applied.stores !== null && retained === undefined) {
           const actions = new BrowserActorActionMailboxV1((request) => worker.postMessage({ wire: encodeBackboneWorkerRequest({ ...request, clientInstanceId: entry.clientInstanceId }) }));
-          browserActorUiByRuntimeKeyRef.current.set(runtimeKey, { clientInstanceId: message.clientInstanceId, activationGeneration: message.activationGeneration, verifiedSurfaceId: message.verifiedSurfaceId, scope: { ...message.scope }, sessionInstanceId: entry.session.instanceId, windows: applied.stores.windows, panels: applied.stores.panels, identity: null, actions });
+          browserActorUiByRuntimeKeyRef.current.set(runtimeKey, { clientInstanceId: message.clientInstanceId, activationGeneration: message.activationGeneration, verifiedSurfaceId: message.verifiedSurfaceId, scope: { ...message.scope }, sessionInstanceId: entry.session.instanceId, windows: applied.stores.windows, panels: applied.stores.panels, sections: applied.stores.sections, identity: null, actions });
         }
         if (applied.stores !== null && (retained === undefined || applied.surfacesAdded)) setBrowserActorUiVersion((current) => current + 1);
+        const live = browserActorUiByRuntimeKeyRef.current.get(runtimeKey),
+          shown = shellStateRef.current.pluginRuntime.session;
+        if (applied.sectionsChanged && live !== undefined && shown?.pluginId === entry.session.pluginId && shown.instanceId === entry.session.instanceId) publishUiRefreshSectionsV1(uiRefreshCacheRef.current, live);
         answer(applied.verdicts);
         return;
       }
@@ -5991,7 +6026,8 @@ function FrameworkOsShellInner({
         }
         unmountedSkippedWindowBodiesRef.current = skipped;
       }
-      const request = buildUiRefreshRequest(scope, fetchWindowInstances, panelTabLeaves, viewState, cache);
+      const built = buildUiRefreshRequest(scope, fetchWindowInstances, panelTabLeaves, viewState, cache);
+      const request = browserActorForSessionV1(nextSession) === null ? built : withoutUiRefreshSectionsV1(built);
       if (request) {
         const response = await hopTrace.timeAsync("refresh.guest", { instanceId: nextSession.instanceId, scope: scope.kind, windows: (request.windows ?? []).length, panels: (request.panels ?? []).length }, () =>
           program.refreshUi(nextSession.instanceId, request),
@@ -6040,27 +6076,9 @@ function FrameworkOsShellInner({
           return next;
         },
       });
-      const dynamicEngagements = (cache.get("engagements")?.value as Readonly<Record<string, WindowEngagement>> | undefined) ?? {};
-      dispatch({
-        type: "SET_WINDOW_ENGAGEMENTS_BY_WINDOW_ID",
-        value: (current) => mergeRecordPreservingIdentity(current, Object.entries(dynamicEngagements)),
-      });
-      const dynamicMeasures = (cache.get("measures")?.value as Readonly<Record<string, readonly WindowMeasure[]>> | undefined) ?? {};
-      dispatch({
-        type: "SET_WINDOW_MEASURES_BY_WINDOW_ID",
-        value: (current) => mergeRecordPreservingIdentity(current, Object.entries(dynamicMeasures)),
-      });
-      const dynamicToolMeasures = (cache.get("tools")?.value as Readonly<Record<string, readonly WindowMeasure[]>> | undefined) ?? {};
-      dispatch({
-        type: "SET_TOOL_MEASURES_BY_TOOL_ID",
-        value: (current) => mergeRecordPreservingIdentity(current, withProgramEntriesV1(current, null, spawnedIdsRef.current, Object.entries(dynamicToolMeasures))),
-      });
+      publishUiRefreshSectionsV1(cache, browserActorForSessionV1(nextSession));
       const freshAppLabelsOverlay = normalizeAppLabelsOverlay(cache.get("labels")?.value as Partial<PluginAppLabelsOverlay> | undefined);
       dispatch({ type: "SET_APP_LABELS_OVERLAY", value: (current) => preserveJsonIdentity(current, freshAppLabelsOverlay) });
-      // 🛍️ App-static: fetched once per app instance and kept by identity, so a scene host subscribing
-      // through `AppCatalogueContext` never re-renders on an unchanged catalogue.
-      const freshAppCatalogue = (cache.get("catalogue")?.value as AppCatalogue | undefined) ?? EMPTY_APP_CATALOGUE;
-      dispatch({ type: "SET_APP_CATALOGUE", value: (current) => preserveJsonIdentity(current, freshAppCatalogue) });
       const panelStores = publishPanelBodiesV1(
         builtNodeStoreCacheRef.current,
         panelTabLeaves.filter((tab) => tab.bodyKey).map((tab) => [panelTabKindId(tab.kind), cache.get(`panel:${panelTabKindId(tab.kind)}`)?.value as BuiltNode | undefined] as const),
@@ -8257,7 +8275,7 @@ function FrameworkOsShellInner({
         // place a fully wired binding dies without a fault reaching anyone, so it names the app, the action
         // and the dispatching window kind (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         const undeclared = undeclaredActionDiagnostic(targetSession.app.id, action.action, targetSession.app.windowKinds, (baseDispatchViewState.windowInstances ?? []).find((instance) => instance.id === dispatchWindowId)?.windowKindId ?? null, targetSession.app.actions ?? []);
-        if (undeclared) {
+        if (undeclared && !frameworkOwnsExampleSwitch(targetSession.app.role, action.action)) {
           console.error(undeclared.message, undeclared);
           return refuse("undeclared-action", undeclared.message);
         }
@@ -11072,7 +11090,7 @@ function FrameworkOsShellInner({
               items: entries.map((entry) => ({
                 id: `framework.history.entry.${entry.seq}`,
                 label: entry.count && entry.count > 1 ? `${historyRowLabelText(entry)} ×${entry.count}` : historyRowLabelText(entry),
-                description: entry.opLines?.join(" · "),
+                description: entry.opLines && (entry.opCount ?? 0) > entry.opLines.length ? ["…", ...entry.opLines].join(" · ") : entry.opLines?.join(" · "),
                 dimmed: entry.applied === false,
                 // 🕰️ The shell's ONLY revert-to-command affordance. It was an id-less glyph button, so
                 // nothing outside a mouse could reach it: the ◻️2d/🧊️3d batteries both looked for a
@@ -11159,8 +11177,9 @@ function FrameworkOsShellInner({
   const focusedPluginManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.pluginId === focusedProgram?.pluginId)?.manifest, [loadedPlugins, focusedProgram?.pluginId]);
   const exampleOptions = useMemo(() => {
     const app = focusedApp;
-    if (!app || !appSwitchesExamples(app.id, app.windowKinds, app.actions ?? [])) return [];
-    return examplesForApp(focusedPluginManifest?.examples ?? [], app).map((example) => ({
+    const examples = app ? examplesForApp(focusedPluginManifest?.examples ?? [], app) : [];
+    if (!app || !appOffersRegisteredExamples(app, examples.length)) return [];
+    return examples.map((example) => ({
       id: example.id,
       label: resolveAppLabel(appLabelsOverlay, "example", example.id, resolveManifestLabel(example.label, uiTerminology, uiLocale)),
       // 🩹️ `PluginManifest.examples` entries carry no icon (`{id, label, artifactJson, dialect}` only,

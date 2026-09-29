@@ -341,13 +341,14 @@ pub trait HistoryUndoPort: Send + Sync {
 }
 
 /// 🧭️ The fault the plugin SDK's agent-lane preview (`🔌️plugin` `preview_addressed_action`) answers for a
-/// verb whose emit publishes a lane an agent transaction cannot carry: a whole-document load, a file
-/// download or request, extension calls or follow-up tasks. The verb runs only from the shell.
+/// verb whose previewed result publishes a lane an agent transaction cannot carry — anything beside its document, config,
+/// draft and owned-child operations (`agent_lane_carriage`: every host effect, extension calls, events, follow-up tasks,
+/// ephemeral lanes). The preview fails closed, so the verb runs only from the shell.
 pub const AGENT_LANE_UNCARRIED_FAULT_CODE: &str = "interactive-job.agent-lane-uncarried";
 
-/// 🧭️ The fault the same preview answers for a verb whose retained job has no agent-lane preview at all (a plugin's own
-/// tool-command job); like [`AGENT_LANE_UNCARRIED_FAULT_CODE`] the verb runs only from the shell.
-pub const AGENT_LANE_PREVIEW_UNSUPPORTED_FAULT_CODE: &str = "interactive-job.preview-unsupported";
+/// 🫥️ The fault the same preview answers for a verb that, in the document's current state, carries no operation and only
+/// presents something to its human — a notice (each one a structured `app.notice` cause of the fault) or a selection.
+pub const COMMAND_NO_EFFECT_FAULT_CODE: &str = "app.command.no-effect";
 
 /// ⏱️ The fault the same preview answers for a job still running past its preview budget; like
 /// [`AGENT_LANE_UNCARRIED_FAULT_CODE`] the verb runs only from the shell.
@@ -375,6 +376,12 @@ pub const HUB_EDIT_UNBOUND_FAULT_CODE: &str = "hub.edit-unbound";
 /// the session, so the agent retries instead of believing a write the hub may never hold.
 pub const HUB_RELAY_UNACKNOWLEDGED_FAULT_CODE: &str = "hub.relay-unacknowledged";
 
+/// 🗣️ What the agent tells its human about a [`COMMAND_NO_EFFECT_FAULT_CODE`] refusal, `(en, de)`.
+pub const COMMAND_NO_EFFECT_REMEDY: (&str, &str) = (
+    "Nothing changed: the document is not in a state this action acts on; check what it needs and the app's notice.",
+    "Nichts geändert: Das Dokument ist nicht in einem Zustand, in dem diese Aktion wirkt; prüfe, was sie braucht, und den Hinweis der App.",
+);
+
 /// 🗣️ What the agent tells its human about an [`AGENT_LANE_UNCARRIED_FAULT_CODE`] refusal, `(en, de)`.
 pub const AGENT_LANE_UNCARRIED_REMEDY: (&str, &str) = (
     "This action runs only in the semio shell; ask your human to run it there.",
@@ -395,8 +402,9 @@ pub const AGENT_LANE_UNCARRIED_REMEDY: (&str, &str) = (
 /// ([`HUB_EDIT_UNBOUND_FAULT_CODE`]), one the hub did not acknowledge a retryable `PLUGIN_UNAVAILABLE`
 /// ([`HUB_RELAY_UNACKNOWLEDGED_FAULT_CODE`]). A verb whose emit publishes a lane an agent transaction cannot carry
 /// ([`AGENT_LANE_UNCARRIED_FAULT_CODE`]) is a non-retryable `PLUGIN_UNAVAILABLE` whose `details` name the
-/// fault and tell the agent, in en and de, to hand the action to its human. An unrecognised code is
-/// `Internal` (never silently swallowed).
+/// fault and tell the agent, in en and de, to hand the action to its human; a verb that changes nothing in the
+/// document's state ([`COMMAND_NO_EFFECT_FAULT_CODE`]) is a non-retryable `PRECONDITION_FAILED` with its own en + de
+/// remedy. An unrecognised code is `Internal` (never silently swallowed).
 fn map_fault(fault: &Fault) -> GatewayError {
     match fault.code.as_str() {
         VIEWER_READ_ONLY_FAULT_CODE => GatewayError::new(GatewayErrorCode::PermissionDenied, fault.message.clone())
@@ -409,7 +417,9 @@ fn map_fault(fault: &Fault) -> GatewayError {
         "interactive-job.not-ui-safe" => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone()),
         "interactive-job.preview-output" => GatewayError::new(GatewayErrorCode::InputInvalid, fault.message.clone()),
         COMMAND_TARGETS_REQUIRED_FAULT_CODE => GatewayError::new(GatewayErrorCode::InputInvalid, fault.message.clone()),
-        AGENT_LANE_UNCARRIED_FAULT_CODE | AGENT_LANE_PREVIEW_UNSUPPORTED_FAULT_CODE | AGENT_LANE_PREVIEW_BUDGET_FAULT_CODE => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone())
+        COMMAND_NO_EFFECT_FAULT_CODE => GatewayError::new(GatewayErrorCode::PreconditionFailed, fault.message.clone())
+            .with_details(serde_json::json!({ "faultCode": fault.code, "remedy": { "en": COMMAND_NO_EFFECT_REMEDY.0, "de": COMMAND_NO_EFFECT_REMEDY.1 } })),
+        AGENT_LANE_UNCARRIED_FAULT_CODE | AGENT_LANE_PREVIEW_BUDGET_FAULT_CODE => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone())
             .with_details(serde_json::json!({ "faultCode": fault.code, "remedy": { "en": AGENT_LANE_UNCARRIED_REMEDY.0, "de": AGENT_LANE_UNCARRIED_REMEDY.1 } })),
         "transaction.generation-mismatch" => GatewayError::new(GatewayErrorCode::RevisionConflict, fault.message.clone()),
         "transaction.instance-busy" => GatewayError::new(GatewayErrorCode::PreconditionFailed, fault.message.clone()).retryable(),
@@ -422,6 +432,29 @@ fn map_fault(fault: &Fault) -> GatewayError {
         _ => GatewayError::new(GatewayErrorCode::Internal, fault.message.clone()),
     }
 }
+/// 🧮️ The input an action runs with: the caller's own values, plus the declared `default` of every argument the caller
+/// left out — the ONE effective-args rule the shells apply before dispatch (`manifest::effective_action_args`), because the
+/// guest SDK no longer fills defaults (an agent's `{}` for forms `addBlock` failed "missing field `kind`" though `kind`
+/// defaults to `text`). A key the caller sent is never replaced or dropped, declared or not, so the capability's schema
+/// still refuses an undeclared one.
+pub fn declared_effective_input(capability: &crate::catalog::CapabilityDefinition, input: serde_json::Value) -> serde_json::Value {
+    let mut given = match input {
+        serde_json::Value::Object(given) => given,
+        other => return other,
+    };
+    let definitions = capability.presentation.args.iter().filter_map(|arg| arg.definition.clone()).collect::<Vec<_>>();
+    if definitions.is_empty() {
+        return serde_json::Value::Object(given);
+    }
+    let effective = semio_framework::manifest::effective_action_args(&definitions, &DslValue::from(&serde_json::Value::Object(given.clone())), None);
+    for (key, value) in effective.as_object().unwrap_or_default() {
+        if !given.contains_key(key) {
+            given.insert(key.clone(), serde_json::Value::from(value.clone()));
+        }
+    }
+    serde_json::Value::Object(given)
+}
+
 /// 📮️ The error a commit answers when its hub document did not acknowledge it: the refusal the link reported, or
 /// [`HUB_RELAY_UNACKNOWLEDGED_FAULT_CODE`] when the hub stayed silent. The caller has already reverted the edit.
 fn unacknowledged_relay_error(edit_id: &str, relay: &HubRelayOutcome) -> GatewayError {
@@ -1034,6 +1067,7 @@ impl ActionAdapter {
             }
         };
 
+        let input = declared_effective_input(capability, input);
         if let Ok(validator) = crate::schema::compile_validator(&capability.input_schema) {
             if let Err(validation_error) = crate::schema::validate(&validator, &input) {
                 let error = GatewayError::new(GatewayErrorCode::InputInvalid, validation_error);

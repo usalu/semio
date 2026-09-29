@@ -51,6 +51,36 @@ fn bundle_registers_its_own_and_the_six_foreign_demonstrator_surfaces() {
     );
 }
 
+/// 🏠️ LAW: demonstrator HOSTS the kinds of the six plugins whose surfaces it embeds — it owns only its playground, every
+/// embedded surface's kind is a hosted row naming that surface's owner (a declared dependency), and every embedded editor
+/// presents a kind it hosts — so a trusted catalog with demonstrator and the owners has one creating editor per kind (hub 7800
+/// p34, 2026-09-29: `3d.cad`/`3d.generation`/`3d.process`/`s.gis.gismap` creation answered 409).
+#[test]
+fn demonstrator_hosts_the_kinds_of_every_embedded_surface_and_owns_only_its_playground() {
+    let manifest = test_bundle().manifest;
+    let owned: std::collections::BTreeSet<&str> = manifest.artifact_kinds.iter().chain(manifest.apps.iter().flat_map(|app| app.artifact_kinds.iter())).map(|kind| kind.id.as_str()).collect();
+    assert_eq!(owned, std::collections::BTreeSet::from(["playground.document"]));
+    let hosted: std::collections::BTreeSet<(&str, &str, &str)> = manifest.hosted_artifact_kinds.iter().map(|kind| (kind.id.as_str(), kind.schema.as_str(), kind.owner.as_str())).collect();
+    assert_eq!(
+        hosted,
+        std::collections::BTreeSet::from([
+            ("3d.generation", "generation.3d", "procedural"),
+            ("3d.cad", "cad.scene", "cad"),
+            ("3d.puzzle", "puzzle.3d", "puzzle"),
+            ("catalogue.sourcing", "sourcing.curation/v1", "sourcing"),
+            ("catalogue.kinds", "catalogue.kinds", "sourcing"),
+            ("kit.catalog", "kit.catalog", "sourcing"),
+            ("3d.process", "process.3d", "process"),
+            ("s.gis.gismap", "gis.map", "gis"),
+        ])
+    );
+    let dependencies: std::collections::BTreeSet<&str> = manifest.dependencies.iter().map(|dependency| dependency.plugin_id.as_str()).collect();
+    assert!(hosted.iter().all(|(_, _, owner)| dependencies.contains(owner)), "every hosted row names a declared dependency as its owner");
+    for app in manifest.apps.iter().filter(|app| app.role == semio_framework::AppRole::Editor && !app.dialect.artifact_kind.starts_with("s.demonstrator.")) {
+        assert!(hosted.iter().any(|(id, schema, _)| *id == app.io.artifact.id && *schema == app.io.artifact_schema), "{} presents {} ({}), a kind demonstrator does not host", app.id, app.io.artifact.id, app.io.artifact_schema);
+    }
+}
+
 #[test]
 fn every_surface_declares_a_artifact_schema() {
     for app in test_bundle().manifest.apps {

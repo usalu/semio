@@ -1337,6 +1337,151 @@
           "unapplied": []
         }
       ]
+    },
+    {
+      "id": "a-reincarnated-window-drops-the-runs-it-never-saw",
+      "note": "the document reopened while run 2 was in flight: the new window (applied 0 < acknowledged 1) never saw it, so the host drops it instead of folding it onto the reopened text, a late refusal of it changes nothing, and the next run is numbered 3",
+      "init": {
+        "buffer": "ab",
+        "applied": 0
+      },
+      "events": [
+        {
+          "local": "abX",
+          "caret": 3
+        },
+        {
+          "send": {
+            "seq": 1,
+            "splice": {
+              "start": 2,
+              "deleted": "",
+              "insert": "X",
+              "before": "ab",
+              "after": ""
+            }
+          }
+        },
+        {
+          "scene": "abX",
+          "applied": 1,
+          "show": null,
+          "unapplied": []
+        },
+        {
+          "local": "abXY",
+          "caret": 4
+        },
+        {
+          "send": {
+            "seq": 2,
+            "splice": {
+              "start": 3,
+              "deleted": "",
+              "insert": "Y",
+              "before": "abX",
+              "after": ""
+            }
+          }
+        },
+        {
+          "scene": "",
+          "applied": 0,
+          "show": {
+            "text": "",
+            "anchor": 0,
+            "caret": 0
+          },
+          "unapplied": []
+        },
+        {
+          "scene": "abX",
+          "applied": 0,
+          "show": {
+            "text": "abX",
+            "anchor": 0,
+            "caret": 0
+          },
+          "unapplied": []
+        },
+        {
+          "refuse": 2,
+          "show": null,
+          "unapplied": []
+        },
+        {
+          "local": "abXZ",
+          "caret": 4
+        },
+        {
+          "send": {
+            "seq": 3,
+            "splice": {
+              "start": 3,
+              "deleted": "",
+              "insert": "Z",
+              "before": "abX",
+              "after": ""
+            }
+          }
+        },
+        {
+          "scene": "abXZ",
+          "applied": 3,
+          "show": null,
+          "unapplied": []
+        }
+      ]
+    },
+    {
+      "id": "a-settled-run-never-folds-twice",
+      "note": "the round trip of run 1 settled applied before any scene acknowledged it; the window then reincarnated (applied 0, nothing to compare with) and the reopened document carries X from the hub: X shows once, never folded onto it again",
+      "init": {
+        "buffer": "ab",
+        "applied": 0
+      },
+      "events": [
+        {
+          "local": "abX",
+          "caret": 3
+        },
+        {
+          "send": {
+            "seq": 1,
+            "splice": {
+              "start": 2,
+              "deleted": "",
+              "insert": "X",
+              "before": "ab",
+              "after": ""
+            }
+          }
+        },
+        {
+          "settle": 1,
+          "unapplied": []
+        },
+        {
+          "scene": "",
+          "applied": 0,
+          "show": {
+            "text": "",
+            "anchor": 0,
+            "caret": 0
+          },
+          "unapplied": []
+        },
+        {
+          "scene": "abX",
+          "applied": 0,
+          "show": {
+            "text": "abX",
+            "anchor": 0,
+            "caret": 0
+          },
+          "unapplied": []
+        }
+      ]
     }
   ]
 }

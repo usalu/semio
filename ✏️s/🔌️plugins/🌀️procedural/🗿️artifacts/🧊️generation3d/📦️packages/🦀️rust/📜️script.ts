@@ -4,9 +4,11 @@ import { runArtifactRustPackageMain } from "../../../../../../../🧰️framewor
 import { generation3dTerminologySelfTests } from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🧪️tests/🔬️unit/🟦️.ts";
 import { generation3dSnapshotFixtureAssetSelfTests } from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🧪️tests/🔬️snapshot-fixture-asset/🟦️.ts";
 import { generation3dGraphKeyboardSelfTests } from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️navigate-graph/🧪️tests/🔬️unit/🟦️.ts";
+import { generation3dWidgetCreationSelfTests } from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🧪️tests/🔬️unit/🟦️.ts";
 await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-procedural-generation3d", {
   testFeatures: ["component-app-assembly"],
   twins: [
+    { name: "generation3d-widget-creation", run: generation3dWidgetCreationSelfTests },
     { name: "generation3d-terminology", run: generation3dTerminologySelfTests },
     { name: "generation3d-snapshot-fixture-asset", run: generation3dSnapshotFixtureAssetSelfTests },
     { name: "generation3d-graph-keyboard", run: generation3dGraphKeyboardSelfTests },

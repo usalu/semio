@@ -2,7 +2,7 @@
 use crate::schema::mutations::XmlMutation;
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
-pub const TEXT_OPCODES: &[&str] = &["set-declaration", "set-doctype", "insert-element", "remove-element", "set-attribute", "set-text"];
+pub const TEXT_OPCODES: &[&str] = &["set-declaration", "set-doctype", "insert-element", "remove-element", "set-attribute", "set-text", "set-snapshot"];
 fn error(detail: impl Into<String>) -> store::TextError {
     store::TextError::new(detail.into(), dsl::TextSpan::at(1, 1))
 }

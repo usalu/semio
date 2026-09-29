@@ -1,0 +1,21 @@
+{
+  "limit": 8,
+  "close": [
+    { "name": "another app under the bound closes nothing", "live": [["n1", "note", "note.editor", 1]], "opening": "c1", "route": ["cad", "cad.editor"], "expect": [] },
+    { "name": "another document of the same app supersedes its link", "live": [["n1", "note", "note.editor", 1], ["c1", "cad", "cad.editor", 2]], "opening": "n2", "route": ["note", "note.editor"], "expect": [["n1", "superseded"]] },
+    { "name": "the same plugin's other app keeps its link", "live": [["b2", "block", "block.2d", 1]], "opening": "b3", "route": ["block", "block.3d"], "expect": [] },
+    { "name": "an expired link of the document itself is relinked", "live": [["n1", "note", "note.editor", 4]], "opening": "n1", "route": ["note", "note.editor"], "expect": [["n1", "relinked"]] },
+    { "name": "at the bound the least recently used closes", "live": [["a", "p1", "x", 5], ["b", "p2", "x", 2], ["c", "p3", "x", 9]], "opening": "d", "route": ["p4", "x"], "limit": 3, "expect": [["b", "bounded"]] },
+    { "name": "past the bound every excess link closes, oldest first", "live": [["a", "p1", "x", 5], ["b", "p2", "x", 2], ["c", "p3", "x", 9]], "opening": "d", "route": ["p4", "x"], "limit": 2, "expect": [["b", "bounded"], ["a", "bounded"]] },
+    { "name": "a superseded link already makes room", "live": [["a", "p1", "x", 5], ["b", "p2", "x", 2], ["c", "p3", "x", 9]], "opening": "d", "route": ["p1", "x"], "limit": 3, "expect": [["a", "superseded"]] },
+    { "name": "the session bound holds eight", "live": [["d1", "p1", "x", 1], ["d2", "p2", "x", 2], ["d3", "p3", "x", 3], ["d4", "p4", "x", 4], ["d5", "p5", "x", 5], ["d6", "p6", "x", 6], ["d7", "p7", "x", 7], ["d8", "p8", "x", 8]], "opening": "d9", "route": ["p9", "x"], "expect": [["d1", "bounded"]] }
+  ],
+  "session": [
+    { "name": "the hub document opened last", "bound": [["n1", true, 3], ["n2", true, 7]], "expect": "n2" },
+    { "name": "the hub document edited last", "bound": [["n1", true, 9], ["n2", true, 7]], "expect": "n1" },
+    { "name": "a hub document beside a folder artifact", "bound": [["f1", false, 0], ["n1", true, 2]], "expect": "n1" },
+    { "name": "the single folder artifact", "bound": [["f1", false, 0]], "expect": "f1" },
+    { "name": "two folder artifacts name none", "bound": [["f1", false, 0], ["f2", false, 0]], "expect": null },
+    { "name": "nothing bound", "bound": [], "expect": null }
+  ]
+}

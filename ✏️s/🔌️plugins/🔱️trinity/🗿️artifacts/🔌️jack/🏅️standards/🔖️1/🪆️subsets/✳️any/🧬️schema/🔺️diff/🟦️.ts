@@ -10,6 +10,7 @@ export interface JackDiff {
   /** @state artifact */ camera: Camera | null;
   /** @state artifact @child kind=s.stdio.semio */ content: ArtifactChild | null;
   /** @state artifact */ rootNodeId: string | null;
+  /** @state artifact */ query: string | null;
 }
 
 const nullableString = (value: unknown, at: string): string | null => {
@@ -21,7 +22,7 @@ const nullableString = (value: unknown, at: string): string | null => {
 export function parseJackDiff(value: unknown, at = "$"): JackDiff {
   if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error(`${at}: diff must be an object`);
   const row = value as Record<string, unknown>;
-  const keys = ["schema", "name", "manifestId", "manifest", "camera", "content", "rootNodeId"];
+  const keys = ["schema", "name", "manifestId", "manifest", "camera", "content", "rootNodeId", "query"];
   if (Object.keys(row).length !== keys.length || keys.some((key) => !Object.hasOwn(row, key))) throw new Error(`${at}: fields do not match JackDiff`);
   return {
     schema: nullableString(row.schema, `${at}.schema`),
@@ -31,5 +32,6 @@ export function parseJackDiff(value: unknown, at = "$"): JackDiff {
     camera: row.camera === null ? null : parseCamera(row.camera, `${at}.camera`),
     content: row.content === null ? null : parseArtifactChild(row.content),
     rootNodeId: nullableString(row.rootNodeId, `${at}.rootNodeId`),
+    query: nullableString(row.query, `${at}.query`),
   };
 }

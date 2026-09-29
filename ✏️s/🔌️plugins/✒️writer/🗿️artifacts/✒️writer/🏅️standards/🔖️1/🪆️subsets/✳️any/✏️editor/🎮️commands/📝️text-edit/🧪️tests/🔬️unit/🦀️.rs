@@ -52,6 +52,47 @@ async fn a_typing_run_longer_than_the_edit_ledger_saves_and_undoes_as_one_step()
     assert_eq!(writer_text(&app.snapshot().expect("projection")), run.expected, "one redo restores the whole run");
 }
 
+/// ⌨️ LAW (coordinator P1, ticket 26/09/23 C12): ONE uninterrupted 10 000-keystroke typing run at the maximum rate — one
+/// full-text `text-edit` per key with corrections, no pressure drain between keys — applies every key in order, never faults,
+/// and costs the same per key at its end as at its start. Every key re-points the document slot at a new content-addressed
+/// child and so admits child-root and child-member retirements faster than the maintenance rotation returns them;
+/// publication and the follow pass wait on those retirements (the 65th key answered
+/// `interactive-job.child-root-retirement-saturated` before). Every key also amends the run's one coalesced edit, which
+/// re-encoded the whole run per key before (the median key of the last 1 000 must stay within 3 × the first 1 000).
+/// Afterwards maintenance returns the retirements below their pressure bound.
+#[semio_framework_async_macros::async_test]
+async fn a_ten_thousand_keystroke_burst_applies_every_key_in_order() {
+    const KEYS: [char; 8] = ['a', 'q', 'ß', 'ü', '€', '𝄞', ' ', '\n'];
+    let mut app = new_app().await;
+    let mut model = String::new();
+    let mut seed = 0x9e37_79b9_7f4a_7c15u64;
+    let mut key_nanos = Vec::with_capacity(10_000);
+    for index in 0..10_000usize {
+        seed = seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407);
+        if index % 7 == 6 {
+            model.pop();
+        } else {
+            if model.chars().count() == 48 {
+                model.remove(0);
+            }
+            model.push(KEYS[(seed >> 33) as usize % KEYS.len()]);
+        }
+        let started = std::time::Instant::now();
+        dispatch(&mut app, WriterCommand::TextEdit(super::TextEdit { text: model.clone() })).await;
+        key_nanos.push(started.elapsed().as_nanos());
+        assert_eq!(writer_text(&app.snapshot().expect("projection")), model, "key {index} applies in order");
+    }
+    let median = |window: &[u128]| {
+        let mut sorted = window.to_vec();
+        sorted.sort_unstable();
+        sorted[sorted.len() / 2]
+    };
+    let (first, last) = (median(&key_nanos[..1_000]), median(&key_nanos[9_000..]));
+    assert!(last <= first.saturating_mul(3), "per-key cost stays flat over one uninterrupted run: the median key of the last 1 000 took {last} ns against {first} ns for the first 1 000");
+    semio_framework_plugin::artifact_app_laws::drain_maintenance_pressure(&mut *app);
+    assert!(!PluginApp::maintenance_under_pressure(&*app), "maintenance returns the burst's retirements below their pressure bound");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn format_artifact_reformats_jack_query() {
     let mut app = app_with_jack().await;

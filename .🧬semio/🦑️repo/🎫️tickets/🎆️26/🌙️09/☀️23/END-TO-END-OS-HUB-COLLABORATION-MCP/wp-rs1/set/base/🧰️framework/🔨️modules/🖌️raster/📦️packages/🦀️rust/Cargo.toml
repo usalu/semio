@@ -1,0 +1,33 @@
+[package]
+name = "semio-framework-raster"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Headless offscreen rasterization of first-party vector scenes (semio_framework_geometry::BezPath/Affine) to RGBA8 pixel buffers — wraps vello + wgpu behind a first-party interface — and the first-party video tier (H.264 I_PCM/P_Skip encoder behind a VideoEncoder trait, MP4 muxer)"
+
+[package.metadata.semio]
+role = "framework"
+id = "raster"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-geometry = { path = "../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
+
+# 🎯️ `SceneRasterizer` (device/queue/pipeline, headless GPU frame capture) is the only consumer of
+# either crate — gated `not(all(target_arch = "wasm32", target_env = "p2"))` in `../../🦀️.rs`.
+# `target_arch = "wasm32"` alone is TRUE for `wasm32-wasip2`, so this table (not a bare
+# `cfg(not(target_arch = "wasm32"))`) is what actually keeps both crates, and their
+# `wasm-bindgen`/`js-sys`/`web-sys` transitive edge, out of the shipped wasip2 component.
+[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
+vello = { version = "0.9.0", features = ["wgpu", "wgpu_default"] }
+wgpu = "29.0.4"
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-hash = { path = "../../../🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+serde_json = { workspace = true }

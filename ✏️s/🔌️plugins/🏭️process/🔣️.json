@@ -1834,7 +1834,42 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "id",
+                "label": {
+                  "native": {
+                    "en": "Step",
+                    "de": "Schritt"
+                  },
+                  "reuse": {
+                    "en": "Step",
+                    "de": "Schritt"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "enabled",
+                "label": {
+                  "native": {
+                    "en": "Enabled",
+                    "de": "Aktiviert"
+                  },
+                  "reuse": {
+                    "en": "Enabled",
+                    "de": "Aktiviert"
+                  }
+                },
+                "schema": {
+                  "kind": "boolean"
+                },
+                "required": true
+              }
+            ],
             "inPalette": false,
             "semantics": {
               "effects": {
@@ -1864,12 +1899,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Turns one process step on or off; a disabled step stays in the timeline but is not applied to the stock.",
-                  "de": "Schaltet einen Prozessschritt ein oder aus; ein deaktivierter Schritt bleibt in der Zeitleiste, wird aber nicht auf das Rohteil angewendet."
+                  "en": "Sets one process step on or off, to exactly the value passed, so repeating it changes nothing; a disabled step stays in the timeline but is not applied to the stock.",
+                  "de": "Schaltet einen Prozessschritt genau nach dem übergebenen Wert ein oder aus, sodass eine Wiederholung nichts ändert; ein deaktivierter Schritt bleibt in der Zeitleiste, wird aber nicht auf das Rohteil angewendet."
                 },
                 "reuse": {
-                  "en": "Turns one process step on or off; a disabled step stays in the timeline but is not applied to the stock.",
-                  "de": "Schaltet einen Prozessschritt ein oder aus; ein deaktivierter Schritt bleibt in der Zeitleiste, wird aber nicht auf das Rohteil angewendet."
+                  "en": "Sets one process step on or off, to exactly the value passed, so repeating it changes nothing; a disabled step stays in the timeline but is not applied to the stock.",
+                  "de": "Schaltet einen Prozessschritt genau nach dem übergebenen Wert ein oder aus, sodass eine Wiederholung nichts ändert; ein deaktivierter Schritt bleibt in der Zeitleiste, wird aber nicht auf das Rohteil angewendet."
                 }
               }
             }
@@ -5115,8 +5150,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "b07444e3435fd588deb88c5d06121ee03b7bb39c6ebfb58dbe01d3779aae83fa",
-    "coreWasmSha256": "cd1168ac34066750d4c50f50b260e8c0c8cbdea5500ab3bf5f06a125baabb771",
-    "descriptorSha256": "5367d45d6307d7529c305cdb1abca533de02a4305ae5c78e563933dac2a674fb"
+    "wasmSha256": "b0a95872fea39fe7b3dcc20d8ef752ebce62fdfca3cc2df68c32dde88a92f355",
+    "coreWasmSha256": "32b225bb587c4983fb8c89121bfad812d46c23fa0ac3bf69c7fd1c87c67864d4",
+    "descriptorSha256": "46690e013db7ab3a879958608bbd3e076c3ffc19114f76d0149d057bf3d34603"
   }
 }

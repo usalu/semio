@@ -9,7 +9,7 @@ use crate::editor::process3d::process3d_action;
 use crate::editor::process3d::terminology::Process3dLabels;
 use crate::editor::process3d::{PROCESS3D_GRANULARITY_OBJECT, PROCESS3D_INTERACTION_DOMAIN, PROCESS_3D_PLAY_APP_ID};
 use crate::{MachineCatalog, Process3dSnapshot, WorkshopMachine};
-use semio_framework_plugin::{tree_item, ActionBinding, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, RowAction, RowActionPlacement, Trigger, TreeWindows, UiAssemblyResult};
+use semio_framework_plugin::{row_action, row_target, tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, RowActionPlacement, TreeWindows, UiAssemblyResult};
 
 //#region 🔖️Constants
 pub const PROCESS_3D_PLAY_BODY_WORKSHOP: &str = "process.play.workshop";
@@ -38,26 +38,20 @@ fn ui_text(value: &str) -> UiAssemblyResult<semio_framework_plugin::UiText> {
     semio_framework_plugin::UiText::try_from_str(value).ok_or_else(|| workshop_error("text"))
 }
 
-/// 🛠️ One installed-machine row: `removeWorkshopMachine` stays its own menu row action, selection is
-/// the tree's — the row declares the `object` granularity and picks through the tree's single
+/// 🛠️ One installed-machine row: ONE target `{id}` and `removeWorkshopMachine` as its own menu row action naming only
+/// the verb; selection is the tree's — the row declares the `object` granularity and picks through the tree's single
 /// `interactionSelect` binding.
 fn machine_row(machine: &WorkshopMachine, labels: &Process3dLabels) -> UiAssemblyResult<BuiltNode> {
     let args = crate::editor::process3d::ui_value_map([("id", crate::editor::process3d::ui_value_text(&machine.id)?)])?;
-    let (action, args) = process3d_action("removeWorkshopMachine", Some(args))?;
+    let target = row_target(crate::editor::process3d::PROCESS_3D_PLAY_CONTROLLER_ID, Some(args), None)?;
     let mut row_actions = semio_framework_plugin::UiFixedList::default();
-    row_actions
-        .try_push(RowAction {
-            icon: ui_text("trash")?,
-            label: Some(crate::editor::process3d::ui_label(labels.remove_machine.as_str())?),
-            action: ActionBinding { trigger: Trigger::Activate, action, args, capability: None },
-            placement: RowActionPlacement::Menu,
-        })
-        .map_err(|_| workshop_error("row-actions"))?;
+    row_actions.try_push(row_action("trash", labels.remove_machine.as_str(), "removeWorkshopMachine", RowActionPlacement::Menu)?).map_err(|_| workshop_error("row-actions"))?;
     let mut item = tree_item(format!("machine:{}", machine.id), crate::editor::process3d::ui_label(&machine.label)?)?;
     if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
         props.icon = Some(ui_text(&machine.icon_id)?);
         props.granularity = Some(ui_text(PROCESS3D_GRANULARITY_OBJECT)?);
         props.row_actions = row_actions;
+        props.target = Some(target);
     }
     Ok(item)
 }

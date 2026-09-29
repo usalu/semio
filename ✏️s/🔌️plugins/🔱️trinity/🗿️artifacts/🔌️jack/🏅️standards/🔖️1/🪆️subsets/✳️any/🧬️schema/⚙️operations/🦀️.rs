@@ -133,6 +133,11 @@ pub fn validate_trinity_graph_operation(operation: &TrinityGraphMutation, snapsh
         TrinityGraphMutation::RemoveDataProperty(payload) => {
             validate_clear_data_property(snapshot, &payload.entity, &payload.key)?;
         }
+        TrinityGraphMutation::SetQuery(payload) => {
+            if payload.value.len() > crate::JACK_QUERY_MAXIMUM_BYTES {
+                return Err(TrinityRamError::QueryTooLarge { bytes: payload.value.len(), maximum: crate::JACK_QUERY_MAXIMUM_BYTES });
+            }
+        }
     }
     Ok(())
 }

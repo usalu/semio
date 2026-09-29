@@ -1,3 +1,4 @@
+import { createBrowserMediaOverlay } from "../../../🎬️media/🌐️browser/🎛️host/🟦️.ts";
 //#region 🧲️PlatformBoot
 /** 🧵️ Browser UI isolate host for the dedicated frame Worker. */
 
@@ -268,6 +269,7 @@ async function mount(root: HTMLElement): Promise<void> {
   if (typeof Worker === "undefined") throw new Error("worker-unavailable: Dedicated Worker is not supported");
   const canvas = canvasElement();
   if (typeof canvas.transferControlToOffscreen !== "function") throw new Error("offscreen-canvas-unavailable: OffscreenCanvas transfer is not supported");
+  root.style.position = "relative";
   root.replaceChildren(canvas);
   const status = statusElement(root);
   const dpr = window.devicePixelRatio || 1;
@@ -291,6 +293,7 @@ async function mount(root: HTMLElement): Promise<void> {
   const fullscreenOwner = wireBrowserFullscreen(root, canvas);
   let detachIntrospection = () => {};
   let accessibility: { readonly refresh: () => void; readonly dispose: () => void } | undefined;
+  let mediaOverlay: ReturnType<typeof createBrowserMediaOverlay> | undefined;
   const transport = new BrowserFrameTransport({
     worker,
     boot: { bindingsModuleUrl: RENDERER_MODULE_URL, bindingsWasmUrl: RENDERER_WASM_URL, canvas: offscreen, width, height, dpr, locale: locale(), descriptor, appearance: hostAppearance(), platform: hostPlatform(), storage: hostStorage() },
@@ -312,7 +315,8 @@ async function mount(root: HTMLElement): Promise<void> {
       beacon.ready();
       status.remove();
       detachIntrospection = attachIntrospectionBindings(transport);
-      accessibility = createAccessibilityMirror(root, transport, locale(), canvas);
+      mediaOverlay = createBrowserMediaOverlay(root, (slot) => transport.mediaPort(slot.token));
+      accessibility = createAccessibilityMirror(root, transport, locale(), canvas, (surface, node) => mediaOverlay?.owns(surface.windowId, node.nodeId, node.key) === true);
       accessibility.refresh();
       cleanupInput = wireInput(root, canvas, transport);
       transport.enqueueReplaceable(browserFrameEventFromDom({ type: "resize", clientWidth: canvas.clientWidth, clientHeight: canvas.clientHeight }, dpr) as Extract<ReturnType<typeof browserFrameEventFromDom>, { kind: "resize" }>);
@@ -326,7 +330,8 @@ async function mount(root: HTMLElement): Promise<void> {
     // built it had measured 34, with no source change in between, and every later document (a locale
     // switch, an example switch, a selection) invisible to a reader even when the boot race happened
     // to win (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    onDirectives: ({ cursor, fullscreen }) => {
+    onDirectives: ({ cursor, fullscreen, mediaSlots }) => {
+      mediaOverlay?.accept(mediaSlots);
       canvas.style.cursor = cursor;
       if (typeof fullscreen === "boolean") void fullscreenOwner.set(fullscreen).catch(() => {});
       accessibility?.refresh();
@@ -337,6 +342,7 @@ async function mount(root: HTMLElement): Promise<void> {
       cleanupInput();
       fullscreenOwner.dispose();
       detachIntrospection();
+      mediaOverlay?.dispose();
       accessibility?.dispose();
       renderFault(root, code, detail, fallback);
     },
@@ -392,6 +398,7 @@ async function mount(root: HTMLElement): Promise<void> {
     cleanupInput();
     fullscreenOwner.dispose();
     detachIntrospection();
+    mediaOverlay?.dispose();
     accessibility?.dispose();
     setInteractiveJobPort(previousInteractiveJobPort);
     transport.close();

@@ -3,7 +3,7 @@ grammar jack.mutations
 extension jack
 start line
 
-line = create-node / delete-node / create-edge / delete-edge / rename-node / move-node / change-data-property / remove-data-property
+line = create-node / delete-node / create-edge / delete-edge / rename-node / move-node / change-data-property / remove-data-property / set-query
 
 create-node = "create-node" SP id SP text SP text SP number SP number SP number SP number SP port-table
 delete-node = "delete-node" SP id
@@ -13,6 +13,7 @@ rename-node = "rename-node" SP id SP text
 move-node = "move-node" SP id SP number SP number
 change-data-property = "change-data-property" SP entity SP text SP value
 remove-data-property = "remove-data-property" SP entity SP text
+set-query = "set-query" SP text
 
 entity = "node" ":" id / "edge" ":" id
 port-table = "{" NL port-row* "}"

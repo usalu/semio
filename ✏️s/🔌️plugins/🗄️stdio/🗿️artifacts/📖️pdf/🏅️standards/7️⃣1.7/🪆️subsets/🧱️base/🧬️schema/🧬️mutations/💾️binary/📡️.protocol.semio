@@ -131,3 +131,5 @@ record set-catalog-entry tag=58
 field payload bytes
 record remove-catalog-entry tag=59
 field payload bytes
+record set-snapshot tag=60
+field payload bytes

@@ -1,0 +1,19 @@
+
+//! 👁️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.5 — the real
+//! `semio_framework_plugin::artifact_app_laws::{assert_editor_and_viewer_share_dialect, new_viewer}` (closed by w0-f,
+//! gap 2), used directly rather than local stand-ins. Both viewers carry a transient lane (Home its folded hub directory,
+//! the Space index its folded space directory and presence), which the generic `assert_viewer_never_mutates` fixture does
+//! not admit; each crate proves the same property over its registered viewer surface
+//! (`viewer::home::…::a_viewer_page_publishes_only_its_transient_item`,
+//! `viewer::space_index::…::the_viewers_feeds_publish_only_transient_items`).
+use semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect;
+
+#[semio_framework_async_macros::async_test]
+async fn home_editor_and_viewer_share_dialect() {
+    assert_editor_and_viewer_share_dialect::<semio_s_artifact_space_home::editor::home::HomeApp, semio_s_artifact_space_home::viewer::home::HomeViewer>().await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn space_index_editor_and_viewer_share_dialect() {
+    assert_editor_and_viewer_share_dialect::<semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor, semio_s_artifact_space_space::viewer::space_index::SpaceIndexViewer>().await;
+}

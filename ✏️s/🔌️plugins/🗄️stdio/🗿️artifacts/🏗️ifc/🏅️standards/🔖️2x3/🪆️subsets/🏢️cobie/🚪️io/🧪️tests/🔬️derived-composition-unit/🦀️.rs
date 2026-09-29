@@ -17,7 +17,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn wrong_view_definition_fails_compose_with_real_diagnostic() {
         let mut snapshot = Ifc2x3CobieBuilder::new().build().expect("build");
-        snapshot.document.header.file_description[0] = semio_s_artifact_stdio_step::engine::part21::Part21Value::List(vec![semio_s_artifact_stdio_step::engine::part21::Part21Value::Str("ViewDefinition [CoordinationView]".into())]);
+        snapshot.document.header.file_description[0] = semio_s_artifact_stdio_contract::part21::Part21Value::List(vec![semio_s_artifact_stdio_contract::part21::Part21Value::Str("ViewDefinition [CoordinationView]".into())]);
         let bytes = <Ifc2x3Snapshot as store::ArtifactPack>::encode_pack(&snapshot);
         let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
         let err = Ifc2x3CobieComposerComposition::compose(&sources).expect_err("wrong ViewDefinition must not stamp cobie");

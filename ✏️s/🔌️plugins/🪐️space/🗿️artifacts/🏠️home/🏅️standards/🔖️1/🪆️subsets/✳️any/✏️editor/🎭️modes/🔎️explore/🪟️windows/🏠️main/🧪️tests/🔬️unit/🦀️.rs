@@ -46,9 +46,12 @@ fn row<'a>(root: &'a semio_framework_plugin::BuiltNode, key: &str) -> &'a semio_
     root.children.iter().find(|node| node.key.as_str() == key).expect("Home row key present")
 }
 
-fn buttons(node: &semio_framework_plugin::BuiltNode) -> Vec<&semio_framework_ui_contract::ActionBinding> {
+/// 🎬️ The bindings a Home row's actions dispatch — each its verb on the row's ONE target.
+fn buttons(node: &semio_framework_plugin::BuiltNode) -> Vec<semio_framework_ui_contract::ActionBinding> {
     let semio_framework_ui_contract::Component::TableRow(props) = &node.component else { panic!("a Home row is one TableRow record") };
-    props.row_actions.iter().map(|action| &action.action).collect()
+    let target = props.target.as_ref().expect("a Home row carries its one target");
+    assert_eq!(target.activation.as_ref().map(|verb| verb.as_str()), Some("openSpace"), "a Home row's activation opens the space");
+    props.row_actions.iter().map(|action| target.binding(&action.verb).expect("credited row binding")).collect()
 }
 
 fn rows(windows: &TreeWindows<'_>, rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, actions: &SHomeLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
@@ -140,7 +143,7 @@ async fn a_local_row_carries_open_and_remove_from_home() {
         let names: Vec<&str> = buttons.iter().map(|binding| binding.action.name.as_str()).collect();
         assert_eq!(names, ["openSpace", "deleteVirtualFileSystemNode"], "local-only rows offer open and the Home removal");
         assert_eq!(buttons[1].action.scope.as_str(), S_HOME_CONTROLLER_ID);
-        assert_eq!(text_arg(buttons[1], "spaceId"), "sp-local", "the removal names the row's own studio");
+        assert_eq!(text_arg(&buttons[1], "spaceId"), "sp-local", "the removal names the row's own studio");
     });
 }
 
